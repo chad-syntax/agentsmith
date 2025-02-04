@@ -6,9 +6,12 @@ import { Footer } from '@/components/Footer';
 import { PostHogProvider } from './providers/posthog';
 import Head from 'next/head';
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : 'http://localhost:3000';
+const defaultUrl =
+  process.env.VERCEL_ENV === 'production'
+    ? 'https://agentsmith.app'
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:3000';
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
