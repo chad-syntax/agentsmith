@@ -28,7 +28,7 @@ export const NotPubliclyAvailable = (props: NotPubliclyAvailableProps) => {
   };
 
   return (
-    <div className="max-w-[1400px] w-full mx-auto px-16 py-12">
+    <div className="max-w-[1400px] w-full mx-auto md:px-16 md:py-12 pt-8">
       <h2 className="text-2xl font-bold text-foreground/60 text-center mb-8">
         Agentsmith is not publicly available yet.
       </h2>
@@ -39,7 +39,7 @@ export const NotPubliclyAvailable = (props: NotPubliclyAvailableProps) => {
         <div className="flex flex-col items-center justify-center">
           <button
             onClick={() => handleAlphaClubClick()}
-            className="flex items-center gap-1 border border-background border-success bg-success/10 bg-white text-success px-2 py-1 rounded-md text-xs"
+            className="flex items-center gap-1 border border-background border-success bg-success/15 bg-white text-success px-2 py-1 rounded-md text-xs"
           >
             Get 50% off the first year of public launch by joining the Alpha
             Club!
@@ -47,7 +47,7 @@ export const NotPubliclyAvailable = (props: NotPubliclyAvailableProps) => {
 
           <p
             className={twMerge(
-              'text-sm text-foreground/60 text-center transition-opacity duration-300 mt-4 border rounded border-foreground p-1',
+              'text-sm text-foreground/60 text-center transition-opacity duration-300 mb-2 mt-2 md:mb-0 md:mt-4 border rounded border-foreground p-1',
               alphaClubClicked ? 'opacity-100' : 'opacity-0'
             )}
           >
