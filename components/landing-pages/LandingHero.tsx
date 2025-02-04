@@ -9,6 +9,7 @@ import { twMerge } from 'tailwind-merge';
 import { ThemeSwitcher } from '../theme-switcher';
 import { useRef, useState } from 'react';
 import { usePostHog } from 'posthog-js/react';
+import Link from 'next/link';
 
 type LandingHeroProps = {
   withAlphaClub?: boolean;
@@ -41,7 +42,9 @@ export const LandingHero = (props: LandingHeroProps) => {
   return (
     <div className="mb-16">
       <div className="flex justify-between items-center mb-4 md:mb-12">
-        <h2 className="text-2xl md:text-5xl font-bold">Agentsmith</h2>
+        <Link href="/">
+          <h2 className="text-2xl md:text-5xl font-bold">Agentsmith</h2>
+        </Link>
         <ThemeSwitcher />
       </div>
       <div className="flex justify-start items-center md:items-start flex-col lg:flex-row">
