@@ -1,22 +1,15 @@
-import { ThemeSwitcher } from '@/components/theme-switcher';
+import { HeroHeader } from '@/components/HeroHeader';
 
 export const PrivacyPolicyPage = () => {
   return (
     <main>
-      <article className="mx-auto px-4 max-w-[1400px] py-16">
-        <nav
-          className="flex justify-between items-center"
-          aria-label="Top navigation"
-        >
-          <h1 className="text-4xl font-bold mb-6">Privacy Policy</h1>
-          <ThemeSwitcher />
-        </nav>
-
+      <article className="mx-auto px-4 max-w-[1400px] py-4 md:py-12">
+        <HeroHeader />
+        <h1 className="text-2xl md:text-4xl font-bold mb-4">Privacy Policy</h1>
         <div className="space-y-4">
           <p>
             <strong>Last updated:</strong> 2-7-2025
           </p>
-
           <section aria-label="Introduction">
             <p className="pt-6">
               This Privacy Policy describes how Chad Syntax LLC (the

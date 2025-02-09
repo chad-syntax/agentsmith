@@ -10,6 +10,7 @@ import { ThemeSwitcher } from '../theme-switcher';
 import { useRef, useState } from 'react';
 import { usePostHog } from 'posthog-js/react';
 import Link from 'next/link';
+import { HeroHeader } from '../HeroHeader';
 
 type LandingHeroProps = {
   withAlphaClub?: boolean;
@@ -41,12 +42,7 @@ export const LandingHero = (props: LandingHeroProps) => {
 
   return (
     <div className="mb-16">
-      <div className="flex justify-between items-center mb-4 md:mb-12">
-        <Link href="/">
-          <h2 className="text-2xl md:text-5xl font-bold">Agentsmith</h2>
-        </Link>
-        <ThemeSwitcher />
-      </div>
+      <HeroHeader />
       <div className="flex justify-start items-center md:items-start flex-col lg:flex-row">
         <div className="flex flex-col">
           <h1 className="max-w-[400px] md:max-w-none text-5xl md:text-8xl font-bold leading-tight mb-10 leading-[1] md:leading-[90px]">
