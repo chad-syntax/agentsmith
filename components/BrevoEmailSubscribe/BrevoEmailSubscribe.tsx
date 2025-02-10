@@ -61,6 +61,13 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     posthog.capture('brevo_email_subscribe_submitted');
+
+    // Google Search-1 campaign conversion tracking
+    window.gtag('event', 'conversion', {
+      send_to: 'AW-16839610676/zqbPCJr38pUaELSi4N0-',
+      value: 1.0,
+      currency: 'USD',
+    });
   };
 
   return (
