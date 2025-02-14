@@ -48,6 +48,7 @@ export type Prompt = {
   content: string;
   version: string;
   variables: PromptVariable[];
+  slug: string;
 };
 
 export type PromptMap = {
@@ -58,6 +59,7 @@ export const __DUMMY_PROMPTS__: PromptMap = {
   'a1b2c3d4-e5f6-4321-8901-abcdef123456': {
     id: 'a1b2c3d4-e5f6-4321-8901-abcdef123456',
     name: 'Qualify Lead',
+    slug: 'qualify_lead',
     content: `Based on the following information about {{ contact_name }} from their company:
 
 {{ company_info }}
@@ -83,6 +85,7 @@ Provide a detailed analysis of their potential value as a customer and recommend
   'b2c3d4e5-f6a7-5432-9012-bcdef234567': {
     id: 'b2c3d4e5-f6a7-5432-9012-bcdef234567',
     name: 'Detect Super Qualified Lead',
+    slug: 'detect_super_qualified_lead',
     content: `Analyze this lead for indicators of being a super-qualified prospect.
 
 Lead Details:
@@ -112,6 +115,7 @@ Provide a confidence score (0-100) and detailed reasoning for why this lead shou
   'c3d4e5f6-g7h8-6543-0123-cdefg345678': {
     id: 'c3d4e5f6-g7h8-6543-0123-cdefg345678',
     name: 'Lead Urgency Assessment',
+    slug: 'lead_urgency_assessment',
     content: `Current Situation:
 {{ current_situation }}
 
@@ -139,6 +143,7 @@ Provide an urgency score (1-5) and recommend specific next steps with timeline r
   'd4e5f6g7-h8i9-7654-2345-defgh456789': {
     id: 'd4e5f6g7-h8i9-7654-2345-defgh456789',
     name: 'Budget Alignment Verification',
+    slug: 'budget_alignment_verification',
     content: `Budget Details:
 {{ budget_details }}
 
@@ -170,6 +175,7 @@ Provide a budget fit score (0-100) and identify:
   'e5f6g7h8-i9j0-8765-3456-efghi567890': {
     id: 'e5f6g7h8-i9j0-8765-3456-efghi567890',
     name: 'Technical Fit Assessment',
+    slug: 'technical_fit_assessment',
     content: `Current Technology Stack:
 {{ tech_stack }}
 
@@ -197,6 +203,95 @@ Provide:
       { name: 'tech_stack', type: 'string', required: true },
       { name: 'integration_needs', type: 'string', required: true },
       { name: 'technical_constraints', type: 'string', required: true },
+    ],
+  },
+  'b2c3d4e5-f6g7-5432-9012-bcdef234567': {
+    id: 'b2c3d4e5-f6g7-5432-9012-bcdef234567',
+    name: 'Default system prompt',
+    slug: 'default_system_prompt',
+    content: 'You are an AI assistant. Help the user with what they need.',
+    version: '1.0.0',
+    variables: [],
+  },
+} as const;
+
+export const AGENT_TRIGGERS = {
+  AFTER_ANY_MESSAGE: 'AFTER_ANY_MESSAGE',
+  BEFORE_ANY_MESSAGE: 'BEFORE_ANY_MESSAGE',
+  AFTER_USER_MESSAGE: 'AFTER_USER_MESSAGE',
+  AFTER_ASSISTANT_MESSAGE: 'AFTER_ASSISTANT_MESSAGE',
+  BEFORE_USER_MESSAGE: 'BEFORE_USER_MESSAGE',
+  BEFORE_ASSISTANT_MESSAGE: 'BEFORE_ASSISTANT_MESSAGE',
+  BEFORE_INSTANCE_CLEANUP: 'BEFORE_INSTANCE_CLEANUP',
+  CRON_SCHEDULE: 'CRON_SCHEDULE',
+} as const;
+
+export type AgentTriggers = keyof typeof AGENT_TRIGGERS;
+
+export type AgentTrigger = {
+  type: AgentTriggers;
+  cron_schedule?: string;
+} & (
+  | {
+      type: 'CRON_SCHEDULE';
+      cron_schedule: string;
+    }
+  | {
+      type: Exclude<AgentTriggers, 'CRON_SCHEDULE'>;
+      cron_schedule?: never;
+    }
+);
+
+export type Agent = {
+  id: string;
+  name: string;
+  slug: string;
+  system_prompt_id: string;
+  actions: AgentAction[];
+  reactions: AgentReaction[];
+};
+
+export type AgentAction = {
+  id: string;
+  name: string;
+  slug: string;
+  prompt_id: string;
+};
+
+export type AgentReaction = {
+  id: string;
+  name: string;
+  slug: string;
+  prompt_id: string;
+  triggers: AgentTrigger[];
+};
+
+export type AgentMap = {
+  [key: string]: Agent;
+};
+
+export const __DUMMY_AGENTS__: AgentMap = {
+  'f6g7h8i9-j0k1-9876-4567-fghij678901': {
+    id: 'f6g7h8i9-j0k1-9876-4567-fghij678901',
+    system_prompt_id: 'b2c3d4e5-f6g7-5432-9012-bcdef234567',
+    name: 'Lead Agent',
+    slug: 'lead_agent',
+    actions: [
+      {
+        id: 'c8d9e0f1-g2h3-7654-3210-ghijkl456789',
+        name: 'Qualify Lead',
+        slug: 'qualify_lead',
+        prompt_id: 'a1b2c3d4-e5f6-4321-8901-abcdef123456',
+      },
+    ],
+    reactions: [
+      {
+        id: 'd4e5f6g7-h8i9-8765-4321-ijklmn890123',
+        name: 'Detect Super Qualified Lead',
+        slug: 'detect_super_qualified_lead',
+        prompt_id: 'b2c3d4e5-f6a7-5432-9012-bcdef234567',
+        triggers: [{ type: AGENT_TRIGGERS.AFTER_ASSISTANT_MESSAGE }],
+      },
     ],
   },
 } as const;
