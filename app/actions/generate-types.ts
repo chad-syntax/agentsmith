@@ -1,7 +1,11 @@
 'use server';
 
 import { Project } from 'ts-morph';
-import { __DUMMY_PROMPTS__, __DUMMY_AGENTS__ } from '@/app/constants';
+import {
+  __DUMMY_PROMPTS__,
+  __DUMMY_AGENTS__,
+  __DUMMY_AGENT_VERSIONS__,
+} from '@/app/constants';
 
 export async function generateTypes() {
   // Initialize project and create source file
@@ -166,29 +170,32 @@ export async function generateTypes() {
           .write(';\n');
         writer.write('agents: ').block(() => {
           Object.entries(__DUMMY_AGENTS__).forEach(([_, agent]) => {
+            const targetAgentVersion =
+              __DUMMY_AGENT_VERSIONS__[agent.currentVersionId];
+
             writer.write(
               `'${agent.slug}': Agent & { 
                   id: '${agent.id}';
                   name: '${agent.name}';
                   slug: '${agent.slug}';
-                  system_prompt_id: '${agent.system_prompt_id}';
-                  actions: [${agent.actions
+                  system_prompt_id: '${targetAgentVersion.systemPrompt.id}';
+                  actions: [${targetAgentVersion.actions
                     .map(
                       (action) => `{
                     id: '${action.id}';
                     name: '${action.name}';
                     slug: '${action.slug}';
-                    prompt_id: '${action.prompt_id}';
+                    prompt_id: '${action.prompt.id}';
                   }`
                     )
                     .join(', ')}];
-                  reactions: [${agent.reactions
+                  reactions: [${targetAgentVersion.reactions
                     .map(
                       (reaction) => `{
                     id: '${reaction.id}';
                     name: '${reaction.name}';
                     slug: '${reaction.slug}';
-                    prompt_id: '${reaction.prompt_id}';
+                    prompt_id: '${reaction.prompt.id}';
                     triggers: [{ type: '${reaction.triggers[0].type}' }];
                   }`
                     )

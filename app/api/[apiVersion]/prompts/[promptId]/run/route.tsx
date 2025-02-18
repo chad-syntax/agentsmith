@@ -11,7 +11,7 @@ type RequestBody = {
 
 export async function POST(
   request: Request,
-  { params }: { params: { promptId: string } }
+  { params }: { params: Promise<{ promptId: string }> }
 ) {
   const { promptId } = await params;
 

@@ -279,46 +279,91 @@ export type AgentTrigger = {
     }
 );
 
+// The main agent record (metadata)
 export type Agent = {
   id: string;
   name: string;
   slug: string;
-  system_prompt_id: string;
-  actions: AgentAction[];
-  reactions: AgentReaction[];
+  currentVersionId: string; // Points to AgentVersion
+  createdAt: Date;
+  updatedAt: Date;
 };
 
-export type AgentAction = {
+// A specific version of an agent
+export type AgentVersion = {
   id: string;
+  agentId: string;
+  version: string;
   name: string;
   slug: string;
-  prompt_id: string;
+  systemPrompt: {
+    id: string;
+  };
+  actions: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    prompt: {
+      id: string;
+    };
+  }>;
+  reactions: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    prompt: {
+      id: string;
+    };
+    triggers: AgentTrigger[];
+  }>;
+  config: Record<string, any>;
+  createdAt: Date;
+  publishedAt: Date | null;
 };
 
-export type AgentReaction = {
+// A running instance of a specific agent version
+export type AgentInstance = {
   id: string;
+  agentId: string; // References Agent
+  agentVersionId: string; // References AgentVersion
   name: string;
-  slug: string;
-  prompt_id: string;
-  triggers: AgentTrigger[];
+  status: 'idle' | 'active' | 'archived';
+  state: Record<string, any>;
+  ctx: Record<string, any>;
+  createdAt: Date;
+  updatedAt: Date;
 };
 
-export type AgentMap = {
-  [key: string]: Agent;
-};
-
-export const __DUMMY_AGENTS__: AgentMap = {
+// Dummy data
+export const __DUMMY_AGENTS__: Record<string, Agent> = {
   'f6g7h8i9-j0k1-9876-4567-fghij678901': {
     id: 'f6g7h8i9-j0k1-9876-4567-fghij678901',
-    system_prompt_id: 'b2c3d4e5-f6g7-5432-9012-bcdef234567',
     name: 'Lead Agent',
     slug: 'lead_agent',
+    currentVersionId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+};
+
+export const __DUMMY_AGENT_VERSIONS__: Record<string, AgentVersion> = {
+  'a1b2c3d4-e5f6-7890-abcd-ef1234567890': {
+    id: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    agentId: 'f6g7h8i9-j0k1-9876-4567-fghij678901',
+    version: '1.2.3',
+    name: 'Lead Agent',
+    slug: 'lead_agent',
+    systemPrompt: {
+      id: 'b2c3d4e5-f6g7-5432-9012-bcdef234567',
+    },
     actions: [
       {
         id: 'c8d9e0f1-g2h3-7654-3210-ghijkl456789',
         name: 'Qualify Lead',
         slug: 'qualify_lead',
-        prompt_id: 'a1b2c3d4-e5f6-4321-8901-abcdef123456',
+        prompt: {
+          id: 'a1b2c3d4-e5f6-4321-8901-abcdef123456',
+        },
       },
     ],
     reactions: [
@@ -326,9 +371,103 @@ export const __DUMMY_AGENTS__: AgentMap = {
         id: 'd4e5f6g7-h8i9-8765-4321-ijklmn890123',
         name: 'Detect Super Qualified Lead',
         slug: 'detect_super_qualified_lead',
-        prompt_id: 'b2c3d4e5-f6a7-5432-9012-bcdef234567',
-        triggers: [{ type: AGENT_TRIGGERS.AFTER_ASSISTANT_MESSAGE }],
+        prompt: {
+          id: 'b2c3d4e5-f6a7-5432-9012-bcdef234567',
+        },
+        triggers: [
+          {
+            type: AGENT_TRIGGERS.AFTER_ACTION_EXECUTION,
+            action_id: 'c8d9e0f1-g2h3-7654-3210-ghijkl456789',
+          },
+        ],
       },
     ],
+    config: {},
+    createdAt: new Date(),
+    publishedAt: new Date(),
   },
-} as const;
+  'b2c3d4e5-f6g7-8901-bcde-f23456789012': {
+    id: 'b2c3d4e5-f6g7-8901-bcde-f23456789012',
+    agentId: 'f6g7h8i9-j0k1-9876-4567-fghij678901',
+    version: '1.2.2',
+    name: 'Lead Agent',
+    slug: 'lead_agent',
+    systemPrompt: {
+      id: 'b2c3d4e5-f6g7-5432-9012-bcdef234567',
+    },
+    actions: [
+      {
+        id: 'c8d9e0f1-g2h3-7654-3210-ghijkl456789',
+        name: 'Qualify Lead',
+        slug: 'qualify_lead',
+        prompt: {
+          id: 'a1b2c3d4-e5f6-4321-8901-abcdef123456',
+        },
+      },
+    ],
+    reactions: [
+      {
+        id: 'd4e5f6g7-h8i9-8765-4321-ijklmn890123',
+        name: 'Detect Super Qualified Lead',
+        slug: 'detect_super_qualified_lead',
+        prompt: {
+          id: 'b2c3d4e5-f6a7-5432-9012-bcdef234567',
+        },
+        triggers: [
+          {
+            type: AGENT_TRIGGERS.AFTER_ACTION_EXECUTION,
+            action_id: 'c8d9e0f1-g2h3-7654-3210-ghijkl456789',
+          },
+        ],
+      },
+    ],
+    config: {},
+    createdAt: new Date(),
+    publishedAt: new Date(),
+  },
+};
+
+export const __DUMMY_AGENT_INSTANCES__: Record<string, AgentInstance> = {
+  'g7h8i9j0-k1l2-0987-5678-ghijk789012': {
+    id: 'g7h8i9j0-k1l2-0987-5678-ghijk789012',
+    agentId: 'f6g7h8i9-j0k1-9876-4567-fghij678901', // Lead Agent
+    agentVersionId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    name: 'Sales Team Lead Agent',
+    status: 'active',
+    state: {},
+    ctx: {
+      salesTeam: 'enterprise',
+      region: 'north-america',
+    },
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-15'),
+  },
+  'h8i9j0k1-l2m3-1098-6789-hijkl890123': {
+    id: 'h8i9j0k1-l2m3-1098-6789-hijkl890123',
+    agentId: 'f6g7h8i9-j0k1-9876-4567-fghij678901', // Lead Agent
+    agentVersionId: 'b2c3d4e5-f6g7-8901-bcde-f23456789012',
+    name: 'Marketing Team Lead Agent',
+    status: 'idle',
+    state: {},
+    ctx: {
+      salesTeam: 'marketing',
+      region: 'europe',
+    },
+    createdAt: new Date('2024-01-10'),
+    updatedAt: new Date('2024-01-14'),
+  },
+  'i9j0k1l2-m3n4-2109-7890-ijklm901234': {
+    id: 'i9j0k1l2-m3n4-2109-7890-ijklm901234',
+    agentId: 'f6g7h8i9-j0k1-9876-4567-fghij678901', // Lead Agent
+    agentVersionId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    name: 'APAC Lead Agent',
+    status: 'archived',
+    state: {},
+    ctx: {
+      salesTeam: 'enterprise',
+      region: 'apac',
+    },
+    createdAt: new Date('2023-12-01'),
+    updatedAt: new Date('2024-01-01'),
+  },
+};
