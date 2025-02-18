@@ -18,6 +18,10 @@ export default function PromptDetailPage() {
   const [isOpen, setIsOpen] = useState(true);
 
   const editor = useEditor({
+    immediatelyRender: false,
+    parseOptions: {
+      preserveWhitespace: 'full',
+    },
     extensions: [
       StarterKit,
       Placeholder.configure({

@@ -49,6 +49,7 @@ export type Prompt = {
   version: string;
   variables: PromptVariable[];
   slug: string;
+  model: string;
 };
 
 export type PromptMap = {
@@ -60,6 +61,7 @@ export const __DUMMY_PROMPTS__: PromptMap = {
     id: 'a1b2c3d4-e5f6-4321-8901-abcdef123456',
     name: 'Qualify Lead',
     slug: 'qualify_lead',
+    model: 'openrouter/auto',
     content: `Based on the following information about {{ contact_name }} from their company:
 
 {{ company_info }}
@@ -86,6 +88,7 @@ Provide a detailed analysis of their potential value as a customer and recommend
     id: 'b2c3d4e5-f6a7-5432-9012-bcdef234567',
     name: 'Detect Super Qualified Lead',
     slug: 'detect_super_qualified_lead',
+    model: 'openrouter/auto',
     content: `Analyze this lead for indicators of being a super-qualified prospect.
 
 Lead Details:
@@ -116,6 +119,7 @@ Provide a confidence score (0-100) and detailed reasoning for why this lead shou
     id: 'c3d4e5f6-g7h8-6543-0123-cdefg345678',
     name: 'Lead Urgency Assessment',
     slug: 'lead_urgency_assessment',
+    model: 'openrouter/auto',
     content: `Current Situation:
 {{ current_situation }}
 
@@ -144,6 +148,7 @@ Provide an urgency score (1-5) and recommend specific next steps with timeline r
     id: 'd4e5f6g7-h8i9-7654-2345-defgh456789',
     name: 'Budget Alignment Verification',
     slug: 'budget_alignment_verification',
+    model: 'openrouter/auto',
     content: `Budget Details:
 {{ budget_details }}
 
@@ -176,6 +181,7 @@ Provide a budget fit score (0-100) and identify:
     id: 'e5f6g7h8-i9j0-8765-3456-efghi567890',
     name: 'Technical Fit Assessment',
     slug: 'technical_fit_assessment',
+    model: 'openrouter/auto',
     content: `Current Technology Stack:
 {{ tech_stack }}
 
@@ -209,6 +215,7 @@ Provide:
     id: 'b2c3d4e5-f6g7-5432-9012-bcdef234567',
     name: 'Default system prompt',
     slug: 'default_system_prompt',
+    model: 'openrouter/auto',
     content: 'You are an AI assistant. Help the user with what they need.',
     version: '1.0.0',
     variables: [],
@@ -223,6 +230,12 @@ export const AGENT_TRIGGERS = {
   BEFORE_USER_MESSAGE: 'BEFORE_USER_MESSAGE',
   BEFORE_ASSISTANT_MESSAGE: 'BEFORE_ASSISTANT_MESSAGE',
   BEFORE_INSTANCE_CLEANUP: 'BEFORE_INSTANCE_CLEANUP',
+  BEFORE_PROMPT_EXECUTION: 'BEFORE_PROMPT_EXECUTION',
+  AFTER_PROMPT_EXECUTION: 'AFTER_PROMPT_EXECUTION',
+  BEFORE_ACTION_EXECUTION: 'BEFORE_ACTION_EXECUTION',
+  AFTER_ACTION_EXECUTION: 'AFTER_ACTION_EXECUTION',
+  BEFORE_REACTION_EXECUTION: 'BEFORE_REACTION_EXECUTION',
+  AFTER_REACTION_EXECUTION: 'AFTER_REACTION_EXECUTION',
   CRON_SCHEDULE: 'CRON_SCHEDULE',
 } as const;
 
@@ -237,8 +250,32 @@ export type AgentTrigger = {
       cron_schedule: string;
     }
   | {
-      type: Exclude<AgentTriggers, 'CRON_SCHEDULE'>;
+      type: 'BEFORE_PROMPT_EXECUTION' | 'AFTER_PROMPT_EXECUTION';
+      prompt_id: string;
+    }
+  | {
+      type: 'BEFORE_ACTION_EXECUTION' | 'AFTER_ACTION_EXECUTION';
+      action_id: string;
+    }
+  | {
+      type: 'BEFORE_REACTION_EXECUTION' | 'AFTER_REACTION_EXECUTION';
+      reaction_id: string;
+    }
+  | {
+      type: Exclude<
+        AgentTriggers,
+        | 'CRON_SCHEDULE'
+        | 'BEFORE_PROMPT_EXECUTION'
+        | 'AFTER_PROMPT_EXECUTION'
+        | 'BEFORE_ACTION_EXECUTION'
+        | 'AFTER_ACTION_EXECUTION'
+        | 'BEFORE_REACTION_EXECUTION'
+        | 'AFTER_REACTION_EXECUTION'
+      >;
       cron_schedule?: never;
+      prompt_id?: never;
+      action_id?: never;
+      reaction_id?: never;
     }
 );
 

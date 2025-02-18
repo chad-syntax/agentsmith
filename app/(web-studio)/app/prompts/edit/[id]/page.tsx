@@ -2,43 +2,32 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
+import Editor from 'react-simple-code-editor';
+import { highlight, languages } from 'prismjs';
+import 'prismjs/components/prism-markup-templating';
+import 'prismjs/components/prism-django';
+import 'prismjs/themes/prism.css';
 import { __DUMMY_PROMPTS__, PromptVariable } from '@/app/constants';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { IconChevronRight, IconTrash } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Modal } from '@/components/ui/modal';
 
 export default function EditPromptPage() {
   const params = useParams();
   const promptId = params.id as string;
   const prompt = __DUMMY_PROMPTS__[promptId];
   const [isOpen, setIsOpen] = useState(true);
+  const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [variables, setVariables] = useState<PromptVariable[]>(
     prompt?.variables || []
   );
-
-  console.log(prompt?.content);
-
-  const editor = useEditor({
-    parseOptions: {
-      preserveWhitespace: 'full',
-    },
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder: 'Write your prompt here...',
-      }),
-    ],
-    content: prompt?.content || '',
-    editorProps: {
-      attributes: {
-        class:
-          'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none',
-      },
-    },
-  });
+  const [content, setContent] = useState(prompt?.content);
+  const [testVariables, setTestVariables] = useState<Record<string, string>>(
+    {}
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [testResult, setTestResult] = useState<string | null>(null);
 
   if (!prompt) {
     return (
@@ -75,17 +64,46 @@ export default function EditPromptPage() {
     setVariables(newVariables);
   };
 
+  const handleTestPrompt = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/v1/prompts/${promptId}/run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          variables: testVariables,
+        }),
+      });
+
+      const data = await response.json();
+      setTestResult(data.completion.choices[0].message.content);
+    } catch (error) {
+      console.error('Error testing prompt:', error);
+      setTestResult('Error: Failed to test prompt');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex h-[calc(100vh-64px)]">
       <div className="flex-1 overflow-auto">
         <div className="p-6">
-          <div className="mb-6">
+          <div className="mb-6 flex justify-between items-center">
             <Link
               href={`/app/prompts/${prompt.id}`}
               className="text-blue-500 hover:text-blue-600"
             >
               ← Back to Prompt
             </Link>
+            <button
+              onClick={() => setIsTestModalOpen(true)}
+              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+            >
+              Test Prompt
+            </button>
           </div>
 
           <div className="space-y-6">
@@ -116,7 +134,20 @@ export default function EditPromptPage() {
                 Content
               </label>
               <div className="bg-white rounded-lg border">
-                <EditorContent editor={editor} className="min-h-[500px] p-4" />
+                <Editor
+                  value={content}
+                  onValueChange={(code) => setContent(code)}
+                  highlight={(code) =>
+                    highlight(code, languages.django, 'django')
+                  }
+                  padding={16}
+                  style={{
+                    fontFamily: '"Fira code", "Fira Mono", monospace',
+                    fontSize: 14,
+                    minHeight: '500px',
+                  }}
+                  className="w-full"
+                />
               </div>
             </div>
           </div>
@@ -202,6 +233,60 @@ export default function EditPromptPage() {
           </div>
         </Collapsible.Content>
       </Collapsible.Root>
+
+      <Modal
+        isOpen={isTestModalOpen}
+        onClose={() => setIsTestModalOpen(false)}
+        title="Test Prompt"
+      >
+        <div className="space-y-4">
+          {variables.map((variable) => (
+            <div key={variable.name}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {variable.name}
+                {variable.required && <span className="text-red-500">*</span>}
+              </label>
+              <input
+                type={variable.type === 'number' ? 'number' : 'text'}
+                value={testVariables[variable.name] || ''}
+                onChange={(e) =>
+                  setTestVariables({
+                    ...testVariables,
+                    [variable.name]: e.target.value,
+                  })
+                }
+                className="w-full px-3 py-2 border rounded-md"
+                required={variable.required}
+              />
+            </div>
+          ))}
+        </div>
+
+        {testResult && (
+          <div className="mt-4">
+            <h3 className="font-medium mb-2">Result:</h3>
+            <div className="bg-gray-50 p-4 rounded-md whitespace-pre-wrap">
+              {testResult}
+            </div>
+          </div>
+        )}
+
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            onClick={() => setIsTestModalOpen(false)}
+            className="px-4 py-2 border rounded-md hover:bg-gray-50"
+          >
+            Close
+          </button>
+          <button
+            onClick={handleTestPrompt}
+            disabled={isLoading}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
+          >
+            {isLoading ? 'Loading...' : 'Submit'}
+          </button>
+        </div>
+      </Modal>
 
       <div className="fixed bottom-0 right-0 p-6 bg-white border-t w-full flex justify-end space-x-4">
         <Link
