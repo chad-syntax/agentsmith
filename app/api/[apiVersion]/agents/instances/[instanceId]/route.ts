@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { __DUMMY_AGENT_INSTANCES__ } from '@/app/constants';
 
 export async function GET(
   request: NextRequest,
@@ -6,17 +7,19 @@ export async function GET(
 ) {
   try {
     const { instanceId } = await params;
-    const instance = {}; // Get from database
+    const instance = __DUMMY_AGENT_INSTANCES__[instanceId];
+
     if (!instance) {
       return NextResponse.json(
         { error: 'Instance not found' },
         { status: 404 }
       );
     }
+
     return NextResponse.json(instance, { status: 200 });
   } catch (error) {
     return NextResponse.json(
-      { error: 'Failed to fetch instance' },
+      { error: 'Failed to fetch instance data' },
       { status: 500 }
     );
   }
@@ -29,8 +32,15 @@ export async function PUT(
   try {
     const { instanceId } = await params;
     const body = await request.json();
-    // TODO: Validate body
-    const instance = {}; // Update in database
+    const instance = __DUMMY_AGENT_INSTANCES__[instanceId];
+
+    if (!instance) {
+      return NextResponse.json(
+        { error: 'Instance not found' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(instance, { status: 200 });
   } catch (error) {
     return NextResponse.json(
@@ -46,7 +56,15 @@ export async function DELETE(
 ) {
   try {
     const { instanceId } = await params;
-    // Delete from database
+    const instance = __DUMMY_AGENT_INSTANCES__[instanceId];
+
+    if (!instance) {
+      return NextResponse.json(
+        { error: 'Instance not found' },
+        { status: 404 }
+      );
+    }
+
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     return NextResponse.json(

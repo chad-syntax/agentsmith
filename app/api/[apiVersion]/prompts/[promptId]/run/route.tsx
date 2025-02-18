@@ -122,5 +122,5 @@ export async function POST(
     ],
   });
 
-  return NextResponse.json({ completion });
+  return NextResponse.json({ completion }, { status: 200 });
 }

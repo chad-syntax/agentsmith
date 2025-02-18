@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  __DUMMY_AGENT_INSTANCES__,
+  __DUMMY_AGENT_VERSIONS__,
+} from '@/app/constants';
 
 export async function GET(
   request: NextRequest,
@@ -14,7 +18,22 @@ export async function GET(
 ) {
   try {
     const { instanceId, actionId } = await params;
-    const action = {}; // Get action details from database
+    const instance = __DUMMY_AGENT_INSTANCES__[instanceId];
+
+    if (!instance) {
+      return NextResponse.json(
+        { error: 'Instance not found' },
+        { status: 404 }
+      );
+    }
+
+    const version = __DUMMY_AGENT_VERSIONS__[instance.agentVersionId];
+    const action = version.actions.find((a) => a.id === actionId);
+
+    if (!action) {
+      return NextResponse.json({ error: 'Action not found' }, { status: 404 });
+    }
+
     return NextResponse.json(action, { status: 200 });
   } catch (error) {
     return NextResponse.json(
@@ -39,9 +58,31 @@ export async function POST(
   try {
     const { instanceId, actionId } = await params;
     const body = await request.json();
-    // Execute action
-    const result = {}; // Action execution result
-    return NextResponse.json(result, { status: 200 });
+    const instance = __DUMMY_AGENT_INSTANCES__[instanceId];
+
+    if (!instance) {
+      return NextResponse.json(
+        { error: 'Instance not found' },
+        { status: 404 }
+      );
+    }
+
+    const version = __DUMMY_AGENT_VERSIONS__[instance.agentVersionId];
+    const action = version.actions.find((a) => a.id === actionId);
+
+    if (!action) {
+      return NextResponse.json({ error: 'Action not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        actionId,
+        timestamp: new Date().toISOString(),
+        data: body,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     return NextResponse.json(
       { error: 'Failed to execute action' },
