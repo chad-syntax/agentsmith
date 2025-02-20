@@ -3,7 +3,7 @@ import { __DUMMY_AGENTS__ } from '@/app/constants';
 import { GET, POST } from '@/app/api/[apiVersion]/agents/route';
 
 jest.mock('next/server');
-jest.mock('@/utils/supabase/server', () => ({
+jest.mock('&/supabase/server', () => ({
   createClient: jest.fn().mockReturnValue({
     from: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
@@ -53,7 +53,7 @@ describe('Agents API Routes', () => {
 
     // Mock database error
     jest
-      .spyOn(require('@/utils/supabase/server'), 'createClient')
+      .spyOn(require('&/supabase/server'), 'createClient')
       .mockReturnValueOnce({
         from: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -87,7 +87,7 @@ describe('Agents API Routes', () => {
 
     // Mock successful agent creation
     jest
-      .spyOn(require('@/utils/supabase/server'), 'createClient')
+      .spyOn(require('&/supabase/server'), 'createClient')
       .mockReturnValueOnce({
         from: jest.fn().mockReturnThis(),
         insert: jest.fn().mockReturnThis(),

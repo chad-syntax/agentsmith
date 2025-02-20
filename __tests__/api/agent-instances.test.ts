@@ -1,7 +1,10 @@
 import { NextRequest, mockJson } from './test-utils';
 import { GET as getStatus } from '@/app/api/[apiVersion]/agents/instances/[instanceId]/status/route';
 import { GET as getHistory } from '@/app/api/[apiVersion]/agents/instances/[instanceId]/history/route';
-import { GET as getAction } from '@/app/api/[apiVersion]/agents/instances/[instanceId]/actions/[actionId]/route';
+import {
+  GET as getAction,
+  POST as executeAction,
+} from '@/app/api/[apiVersion]/agents/instances/[instanceId]/actions/[actionId]/route';
 import { GET as getReaction } from '@/app/api/[apiVersion]/agents/instances/[instanceId]/reactions/[reactionId]/route';
 import {
   __DUMMY_AGENT_INSTANCES__,
@@ -181,6 +184,79 @@ describe('Agent Instances API Routes', () => {
     await getReaction(req, { params });
     expect(mockJson).toHaveBeenCalledWith(
       { error: 'Reaction not found' },
+      { status: 404 }
+    );
+  });
+
+  it('should execute an action', async () => {
+    const actionParams = {
+      param1: 'value1',
+      param2: 'value2',
+    };
+
+    const req = NextRequest(
+      `http://localhost:3000/api/v1/agents/instances/${testInstance.id}/actions/${testAction.id}`,
+      {
+        method: 'POST',
+        body: JSON.stringify(actionParams),
+      }
+    );
+    const params = Promise.resolve({
+      apiVersion: 'v1',
+      instanceId: testInstance.id,
+      actionId: testAction.id,
+    });
+
+    await executeAction(req, { params });
+    expect(mockJson).toHaveBeenCalledWith(
+      expect.objectContaining({
+        success: true,
+        actionId: testAction.id,
+        timestamp: expect.any(String),
+        data: actionParams,
+      }),
+      { status: 200 }
+    );
+  });
+
+  it('should handle non-existent instance when executing action', async () => {
+    const req = NextRequest(
+      `http://localhost:3000/api/v1/agents/instances/non-existent/actions/${testAction.id}`,
+      {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }
+    );
+    const params = Promise.resolve({
+      apiVersion: 'v1',
+      instanceId: 'non-existent',
+      actionId: testAction.id,
+    });
+
+    await executeAction(req, { params });
+    expect(mockJson).toHaveBeenCalledWith(
+      { error: 'Instance not found' },
+      { status: 404 }
+    );
+  });
+
+  it('should handle non-existent action when executing', async () => {
+    const req = NextRequest(
+      `http://localhost:3000/api/v1/agents/instances/${testInstance.id}/actions/non-existent`,
+      {
+        method: 'POST',
+        body: JSON.stringify({}),
+      }
+    );
+    const params = Promise.resolve({
+      apiVersion: 'v1',
+      instanceId: testInstance.id,
+      actionId: 'non-existent',
+    });
+
+    await executeAction(req, { params });
+    expect(mockJson).toHaveBeenCalledWith(
+      { error: 'Action not found' },
       { status: 404 }
     );
   });

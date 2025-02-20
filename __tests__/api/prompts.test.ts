@@ -24,7 +24,7 @@ jest.mock('openai', () => {
 });
 
 // Mock Supabase client
-jest.mock('@/utils/supabase/server', () => ({
+jest.mock('&/supabase/server', () => ({
   createClient: jest.fn().mockResolvedValue({
     auth: {
       getUser: jest.fn().mockResolvedValue({

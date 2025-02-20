@@ -8,7 +8,7 @@ import {
 import { __DUMMY_AGENTS__, __DUMMY_AGENT_VERSIONS__ } from '@/app/constants';
 
 jest.mock('next/server');
-jest.mock('@/utils/supabase/server', () => ({
+jest.mock('&/supabase/server', () => ({
   createClient: jest.fn().mockReturnValue({
     from: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
@@ -63,7 +63,7 @@ describe('Agent Details API Routes', () => {
 
     // Mock versions response
     jest
-      .spyOn(require('@/utils/supabase/server'), 'createClient')
+      .spyOn(require('&/supabase/server'), 'createClient')
       .mockReturnValueOnce({
         from: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -124,7 +124,7 @@ describe('Agent Details API Routes', () => {
 
     // Mock no data response
     jest
-      .spyOn(require('@/utils/supabase/server'), 'createClient')
+      .spyOn(require('&/supabase/server'), 'createClient')
       .mockReturnValueOnce({
         from: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -155,7 +155,7 @@ describe('Agent Details API Routes', () => {
 
     // Mock version response
     jest
-      .spyOn(require('@/utils/supabase/server'), 'createClient')
+      .spyOn(require('&/supabase/server'), 'createClient')
       .mockReturnValueOnce({
         from: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -213,7 +213,7 @@ describe('Agent Details API Routes', () => {
 
     // Mock instances response
     jest
-      .spyOn(require('@/utils/supabase/server'), 'createClient')
+      .spyOn(require('&/supabase/server'), 'createClient')
       .mockReturnValueOnce({
         from: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
@@ -266,7 +266,7 @@ describe('Agent Details API Routes', () => {
 
     // Mock no data response
     jest
-      .spyOn(require('@/utils/supabase/server'), 'createClient')
+      .spyOn(require('&/supabase/server'), 'createClient')
       .mockReturnValueOnce({
         from: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
