@@ -8,3 +8,5 @@ create trigger trigger_updated_at_{table_name}
 before update on {table_name}
 for each row
 execute function set_updated_at();
+
+alter table {table_name} enable row level security;
