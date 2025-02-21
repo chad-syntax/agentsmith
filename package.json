@@ -6,7 +6,7 @@
     "start": "next start",
     "test": "jest",
     "test:watch": "jest --watch",
-    "typegen": "npx supabase gen types typescript --project-id \"jcnpgqhjaoppfhbkcnpv\" --schema public > database.types.ts"
+    "typegen": "./node_modules/.bin/supabase gen types typescript --project-id \"jcnpgqhjaoppfhbkcnpv\" --schema public > ./src/app/__generated__/supabase.types.ts"
   },
   "dependencies": {
     "@next/third-parties": "^15.1.6",
