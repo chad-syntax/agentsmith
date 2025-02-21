@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  __DUMMY_AGENT_INSTANCES__,
-  AgentInstance,
-} from '@/services/nextjs/app/constants';
+import { __DUMMY_AGENT_INSTANCES__, AgentInstance } from '@//app/constants';
 
 export async function GET(
   request: Request,

@@ -2,40 +2,22 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import { __DUMMY_PROMPTS__ } from '@/services/nextjs/app/constants';
+import { __DUMMY_PROMPTS__ } from '@//app/constants';
+import { highlight, languages } from 'prismjs';
+import 'prismjs/components/prism-markup-templating';
+import 'prismjs/components/prism-django';
+import 'prismjs/themes/prism.css';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { IconChevronRight } from '@tabler/icons-react';
 import { useState } from 'react';
-import { generateTypes } from '@/services/nextjs/app/actions/generate-types';
+import { generateTypes } from '@//app/actions/generate-types';
+import Editor from 'react-simple-code-editor';
 
 export default function PromptDetailPage() {
   const params = useParams();
   const promptId = params.id as string;
   const prompt = __DUMMY_PROMPTS__[promptId];
   const [isOpen, setIsOpen] = useState(true);
-
-  const editor = useEditor({
-    immediatelyRender: false,
-    parseOptions: {
-      preserveWhitespace: 'full',
-    },
-    extensions: [
-      StarterKit,
-      Placeholder.configure({
-        placeholder: 'Write your prompt here...',
-      }),
-    ],
-    content: prompt?.content || '',
-    editorProps: {
-      attributes: {
-        class:
-          'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none',
-      },
-    },
-  });
 
   const handleGenerateTypes = async () => {
     const response = await generateTypes();
@@ -87,7 +69,7 @@ export default function PromptDetailPage() {
                 Generate Types
               </button>
               <Link
-                href={`/app/prompts/edit/${prompt.id}`}
+                href={`/app/prompts/${prompt.id}/edit`}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
               >
                 Edit Prompt
@@ -96,7 +78,19 @@ export default function PromptDetailPage() {
           </div>
 
           <div className="bg-white rounded-lg border">
-            <EditorContent editor={editor} className="min-h-[500px] p-4" />
+            <Editor
+              value={prompt.content}
+              disabled
+              onValueChange={() => {}}
+              highlight={(code) => highlight(code, languages.django, 'django')}
+              padding={16}
+              style={{
+                fontFamily: '"Fira code", "Fira Mono", monospace',
+                fontSize: 14,
+                minHeight: '500px',
+              }}
+              className="w-full"
+            />
           </div>
         </div>
       </div>

@@ -5,7 +5,7 @@ import {
   __DUMMY_AGENT_INSTANCES__,
   __DUMMY_AGENT_VERSIONS__,
   __DUMMY_PROMPTS__,
-} from '@/services/nextjs/app/constants';
+} from '@//app/constants';
 import { createClient } from '&/supabase/server';
 import OpenAI from 'openai';
 

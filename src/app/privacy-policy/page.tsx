@@ -1,4 +1,4 @@
-import { PrivacyPolicyPage } from '@/services/nextjs/page-components/PrivacyPolicyPage';
+import { PrivacyPolicyPage } from '@//page-components/PrivacyPolicyPage';
 
 export default function PrivacyPolicy() {
   return <PrivacyPolicyPage />;

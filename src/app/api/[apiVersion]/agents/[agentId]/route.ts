@@ -3,7 +3,7 @@ import {
   __DUMMY_AGENTS__,
   __DUMMY_AGENT_VERSIONS__,
   __DUMMY_AGENT_INSTANCES__,
-} from '@/services/nextjs/app/constants';
+} from '@//app/constants';
 
 export async function GET(
   request: NextRequest,

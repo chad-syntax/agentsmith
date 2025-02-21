@@ -1,4 +1,4 @@
-import { AgentDetailPage } from '@/services/nextjs/page-components/AgentDetailPage';
+import { AgentDetailPage } from '@//page-components/AgentDetailPage';
 
 export default async function AgentDetail({
   params,

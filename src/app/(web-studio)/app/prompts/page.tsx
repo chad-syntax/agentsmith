@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { __DUMMY_PROMPTS__ } from '@/services/nextjs/app/constants';
-import { generateTypes } from '@/services/nextjs/app/actions/generate-types';
+import { __DUMMY_PROMPTS__ } from '@//app/constants';
+import { generateTypes } from '@//app/actions/generate-types';
 
 export default function PromptsPage() {
   return (
@@ -49,7 +49,7 @@ export default function PromptsPage() {
             <div className="flex justify-between items-start mb-2">
               <h2 className="text-xl font-semibold">{prompt.name}</h2>
               <Link
-                href={`/app/prompts/edit/${prompt.id}`}
+                href={`/app/prompts/${prompt.id}/edit`}
                 className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
               >
                 Edit

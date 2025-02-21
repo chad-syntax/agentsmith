@@ -1,4 +1,4 @@
-import { resetPasswordAction } from '@/services/nextjs/app/actions/auth';
+import { resetPasswordAction } from '@//app/actions/auth';
 import { FormMessage, Message } from '@/components/form-message';
 import { SubmitButton } from '@/components/submit-button';
 import { Input } from '@/components/ui/input';

@@ -1,4 +1,4 @@
-import { signOutAction } from '@/services/nextjs/app/actions/auth';
+import { signOutAction } from '@//app/actions/auth';
 import { hasEnvVars } from '&/supabase/check-env-vars';
 import Link from 'next/link';
 import { Badge } from './ui/badge';
