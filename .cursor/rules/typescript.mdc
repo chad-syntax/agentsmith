@@ -1,6 +1,6 @@
 ---
-description: 
-globs: *.tsx
+description: These rules are helpful for contrubuting to the front-end Nextjs code and the typescript code.
+globs: *.tsx, *.ts
 ---
 
 # Agentsmith tsx contributing rules for cursor AI
@@ -14,6 +14,7 @@ globs: *.tsx
 7. Only use tailwind css
 8. Each component file should have at most 2 react components, any more than that and it should be split up into multiple component files/folders.
 9. Any links to pages that exist under the web-studio should be prefixed with /app
+
 
 ¹ Exception for the Nextjs page.tsx files. They should only have one default function export.
 
