@@ -1,4 +1,4 @@
-name: Deploy Migrations to Production
+name: Push Supabase Migrations to Production
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  push_supabase_migrations_production:
     environment: Production
     runs-on: ubuntu-latest
 
