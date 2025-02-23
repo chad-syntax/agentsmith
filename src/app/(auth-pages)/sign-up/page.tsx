@@ -1,21 +1,17 @@
-import { signUpAction } from '@//app/actions/auth';
+import { signUpAction } from '@/app/actions/auth';
 import { FormMessage, Message } from '@/components/form-message';
 import { SubmitButton } from '@/components/submit-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { SmtpMessage } from '../smtp-message';
-// import { redirect } from 'next/navigation';
-
-// export default async function Signup() {
-//   // redirecting to home page for now, no sign up functionality yet
-//   redirect('/');
-// }
+import { signInWithGithub } from '@/app/providers/auth';
 
 export default async function Signup(props: {
   searchParams: Promise<Message>;
 }) {
   const searchParams = await props.searchParams;
+
   if ('message' in searchParams) {
     return (
       <div className="w-full flex-1 flex items-center h-screen sm:max-w-md justify-center gap-2 p-4">
@@ -26,6 +22,9 @@ export default async function Signup(props: {
 
   return (
     <>
+      <div>
+        <button onClick={signInWithGithub}>Sign in with Github</button>
+      </div>
       <form className="flex flex-col min-w-64 max-w-64 mx-auto">
         <h1 className="text-2xl font-medium">Sign up</h1>
         <p className="text-sm text text-foreground">

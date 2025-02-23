@@ -29,48 +29,71 @@ export const useAuth = () => {
 
 type AuthProviderProps = {
   children: React.ReactNode;
+  user?: User;
+  agentsmithUser?: AgentsmithUser;
 };
 
 export const AuthProvider = (props: AuthProviderProps) => {
-  const { children } = props;
+  const {
+    children,
+    user: initialUser,
+    agentsmithUser: initialAgentsmithUser,
+  } = props;
 
   const supabase = createClient();
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(initialUser ?? null);
+  const [isLoading, setIsLoading] = useState(!Boolean(initialUser));
+  const [isAuthenticated, setIsAuthenticated] = useState(Boolean(initialUser));
   const [agentsmithUser, setAgentsmithUser] = useState<AgentsmithUser | null>(
-    null
+    initialAgentsmithUser ?? null
   );
 
   useEffect(() => {
     const getUser = async () => {
       const {
-        data: { user },
+        data: { user: userFromSupabase },
       } = await supabase.auth.getUser();
 
-      setUser(user);
+      setUser(userFromSupabase);
       setIsAuthenticated(Boolean(user));
 
-      if (user) {
+      if (userFromSupabase) {
         const { data: agentsmithUser } = await supabase
           .from('agentsmith_users')
           .select('*')
-          .eq('auth_user_id', user.id)
+          .eq('auth_user_id', userFromSupabase.id)
           .single();
         setAgentsmithUser(agentsmithUser);
       }
 
       setIsLoading(false);
     };
-    getUser();
+
+    if (!user || !agentsmithUser) {
+      getUser();
+    }
   }, []);
 
   const authState = useMemo(
-    () => ({ user, isLoading, isAuthenticated, agentsmithUser }),
+    () => ({
+      user,
+      isLoading,
+      isAuthenticated,
+      agentsmithUser,
+    }),
     [user, isLoading, isAuthenticated, agentsmithUser]
   );
 
   return (
     <AuthContext.Provider value={authState}>{children}</AuthContext.Provider>
   );
+};
+
+export const signInWithGithub = async () => {
+  const supabase = createClient();
+
+  await supabase.auth.signInWithOAuth({
+    provider: 'github',
+    options: { redirectTo: `http://localhost:3000/auth/callback` },
+  });
 };

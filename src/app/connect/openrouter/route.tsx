@@ -81,8 +81,6 @@ export async function GET(request: Request) {
 
   const openrouterResponse = await response.json();
 
-  console.log('openrouterResponse', openrouterResponse);
-
   const { data, error } = await supabase
     .from('agentsmith_users')
     .update({
