@@ -1,0 +1,18 @@
+name: Supabase Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  supabase_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 1.11.4
+      - name: Supabase Start
+        run: supabase start
+      - name: Run Tests
+        run: supabase test db
