@@ -6,7 +6,8 @@
     "start": "next start",
     "test": "jest",
     "test:watch": "jest --watch",
-    "typegen": "./node_modules/.bin/supabase gen types typescript --project-id \"jcnpgqhjaoppfhbkcnpv\" --schema public > ./src/app/__generated__/supabase.types.ts"
+    "typegen-local": "./node_modules/.bin/supabase gen types typescript --local --schema public > ./src/app/__generated__/supabase.types.ts",
+    "typegen-dev": "./node_modules/.bin/supabase gen types typescript --project-id \"jcnpgqhjaoppfhbkcnpv\" --schema public > ./src/app/__generated__/supabase.types.ts"
   },
   "dependencies": {
     "@next/third-parties": "^15.1.6",
@@ -16,6 +17,7 @@
     "@radix-ui/react-label": "^2.1.0",
     "@radix-ui/react-navigation-menu": "^1.2.5",
     "@radix-ui/react-slot": "^1.1.0",
+    "@supabase-cache-helpers/postgrest-swr": "^1.10.6",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
     "@tabler/icons-react": "^3.29.0",

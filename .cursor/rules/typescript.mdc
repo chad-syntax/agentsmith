@@ -1,6 +1,7 @@
 ---
 description: These rules are helpful for contrubuting to the front-end Nextjs code and the typescript code.
 globs: *.tsx, *.ts
+alwaysApply: false
 ---
 
 # Agentsmith tsx contributing rules for cursor AI
@@ -14,6 +15,9 @@ globs: *.tsx, *.ts
 7. Only use tailwind css
 8. Each component file should have at most 2 react components, any more than that and it should be split up into multiple component files/folders.
 9. Any links to pages that exist under the web-studio should be prefixed with /app
+10. All functions that take more than 1 argument, should use an `options` syntax instead of adding many arguments. i.e. `const foo = (options: FooOptions) => {}` rather than `const foo = (bar: string, baz: string, quux: string) => {}`
+11. If the response for a function is an object, then it should be typed separately rather than inline. i.e. `const foo = (): FooResult => {}` instead of `const foo = (): { foo: string; bar: string; baz: string } => {}` 
+12. DO NOT edit any generated files within the `__generated__` folder.
 
 
 ¹ Exception for the Nextjs page.tsx files. They should only have one default function export.

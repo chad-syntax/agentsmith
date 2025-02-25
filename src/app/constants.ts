@@ -233,6 +233,13 @@ Provide:
   },
 } as const;
 
+export const USER_KEYS = {
+  OPENROUTER_API_KEY: 'OPENROUTER_API_KEY',
+  OPENROUTER_CODE_VERIFIER: 'OPENROUTER_CODE_VERIFIER',
+} as const;
+
+export type UserKeyType = keyof typeof USER_KEYS;
+
 export const AGENT_TRIGGERS = {
   AFTER_ANY_MESSAGE: 'AFTER_ANY_MESSAGE',
   BEFORE_ANY_MESSAGE: 'BEFORE_ANY_MESSAGE',

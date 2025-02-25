@@ -1,4 +1,4 @@
-create extension if not exists timescaledb;
+create extension if not exists timescaledb schema extensions;
 
 -- LLM Logs (TimescaleDB Table)
 create table llm_logs (

@@ -13,6 +13,6 @@ jobs:
         with:
           version: latest
       - name: Supabase Start
-        run: supabase start
+        run: supabase db start
       - name: Run Tests
         run: supabase test db

@@ -65,7 +65,7 @@ $$;
 select set_auth_user('pro_member@example.com');
 
 -- Create initial key for pro member
-insert into user_keys (user_id, key, vault_id)
+insert into user_keys (user_id, key, vault_secret_id)
 select 
     id,
     'test-key',
@@ -93,7 +93,7 @@ select is_empty(
 -- test 3: user can insert their own key
 select set_auth_user('pro_member@example.com');
 prepare insert_key as
-insert into user_keys (user_id, key, vault_id)
+insert into user_keys (user_id, key, vault_secret_id)
 select 
     id,
     'new-test-key',

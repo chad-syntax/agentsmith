@@ -1,11 +1,13 @@
 'use client';
 
-import { useAuth } from '@/app/providers/auth';
-import { InfoIcon } from 'lucide-react';
 import Link from 'next/link';
+import { useQuery } from '@supabase-cache-helpers/postgrest-swr';
+import { useAuth } from '@/app/providers/auth';
 import { signOutAction } from '@/app/actions/auth';
 import { connectOpenrouter } from '@/app/actions/openrouter';
 import FetchDataSteps from '@/components/tutorial/fetch-data-steps';
+import { createClient } from '&/supabase/client';
+import { USER_KEYS } from '@/app/constants';
 
 export const AccountPage = () => {
   const { user, agentsmithUser, isLoading } = useAuth();
@@ -14,16 +16,33 @@ export const AccountPage = () => {
     return <div>Loading...</div>;
   }
 
+  if (!agentsmithUser) {
+    return (
+      <div>No agentsmith user found, please sign out and sign in again.</div>
+    );
+  }
+
+  const { data: userData, error } = useQuery(
+    createClient()
+      .from('agentsmith_users')
+      .select('id, user_keys(id, key, vault_secret_id)')
+      .eq('id', agentsmithUser.id)
+      .single()
+  );
+
+  const hasOpenrouterKey = userData?.user_keys.some(
+    (userKey) => userKey.key === USER_KEYS.OPENROUTER_API_KEY
+  );
+
   return (
     <div className="flex-1 w-full flex flex-col gap-12">
-      <div className="w-full">
-        <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">
-          <InfoIcon size="16" strokeWidth={2} />
-          This is a protected page that you can only see as an authenticated
-          user
+      {error ? (
+        <div className="flex flex-col gap-2 items-start">
+          <div className="border border-error p-6 text-sm text-red-600">
+            Error fetching user data: {error.message}
+          </div>
         </div>
-      </div>
-      {!agentsmithUser?.openrouter_api_key ? (
+      ) : !hasOpenrouterKey ? (
         <div className="flex flex-col gap-2 items-start">
           <button
             onClick={connectOpenrouter}

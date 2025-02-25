@@ -8,7 +8,7 @@ select
 from agentsmith_users;
 
 -- Create user key records linking users to their secrets
-insert into user_keys (user_id, key, vault_id)
+insert into user_keys (user_id, key, vault_secret_id)
 select
     au.id,
     vs.name,
