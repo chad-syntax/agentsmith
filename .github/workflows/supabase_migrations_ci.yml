@@ -18,6 +18,9 @@ jobs:
       - name: Start Supabase local development setup
         run: supabase db start
 
+      - name: Run Tests
+        run: supabase test db
+
       - name: Verify generated types are checked in
         run: |
           supabase gen types typescript --local > types.gen.ts
