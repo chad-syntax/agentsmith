@@ -1,11 +1,11 @@
-name: Supabase Migrations Check
+name: Supabase Tests
 
 on:
   pull_request:
   workflow_dispatch:
 
 jobs:
-  supabase_migrations_check:
+  supabase_tests:
     runs-on: ubuntu-latest
 
     steps:
