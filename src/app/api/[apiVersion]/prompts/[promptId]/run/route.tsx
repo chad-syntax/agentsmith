@@ -3,7 +3,8 @@ import OpenAI from 'openai';
 import nunjucks from 'nunjucks/browser/nunjucks';
 import { createClient } from '~/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { __DUMMY_PROMPTS__ } from '@/app/constants';
+import { __DUMMY_PROMPTS__, USER_KEYS } from '@/app/constants';
+import { createVaultService } from '~/lib/vault';
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
@@ -85,7 +86,12 @@ export async function POST(
     );
   }
 
-  if (!agentsmithUser.openrouter_api_key) {
+  // Create vault service to get the OpenRouter API key
+  const vaultService = await createVaultService();
+  const { value: openrouterApiKey, error: keyError } =
+    await vaultService.getUserKeySecret(USER_KEYS.OPENROUTER_API_KEY);
+
+  if (keyError || !openrouterApiKey) {
     return NextResponse.json(
       { error: 'OpenRouter API key not found' },
       { status: 404 }
@@ -94,7 +100,7 @@ export async function POST(
 
   const openai = new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
-    apiKey: agentsmithUser.openrouter_api_key,
+    apiKey: openrouterApiKey,
     defaultHeaders: {
       'HTTP-Referer': 'https://agentsmith.app',
       'X-Title': 'Agentsmith',

@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { __DUMMY_PROMPTS__ } from '@//app/constants';
-import { generateTypes } from '@//app/actions/generate-types';
+import { __DUMMY_PROMPTS__ } from '@/app/constants';
+import { generateTypes } from '@/app/actions/generate-types';
 
 export default function PromptsPage() {
   return (

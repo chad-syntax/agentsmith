@@ -6,7 +6,7 @@ import {
   __DUMMY_AGENTS__,
   __DUMMY_AGENT_VERSIONS__,
   __DUMMY_PROMPTS__,
-} from '@//app/constants';
+} from '@/app/constants';
 
 const getNextVersion = (currentVersion: string) => {
   const [major, minor, patch] = currentVersion.split('.').map(Number);

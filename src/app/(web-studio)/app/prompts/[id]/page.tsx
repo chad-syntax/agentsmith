@@ -2,22 +2,35 @@
 
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { __DUMMY_PROMPTS__ } from '@//app/constants';
+import { __DUMMY_PROMPTS__ } from '@/app/constants';
 import { highlight, languages } from 'prismjs';
 import 'prismjs/components/prism-markup-templating';
 import 'prismjs/components/prism-django';
 import 'prismjs/themes/prism.css';
 import * as Collapsible from '@radix-ui/react-collapsible';
-import { IconChevronRight } from '@tabler/icons-react';
+import { IconChevronRight, IconPlayerPlay } from '@tabler/icons-react';
 import { useState } from 'react';
-import { generateTypes } from '@//app/actions/generate-types';
+import { generateTypes } from '@/app/actions/generate-types';
 import Editor from 'react-simple-code-editor';
+
+type RunResponseData = {
+  completion: {
+    choices: Array<{
+      message: {
+        content: string;
+      };
+    }>;
+  };
+};
 
 export default function PromptDetailPage() {
   const params = useParams();
   const promptId = params.id as string;
   const prompt = __DUMMY_PROMPTS__[promptId];
   const [isOpen, setIsOpen] = useState(true);
+  const [isRunning, setIsRunning] = useState(false);
+  const [runResult, setRunResult] = useState<string | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
 
   const handleGenerateTypes = async () => {
     const response = await generateTypes();
@@ -30,6 +43,48 @@ export default function PromptDetailPage() {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+  };
+
+  const handleTestRun = async () => {
+    if (!prompt) return;
+
+    // Create dummy data based on the prompt's variables
+    const dummyVariables: Record<string, string> = {};
+    prompt.variables.forEach((variable) => {
+      dummyVariables[variable.name] = `Sample ${variable.name} value`;
+    });
+
+    setIsRunning(true);
+    setRunResult(null);
+    setRunError(null);
+
+    try {
+      const response = await fetch(`/api/v1/prompts/${promptId}/run`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ variables: dummyVariables }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to run prompt');
+      }
+
+      const data: RunResponseData = await response.json();
+      const result =
+        data.completion.choices[0]?.message.content || 'No response content';
+
+      setRunResult(result);
+    } catch (error) {
+      console.error('Error running prompt:', error);
+      setRunError(
+        error instanceof Error ? error.message : 'Unknown error occurred'
+      );
+    } finally {
+      setIsRunning(false);
+    }
   };
 
   if (!prompt) {
@@ -68,6 +123,20 @@ export default function PromptDetailPage() {
               >
                 Generate Types
               </button>
+              <button
+                onClick={handleTestRun}
+                disabled={isRunning}
+                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center gap-2"
+              >
+                {isRunning ? (
+                  'Running...'
+                ) : (
+                  <>
+                    <IconPlayerPlay size={16} />
+                    Test Run
+                  </>
+                )}
+              </button>
               <Link
                 href={`/app/prompts/${prompt.id}/edit`}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
@@ -92,6 +161,19 @@ export default function PromptDetailPage() {
               className="w-full"
             />
           </div>
+
+          {(runResult || runError) && (
+            <div className="mt-6">
+              <h2 className="text-xl font-semibold mb-3">Test Run Result</h2>
+              <div className="bg-white rounded-lg border p-4">
+                {runError ? (
+                  <div className="text-red-500">{runError}</div>
+                ) : (
+                  <div className="whitespace-pre-wrap">{runResult}</div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

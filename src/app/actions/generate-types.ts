@@ -5,7 +5,7 @@ import {
   __DUMMY_PROMPTS__,
   __DUMMY_AGENTS__,
   __DUMMY_AGENT_VERSIONS__,
-} from '@//app/constants';
+} from '@/app/constants';
 
 export async function generateTypes() {
   // Initialize project and create source file

@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { AgentInstanceDetail } from '@//page-components/AgentInstanceDetail';
+import { AgentInstanceDetail } from '@/page-components/AgentInstanceDetail';
 
 export default function AgentInstancePage() {
   const params = useParams();

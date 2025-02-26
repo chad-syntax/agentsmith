@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   // Get the code verifier from the user's vault instead of environment variable
   const vaultService = await createVaultService();
   const { value: codeVerifier, error: codeVerifierError } =
-    await vaultService.getUserKey(USER_KEYS.OPENROUTER_CODE_VERIFIER);
+    await vaultService.getUserKeySecret(USER_KEYS.OPENROUTER_CODE_VERIFIER);
 
   if (codeVerifierError || !codeVerifier) {
     const errorMessage = codeVerifierError || 'No code verifier found';

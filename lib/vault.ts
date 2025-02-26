@@ -170,9 +170,9 @@ export class VaultService {
   }
 
   /**
-   * Gets a user key by its name
+   * Gets a user key's secret by its name
    */
-  async getUserKey(key: string): Promise<GetUserKeyResult> {
+  async getUserKeySecret(key: string): Promise<GetUserKeyResult> {
     try {
       const { data: userData, error: userError } =
         await this.supabase.auth.getUser();
@@ -255,7 +255,7 @@ export const getOrCreateOpenrouterCodeVerifier =
     const vaultService = await createVaultService();
 
     // Try to get existing code verifier
-    const { value, error } = await vaultService.getUserKey(
+    const { value, error } = await vaultService.getUserKeySecret(
       USER_KEYS.OPENROUTER_CODE_VERIFIER
     );
 
