@@ -19,7 +19,7 @@ export const LogsPage = (props: LogsPageProps) => {
     return (
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Logs</h1>
-        <div className="bg-white rounded-lg shadow p-6 text-center">
+        <div className="bg-white rounded-lg shadow-sm p-6 text-center">
           <p className="text-gray-500">
             No projects found. Create a project first.
           </p>
@@ -37,11 +37,11 @@ export const LogsPage = (props: LogsPageProps) => {
       </div>
 
       {logs.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
+        <div className="bg-white rounded-lg shadow-sm p-6 text-center">
           <p className="text-gray-500">No logs found for this project.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>

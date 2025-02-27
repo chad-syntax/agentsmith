@@ -1,9 +1,5 @@
 import { createClient } from '&/supabase/server';
 
-// TODO:
-// so if we are going to be connecting openrouter to the organization and not the project or the user, then we need to adjust the `user_keys`
-// table because we would no longer need it, we instead need like an `organization_keys` table.
-
 export async function getOnboardingData() {
   const supabase = await createClient();
   const {

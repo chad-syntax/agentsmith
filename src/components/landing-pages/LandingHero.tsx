@@ -45,7 +45,7 @@ export const LandingHero = (props: LandingHeroProps) => {
       <HeroHeader />
       <div className="flex justify-start items-center md:items-start flex-col lg:flex-row">
         <div className="flex flex-col">
-          <h1 className="max-w-[400px] md:max-w-none text-5xl md:text-8xl font-bold leading-tight mb-10 leading-[1] md:leading-[90px]">
+          <h1 className="max-w-[400px] md:max-w-none text-5xl md:text-8xl font-bold leading-tight mb-10 leading-none md:leading-[90px]">
             AI AGENT
             <br />
             DEVELOPMENT
@@ -54,7 +54,7 @@ export const LandingHero = (props: LandingHeroProps) => {
           </h1>
           <button
             onClick={handleWaitlistClicked}
-            className="bg-gradient-to-r from-[#0198B2] via-[#27AC96] to-[#7DD957] text-white px-8 py-4 text-2xl md:text-3xl mb-10"
+            className="bg-linear-to-r from-[#0198B2] via-[#27AC96] to-[#7DD957] text-white px-8 py-4 text-2xl md:text-3xl mb-10"
           >
             <a href="#EMAIL">Secure a spot on the waitlist</a>
           </button>
@@ -69,7 +69,7 @@ export const LandingHero = (props: LandingHeroProps) => {
               <div
                 className={twMerge(
                   alphaClubClicked ? 'opacity-1' : 'opacity-0',
-                  'p-2 transition-opacity duration-300 absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-[calc(100%+16px)] bg-background border border-foreground shadow-xs z-10'
+                  'p-2 transition-opacity duration-300 absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-[calc(100%+16px)] bg-background border border-foreground shadow-2xs z-10'
                 )}
               >
                 <span className="text-sm text-foreground">Coming Soon!</span>

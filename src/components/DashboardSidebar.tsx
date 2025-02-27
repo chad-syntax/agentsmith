@@ -3,27 +3,49 @@
 import Link from 'next/link';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { useState } from 'react';
-import { IconPrompt, IconMenu2, IconUser, IconList } from '@tabler/icons-react';
+import {
+  IconPrompt,
+  IconMenu2,
+  IconUser,
+  IconList,
+  IconHome,
+} from '@tabler/icons-react';
 import { usePathname } from 'next/navigation';
 
-export const DashboardSidebar = () => {
+type DashboardSidebarProps = {
+  hasOnboarded: boolean;
+};
+
+export const DashboardSidebar = (props: DashboardSidebarProps) => {
+  const { hasOnboarded } = props;
+
   const [isOpen, setIsOpen] = useState(true);
 
   const pathname = usePathname();
 
   const navItems = [
     {
-      name: 'Prompts',
-      href: '/studio/prompts',
-      icon: IconPrompt,
-      active: pathname.startsWith('/studio/prompts'),
+      name: 'Home',
+      href: '/studio',
+      icon: IconHome,
+      active: pathname === '/studio',
     },
-    {
-      name: 'Logs',
-      href: '/studio/logs',
-      icon: IconList,
-      active: pathname.startsWith('/studio/logs'),
-    },
+    ...(hasOnboarded
+      ? [
+          {
+            name: 'Prompts',
+            href: '/studio/prompts',
+            icon: IconPrompt,
+            active: pathname.startsWith('/studio/prompts'),
+          },
+          {
+            name: 'Logs',
+            href: '/studio/logs',
+            icon: IconList,
+            active: pathname.startsWith('/studio/logs'),
+          },
+        ]
+      : []),
     {
       name: 'Account',
       href: '/studio/account',

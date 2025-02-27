@@ -59,7 +59,7 @@ export const ExecutablePrompt = ({
             </label>
             {variable.type === 'string' && (
               <textarea
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 value={inputValues[variable.name] || ''}
                 onChange={(e) =>
                   setInputValues((prev) => ({
@@ -73,7 +73,7 @@ export const ExecutablePrompt = ({
             {variable.type === 'number' && (
               <input
                 type="number"
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 value={inputValues[variable.name] || ''}
                 onChange={(e) =>
                   setInputValues((prev) => ({
@@ -85,7 +85,7 @@ export const ExecutablePrompt = ({
             )}
             {variable.type === 'boolean' && (
               <select
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 value={inputValues[variable.name] || ''}
                 onChange={(e) =>
                   setInputValues((prev) => ({

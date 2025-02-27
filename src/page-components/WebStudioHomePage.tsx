@@ -64,7 +64,7 @@ export const WebStudioHomePage = (props: WebStudioPageProps) => {
           </label>
           <div className="relative">
             <select
-              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-hidden focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               value={selectedOrg?.toString() || ''}
               onChange={(e) => setSelectedOrg(parseInt(e.target.value))}
             >
@@ -89,7 +89,7 @@ export const WebStudioHomePage = (props: WebStudioPageProps) => {
           </label>
           <div className="relative">
             <select
-              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+              className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-hidden focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
               value={selectedProject?.toString() || ''}
               onChange={(e) => setSelectedProject(parseInt(e.target.value))}
             >
@@ -155,7 +155,7 @@ export const WebStudioHomePage = (props: WebStudioPageProps) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl">
           <Link
             href="/studio/prompts"
-            className="aspect-square bg-white rounded-xl shadow-sm hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
+            className="aspect-square bg-white rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
           >
             <div className="flex items-center justify-center flex-1">
               <IconPrompt className="w-10 h-10 text-blue-500" />
@@ -170,7 +170,7 @@ export const WebStudioHomePage = (props: WebStudioPageProps) => {
 
           <Link
             href="/studio/logs"
-            className="aspect-square bg-white rounded-xl shadow-sm hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
+            className="aspect-square bg-white rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
           >
             <div className="flex items-center justify-center flex-1">
               <IconList className="w-10 h-10 text-orange-500" />
@@ -185,7 +185,7 @@ export const WebStudioHomePage = (props: WebStudioPageProps) => {
 
           <Link
             href="/studio/account"
-            className="aspect-square bg-white rounded-xl shadow-sm hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
+            className="aspect-square bg-white rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
           >
             <div className="flex items-center justify-center flex-1">
               <IconUser className="w-10 h-10 text-green-500" />

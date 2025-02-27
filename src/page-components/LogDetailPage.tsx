@@ -38,7 +38,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
           </Link>
           <h1 className="text-2xl font-bold">Log Details</h1>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow text-center">
+        <div className="bg-white p-6 rounded-lg shadow-sm text-center">
           <p className="text-gray-500">Log not found.</p>
         </div>
       </div>
@@ -59,7 +59,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
       </div>
 
       <div className="space-y-6">
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Overview</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -103,14 +103,14 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
           </div>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Variables</h2>
           <pre className="bg-gray-50 p-4 rounded-md overflow-auto text-sm">
             {JSON.stringify(log.prompt_variables, null, 2)}
           </pre>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-6 rounded-lg shadow-sm">
           <h2 className="text-lg font-semibold mb-4">Raw Input</h2>
           <pre className="bg-gray-50 p-4 rounded-md overflow-auto text-sm">
             {JSON.stringify(log.raw_input, null, 2)}
@@ -118,7 +118,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
         </div>
 
         {log.raw_output && (
-          <div className="bg-white p-6 rounded-lg shadow">
+          <div className="bg-white p-6 rounded-lg shadow-sm">
             <h2 className="text-lg font-semibold mb-4">Raw Output</h2>
             <pre className="bg-gray-50 p-4 rounded-md overflow-auto text-sm">
               {JSON.stringify(log.raw_output, null, 2)}

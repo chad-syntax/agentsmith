@@ -16,7 +16,7 @@ export const Header = () => {
 
   return (
     <header className="flex justify-center w-full border-b border-foreground/10">
-      <div className="flex items-center justify-between max-w-screen-xl w-full p-4">
+      <div className="flex items-center justify-between max-w-(--breakpoint-xl) w-full p-4">
         <Link href="/">
           <h3 className="text-2xl font-bold">Agentsmith</h3>
         </Link>

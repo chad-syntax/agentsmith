@@ -1,68 +1,93 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --success: 142 72% 29%;
-    --success-foreground: 0 0% 98%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 9%;
-    --info: 214 80% 56%;
-    --info-foreground: 0 0% 98%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
+@theme {
+  /* Base colors */
+  --color-background: #fafafa;
+  --color-background-dark: #0d0d0d;
+  --color-foreground: #0d0d0d;
+  --color-foreground-dark: #e6e6e6;
 
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
+  /* Primary colors */
+  --color-primary: #0077ff;
+  --color-primary-dark: #00ffff;
+  --color-primary-foreground: #ffffff;
+  --color-primary-foreground-dark: #1a1a1a;
+
+  /* Secondary colors */
+  --color-secondary: #d6005a;
+  --color-secondary-dark: #ff007f;
+  --color-secondary-foreground: #ffffff;
+  --color-secondary-foreground-dark: #1a1a1a;
+
+  /* Success colors */
+  --color-success: #008f39;
+  --color-success-dark: #00ff7f;
+  --color-success-foreground: #ffffff;
+  --color-success-foreground-dark: #1a1a1a;
+
+  /* Warning colors */
+  --color-warning: #d48900;
+  --color-warning-dark: #ffbf00;
+  --color-warning-foreground: #ffffff;
+  --color-warning-foreground-dark: #1a1a1a;
+
+  /* Info colors */
+  --color-info: #0077ff;
+  --color-info-dark: #00ffff;
+  --color-info-foreground: #ffffff;
+  --color-info-foreground-dark: #1a1a1a;
+
+  /* Destructive colors */
+  --color-destructive: #d70000;
+  --color-destructive-dark: #ff3131;
+  --color-destructive-foreground: #ffffff;
+  --color-destructive-foreground-dark: #1a1a1a;
+
+  /* Muted colors */
+  --color-muted: #e5e5e5;
+  --color-muted-dark: #333333;
+  --color-muted-foreground: #4d4d4d;
+  --color-muted-foreground-dark: #b3b3b3;
+
+  /* Accent colors */
+  --color-accent: #d48900;
+  --color-accent-dark: #ffbf00;
+  --color-accent-foreground: #ffffff;
+  --color-accent-foreground-dark: #1a1a1a;
+
+  /* Border colors */
+  --color-border: #d1d1d1;
+  --color-border-dark: #333333;
+
+  /* Input colors */
+  --color-input: #cccccc;
+  --color-input-dark: #4d4d4d;
+
+  /* Ring colors */
+  --color-ring: #0077ff;
+  --color-ring-dark: #00ffff;
+
+  /* Popover colors */
+  --color-popover: #ffffff;
+  --color-popover-dark: #1a1a1a;
+  --color-popover-foreground: #1a1a1a;
+  --color-popover-foreground-dark: #e6e6e6;
+
+  /* Card colors */
+  --color-card: #ffffff;
+  --color-card-dark: #1a1a1a;
+  --color-card-foreground: #1a1a1a;
+  --color-card-foreground-dark: #e6e6e6;
+
+  /* Border radius */
+  --radius: 0.5rem;
+  --radius-sm: calc(var(--radius) - 0.25rem);
+  --radius-md: calc(var(--radius) - 0.125rem);
+  --radius-lg: calc(var(--radius) + 0.125rem);
+
+  /* Container settings */
+  --container-padding: 2rem;
+  --container-max-width-2xl: 1400px;
 }
 
 @layer base {
@@ -71,6 +96,37 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Dark mode variant */
+@variant dark (&:is(.dark *));
+
+/* Animations */
+@layer utilities {
+  .animate-accordion-up {
+    animation: accordion-up 0.2s ease-out;
+  }
+  .animate-accordion-down {
+    animation: accordion-down 0.2s ease-out;
+  }
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--radix-accordion-content-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--radix-accordion-content-height);
+  }
+  to {
+    height: 0;
   }
 }
 
