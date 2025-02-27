@@ -1,6 +1,8 @@
+import { getOnboardingData } from '&/onboarding';
 import { WebStudioHomePage } from '@/page-components/WebStudioHomePage';
 
-export default function WebStudioHome() {
-  // In the future, any data fetching needed for this page would go here
-  return <WebStudioHomePage />;
+export default async function WebStudioHome() {
+  const onboardingData = await getOnboardingData();
+
+  return <WebStudioHomePage onboardingData={onboardingData} />;
 }
