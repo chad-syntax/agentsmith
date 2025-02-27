@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import type { PromptVariable } from '@/app/constants';
+import { Database } from '@/app/__generated__/supabase.types';
+
+type PromptVariable = {
+  name: string;
+  type: Database['public']['Enums']['variable_type'] | string;
+  required: boolean;
+};
 
 type ExecutablePromptProps = {
   name: string;

@@ -3,12 +3,7 @@
 import Link from 'next/link';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { useState } from 'react';
-import {
-  IconPrompt,
-  IconRobot,
-  IconMenu2,
-  IconUser,
-} from '@tabler/icons-react';
+import { IconPrompt, IconMenu2, IconUser, IconList } from '@tabler/icons-react';
 import { usePathname } from 'next/navigation';
 
 export const DashboardSidebar = () => {
@@ -19,21 +14,21 @@ export const DashboardSidebar = () => {
   const navItems = [
     {
       name: 'Prompts',
-      href: '/app/prompts',
+      href: '/studio/prompts',
       icon: IconPrompt,
-      active: pathname.startsWith('/app/prompts'),
+      active: pathname.startsWith('/studio/prompts'),
     },
     {
-      name: 'Agents',
-      href: '/app/agents',
-      icon: IconRobot,
-      active: pathname.startsWith('/app/agents'),
+      name: 'Logs',
+      href: '/studio/logs',
+      icon: IconList,
+      active: pathname.startsWith('/studio/logs'),
     },
     {
       name: 'Account',
-      href: '/app/account',
+      href: '/studio/account',
       icon: IconUser,
-      active: pathname.startsWith('/app/account'),
+      active: pathname.startsWith('/studio/account'),
     },
   ];
 

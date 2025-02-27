@@ -1,8 +1,6 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
-import { __DUMMY_PROMPTS__ } from '@/app/constants';
 import { highlight, languages } from 'prismjs';
 import 'prismjs/components/prism-markup-templating';
 import 'prismjs/components/prism-django';
@@ -12,6 +10,8 @@ import { IconChevronRight, IconPlayerPlay } from '@tabler/icons-react';
 import { useState } from 'react';
 import { generateTypes } from '@/app/actions/generate-types';
 import Editor from 'react-simple-code-editor';
+import { getPromptById, getLatestPromptVersion } from '@/lib/prompts';
+import { Modal } from '@/components/ui/modal';
 
 type RunResponseData = {
   completion: {
@@ -23,14 +23,20 @@ type RunResponseData = {
   };
 };
 
-export default function PromptDetailPage() {
-  const params = useParams();
-  const promptId = params.id as string;
-  const prompt = __DUMMY_PROMPTS__[promptId];
+type PromptDetailPageProps = {
+  prompt: NonNullable<Awaited<ReturnType<typeof getPromptById>>>;
+  latestVersion: NonNullable<ReturnType<typeof getLatestPromptVersion>>;
+};
+
+export const PromptDetailPage = (props: PromptDetailPageProps) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
   const [runResult, setRunResult] = useState<string | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
+  const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+  const [testVariables, setTestVariables] = useState<Record<string, string>>(
+    {}
+  );
 
   const handleGenerateTypes = async () => {
     const response = await generateTypes();
@@ -46,25 +52,17 @@ export default function PromptDetailPage() {
   };
 
   const handleTestRun = async () => {
-    if (!prompt) return;
-
-    // Create dummy data based on the prompt's variables
-    const dummyVariables: Record<string, string> = {};
-    prompt.variables.forEach((variable) => {
-      dummyVariables[variable.name] = `Sample ${variable.name} value`;
-    });
-
     setIsRunning(true);
     setRunResult(null);
     setRunError(null);
 
     try {
-      const response = await fetch(`/api/v1/prompts/${promptId}/run`, {
+      const response = await fetch(`/api/v1/prompts/${props.prompt.uuid}/run`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ variables: dummyVariables }),
+        body: JSON.stringify({ variables: testVariables }),
       });
 
       if (!response.ok) {
@@ -84,22 +82,19 @@ export default function PromptDetailPage() {
       );
     } finally {
       setIsRunning(false);
+      setIsTestModalOpen(false);
     }
   };
 
-  if (!prompt) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Prompt Not Found</h1>
-        <p className="text-gray-600 mb-4">
-          The prompt you're looking for doesn't exist.
-        </p>
-        <Link href="/app/prompts" className="text-blue-500 hover:text-blue-600">
-          ← Back to Prompts
-        </Link>
-      </div>
-    );
-  }
+  const openTestModal = () => {
+    // Initialize with empty values or default sample values
+    const initialVariables: Record<string, string> = {};
+    props.latestVersion.prompt_variables.forEach((variable) => {
+      initialVariables[variable.name] = '';
+    });
+    setTestVariables(initialVariables);
+    setIsTestModalOpen(true);
+  };
 
   return (
     <div className="flex h-[calc(100vh-64px)]">
@@ -107,7 +102,7 @@ export default function PromptDetailPage() {
         <div className="p-6">
           <div className="mb-6">
             <Link
-              href="/app/prompts"
+              href="/studio/prompts"
               className="text-blue-500 hover:text-blue-600"
             >
               ← Back to Prompts
@@ -115,7 +110,7 @@ export default function PromptDetailPage() {
           </div>
 
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">{prompt.name}</h1>
+            <h1 className="text-2xl font-bold">{props.prompt.name}</h1>
             <div className="space-x-4">
               <button
                 onClick={handleGenerateTypes}
@@ -124,7 +119,7 @@ export default function PromptDetailPage() {
                 Generate Types
               </button>
               <button
-                onClick={handleTestRun}
+                onClick={openTestModal}
                 disabled={isRunning}
                 className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center gap-2"
               >
@@ -138,7 +133,7 @@ export default function PromptDetailPage() {
                 )}
               </button>
               <Link
-                href={`/app/prompts/${prompt.id}/edit`}
+                href={`/studio/prompts/${props.prompt.uuid}/edit`}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
               >
                 Edit Prompt
@@ -148,7 +143,7 @@ export default function PromptDetailPage() {
 
           <div className="bg-white rounded-lg border">
             <Editor
-              value={prompt.content}
+              value={props.latestVersion.content}
               disabled
               onValueChange={() => {}}
               highlight={(code) => highlight(code, languages.django, 'django')}
@@ -198,8 +193,8 @@ export default function PromptDetailPage() {
         </div>
         <Collapsible.Content className="p-4">
           <div className="space-y-4">
-            {prompt.variables.map((variable, index) => (
-              <div key={index} className="bg-white p-4 rounded-lg border">
+            {props.latestVersion.prompt_variables.map((variable) => (
+              <div key={variable.id} className="bg-white p-4 rounded-lg border">
                 <div className="font-medium mb-2">{variable.name}</div>
                 <div className="text-sm text-gray-500">
                   <p>Type: {variable.type}</p>
@@ -210,6 +205,44 @@ export default function PromptDetailPage() {
           </div>
         </Collapsible.Content>
       </Collapsible.Root>
+
+      <Modal
+        isOpen={isTestModalOpen}
+        onClose={() => setIsTestModalOpen(false)}
+        title="Test Prompt"
+      >
+        <div className="space-y-4">
+          {props.latestVersion.prompt_variables.map((variable) => (
+            <div key={variable.id}>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                {variable.name}
+                {variable.required && <span className="text-red-500">*</span>}
+              </label>
+              <input
+                type={variable.type === 'NUMBER' ? 'number' : 'text'}
+                value={testVariables[variable.name] || ''}
+                onChange={(e) => {
+                  setTestVariables({
+                    ...testVariables,
+                    [variable.name]: e.target.value,
+                  });
+                }}
+                className="w-full px-3 py-2 border rounded-md"
+              />
+            </div>
+          ))}
+
+          <div className="mt-6">
+            <button
+              onClick={handleTestRun}
+              disabled={isRunning}
+              className="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+            >
+              {isRunning ? 'Running...' : 'Run Test'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
-}
+};

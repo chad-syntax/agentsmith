@@ -27,4 +27,32 @@ create trigger trigger_updated_at_llm_logs
     for each row
     execute function set_updated_at();
 
+-- Enable Row Level Security
+alter table llm_logs enable row level security;
+
+-- Create policy for read operations
+create policy llm_logs_project_access_policy
+    on llm_logs
+    for select
+    using (has_project_access(project_id));
+
+-- Create policy for insert operations
+create policy llm_logs_project_insert_policy
+    on llm_logs
+    for insert
+    with check (has_project_access(project_id));
+
+-- Create policy for update operations
+create policy llm_logs_project_update_policy
+    on llm_logs
+    for update
+    using (has_project_access(project_id))
+    with check (has_project_access(project_id));
+
+-- Create policy for delete operations (explicitly deny all deletes)
+create policy llm_logs_project_delete_policy
+    on llm_logs
+    for delete
+    using (false);
+
 select create_hypertable('llm_logs', 'created_at');

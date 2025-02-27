@@ -39,14 +39,14 @@ export const updateSession = async (request: NextRequest) => {
   const { error } = await supabase.auth.getUser();
 
   // protected routes
-  if (request.nextUrl.pathname.startsWith('/app') && error) {
+  if (request.nextUrl.pathname.startsWith('/studio') && error) {
     console.log('redirecting to sign-in because user.error');
     return NextResponse.redirect(new URL('/sign-in', request.url));
   }
 
   if (request.nextUrl.pathname === '/' && !error) {
     console.log('redirecting to app because !user.error');
-    return NextResponse.redirect(new URL('/app', request.url));
+    return NextResponse.redirect(new URL('/studio', request.url));
   }
 
   return response;

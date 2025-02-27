@@ -5,7 +5,6 @@ import { useQuery } from '@supabase-cache-helpers/postgrest-swr';
 import { useAuth } from '@/app/providers/auth';
 import { signOutAction } from '@/app/actions/auth';
 import { connectOpenrouter } from '@/app/actions/openrouter';
-import FetchDataSteps from '@/components/tutorial/fetch-data-steps';
 import { createClient } from '&/supabase/client';
 import { USER_KEYS } from '@/app/constants';
 
@@ -68,7 +67,7 @@ export const AccountPage = () => {
       </div>
       <div className="flex flex-col gap-2 items-start">
         <Link
-          href="/app/account/reset-password"
+          href="/studio/account/reset-password"
           className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
         >
           Reset Password
@@ -87,10 +86,6 @@ export const AccountPage = () => {
         <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
           {JSON.stringify(agentsmithUser, null, 2)}
         </pre>
-      </div>
-      <div>
-        <h2 className="font-bold text-2xl mb-4">Next steps</h2>
-        <FetchDataSteps />
       </div>
     </div>
   );

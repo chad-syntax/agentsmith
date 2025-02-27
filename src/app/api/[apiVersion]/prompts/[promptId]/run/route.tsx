@@ -3,8 +3,10 @@ import OpenAI from 'openai';
 import nunjucks from 'nunjucks/browser/nunjucks';
 import { createClient } from '~/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { __DUMMY_PROMPTS__, USER_KEYS } from '@/app/constants';
+import { USER_KEYS } from '@/app/constants';
 import { createVaultService } from '~/lib/vault';
+import { createLogEntry, updateLogWithCompletion } from '~/lib/logs';
+import { getPromptById, getLatestPromptVersion } from '@/lib/prompts';
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
@@ -23,11 +25,24 @@ export async function POST(
     );
   }
 
-  const targetPrompt = __DUMMY_PROMPTS__[promptId];
+  // Fetch the prompt from Supabase
+  const prompt = await getPromptById(promptId);
 
-  if (!targetPrompt) {
+  if (!prompt) {
     return NextResponse.json({ error: 'Prompt not found' }, { status: 404 });
   }
+
+  // Get the latest version
+  const latestVersion = getLatestPromptVersion(prompt);
+
+  if (!latestVersion) {
+    return NextResponse.json(
+      { error: 'No versions found for prompt' },
+      { status: 404 }
+    );
+  }
+
+  const variables = latestVersion.prompt_variables || [];
 
   // Parse request body
   let body: RequestBody;
@@ -41,7 +56,7 @@ export async function POST(
   }
 
   // Validate all required variables are present
-  const missingVariables = targetPrompt.variables
+  const missingVariables = variables
     .filter((v) => v.required)
     .filter((v) => !(v.name in body.variables))
     .map((v) => v.name);
@@ -86,6 +101,22 @@ export async function POST(
     );
   }
 
+  // Get the first project for now (later we'll have a proper project context)
+  const { data: projects, error: projectsError } = await supabase
+    .from('projects')
+    .select('*')
+    .limit(1)
+    .order('created_at', { ascending: false });
+
+  if (projectsError || !projects || projects.length === 0) {
+    return NextResponse.json(
+      { error: 'No projects found for user' },
+      { status: 404 }
+    );
+  }
+
+  const project = projects[0];
+
   // Create vault service to get the OpenRouter API key
   const vaultService = await createVaultService();
   const { value: openrouterApiKey, error: keyError } =
@@ -98,6 +129,41 @@ export async function POST(
     );
   }
 
+  // Replace variables in the prompt content using nunjucks
+  let promptContent: string;
+  try {
+    promptContent = nunjucks.renderString(
+      latestVersion.content,
+      body.variables
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { error: 'Error rendering prompt template' },
+      { status: 500 }
+    );
+  }
+
+  // Create a log entry before making the API call
+  const rawInput = {
+    messages: [{ role: 'user', content: promptContent }],
+    model: latestVersion.model ?? 'openrouter/auto',
+  };
+
+  const logEntry = await createLogEntry(
+    project.id,
+    latestVersion.id,
+    body.variables,
+    rawInput
+  );
+
+  if (!logEntry) {
+    return NextResponse.json(
+      { error: 'Failed to create log entry' },
+      { status: 500 }
+    );
+  }
+
+  // Initialize OpenAI client for OpenRouter
   const openai = new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
     apiKey: openrouterApiKey,
@@ -107,26 +173,29 @@ export async function POST(
     },
   });
 
-  // Replace variables in the prompt content using nunjucks
-  let promptContent: string;
   try {
-    promptContent = nunjucks.renderString(targetPrompt.content, body.variables);
+    // Make the API call
+    const completion = await openai.chat.completions.create({
+      model: latestVersion.model ?? 'openrouter/auto',
+      messages: [
+        {
+          role: 'user',
+          content: promptContent,
+        },
+      ],
+    });
+
+    // Update the log entry with the completion data
+    await updateLogWithCompletion(logEntry.uuid, completion);
+
+    return NextResponse.json({ completion }, { status: 200 });
   } catch (error) {
+    // In case of error, still update the log but with the error information
+    await updateLogWithCompletion(logEntry.uuid, { error: String(error) });
+
     return NextResponse.json(
-      { error: 'Error rendering prompt template' },
+      { error: 'Error calling OpenRouter API' },
       { status: 500 }
     );
   }
-
-  const completion = await openai.chat.completions.create({
-    model: targetPrompt.model ?? 'openrouter/auto',
-    messages: [
-      {
-        role: 'user',
-        content: promptContent,
-      },
-    ],
-  });
-
-  return NextResponse.json({ completion }, { status: 200 });
 }

@@ -1,0 +1,67 @@
+import type { Config } from 'tailwindcss';
+
+const config: Config = {
+  darkMode: ['class'],
+  content: ['./src/**/*.{ts,tsx}'],
+  prefix: '',
+  theme: {
+    container: {
+      center: true,
+      padding: '2rem',
+      screens: {
+        '2xl': '1400px',
+      },
+    },
+    extend: {
+      colors: {
+        background: { DEFAULT: '#FAFAFA', dark: '#0D0D0D' },
+        foreground: { DEFAULT: '#0D0D0D', dark: '#E6E6E6' },
+        primary: { DEFAULT: '#0077FF', dark: '#00FFFF' },
+        'primary-foreground': { DEFAULT: '#FFFFFF', dark: '#1A1A1A' },
+        secondary: { DEFAULT: '#D6005A', dark: '#FF007F' },
+        'secondary-foreground': { DEFAULT: '#FFFFFF', dark: '#1A1A1A' },
+        success: { DEFAULT: '#008F39', dark: '#00FF7F' },
+        'success-foreground': { DEFAULT: '#FFFFFF', dark: '#1A1A1A' },
+        warning: { DEFAULT: '#D48900', dark: '#FFBF00' },
+        'warning-foreground': { DEFAULT: '#FFFFFF', dark: '#1A1A1A' },
+        info: { DEFAULT: '#0077FF', dark: '#00FFFF' },
+        'info-foreground': { DEFAULT: '#FFFFFF', dark: '#1A1A1A' },
+        destructive: { DEFAULT: '#D70000', dark: '#FF3131' },
+        'destructive-foreground': { DEFAULT: '#FFFFFF', dark: '#1A1A1A' },
+        muted: { DEFAULT: '#E5E5E5', dark: '#333333' },
+        'muted-foreground': { DEFAULT: '#4D4D4D', dark: '#B3B3B3' },
+        accent: { DEFAULT: '#D48900', dark: '#FFBF00' },
+        'accent-foreground': { DEFAULT: '#FFFFFF', dark: '#1A1A1A' },
+        border: { DEFAULT: '#D1D1D1', dark: '#333333' },
+        input: { DEFAULT: '#CCCCCC', dark: '#4D4D4D' },
+        ring: { DEFAULT: '#0077FF', dark: '#00FFFF' },
+        popover: { DEFAULT: '#FFFFFF', dark: '#1A1A1A' },
+        'popover-foreground': { DEFAULT: '#1A1A1A', dark: '#E6E6E6' },
+        card: { DEFAULT: '#FFFFFF', dark: '#1A1A1A' },
+        'card-foreground': { DEFAULT: '#1A1A1A', dark: '#E6E6E6' },
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
+      },
+      keyframes: {
+        'accordion-down': {
+          from: { height: '0' },
+          to: { height: 'var(--radix-accordion-content-height)' },
+        },
+        'accordion-up': {
+          from: { height: 'var(--radix-accordion-content-height)' },
+          to: { height: '0' },
+        },
+      },
+      animation: {
+        'accordion-down': 'accordion-down 0.2s ease-out',
+        'accordion-up': 'accordion-up 0.2s ease-out',
+      },
+    },
+  },
+  plugins: [require('tailwindcss-animate')],
+};
+
+export default config;

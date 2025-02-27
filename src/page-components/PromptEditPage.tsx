@@ -1,50 +1,57 @@
 'use client';
 
-import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs';
 import 'prismjs/components/prism-markup-templating';
 import 'prismjs/components/prism-django';
 import 'prismjs/themes/prism.css';
-import { __DUMMY_PROMPTS__, PromptVariable } from '@/app/constants';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import { IconChevronRight, IconTrash } from '@tabler/icons-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
+import { Database } from '@/app/__generated__/supabase.types';
+import {
+  createPromptVersion,
+  updatePromptName,
+  getPromptById,
+  getLatestPromptVersion,
+} from '@/lib/prompts';
 
-export default function EditPromptPage() {
-  const params = useParams();
-  const promptId = params.id as string;
-  const prompt = __DUMMY_PROMPTS__[promptId];
+type PromptVariable = Omit<
+  Database['public']['Tables']['prompt_variables']['Row'],
+  'id' | 'created_at' | 'updated_at' | 'prompt_version_id'
+> & {
+  id?: number;
+};
+
+type PromptEditPageProps = {
+  prompt: NonNullable<Awaited<ReturnType<typeof getPromptById>>>;
+  initialContent: string;
+  initialModel: string;
+  initialVariables: PromptVariable[];
+};
+
+export const PromptEditPage = (props: PromptEditPageProps) => {
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(true);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [variables, setVariables] = useState<PromptVariable[]>(
-    prompt?.variables || []
+    props.initialVariables
   );
-  const [content, setContent] = useState(prompt?.content);
+  const [content, setContent] = useState(props.initialContent);
+  const [name, setName] = useState(props.prompt.name);
+  const [model, setModel] = useState(props.initialModel);
   const [testVariables, setTestVariables] = useState<Record<string, string>>(
     {}
   );
   const [isLoading, setIsLoading] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
-
-  if (!prompt) {
-    return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Prompt Not Found</h1>
-        <p className="text-gray-600 mb-4">
-          The prompt you're looking for doesn't exist.
-        </p>
-        <Link href="/app/prompts" className="text-blue-500 hover:text-blue-600">
-          ← Back to Prompts
-        </Link>
-      </div>
-    );
-  }
+  const [isSaving, setIsSaving] = useState(false);
 
   const addVariable = () => {
-    setVariables([...variables, { name: '', type: 'string', required: true }]);
+    setVariables([...variables, { name: '', type: 'STRING', required: true }]);
   };
 
   const removeVariable = (index: number) => {
@@ -59,7 +66,10 @@ export default function EditPromptPage() {
     const newVariables = [...variables];
     newVariables[index] = {
       ...newVariables[index],
-      [field]: value,
+      [field]:
+        field === 'type' && typeof value === 'string'
+          ? (value.toUpperCase() as Database['public']['Enums']['variable_type'])
+          : value,
     };
     setVariables(newVariables);
   };
@@ -67,7 +77,7 @@ export default function EditPromptPage() {
   const handleTestPrompt = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/v1/prompts/${promptId}/run`, {
+      const response = await fetch(`/api/v1/prompts/${props.prompt.uuid}/run`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -87,23 +97,74 @@ export default function EditPromptPage() {
     }
   };
 
+  const handleSave = async () => {
+    setIsSaving(true);
+
+    try {
+      // Update prompt name if changed
+      if (name !== props.prompt.name) {
+        const nameUpdated = await updatePromptName({
+          promptUuid: props.prompt.uuid,
+          name,
+        });
+
+        if (!nameUpdated) {
+          throw new Error('Failed to update prompt name');
+        }
+      }
+
+      // Create a new version
+      const newVersionId = await createPromptVersion({
+        promptId: props.prompt.id,
+        content,
+        model,
+        variables: variables.map((v) => ({
+          name: v.name,
+          type: v.type as Database['public']['Enums']['variable_type'],
+          required: v.required,
+        })),
+      });
+
+      if (!newVersionId) {
+        throw new Error('Failed to create new version');
+      }
+
+      // Redirect back to the prompt detail page
+      router.push(`/app/prompts/${props.prompt.uuid}`);
+    } catch (error) {
+      console.error('Error saving prompt:', error);
+      alert('Failed to save prompt. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="flex h-[calc(100vh-64px)]">
       <div className="flex-1 overflow-auto">
         <div className="p-6">
           <div className="mb-6 flex justify-between items-center">
             <Link
-              href={`/app/prompts/${prompt.id}`}
+              href={`/studio/prompts/${props.prompt.uuid}`}
               className="text-blue-500 hover:text-blue-600"
             >
               ← Back to Prompt
             </Link>
-            <button
-              onClick={() => setIsTestModalOpen(true)}
-              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-            >
-              Test Prompt
-            </button>
+            <div className="space-x-4">
+              <button
+                onClick={() => setIsTestModalOpen(true)}
+                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+              >
+                Test Prompt
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              >
+                {isSaving ? 'Saving...' : 'Save New Version'}
+              </button>
+            </div>
           </div>
 
           <div className="space-y-6">
@@ -113,19 +174,22 @@ export default function EditPromptPage() {
               </label>
               <input
                 type="text"
-                defaultValue={prompt.name}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Version
+                Model
               </label>
               <input
                 type="text"
-                defaultValue={prompt.version}
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md"
+                placeholder="openrouter/auto"
               />
             </div>
 
@@ -208,13 +272,13 @@ export default function EditPromptPage() {
                   <select
                     value={variable.type}
                     onChange={(e) =>
-                      updateVariable(index, 'type', e.target.value as any)
+                      updateVariable(index, 'type', e.target.value)
                     }
                     className="w-full px-2 py-1 border rounded-md"
                   >
-                    <option value="string">String</option>
-                    <option value="number">Number</option>
-                    <option value="boolean">Boolean</option>
+                    <option value="STRING">String</option>
+                    <option value="NUMBER">Number</option>
+                    <option value="BOOLEAN">Boolean</option>
                   </select>
                   <label className="flex items-center">
                     <input
@@ -241,67 +305,45 @@ export default function EditPromptPage() {
       >
         <div className="space-y-4">
           {variables.map((variable) => (
-            <div key={variable.name}>
+            <div key={variable.name || Math.random()}>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {variable.name}
                 {variable.required && <span className="text-red-500">*</span>}
               </label>
               <input
-                type={variable.type === 'number' ? 'number' : 'text'}
+                type={variable.type === 'NUMBER' ? 'number' : 'text'}
                 value={testVariables[variable.name] || ''}
-                onChange={(e) =>
+                onChange={(e) => {
                   setTestVariables({
                     ...testVariables,
                     [variable.name]: e.target.value,
-                  })
-                }
+                  });
+                }}
                 className="w-full px-3 py-2 border rounded-md"
-                required={variable.required}
               />
             </div>
           ))}
-        </div>
 
-        {testResult && (
-          <div className="mt-4">
-            <h3 className="font-medium mb-2">Result:</h3>
-            <div className="bg-gray-50 p-4 rounded-md whitespace-pre-wrap">
-              {testResult}
-            </div>
+          <div className="mt-6">
+            <button
+              onClick={handleTestPrompt}
+              disabled={isLoading}
+              className="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+            >
+              {isLoading ? 'Running...' : 'Run Test'}
+            </button>
           </div>
-        )}
 
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={() => setIsTestModalOpen(false)}
-            className="px-4 py-2 border rounded-md hover:bg-gray-50"
-          >
-            Close
-          </button>
-          <button
-            onClick={handleTestPrompt}
-            disabled={isLoading}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-          >
-            {isLoading ? 'Loading...' : 'Submit'}
-          </button>
+          {testResult && (
+            <div className="mt-4">
+              <h3 className="font-medium mb-2">Result:</h3>
+              <div className="bg-gray-50 p-4 rounded-md whitespace-pre-wrap">
+                {testResult}
+              </div>
+            </div>
+          )}
         </div>
       </Modal>
-
-      <div className="fixed bottom-0 right-0 p-6 bg-white border-t w-full flex justify-end space-x-4">
-        <Link
-          href={`/app/prompts/${prompt.id}`}
-          className="px-4 py-2 border rounded-md hover:bg-gray-50"
-        >
-          Cancel
-        </Link>
-        <button
-          type="button"
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-        >
-          Save Changes
-        </button>
-      </div>
     </div>
   );
-}
+};

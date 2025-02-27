@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { USER_KEYS } from '../../constants';
+import { USER_KEYS } from '@/app/constants';
 import { createVaultService } from '~/lib/vault';
 import { createClient } from '~/lib/supabase/server';
 
@@ -10,7 +10,10 @@ export async function GET(request: Request) {
   if (!code) {
     console.error('/connect/openrouter: no code found');
     return NextResponse.redirect(
-      new URL('/app/account?message=Failed to connect OpenRouter', request.url)
+      new URL(
+        '/studio/account?message=Failed to connect OpenRouter',
+        request.url
+      )
     );
   }
 
@@ -23,7 +26,10 @@ export async function GET(request: Request) {
   if (!user) {
     console.error('/connect/openrouter: no user found');
     return NextResponse.redirect(
-      new URL('/app/account?message=Failed to connect OpenRouter', request.url)
+      new URL(
+        '/studio/account?message=Failed to connect OpenRouter',
+        request.url
+      )
     );
   }
 
@@ -37,7 +43,7 @@ export async function GET(request: Request) {
     console.error('/connect/openrouter: ' + errorMessage);
     return NextResponse.redirect(
       new URL(
-        `/app/account?message=Failed to connect OpenRouter: ${errorMessage}`,
+        `/studio/account?message=Failed to connect OpenRouter: ${errorMessage}`,
         request.url
       )
     );
@@ -63,7 +69,10 @@ export async function GET(request: Request) {
       response
     );
     return NextResponse.redirect(
-      new URL('/app/account?message=Failed to connect OpenRouter', request.url)
+      new URL(
+        '/studio/account?message=Failed to connect OpenRouter',
+        request.url
+      )
     );
   }
 
@@ -85,7 +94,7 @@ export async function GET(request: Request) {
     console.error('/connect/openrouter: ' + errorMessage);
     return NextResponse.redirect(
       new URL(
-        `/app/account?message=Failed to connect OpenRouter: ${errorMessage}`,
+        `/studio/account?message=Failed to connect OpenRouter: ${errorMessage}`,
         request.url
       )
     );
@@ -93,5 +102,5 @@ export async function GET(request: Request) {
 
   console.log('/connect/openrouter: successfully saved openrouter key');
 
-  return NextResponse.redirect(new URL('/app/account', request.url));
+  return NextResponse.redirect(new URL('/studio/account', request.url));
 }

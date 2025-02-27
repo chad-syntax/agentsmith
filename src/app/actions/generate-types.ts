@@ -1,11 +1,8 @@
 'use server';
 
 import { Project } from 'ts-morph';
-import {
-  __DUMMY_PROMPTS__,
-  __DUMMY_AGENTS__,
-  __DUMMY_AGENT_VERSIONS__,
-} from '@/app/constants';
+import { createClient } from '&/supabase/server';
+import type { Database } from '@/app/__generated__/supabase.types';
 
 export async function generateTypes() {
   // Initialize project and create source file
@@ -21,10 +18,56 @@ export async function generateTypes() {
     '',
   ]);
 
+  // Fetch prompts from Supabase
+  const supabase = await createClient();
+  const { data: prompts, error } = await supabase
+    .from('prompts')
+    .select(
+      `
+      *,
+      prompt_versions(*, prompt_variables(*))
+    `
+    )
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching prompts:', error);
+    return {
+      content: '// Error generating types: ' + error.message,
+      filename: 'agentsmith.types.ts',
+    };
+  }
+
+  // Process prompts to get the latest version and variables
+  const processedPrompts = prompts.map((prompt) => {
+    const versions = prompt.prompt_versions || [];
+    // Sort versions by created_at in descending order
+    const sortedVersions = [...versions].sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    const latestVersion = sortedVersions.length > 0 ? sortedVersions[0] : null;
+    const variables = latestVersion?.prompt_variables || [];
+
+    return {
+      id: prompt.id,
+      name: prompt.name,
+      slug: prompt.uuid,
+      content: latestVersion?.content || '',
+      version: latestVersion?.version || '1.0.0',
+      variables: variables.map((v) => ({
+        name: v.name,
+        type: v.type,
+        required: v.required,
+      })),
+    };
+  });
+
   // Add PromptSlug type
-  const promptSlugs = Object.values(__DUMMY_PROMPTS__)
-    .map((p) => `'${p.slug}'`)
-    .join(' | ');
+  const promptSlugs =
+    processedPrompts.map((p) => `'${p.slug}'`).join(' | ') ||
+    "'no_prompts_found'";
 
   sourceFile.addTypeAlias({
     name: 'PromptSlug',
@@ -37,7 +80,7 @@ export async function generateTypes() {
     name: 'Prompt',
     isExported: true,
     type: `{
-      id: string;
+      id: number;
       name: string;
       content: string;
       version: string;
@@ -52,92 +95,12 @@ export async function generateTypes() {
     isExported: true,
     type: `{
       name: string;
-      type: 'string' | 'number' | 'boolean';
+      type: string;
       required: boolean;
     }`,
   });
 
-  // Add AgentAction type
-  sourceFile.addTypeAlias({
-    name: 'AgentAction',
-    isExported: true,
-    type: `{
-      id: string;
-      name: string;
-      slug: string;
-      prompt_id: string;
-    }`,
-  });
-
-  // Add AgentTriggers const and type
-  sourceFile.addTypeAlias({
-    name: 'AGENT_TRIGGERS',
-    isExported: true,
-    type: `{
-      AFTER_ANY_MESSAGE: 'AFTER_ANY_MESSAGE';
-      BEFORE_ANY_MESSAGE: 'BEFORE_ANY_MESSAGE';
-      AFTER_USER_MESSAGE: 'AFTER_USER_MESSAGE';
-      AFTER_ASSISTANT_MESSAGE: 'AFTER_ASSISTANT_MESSAGE';
-      BEFORE_USER_MESSAGE: 'BEFORE_USER_MESSAGE';
-      BEFORE_ASSISTANT_MESSAGE: 'BEFORE_ASSISTANT_MESSAGE';
-      BEFORE_INSTANCE_CLEANUP: 'BEFORE_INSTANCE_CLEANUP';
-      CRON_SCHEDULE: 'CRON_SCHEDULE';
-    }`,
-  });
-
-  sourceFile.addTypeAlias({
-    name: 'AgentTriggers',
-    isExported: true,
-    type: 'keyof AGENT_TRIGGERS',
-  });
-
-  // Add AgentTrigger type
-  sourceFile.addTypeAlias({
-    name: 'AgentTrigger',
-    isExported: true,
-    type: `{
-      type: AgentTriggers;
-      cron_schedule?: string;
-    } & (
-      | {
-          type: 'CRON_SCHEDULE';
-          cron_schedule: string;
-        }
-      | {
-          type: Exclude<AgentTriggers, 'CRON_SCHEDULE'>;
-          cron_schedule?: never;
-        }
-    )`,
-  });
-
-  // Add AgentReaction type
-  sourceFile.addTypeAlias({
-    name: 'AgentReaction',
-    isExported: true,
-    type: `{
-      id: string;
-      name: string;
-      slug: string;
-      prompt_id: string;
-      triggers: AgentTrigger[];
-    }`,
-  });
-
-  // Add Agent type
-  sourceFile.addTypeAlias({
-    name: 'Agent',
-    isExported: true,
-    type: `{
-      id: string;
-      name: string;
-      slug: string;
-      system_prompt_id: string;
-      actions: AgentAction[];
-      reactions: AgentReaction[];
-    }`,
-  });
-
-  // Add Agency type with strict typing based on actual prompts and agents
+  // Add Agency type with strict typing based on actual prompts
   sourceFile.addTypeAlias({
     name: 'Agency',
     isExported: true,
@@ -146,10 +109,10 @@ export async function generateTypes() {
         writer
           .write('prompts: ')
           .block(() => {
-            Object.entries(__DUMMY_PROMPTS__).forEach(([_, prompt]) => {
+            processedPrompts.forEach((prompt) => {
               writer.write(
                 `'${prompt.slug}': Prompt & { 
-                  id: '${prompt.id}'; 
+                  id: ${prompt.id}; 
                   name: '${prompt.name}'; 
                   content: string;
                   version: '${prompt.version}';
@@ -168,42 +131,6 @@ export async function generateTypes() {
             });
           })
           .write(';\n');
-        writer.write('agents: ').block(() => {
-          Object.entries(__DUMMY_AGENTS__).forEach(([_, agent]) => {
-            const targetAgentVersion =
-              __DUMMY_AGENT_VERSIONS__[agent.currentVersionId];
-
-            writer.write(
-              `'${agent.slug}': Agent & { 
-                  id: '${agent.id}';
-                  name: '${agent.name}';
-                  slug: '${agent.slug}';
-                  system_prompt_id: '${targetAgentVersion.systemPrompt.id}';
-                  actions: [${targetAgentVersion.actions
-                    .map(
-                      (action) => `{
-                    id: '${action.id}';
-                    name: '${action.name}';
-                    slug: '${action.slug}';
-                    prompt_id: '${action.prompt.id}';
-                  }`
-                    )
-                    .join(', ')}];
-                  reactions: [${targetAgentVersion.reactions
-                    .map(
-                      (reaction) => `{
-                    id: '${reaction.id}';
-                    name: '${reaction.name}';
-                    slug: '${reaction.slug}';
-                    prompt_id: '${reaction.prompt.id}';
-                    triggers: [{ type: '${reaction.triggers[0].type}' }];
-                  }`
-                    )
-                    .join(', ')}];
-                };\n`
-            );
-          });
-        });
       });
     },
   });
