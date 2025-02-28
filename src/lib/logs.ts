@@ -1,36 +1,20 @@
-import { createClient } from '&/supabase/server';
-import type { Database } from '@/app/__generated__/supabase.types';
+import { createClient } from '@/lib/supabase/server';
 
 /**
- * Get the first project from the database
- * This is a temporary function until we implement proper project selection
+ * Fetch logs for a specific project
  */
-export async function getFirstProject() {
+export const getLogsByProjectId = async (projectId: number) => {
   const supabase = await createClient();
 
-  const { data: projects, error } = await supabase
-    .from('projects')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(1);
-
-  if (error) {
-    console.error('Error fetching first project:', error);
-    return null;
-  }
-
-  return projects.length > 0 ? projects[0] : null;
-}
-
-/**
- * Get logs for a specific project
- */
-export async function getLogsByProjectId(projectId: number) {
-  const supabase = await createClient();
-
-  const { data: logs, error } = await supabase
+  const { data, error } = await supabase
     .from('llm_logs')
-    .select('*')
+    .select(
+      `
+      *,
+      projects(*),
+      prompt_versions(*)
+    `
+    )
     .eq('project_id', projectId)
     .order('created_at', { ascending: false });
 
@@ -39,36 +23,16 @@ export async function getLogsByProjectId(projectId: number) {
     return [];
   }
 
-  return logs;
-}
+  return data;
+};
 
 /**
- * Get a specific log by its ID
+ * Fetch a specific log by UUID with related data
  */
-export async function getLogById(logId: number) {
+export const getLogByUuid = async (uuid: string) => {
   const supabase = await createClient();
 
-  const { data: log, error } = await supabase
-    .from('llm_logs')
-    .select('*')
-    .eq('id', logId)
-    .single();
-
-  if (error) {
-    console.error('Error fetching log:', error);
-    return null;
-  }
-
-  return log;
-}
-
-/**
- * Get a specific log by its UUID
- */
-export async function getLogByUuid(uuid: string) {
-  const supabase = await createClient();
-
-  const { data: log, error } = await supabase
+  const { data, error } = await supabase
     .from('llm_logs')
     .select(
       `
@@ -81,9 +45,87 @@ export async function getLogByUuid(uuid: string) {
     .single();
 
   if (error) {
-    console.error('Error fetching log by UUID:', error);
+    console.error('Error fetching log:', error);
     return null;
   }
 
-  return log;
-}
+  return data;
+};
+
+/**
+ * Get the first project for the current user
+ */
+export const getFirstProject = async () => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .limit(1)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching project:', error);
+    return null;
+  }
+
+  return data[0];
+};
+
+/**
+ * Insert a new log entry for a prompt run
+ */
+export const createLogEntry = async (
+  projectId: number,
+  promptVersionId: number,
+  promptVariables: Record<string, any>,
+  rawInput: Record<string, any>
+) => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('llm_logs')
+    .insert({
+      project_id: projectId,
+      prompt_version_id: promptVersionId,
+      prompt_variables: promptVariables,
+      raw_input: rawInput,
+      start_time: new Date().toISOString(),
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating log entry:', error);
+    return null;
+  }
+
+  return data;
+};
+
+/**
+ * Update a log entry with completion data
+ */
+export const updateLogWithCompletion = async (
+  uuid: string,
+  rawOutput: Record<string, any>
+) => {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('llm_logs')
+    .update({
+      raw_output: rawOutput,
+      end_time: new Date().toISOString(),
+    })
+    .eq('uuid', uuid)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error updating log entry:', error);
+    return null;
+  }
+
+  return data;
+};

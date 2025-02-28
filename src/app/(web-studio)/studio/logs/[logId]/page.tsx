@@ -1,4 +1,4 @@
-import { getLogByUuid } from '~/lib/logs';
+import { getLogByUuid } from '@/lib/logs';
 import { LogDetailPage } from '@/page-components/LogDetailPage';
 
 type PageProps = {

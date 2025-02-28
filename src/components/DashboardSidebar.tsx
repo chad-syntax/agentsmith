@@ -9,15 +9,21 @@ import {
   IconUser,
   IconList,
   IconHome,
+  IconBuilding,
 } from '@tabler/icons-react';
 import { usePathname } from 'next/navigation';
+import { useApp } from '@/app/providers/app';
+import { OrganizationSelector } from '@/components/OrganizationSelector';
+import type { GetUserOrganizationDataResult } from '@/lib/onboarding';
 
-type DashboardSidebarProps = {
-  hasOnboarded: boolean;
+export type DashboardSidebarProps = {
+  isOnboarded: boolean;
+  userOrganizationData: GetUserOrganizationDataResult;
 };
 
 export const DashboardSidebar = (props: DashboardSidebarProps) => {
-  const { hasOnboarded } = props;
+  const { isOnboarded, userOrganizationData } = props;
+  const { selectedOrganizationUuid } = useApp();
 
   const [isOpen, setIsOpen] = useState(true);
 
@@ -30,7 +36,13 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
       icon: IconHome,
       active: pathname === '/studio',
     },
-    ...(hasOnboarded
+    {
+      name: 'Organization',
+      href: `/studio/organization/${selectedOrganizationUuid}`,
+      icon: IconBuilding,
+      active: pathname.startsWith('/studio/organization'),
+    },
+    ...(isOnboarded
       ? [
           {
             name: 'Prompts',
@@ -88,6 +100,7 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
           </Link>
         ))}
       </nav>
+      <OrganizationSelector userOrganizationData={userOrganizationData} />
     </Collapsible.Root>
   );
 };

@@ -1,4 +1,4 @@
-import { createClient } from '~/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { Database } from '@/app/__generated__/supabase.types';
 
 /**

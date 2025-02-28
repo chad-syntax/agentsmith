@@ -1,18 +1,20 @@
 'use client';
 
-import { createClient } from '~/lib/supabase/client';
+import { createClient } from '&/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Database } from '../__generated__/supabase.types';
+import { GetUserOrganizationDataResult } from '&/onboarding';
 
 export type AgentsmithUser =
   Database['public']['Tables']['agentsmith_users']['Row'];
 
 export type AuthContextType = {
   user: User | null;
-  agentsmithUser: AgentsmithUser | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  agentsmithUser: AgentsmithUser | null;
+  organizationData: GetUserOrganizationDataResult | null;
 };
 
 export const AuthContext = createContext<AuthContextType>({
@@ -20,6 +22,7 @@ export const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   isAuthenticated: false,
   agentsmithUser: null,
+  organizationData: null,
 });
 
 export const useAuth = () => {
@@ -31,6 +34,7 @@ type AuthProviderProps = {
   children: React.ReactNode;
   user?: User;
   agentsmithUser?: AgentsmithUser;
+  organizationData?: GetUserOrganizationDataResult;
 };
 
 export const AuthProvider = (props: AuthProviderProps) => {
@@ -47,6 +51,10 @@ export const AuthProvider = (props: AuthProviderProps) => {
   const [agentsmithUser, setAgentsmithUser] = useState<AgentsmithUser | null>(
     initialAgentsmithUser ?? null
   );
+  const [organizationData, setOrganizationData] =
+    useState<GetUserOrganizationDataResult | null>(
+      props.organizationData ?? null
+    );
 
   useEffect(() => {
     const getUser = async () => {
@@ -64,6 +72,36 @@ export const AuthProvider = (props: AuthProviderProps) => {
           .eq('auth_user_id', userFromSupabase.id)
           .single();
         setAgentsmithUser(agentsmithUser);
+
+        const { data: organizationData, error: organizationDataError } =
+          await supabase
+            .from('agentsmith_users')
+            .select(
+              `
+            organization_users (
+              id, 
+              organizations (
+                uuid, 
+                name, 
+                organization_keys (
+                  id,
+                  key
+                ),
+                projects (
+                  uuid,
+                  name
+                )
+              )
+            )`
+            )
+            .eq('auth_user_id', userFromSupabase.id)
+            .single();
+
+        if (organizationDataError) {
+          console.error(organizationDataError);
+        }
+
+        setOrganizationData(organizationData);
       }
 
       setIsLoading(false);
@@ -80,8 +118,9 @@ export const AuthProvider = (props: AuthProviderProps) => {
       isLoading,
       isAuthenticated,
       agentsmithUser,
+      organizationData,
     }),
-    [user, isLoading, isAuthenticated, agentsmithUser]
+    [user, isLoading, isAuthenticated, agentsmithUser, organizationData]
   );
 
   return (

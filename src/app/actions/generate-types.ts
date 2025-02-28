@@ -1,7 +1,7 @@
 'use server';
 
 import { Project } from 'ts-morph';
-import { createClient } from '&/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/app/__generated__/supabase.types';
 
 export async function generateTypes() {

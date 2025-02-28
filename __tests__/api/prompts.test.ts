@@ -1,6 +1,5 @@
 import { NextRequest, mockJson } from './test-utils';
-import { POST as runPrompt } from '@/app/api/[apiVersion]/prompts/[promptId]/run/route';
-import { Database } from '@/app/__generated__/supabase.types';
+import { POST as runPrompt } from '@/app/api/[apiVersion]/prompts/[promptUuid]/run/route';
 
 // Mock OpenAI
 const mockCompletion = {
@@ -128,7 +127,7 @@ describe('Prompts API Routes', () => {
     jest.clearAllMocks();
   });
 
-  describe('POST /api/[apiVersion]/prompts/[promptId]/run', () => {
+  describe('POST /api/[apiVersion]/prompts/[promptUuid]/run', () => {
     it('should run a prompt successfully', async () => {
       const variables = {
         variable1: 'Test value 1',
@@ -144,7 +143,7 @@ describe('Prompts API Routes', () => {
           }),
         }
       );
-      const params = Promise.resolve({ promptId: testPromptId });
+      const params = Promise.resolve({ promptUuid: testPromptId });
 
       await runPrompt(req, { params });
       expect(mockJson).toHaveBeenCalledWith(
@@ -165,7 +164,7 @@ describe('Prompts API Routes', () => {
           }),
         }
       );
-      const params = Promise.resolve({ promptId: '' });
+      const params = Promise.resolve({ promptUuid: '' });
 
       await runPrompt(req, { params });
       expect(mockJson).toHaveBeenCalledWith(
@@ -182,7 +181,7 @@ describe('Prompts API Routes', () => {
           body: 'invalid-json',
         }
       );
-      const params = Promise.resolve({ promptId: testPromptId });
+      const params = Promise.resolve({ promptUuid: testPromptId });
 
       await runPrompt(req, { params });
       expect(mockJson).toHaveBeenCalledWith(
@@ -201,7 +200,7 @@ describe('Prompts API Routes', () => {
           }),
         }
       );
-      const params = Promise.resolve({ promptId: testPromptId });
+      const params = Promise.resolve({ promptUuid: testPromptId });
 
       await runPrompt(req, { params });
       expect(mockJson).toHaveBeenCalledWith(

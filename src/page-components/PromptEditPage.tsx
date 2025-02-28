@@ -13,10 +13,10 @@ import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Database } from '@/app/__generated__/supabase.types';
 import {
-  createPromptVersion,
-  updatePromptName,
+  //   createPromptVersion,
+  //   updatePromptName,
   getPromptById,
-  getLatestPromptVersion,
+  //   getLatestPromptVersion,
 } from '@/lib/prompts';
 
 type PromptVariable = Omit<
@@ -103,31 +103,30 @@ export const PromptEditPage = (props: PromptEditPageProps) => {
     try {
       // Update prompt name if changed
       if (name !== props.prompt.name) {
-        const nameUpdated = await updatePromptName({
-          promptUuid: props.prompt.uuid,
-          name,
-        });
-
-        if (!nameUpdated) {
-          throw new Error('Failed to update prompt name');
-        }
+        // const nameUpdated = await updatePromptName({
+        //   promptUuid: props.prompt.uuid,
+        //   name,
+        // });
+        // if (!nameUpdated) {
+        //   throw new Error('Failed to update prompt name');
+        // }
       }
 
       // Create a new version
-      const newVersionId = await createPromptVersion({
-        promptId: props.prompt.id,
-        content,
-        model,
-        variables: variables.map((v) => ({
-          name: v.name,
-          type: v.type as Database['public']['Enums']['variable_type'],
-          required: v.required,
-        })),
-      });
+      // const newVersionId = await createPromptVersion({
+      //   promptId: props.prompt.id,
+      //   content,
+      //   model,
+      //   variables: variables.map((v) => ({
+      //     name: v.name,
+      //     type: v.type as Database['public']['Enums']['variable_type'],
+      //     required: v.required,
+      //   })),
+      // });
 
-      if (!newVersionId) {
-        throw new Error('Failed to create new version');
-      }
+      // if (!newVersionId) {
+      //   throw new Error('Failed to create new version');
+      // }
 
       // Redirect back to the prompt detail page
       router.push(`/app/prompts/${props.prompt.uuid}`);

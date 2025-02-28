@@ -1,5 +1,5 @@
 import { AccountPage } from '@/page-components/AccountPage';
 
-export default function Account() {
+export default async function Account() {
   return <AccountPage />;
 }

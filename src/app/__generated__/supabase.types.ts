@@ -119,6 +119,41 @@ export type Database = {
           },
         ]
       }
+      organization_keys: {
+        Row: {
+          created_at: string
+          id: number
+          key: string
+          organization_id: number
+          updated_at: string
+          vault_secret_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          key: string
+          organization_id: number
+          updated_at?: string
+          vault_secret_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          key?: string
+          organization_id?: number
+          updated_at?: string
+          vault_secret_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_keys_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_users: {
         Row: {
           created_at: string
@@ -164,7 +199,9 @@ export type Database = {
       organizations: {
         Row: {
           created_at: string
+          created_by: number
           id: number
+          invite_code: string
           name: string
           tier: Database["public"]["Enums"]["organization_tier"]
           updated_at: string
@@ -172,7 +209,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by: number
           id?: number
+          invite_code?: string
           name: string
           tier: Database["public"]["Enums"]["organization_tier"]
           updated_at?: string
@@ -180,39 +219,49 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: number
           id?: number
+          invite_code?: string
           name?: string
           tier?: Database["public"]["Enums"]["organization_tier"]
           updated_at?: string
           uuid?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "organizations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "agentsmith_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projects: {
         Row: {
           created_at: string
-          created_by: number | null
+          created_by: number
           id: number
           name: string
-          organization_id: number | null
+          organization_id: number
           updated_at: string
           uuid: string
         }
         Insert: {
           created_at?: string
-          created_by?: number | null
+          created_by: number
           id?: number
           name: string
-          organization_id?: number | null
+          organization_id: number
           updated_at?: string
           uuid?: string
         }
         Update: {
           created_at?: string
-          created_by?: number | null
+          created_by?: number
           id?: number
           name?: string
-          organization_id?: number | null
+          organization_id?: number
           updated_at?: string
           uuid?: string
         }
@@ -320,7 +369,7 @@ export type Database = {
           created_at: string
           id: number
           name: string
-          project_id: number | null
+          project_id: number
           slug: string
           updated_at: string
           uuid: string
@@ -329,7 +378,7 @@ export type Database = {
           created_at?: string
           id?: number
           name: string
-          project_id?: number | null
+          project_id: number
           slug: string
           updated_at?: string
           uuid?: string
@@ -338,7 +387,7 @@ export type Database = {
           created_at?: string
           id?: number
           name?: string
-          project_id?: number | null
+          project_id?: number
           slug?: string
           updated_at?: string
           uuid?: string
@@ -353,41 +402,6 @@ export type Database = {
           },
         ]
       }
-      user_keys: {
-        Row: {
-          created_at: string
-          id: number
-          key: string
-          updated_at: string
-          user_id: number | null
-          vault_secret_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: number
-          key: string
-          updated_at?: string
-          user_id?: number | null
-          vault_secret_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: number
-          key?: string
-          updated_at?: string
-          user_id?: number | null
-          vault_secret_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_keys_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "agentsmith_users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -397,21 +411,33 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
-      create_user_key: {
+      create_organization: {
         Args: {
+          arg_name: string
+        }
+        Returns: string
+      }
+      create_organization_key: {
+        Args: {
+          arg_organization_uuid: string
           arg_key: string
           arg_value: string
           arg_description?: string
         }
         Returns: Json
       }
-      delete_user_key: {
+      delete_organization_key: {
         Args: {
+          arg_organization_uuid: string
           arg_key_name: string
         }
         Returns: Json
       }
-      get_vault_secret: {
+      gen_invite_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      get_organization_vault_secret: {
         Args: {
           arg_vault_secret_id: string
         }
@@ -429,12 +455,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_key_owner: {
-        Args: {
-          key_id: number
-        }
-        Returns: boolean
-      }
       is_organization_admin: {
         Args: {
           org_id: number
@@ -446,6 +466,19 @@ export type Database = {
           org_id: number
         }
         Returns: boolean
+      }
+      join_organization: {
+        Args: {
+          arg_invite_code: string
+        }
+        Returns: string
+      }
+      rename_organization: {
+        Args: {
+          arg_organization_uuid: string
+          arg_name: string
+        }
+        Returns: undefined
       }
     }
     Enums: {

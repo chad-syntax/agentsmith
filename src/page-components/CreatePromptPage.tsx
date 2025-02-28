@@ -10,7 +10,7 @@ import 'prismjs/themes/prism.css';
 import { useState } from 'react';
 import { IconTrash } from '@tabler/icons-react';
 import { Database } from '@/app/__generated__/supabase.types';
-import { createClient } from '~/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client';
 
 type PromptVariable = {
   name: string;

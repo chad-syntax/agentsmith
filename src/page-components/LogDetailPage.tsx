@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { IconArrowLeft } from '@tabler/icons-react';
-import { getLogByUuid } from '~/lib/logs';
+import { getLogByUuid } from '@/lib/logs';
 
 type LogDetailPageProps = {
   log: Awaited<ReturnType<typeof getLogByUuid>>;

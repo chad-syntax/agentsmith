@@ -1,4 +1,4 @@
-import { getFirstProject, getLogsByProjectId } from '~/lib/logs';
+import { getFirstProject, getLogsByProjectId } from '@/lib/logs';
 import { LogsPage } from '@/page-components/LogsPage';
 
 export default async function Logs() {

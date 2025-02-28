@@ -1,5 +1,5 @@
 import { CreatePromptPage } from '@/page-components/CreatePromptPage';
-import { createClient } from '~/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
 export default async function NewPromptPage() {

@@ -1,12 +1,12 @@
 import OpenAI from 'openai';
 // @ts-ignore needs to be browser version so nextjs can import it
 import nunjucks from 'nunjucks/browser/nunjucks';
-import { createClient } from '~/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { USER_KEYS } from '@/app/constants';
-import { createVaultService } from '~/lib/vault';
-import { createLogEntry, updateLogWithCompletion } from '~/lib/logs';
-import { getPromptById, getLatestPromptVersion } from '@/lib/prompts';
+import { ORGANIZATION_KEYS } from '@/app/constants';
+import { createVaultService } from '@/lib/vault';
+import { createLogEntry, updateLogWithCompletion } from '&/logs';
+import { getPromptById, getLatestPromptVersion } from '&/prompts';
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
@@ -14,11 +14,11 @@ type RequestBody = {
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ promptId: string }> }
+  { params }: { params: Promise<{ promptUuid: string }> }
 ) {
-  const { promptId } = await params;
+  const { promptUuid } = await params;
 
-  if (!promptId) {
+  if (!promptUuid) {
     return NextResponse.json(
       { error: 'Prompt ID is required' },
       { status: 400 }
@@ -26,14 +26,14 @@ export async function POST(
   }
 
   // Fetch the prompt from Supabase
-  const prompt = await getPromptById(promptId);
+  const prompt = await getPromptById(promptUuid);
 
   if (!prompt) {
     return NextResponse.json({ error: 'Prompt not found' }, { status: 404 });
   }
 
   // Get the latest version
-  const latestVersion = getLatestPromptVersion(prompt);
+  const latestVersion = await getLatestPromptVersion(prompt.id);
 
   if (!latestVersion) {
     return NextResponse.json(
@@ -101,28 +101,17 @@ export async function POST(
     );
   }
 
-  // Get the first project for now (later we'll have a proper project context)
-  const { data: projects, error: projectsError } = await supabase
-    .from('projects')
-    .select('*')
-    .limit(1)
-    .order('created_at', { ascending: false });
-
-  if (projectsError || !projects || projects.length === 0) {
-    return NextResponse.json(
-      { error: 'No projects found for user' },
-      { status: 404 }
-    );
-  }
-
-  const project = projects[0];
+  const project = prompt.projects;
+  const organizationUuid = project.organizations.uuid;
 
   // Create vault service to get the OpenRouter API key
   const vaultService = await createVaultService();
-  const { value: openrouterApiKey, error: keyError } =
-    await vaultService.getUserKeySecret(USER_KEYS.OPENROUTER_API_KEY);
+  const { value: apiKey } = await vaultService.getOrganizationKeySecret(
+    organizationUuid,
+    ORGANIZATION_KEYS.OPENROUTER_API_KEY
+  );
 
-  if (keyError || !openrouterApiKey) {
+  if (!apiKey) {
     return NextResponse.json(
       { error: 'OpenRouter API key not found' },
       { status: 404 }
@@ -166,7 +155,7 @@ export async function POST(
   // Initialize OpenAI client for OpenRouter
   const openai = new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
-    apiKey: openrouterApiKey,
+    apiKey: apiKey,
     defaultHeaders: {
       'HTTP-Referer': 'https://agentsmith.app',
       'X-Title': 'Agentsmith',

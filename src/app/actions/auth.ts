@@ -1,7 +1,7 @@
 'use server';
 
-import { encodedRedirect } from '~/utils/utils';
-import { createClient } from '&/supabase/server';
+import { encodedRedirect } from '@/utils/utils';
+import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
@@ -53,7 +53,7 @@ export const signInAction = async (formData: FormData) => {
     return encodedRedirect('error', '/sign-in', error.message);
   }
 
-  return redirect('/app');
+  return redirect('/studio');
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {
@@ -67,7 +67,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?redirect_to=/app/account/protected/reset-password`,
+    redirectTo: `${origin}/auth/callback?redirect_to=/studio/account`,
   });
 
   if (error) {

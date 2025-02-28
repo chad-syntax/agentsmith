@@ -10,22 +10,14 @@ import { IconChevronRight, IconPlayerPlay } from '@tabler/icons-react';
 import { useState } from 'react';
 import { generateTypes } from '@/app/actions/generate-types';
 import Editor from 'react-simple-code-editor';
-import { getPromptById, getLatestPromptVersion } from '@/lib/prompts';
+import { getPromptById, getLatestPromptVersion } from '&/prompts';
 import { Modal } from '@/components/ui/modal';
-
-type RunResponseData = {
-  completion: {
-    choices: Array<{
-      message: {
-        content: string;
-      };
-    }>;
-  };
-};
 
 type PromptDetailPageProps = {
   prompt: NonNullable<Awaited<ReturnType<typeof getPromptById>>>;
-  latestVersion: NonNullable<ReturnType<typeof getLatestPromptVersion>>;
+  latestVersion: NonNullable<
+    Awaited<ReturnType<typeof getLatestPromptVersion>>
+  >;
 };
 
 export const PromptDetailPage = (props: PromptDetailPageProps) => {
@@ -70,7 +62,8 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         throw new Error(errorData.error || 'Failed to run prompt');
       }
 
-      const data: RunResponseData = await response.json();
+      const data = await response.json();
+
       const result =
         data.completion.choices[0]?.message.content || 'No response content';
 

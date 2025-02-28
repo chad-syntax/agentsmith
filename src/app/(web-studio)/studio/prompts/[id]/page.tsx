@@ -17,7 +17,7 @@ export default async function PromptDetail(props: PromptDetailProps) {
   }
 
   // Get the latest version
-  const latestVersion = getLatestPromptVersion(prompt);
+  const latestVersion = await getLatestPromptVersion(prompt.id);
 
   if (!latestVersion) {
     return notFound();

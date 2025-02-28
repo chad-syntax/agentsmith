@@ -19,7 +19,7 @@ export default async function PromptEdit(props: PromptEditProps) {
   }
 
   // Get the latest version
-  const latestVersion = getLatestPromptVersion(prompt);
+  const latestVersion = await getLatestPromptVersion(prompt.id);
 
   if (!latestVersion) {
     return notFound();
