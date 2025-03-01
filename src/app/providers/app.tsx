@@ -1,13 +1,8 @@
 'use client';
 
-import {
-  getLocalStorageItem,
-  LOCAL_STORAGE_KEYS,
-  setLocalStorageItem,
-} from '&/local-storage';
 import { GetUserOrganizationDataResult } from '@/lib/onboarding';
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { ORGANIZATION_KEYS } from '../constants';
+import { createContext, useContext, useMemo, useState } from 'react';
+import { ORGANIZATION_KEYS } from '@/app/constants';
 
 type Organization =
   GetUserOrganizationDataResult['organization_users'][number]['organizations'];
@@ -78,84 +73,11 @@ export const AppProvider = (props: AppProviderProps) => {
   const [isLoading, setIsLoading] = useState(
     !(initialSelectedProjectUuid || initialSelectedOrganizationUuid)
   );
-  const [hasOpenRouterKey, setHasOpenRouterKey] = useState(false);
 
-  useEffect(() => {
-    const lsSelectedOrganizationUuid = getLocalStorageItem(
-      LOCAL_STORAGE_KEYS.SELECTED_ORGANIZATION_UUID
-    );
-
-    const isValidOrganizationUuid =
-      userOrganizationData.organization_users.some(
-        (orgUser) => orgUser.organizations.uuid === lsSelectedOrganizationUuid
-      );
-
-    if (lsSelectedOrganizationUuid && isValidOrganizationUuid) {
-      _setSelectedOrganizationUuid(lsSelectedOrganizationUuid);
-      const targetOrganization =
-        userOrganizationData.organization_users.find(
-          (orgUser) => orgUser.organizations.uuid === lsSelectedOrganizationUuid
-        )?.organizations ?? null;
-      setSelectedOrganization(targetOrganization);
-
-      const hasOpenRouterKey =
-        targetOrganization?.organization_keys.some(
-          (key) => key.key === ORGANIZATION_KEYS.OPENROUTER_API_KEY
-        ) ?? false;
-
-      setHasOpenRouterKey(hasOpenRouterKey);
-    } else {
-      const firstOrganization =
-        userOrganizationData.organization_users[0]?.organizations;
-      _setSelectedOrganizationUuid(firstOrganization?.uuid);
-      setLocalStorageItem(
-        LOCAL_STORAGE_KEYS.SELECTED_ORGANIZATION_UUID,
-        firstOrganization?.uuid
-      );
-      setHasOpenRouterKey(
-        firstOrganization?.organization_keys.some(
-          (key) => key.key === ORGANIZATION_KEYS.OPENROUTER_API_KEY
-        ) ?? false
-      );
-    }
-
-    const lsSelectedProjectUuid = getLocalStorageItem(
-      LOCAL_STORAGE_KEYS.SELECTED_PROJECT_UUID
-    );
-
-    const isValidProjectUuid = userOrganizationData.organization_users.some(
-      (orgUser) =>
-        orgUser.organizations.projects.some(
-          (project) => project.uuid === lsSelectedProjectUuid
-        )
-    );
-
-    if (lsSelectedProjectUuid && isValidProjectUuid) {
-      _setSelectedProjectUuid(lsSelectedProjectUuid);
-      setSelectedProject(
-        userOrganizationData.organization_users
-          .find((orgUser) =>
-            orgUser.organizations.projects.find(
-              (project) => project.uuid === lsSelectedProjectUuid
-            )
-          )
-          ?.organizations.projects.find(
-            (project) => project.uuid === lsSelectedProjectUuid
-          ) ?? null
-      );
-    } else {
-      const firstProject =
-        userOrganizationData.organization_users?.[0]?.organizations
-          ?.projects?.[0];
-      _setSelectedProjectUuid(firstProject?.uuid);
-      setLocalStorageItem(
-        LOCAL_STORAGE_KEYS.SELECTED_PROJECT_UUID,
-        firstProject?.uuid
-      );
-    }
-
-    setIsLoading(false);
-  }, []);
+  const hasOpenRouterKey =
+    selectedOrganization?.organization_keys.some(
+      (key) => key.key === ORGANIZATION_KEYS.OPENROUTER_API_KEY
+    ) ?? false;
 
   const setSelectedOrganizationUuid = (uuid: string) => {
     _setSelectedOrganizationUuid(uuid);
@@ -164,12 +86,14 @@ export const AppProvider = (props: AppProviderProps) => {
         (orgUser) => orgUser.organizations.uuid === uuid
       )?.organizations ?? null
     );
-    setLocalStorageItem(LOCAL_STORAGE_KEYS.SELECTED_ORGANIZATION_UUID, uuid);
   };
 
   const setSelectedProjectUuid = (uuid: string) => {
     _setSelectedProjectUuid(uuid);
-    setLocalStorageItem(LOCAL_STORAGE_KEYS.SELECTED_PROJECT_UUID, uuid);
+    setSelectedProject(
+      selectedOrganization?.projects.find((project) => project.uuid === uuid) ??
+        null
+    );
   };
 
   const value = useMemo(

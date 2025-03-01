@@ -21,7 +21,6 @@ export const OrganizationSelector = (props: OrganizationSelectorProps) => {
     return <div>Loading...</div>;
   }
 
-  // Extract organizations from the nested structure
   const organizations =
     userOrganizationData?.organization_users?.flatMap((orgUser: any) =>
       orgUser.organizations ? [orgUser.organizations] : []
@@ -32,7 +31,6 @@ export const OrganizationSelector = (props: OrganizationSelectorProps) => {
 
   return (
     <div>
-      {/* Organization selection dropdown (if available) */}
       {hasOrganizations && (
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -56,8 +54,6 @@ export const OrganizationSelector = (props: OrganizationSelectorProps) => {
           </div>
         </div>
       )}
-
-      {/* Project selection dropdown (if org selected and has projects) */}
       {hasOrganizations && selectedOrganizationUuid && hasProjects && (
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-1">

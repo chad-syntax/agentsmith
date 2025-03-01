@@ -1,8 +1,7 @@
 const LS_PREFIX = '@@agentsmith';
 
 export const LOCAL_STORAGE_KEYS = {
-  SELECTED_ORGANIZATION_UUID: 'SELECTED_ORGANIZATION_UUID',
-  SELECTED_PROJECT_UUID: 'SELECTED_PROJECT_UUID',
+  PLACEHOLDER: 'PLACEHOLDER',
 } as const;
 
 export type LocalStorageKeys = keyof typeof LOCAL_STORAGE_KEYS;

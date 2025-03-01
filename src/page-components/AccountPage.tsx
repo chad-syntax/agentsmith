@@ -3,12 +3,10 @@
 import Link from 'next/link';
 import { useAuth } from '@/app/providers/auth';
 import { signOutAction } from '@/app/actions/auth';
-import { useApp } from '@/app/providers/app';
 import { routes } from '@/utils/routes';
 
 export const AccountPage = () => {
   const { user, agentsmithUser } = useAuth();
-  const { hasOpenRouterKey, isLoading } = useApp();
 
   if (!agentsmithUser) {
     return (
@@ -44,30 +42,6 @@ export const AccountPage = () => {
         <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
           {JSON.stringify(agentsmithUser, null, 2)}
         </pre>
-      </div>
-      <div>
-        <h2 className="font-bold text-xl mb-4">Openrouter Account</h2>
-        {isLoading ? (
-          <div>Loading...</div>
-        ) : (
-          <>
-            <p className="pb-4">
-              {hasOpenRouterKey
-                ? '✅ You have an Openrouter key for this organization'
-                : '❌ You do not have an Openrouter key for this organization'}
-            </p>
-            {hasOpenRouterKey && (
-              <a
-                href="https://openrouter.ai/settings/keys"
-                className="text-blue-500 hover:text-blue-600 text-xs"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View Your Openrouter Keys
-              </a>
-            )}
-          </>
-        )}
       </div>
     </div>
   );

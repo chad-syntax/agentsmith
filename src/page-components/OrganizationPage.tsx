@@ -15,7 +15,7 @@ type OrganizationPageProps = {
 export const OrganizationPage = (props: OrganizationPageProps) => {
   const { organization } = props;
 
-  const { selectedOrganizationUuid } = useApp();
+  const { selectedOrganizationUuid, isLoading, hasOpenRouterKey } = useApp();
 
   const router = useRouter();
 
@@ -75,6 +75,30 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
             </Link>
           ))}
         </div>
+      </div>
+      <div>
+        <h2 className="font-bold text-xl mb-4">Openrouter Account</h2>
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : (
+          <>
+            <p className="pb-4">
+              {hasOpenRouterKey
+                ? '✅ This organization has an Openrouter key'
+                : '❌ This organization does not have an Openrouter key'}
+            </p>
+            {hasOpenRouterKey && (
+              <a
+                href="https://openrouter.ai/settings/keys"
+                className="text-blue-500 hover:text-blue-600 text-xs"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View Your Openrouter Keys
+              </a>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

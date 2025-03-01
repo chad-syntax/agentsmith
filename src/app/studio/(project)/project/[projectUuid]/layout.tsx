@@ -4,12 +4,14 @@ import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { AuthProvider } from '@/app/providers/auth';
 import { getUserOrganizationData, isUserOnboarded } from '&/onboarding';
 import { getUser } from '&/user';
-import { AppProvider, useApp } from '../../../providers/app';
+import { AppProvider } from '@/app/providers/app';
 import { routes } from '@/utils/routes';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
-  params: Promise<{ projectUuid: string }>;
+  params: Promise<{
+    projectUuid: string;
+  }>;
 };
 
 export default async function DashboardLayout(props: DashboardLayoutProps) {
