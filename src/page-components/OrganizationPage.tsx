@@ -5,6 +5,9 @@ import { useEffect, useState } from 'react';
 import { IconClipboard } from '@tabler/icons-react';
 import { useApp } from '@/app/providers/app';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { routes } from '@/utils/routes';
+
 type OrganizationPageProps = {
   organization: Organization;
 };
@@ -37,7 +40,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
       selectedOrganizationUuid !== null &&
       selectedOrganizationUuid !== organization.uuid
     ) {
-      router.push(`/studio/organization/${selectedOrganizationUuid}`);
+      router.push(routes.studio.organization(selectedOrganizationUuid!));
     }
   }, [selectedOrganizationUuid]);
 
@@ -63,7 +66,13 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
         <h2 className="text-lg font-semibold">Projects</h2>
         <div className="flex flex-col gap-2">
           {organization.projects.map((project) => (
-            <div key={project.id}>{project.name}</div>
+            <Link
+              href={routes.studio.project(project.uuid)}
+              className="text-blue-500 hover:underline"
+              key={project.id}
+            >
+              {project.name}
+            </Link>
           ))}
         </div>
       </div>

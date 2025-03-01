@@ -83,7 +83,7 @@ create table organizations (
     uuid uuid not null unique default uuid_generate_v4(),
     name text not null,
     invite_code text not null unique,
-    tier organization_tier not null,
+    tier organization_tier not null default 'FREE',
     created_by bigint references agentsmith_users(id) not null,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
@@ -225,11 +225,12 @@ set search_path = ''
 as $$
 declare
   var_organization_uuid uuid;
+  var_organization_id bigint;
 begin
     -- create the organization
     insert into public.organizations (name, created_by)
     values (arg_name, public.agentsmith_user_id())
-    returning uuid into var_organization_uuid;
+    returning id, uuid into var_organization_id, var_organization_uuid;
 
     -- create an admin user for the organization
     insert into public.organization_users (organization_id, user_id, role)

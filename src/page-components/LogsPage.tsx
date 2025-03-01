@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { getFirstProject, getLogsByProjectId } from '@/lib/logs';
+import { routes } from '@/utils/routes';
 
 type LogsPageProps = {
   project: Awaited<ReturnType<typeof getFirstProject>>;
@@ -94,7 +95,7 @@ export const LogsPage = (props: LogsPageProps) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <Link
-                        href={`/studio/logs/${log.uuid}`}
+                        href={routes.studio.logDetail(project.uuid, log.uuid)}
                         className="text-blue-600 hover:text-blue-900"
                       >
                         View Details

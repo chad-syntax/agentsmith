@@ -39,7 +39,7 @@ export const NotPubliclyAvailable = (props: NotPubliclyAvailableProps) => {
         <div className="flex flex-col items-center justify-center">
           <button
             onClick={() => handleAlphaClubClick()}
-            className="flex items-center gap-1 border border-background border-success bg-success/15 bg-white text-success px-2 py-1 rounded-md text-xs"
+            className="flex items-center gap-1 border border-success bg-success/15 text-success px-2 py-1 rounded-md text-xs"
           >
             Get 50% off the first year of public launch by joining the Alpha
             Club!

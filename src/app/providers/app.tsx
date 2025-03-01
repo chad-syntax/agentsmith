@@ -38,21 +38,46 @@ const AppContext = createContext<AppContextType>({
 type AppProviderProps = {
   userOrganizationData: GetUserOrganizationDataResult;
   children: React.ReactNode;
+  selectedProjectUuid?: string;
+  selectedOrganizationUuid?: string;
 };
 
 export const AppProvider = (props: AppProviderProps) => {
-  const { children, userOrganizationData } = props;
+  const {
+    children,
+    userOrganizationData,
+    selectedProjectUuid: initialSelectedProjectUuid,
+    selectedOrganizationUuid: initialSelectedOrganizationUuid,
+  } = props;
 
   const [selectedOrganizationUuid, _setSelectedOrganizationUuid] = useState<
     string | null
-  >(null);
+  >(initialSelectedOrganizationUuid ?? null);
   const [selectedProjectUuid, _setSelectedProjectUuid] = useState<
     string | null
-  >(null);
+  >(initialSelectedProjectUuid ?? null);
+
+  const initialSelectedOrganization = initialSelectedOrganizationUuid
+    ? (userOrganizationData.organization_users.find(
+        (orgUser) =>
+          orgUser.organizations.uuid === initialSelectedOrganizationUuid
+      )?.organizations ?? null)
+    : null;
+
+  const initialSelectedProject = initialSelectedProjectUuid
+    ? (initialSelectedOrganization?.projects.find(
+        (project) => project.uuid === initialSelectedProjectUuid
+      ) ?? null)
+    : null;
+
   const [selectedOrganization, setSelectedOrganization] =
-    useState<Organization | null>(null);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+    useState<Organization | null>(initialSelectedOrganization);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(
+    initialSelectedProject
+  );
+  const [isLoading, setIsLoading] = useState(
+    !(initialSelectedProjectUuid || initialSelectedOrganizationUuid)
+  );
   const [hasOpenRouterKey, setHasOpenRouterKey] = useState(false);
 
   useEffect(() => {

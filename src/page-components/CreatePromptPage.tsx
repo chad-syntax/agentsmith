@@ -11,7 +11,8 @@ import { useState } from 'react';
 import { IconTrash } from '@tabler/icons-react';
 import { Database } from '@/app/__generated__/supabase.types';
 import { createClient } from '@/lib/supabase/client';
-
+import { routes } from '@/utils/routes';
+import { useApp } from '@/app/providers/app';
 type PromptVariable = {
   name: string;
   type: Database['public']['Enums']['variable_type'];
@@ -30,6 +31,7 @@ export const CreatePromptPage = (props: CreatePromptPageProps) => {
   const [name, setName] = useState('');
   const [model, setModel] = useState('openrouter/auto');
   const [isSaving, setIsSaving] = useState(false);
+  const { selectedProjectUuid } = useApp();
 
   const addVariable = () => {
     setVariables([...variables, { name: '', type: 'STRING', required: true }]);
@@ -139,7 +141,9 @@ export const CreatePromptPage = (props: CreatePromptPageProps) => {
       }
 
       // Redirect to the prompt detail page
-      router.push(`/studio/prompts/${newPromptUuid}`);
+      router.push(
+        routes.studio.promptDetail(selectedProjectUuid!, newPromptUuid)
+      );
     } catch (error) {
       console.error('Error creating prompt:', error);
       alert('Failed to create prompt. Please try again.');
@@ -154,7 +158,7 @@ export const CreatePromptPage = (props: CreatePromptPageProps) => {
         <div className="p-6">
           <div className="mb-6 flex justify-between items-center">
             <Link
-              href="/studio/prompts"
+              href={routes.studio.prompts(selectedProjectUuid!)}
               className="text-blue-500 hover:text-blue-600"
             >
               ← Back to Prompts

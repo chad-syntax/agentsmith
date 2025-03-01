@@ -4,14 +4,18 @@ import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { AuthProvider } from '@/app/providers/auth';
 import { getUserOrganizationData, isUserOnboarded } from '&/onboarding';
 import { getUser } from '&/user';
-import { AppProvider } from '../providers/app';
+import { AppProvider, useApp } from '../../../providers/app';
+import { routes } from '@/utils/routes';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
+  params: Promise<{ projectUuid: string }>;
 };
 
 export default async function DashboardLayout(props: DashboardLayoutProps) {
-  const { children } = props;
+  const { children, params } = props;
+
+  const { projectUuid } = await params;
 
   const supabase = await createClient();
 
@@ -20,7 +24,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/sign-in');
+    redirect(routes.auth.signIn);
   }
 
   try {
@@ -30,13 +34,31 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
     const isOnboarded = isUserOnboarded(userOrganizationData);
 
+    const selectedProject = userOrganizationData.organization_users
+      .flatMap((orgUser) => orgUser.organizations.projects)
+      .find((project) => project.uuid === projectUuid);
+
+    const selectedOrganization = userOrganizationData.organization_users
+      .flatMap((orgUser) => orgUser.organizations)
+      .find((org) =>
+        org.projects.some((project) => project.uuid === projectUuid)
+      );
+
+    if (!selectedProject || !selectedOrganization) {
+      redirect(routes.studio.home);
+    }
+
     return (
       <AuthProvider
         user={user}
         agentsmithUser={agentsmithUser ?? undefined}
         organizationData={userOrganizationData}
       >
-        <AppProvider userOrganizationData={userOrganizationData}>
+        <AppProvider
+          selectedProjectUuid={selectedProject.uuid}
+          selectedOrganizationUuid={selectedOrganization.uuid}
+          userOrganizationData={userOrganizationData}
+        >
           <div className="flex h-screen">
             <DashboardSidebar
               isOnboarded={isOnboarded}
@@ -49,6 +71,6 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
     );
   } catch (error) {
     console.error(error);
-    redirect('/error?message=Failed to fetch user data');
+    redirect(routes.error('Failed to fetch user data'));
   }
 }

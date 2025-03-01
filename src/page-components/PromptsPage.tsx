@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { generateTypes } from '@/app/actions/generate-types';
 import { getPromptsByProjectId } from '@/lib/prompts';
+import { routes } from '@/utils/routes';
+import { useApp } from '@/app/providers/app';
 
 type PromptsPageProps = {
   prompts: Awaited<ReturnType<typeof getPromptsByProjectId>>;
@@ -10,7 +12,7 @@ type PromptsPageProps = {
 
 export const PromptsPage = (props: PromptsPageProps) => {
   const { prompts } = props;
-
+  const { selectedProjectUuid } = useApp();
   const handleGenerateTypes = async () => {
     const response = await generateTypes();
     const blob = new Blob([response.content], { type: 'text/typescript' });
@@ -36,7 +38,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
             Generate Types
           </button>
           <Link
-            href="/studio/prompts/new"
+            href={routes.studio.createPrompt(selectedProjectUuid!)}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             Create New Prompt
@@ -48,7 +50,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">No prompts found</p>
           <Link
-            href="/studio/prompts/new"
+            href={routes.studio.createPrompt(selectedProjectUuid!)}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             Create Your First Prompt
@@ -77,7 +79,10 @@ export const PromptsPage = (props: PromptsPageProps) => {
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-xl font-semibold">{prompt.name}</h2>
                   <Link
-                    href={`/studio/prompts/${prompt.uuid}/edit`}
+                    href={routes.studio.editPrompt(
+                      selectedProjectUuid!,
+                      prompt.uuid
+                    )}
                     className="text-blue-500 hover:text-blue-600"
                   >
                     Edit
@@ -110,7 +115,10 @@ export const PromptsPage = (props: PromptsPageProps) => {
                     Version: {latestVersion?.version || '1.0'}
                   </span>
                   <Link
-                    href={`/studio/prompts/${prompt.uuid}`}
+                    href={routes.studio.promptDetail(
+                      selectedProjectUuid!,
+                      prompt.uuid
+                    )}
                     className="text-blue-500 hover:text-blue-600 text-sm"
                   >
                     View Details →

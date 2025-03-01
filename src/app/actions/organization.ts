@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
-
+import { routes } from '@/utils/routes';
 export const createOrganization = async (name: string) => {
   const supabase = await createClient();
 
@@ -21,7 +21,7 @@ export const createOrganization = async (name: string) => {
     throw new Error('No new organization uuid returned, please try again');
   }
 
-  const redirectUrl = `/studio/organization/${newOrganizationUuid}`;
+  const redirectUrl = routes.studio.organization(newOrganizationUuid);
 
   return redirect(redirectUrl);
 };
@@ -41,7 +41,7 @@ export const renameOrganization = async (
     throw new Error(error.message);
   }
 
-  const redirectUrl = `/studio/organization/${organizationUuid}`;
+  const redirectUrl = routes.studio.organization(organizationUuid);
 
   return redirect(redirectUrl);
 };

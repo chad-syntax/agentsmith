@@ -13,7 +13,7 @@ deallocate all;
 \set ON_ERROR_STOP true
 
 -- plan the number of tests
-select plan(2);
+select plan(6);
 
 -- helper function to get user ids
 create or replace function get_test_user_id(test_email text) 
@@ -30,7 +30,18 @@ begin
 end;
 $$;
 
--- Helper function to set up test context
+-- helper function to reset session
+create or replace function reset_session()
+returns void
+language plpgsql as $$
+begin
+    perform set_config('request.jwt.claim.role', null, true);
+    perform set_config('request.jwt.claim.sub', null, true);
+    set role postgres;
+end;
+$$;
+
+-- helper function to set up test context
 create or replace function set_auth_user(test_email text)
 returns void
 language plpgsql as $$
@@ -55,6 +66,144 @@ select is_empty(
     $$select * from agentsmith_users 
     where auth_user_id = get_test_user_id('pro_member@example.com')$$,
     'user cannot view other users records'
+);
+
+-- test 3-6: inserting a new auth.users record creates associated records
+select reset_session();
+set role postgres;
+
+-- create a test email variable
+do $$
+declare 
+    test_email text := 'test_trigger_user@example.com';
+    test_user_id uuid;
+begin
+    -- Skip creation if user already exists (to make tests idempotent)
+    if not exists (select 1 from auth.users where email = test_email) then
+        -- Insert the user following the pattern from the seeding file
+        insert into auth.users (
+            instance_id,
+            id,
+            aud,
+            role,
+            email,
+            encrypted_password,
+            email_confirmed_at,
+            recovery_sent_at,
+            last_sign_in_at,
+            raw_app_meta_data,
+            raw_user_meta_data,
+            created_at,
+            updated_at,
+            confirmation_token,
+            email_change,
+            email_change_token_new,
+            recovery_token
+        ) values (
+            '00000000-0000-0000-0000-000000000000',
+            uuid_generate_v4(),
+            'authenticated',
+            'authenticated',
+            test_email,
+            crypt('password123', gen_salt('bf')),
+            current_timestamp,
+            current_timestamp,
+            current_timestamp,
+            '{"provider":"email","providers":["email"]}',
+            '{}',
+            current_timestamp,
+            current_timestamp,
+            '',
+            '',
+            '',
+            ''
+        ) returning id into test_user_id;
+        
+        -- Also create the identity record
+        insert into auth.identities (
+            id,
+            user_id,
+            provider_id,
+            identity_data,
+            provider,
+            last_sign_in_at,
+            created_at,
+            updated_at
+        ) values (
+            uuid_generate_v4(),
+            test_user_id,
+            test_user_id,
+            format('{"sub":"%s","email":"%s"}', test_user_id::text, test_email)::jsonb,
+            'email',
+            current_timestamp,
+            current_timestamp,
+            current_timestamp
+        );
+    end if;
+end $$;
+
+-- get the new user's id
+create or replace function get_new_test_user_id()
+returns uuid
+language sql as $$
+    select id from auth.users where email = 'test_trigger_user@example.com';
+$$;
+
+-- check that the agentsmith_user record was created
+select ok(
+    exists (
+        select 1 from agentsmith_users 
+        where auth_user_id = get_new_test_user_id()
+    ),
+    'agentsmith_user record is automatically created'
+);
+
+-- get the new agentsmith_user id
+create or replace function get_new_agentsmith_user_id()
+returns bigint
+language sql as $$
+    select id from agentsmith_users where auth_user_id = get_new_test_user_id();
+$$;
+
+-- check that the organization record was created
+select ok(
+    exists (
+        select 1 from organizations
+        where name = 'Default Organization'
+        and created_by = get_new_agentsmith_user_id()
+    ),
+    'default organization record is automatically created'
+);
+
+-- get the new organization id
+create or replace function get_new_organization_id()
+returns bigint
+language sql as $$
+    select id from organizations 
+    where created_by = get_new_agentsmith_user_id() 
+    and name = 'Default Organization';
+$$;
+
+-- check that the organization_user record was created with ADMIN role
+select ok(
+    exists (
+        select 1 from organization_users
+        where organization_id = get_new_organization_id()
+        and user_id = get_new_agentsmith_user_id()
+        and role = 'ADMIN'
+    ),
+    'organization_user record with ADMIN role is automatically created'
+);
+
+-- check that the project record was created
+select ok(
+    exists (
+        select 1 from projects
+        where organization_id = get_new_organization_id()
+        and name = 'Default Project'
+        and created_by = get_new_agentsmith_user_id()
+    ),
+    'default project record is automatically created'
 );
 
 -- finish the tests

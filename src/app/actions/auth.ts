@@ -4,6 +4,7 @@ import { encodedRedirect } from '@/utils/utils';
 import { createClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { routes } from '@/utils/routes';
 
 export const signUpAction = async (formData: FormData) => {
   const email = formData.get('email')?.toString();
@@ -14,7 +15,7 @@ export const signUpAction = async (formData: FormData) => {
   if (!email || !password) {
     return encodedRedirect(
       'error',
-      '/sign-up',
+      routes.auth.signUp,
       'Email and password are required'
     );
   }
@@ -29,11 +30,11 @@ export const signUpAction = async (formData: FormData) => {
 
   if (error) {
     console.error(error.code + ' ' + error.message);
-    return encodedRedirect('error', '/sign-up', error.message);
+    return encodedRedirect('error', routes.auth.signUp, error.message);
   } else {
     return encodedRedirect(
       'success',
-      '/sign-up',
+      routes.auth.signUp,
       'Thanks for signing up! Please check your email for a verification link.'
     );
   }
@@ -50,10 +51,10 @@ export const signInAction = async (formData: FormData) => {
   });
 
   if (error) {
-    return encodedRedirect('error', '/sign-in', error.message);
+    return encodedRedirect('error', routes.auth.signIn, error.message);
   }
 
-  return redirect('/studio');
+  return redirect(routes.studio.home);
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {
@@ -63,18 +64,22 @@ export const forgotPasswordAction = async (formData: FormData) => {
   const callbackUrl = formData.get('callbackUrl')?.toString();
 
   if (!email) {
-    return encodedRedirect('error', '/forgot-password', 'Email is required');
+    return encodedRedirect(
+      'error',
+      routes.auth.forgotPassword,
+      'Email is required'
+    );
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?redirect_to=/studio/account`,
+    redirectTo: `${origin}/auth/callback?redirect_to=${routes.studio.account}`,
   });
 
   if (error) {
     console.error(error.message);
     return encodedRedirect(
       'error',
-      '/forgot-password',
+      routes.auth.forgotPassword,
       'Could not reset password'
     );
   }
@@ -85,7 +90,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
 
   return encodedRedirect(
     'success',
-    '/forgot-password',
+    routes.auth.forgotPassword,
     'Check your email for a link to reset your password.'
   );
 };
@@ -99,7 +104,7 @@ export const resetPasswordAction = async (formData: FormData) => {
   if (!password || !confirmPassword) {
     encodedRedirect(
       'error',
-      '/account/protected/reset-password',
+      routes.studio.resetPassword,
       'Password and confirm password are required'
     );
   }
@@ -107,7 +112,7 @@ export const resetPasswordAction = async (formData: FormData) => {
   if (password !== confirmPassword) {
     encodedRedirect(
       'error',
-      '/account/protected/reset-password',
+      routes.studio.resetPassword,
       'Passwords do not match'
     );
   }
@@ -119,20 +124,16 @@ export const resetPasswordAction = async (formData: FormData) => {
   if (error) {
     encodedRedirect(
       'error',
-      '/account/protected/reset-password',
+      routes.studio.resetPassword,
       'Password update failed'
     );
   }
 
-  encodedRedirect(
-    'success',
-    '/account/protected/reset-password',
-    'Password updated'
-  );
+  encodedRedirect('success', routes.studio.resetPassword, 'Password updated');
 };
 
 export const signOutAction = async () => {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  return redirect('/sign-in');
+  return redirect(routes.auth.signIn);
 };

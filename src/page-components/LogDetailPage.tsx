@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { format } from 'date-fns';
 import { IconArrowLeft } from '@tabler/icons-react';
 import { getLogByUuid } from '@/lib/logs';
+import { routes } from '@/utils/routes';
+import { useApp } from '@/app/providers/app';
 
 type LogDetailPageProps = {
   log: Awaited<ReturnType<typeof getLogByUuid>>;
@@ -9,7 +11,7 @@ type LogDetailPageProps = {
 
 export const LogDetailPage = (props: LogDetailPageProps) => {
   const { log } = props;
-
+  const { selectedProjectUuid } = useApp();
   // Format date for display
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), 'MMM d, yyyy h:mm a');
@@ -30,7 +32,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
       <div className="p-6">
         <div className="mb-6 flex items-center">
           <Link
-            href="/studio/logs"
+            href={routes.studio.logs(selectedProjectUuid!)}
             className="mr-4 text-blue-600 hover:text-blue-800 flex items-center"
           >
             <IconArrowLeft className="w-4 h-4 mr-1" />
@@ -49,7 +51,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
     <div className="p-6">
       <div className="mb-6 flex items-center">
         <Link
-          href="/studio/logs"
+          href={routes.studio.logs(selectedProjectUuid!)}
           className="mr-4 text-blue-600 hover:text-blue-800 flex items-center"
         >
           <IconArrowLeft className="w-4 h-4 mr-1" />

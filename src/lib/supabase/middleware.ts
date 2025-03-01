@@ -1,9 +1,8 @@
+import { routes } from '@/utils/routes';
 import { createServerClient } from '@supabase/ssr';
 import { type NextRequest, NextResponse } from 'next/server';
 
 export const updateSession = async (request: NextRequest) => {
-  console.log('running supabase middleware');
-
   // Create an unmodified response
   let response = NextResponse.next({
     request: {
@@ -39,14 +38,14 @@ export const updateSession = async (request: NextRequest) => {
   const { error } = await supabase.auth.getUser();
 
   // protected routes
-  if (request.nextUrl.pathname.startsWith('/studio') && error) {
+  if (request.nextUrl.pathname.startsWith(routes.studio.home) && error) {
     console.log('redirecting to sign-in because user.error');
-    return NextResponse.redirect(new URL('/sign-in', request.url));
+    return NextResponse.redirect(new URL(routes.auth.signIn, request.url));
   }
 
   if (request.nextUrl.pathname === '/' && !error) {
     console.log('redirecting to app because !user.error');
-    return NextResponse.redirect(new URL('/studio', request.url));
+    return NextResponse.redirect(new URL(routes.studio.home, request.url));
   }
 
   return response;

@@ -45,7 +45,7 @@ export const LandingHero = (props: LandingHeroProps) => {
       <HeroHeader />
       <div className="flex justify-start items-center md:items-start flex-col lg:flex-row">
         <div className="flex flex-col">
-          <h1 className="max-w-[400px] md:max-w-none text-5xl md:text-8xl font-bold leading-tight mb-10 leading-none md:leading-[90px]">
+          <h1 className="max-w-[400px] md:max-w-none text-5xl md:text-8xl font-bold leading-tight mb-10 md:leading-[90px]">
             AI AGENT
             <br />
             DEVELOPMENT

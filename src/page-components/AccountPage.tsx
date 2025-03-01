@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/app/providers/auth';
 import { signOutAction } from '@/app/actions/auth';
 import { useApp } from '@/app/providers/app';
+import { routes } from '@/utils/routes';
 
 export const AccountPage = () => {
   const { user, agentsmithUser } = useAuth();
@@ -26,7 +27,7 @@ export const AccountPage = () => {
           Sign Out
         </button>
         <Link
-          href="/studio/account/reset-password"
+          href={routes.studio.resetPassword}
           className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
         >
           Reset Password

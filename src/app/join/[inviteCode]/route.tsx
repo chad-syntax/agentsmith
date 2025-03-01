@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-
+import { routes } from '@/utils/routes';
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ inviteCode: string }> }
@@ -28,11 +28,11 @@ export async function GET(
   if (error) {
     console.error(error);
     return NextResponse.redirect(
-      new URL('/error?message=Failed to join organization', request.url)
+      new URL(routes.error('Failed to join organization'), request.url)
     );
   }
 
   return NextResponse.redirect(
-    new URL(`/studio/organization/${organizationUuid}`, request.url)
+    new URL(routes.studio.organization(organizationUuid), request.url)
   );
 }

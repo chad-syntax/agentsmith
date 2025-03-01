@@ -12,6 +12,8 @@ import { generateTypes } from '@/app/actions/generate-types';
 import Editor from 'react-simple-code-editor';
 import { getPromptById, getLatestPromptVersion } from '&/prompts';
 import { Modal } from '@/components/ui/modal';
+import { routes } from '@/utils/routes';
+import { useApp } from '@/app/providers/app';
 
 type PromptDetailPageProps = {
   prompt: NonNullable<Awaited<ReturnType<typeof getPromptById>>>;
@@ -29,7 +31,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
   const [testVariables, setTestVariables] = useState<Record<string, string>>(
     {}
   );
-
+  const { selectedProjectUuid } = useApp();
   const handleGenerateTypes = async () => {
     const response = await generateTypes();
     const blob = new Blob([response.content], { type: 'text/typescript' });
@@ -95,7 +97,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         <div className="p-6">
           <div className="mb-6">
             <Link
-              href="/studio/prompts"
+              href={routes.studio.prompts(selectedProjectUuid!)}
               className="text-blue-500 hover:text-blue-600"
             >
               ← Back to Prompts
@@ -126,7 +128,10 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
                 )}
               </button>
               <Link
-                href={`/studio/prompts/${props.prompt.uuid}/edit`}
+                href={routes.studio.editPrompt(
+                  selectedProjectUuid!,
+                  props.prompt.uuid
+                )}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
               >
                 Edit Prompt

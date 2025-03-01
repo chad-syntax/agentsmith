@@ -2,10 +2,11 @@ import { NextResponse } from 'next/server';
 import { ORGANIZATION_KEYS } from '@/app/constants';
 import { createVaultService } from '@/lib/vault';
 import { createClient } from '@/lib/supabase/server';
+import { routes } from '@/utils/routes';
 
-type OpenrouterCallbackParams = {
+type OpenrouterCallbackParams = Promise<{
   organizationUuid: string;
-};
+}>;
 
 export async function GET(
   request: Request,
@@ -15,13 +16,13 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
 
-    const { organizationUuid } = params;
+    const { organizationUuid } = await params;
 
     if (!code) {
       console.error('/connect/openrouter: no code found');
       return NextResponse.redirect(
         new URL(
-          '/studio/account?message=Failed to connect OpenRouter: No code provided',
+          routes.error('Failed to connect OpenRouter: No code provided'),
           request.url
         )
       );
@@ -31,7 +32,9 @@ export async function GET(
       console.error('/connect/openrouter: no organizationUuid found');
       return NextResponse.redirect(
         new URL(
-          '/studio/account?message=Failed to connect OpenRouter: No organization ID provided',
+          routes.error(
+            'Failed to connect OpenRouter: No organization ID provided'
+          ),
           request.url
         )
       );
@@ -46,7 +49,7 @@ export async function GET(
       console.error('/connect/openrouter: no user found');
       return NextResponse.redirect(
         new URL(
-          '/studio/account?message=Failed to connect OpenRouter: Not authenticated',
+          routes.error('Failed to connect OpenRouter: Not authenticated'),
           request.url
         )
       );
@@ -63,7 +66,7 @@ export async function GET(
       console.error('/connect/openrouter: no code verifier found');
       return NextResponse.redirect(
         new URL(
-          '/studio/account?message=Failed to connect OpenRouter: No code verifier found',
+          routes.error('Failed to connect OpenRouter: No code verifier found'),
           request.url
         )
       );
@@ -89,7 +92,7 @@ export async function GET(
       );
       return NextResponse.redirect(
         new URL(
-          '/studio/account?message=Failed to connect OpenRouter: API error',
+          routes.error('Failed to connect OpenRouter: API error'),
           request.url
         )
       );
@@ -103,7 +106,7 @@ export async function GET(
       );
       return NextResponse.redirect(
         new URL(
-          '/studio/account?message=Failed to connect OpenRouter: No API key in response',
+          routes.error('Failed to connect OpenRouter: No API key in response'),
           request.url
         )
       );
@@ -125,24 +128,19 @@ export async function GET(
       );
       return NextResponse.redirect(
         new URL(
-          '/studio/account?message=Failed to connect OpenRouter: Could not save API key',
+          routes.error('Failed to connect OpenRouter: Could not save API key'),
           request.url
         )
       );
     }
 
     console.log('/connect/openrouter: successfully saved openrouter key');
-    return NextResponse.redirect(
-      new URL(
-        '/studio/account?message=Successfully connected OpenRouter',
-        request.url
-      )
-    );
+    return NextResponse.redirect(new URL(routes.studio.account, request.url));
   } catch (error) {
     console.error('/connect/openrouter: unexpected error', error);
     return NextResponse.redirect(
       new URL(
-        '/studio/account?message=Failed to connect OpenRouter: Unexpected error',
+        routes.error('Failed to connect OpenRouter: Unexpected error'),
         request.url
       )
     );

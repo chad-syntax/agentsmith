@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { AgentsmithUser, AuthProvider } from '../providers/auth';
-
+import { routes } from '@/utils/routes';
 type AuthLayoutProps = {
   children: React.ReactNode;
 };
@@ -16,7 +16,7 @@ export default async function AuthLayout(props: AuthLayoutProps) {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect('/app');
+    redirect(routes.studio.home);
   }
 
   return <>{children}</>;

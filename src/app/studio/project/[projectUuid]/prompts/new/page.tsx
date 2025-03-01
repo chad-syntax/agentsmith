@@ -1,6 +1,7 @@
 import { CreatePromptPage } from '@/page-components/CreatePromptPage';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
+import { routes } from '@/utils/routes';
 
 export default async function NewPromptPage() {
   const supabase = await createClient();
@@ -11,7 +12,7 @@ export default async function NewPromptPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect('/sign-in');
+    redirect(routes.auth.signIn);
   }
 
   const { data: userData } = await supabase
@@ -26,7 +27,7 @@ export default async function NewPromptPage() {
 
   if (!projectData) {
     // Redirect to home if user doesn't have an active project
-    redirect('/studio');
+    redirect(routes.studio.home);
   }
 
   return <CreatePromptPage projectId={projectData.id} />;

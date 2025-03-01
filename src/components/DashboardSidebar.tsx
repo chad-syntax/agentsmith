@@ -15,6 +15,7 @@ import { usePathname } from 'next/navigation';
 import { useApp } from '@/app/providers/app';
 import { OrganizationSelector } from '@/components/OrganizationSelector';
 import type { GetUserOrganizationDataResult } from '@/lib/onboarding';
+import { routes } from '@/utils/routes';
 
 export type DashboardSidebarProps = {
   isOnboarded: boolean;
@@ -32,37 +33,43 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
   const navItems = [
     {
       name: 'Home',
-      href: '/studio',
+      href: routes.studio.home,
       icon: IconHome,
-      active: pathname === '/studio',
+      active: pathname === routes.studio.home,
     },
     {
       name: 'Organization',
-      href: `/studio/organization/${selectedOrganizationUuid}`,
+      href: routes.studio.organization(selectedOrganizationUuid!),
       icon: IconBuilding,
-      active: pathname.startsWith('/studio/organization'),
+      active: pathname.startsWith(
+        routes.studio.organization(selectedOrganizationUuid!)
+      ),
     },
     ...(isOnboarded
       ? [
           {
             name: 'Prompts',
-            href: '/studio/prompts',
+            href: routes.studio.prompts(selectedOrganizationUuid!),
             icon: IconPrompt,
-            active: pathname.startsWith('/studio/prompts'),
+            active: pathname.startsWith(
+              routes.studio.prompts(selectedOrganizationUuid!)
+            ),
           },
           {
             name: 'Logs',
-            href: '/studio/logs',
+            href: routes.studio.logs(selectedOrganizationUuid!),
             icon: IconList,
-            active: pathname.startsWith('/studio/logs'),
+            active: pathname.startsWith(
+              routes.studio.logs(selectedOrganizationUuid!)
+            ),
           },
         ]
       : []),
     {
       name: 'Account',
-      href: '/studio/account',
+      href: routes.studio.account,
       icon: IconUser,
-      active: pathname.startsWith('/studio/account'),
+      active: pathname.startsWith(routes.studio.account),
     },
   ];
 

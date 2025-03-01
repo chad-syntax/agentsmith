@@ -1,5 +1,6 @@
+import { routes } from '@/utils/routes';
 import { redirect } from 'next/navigation';
 
 export default async function Home() {
-  redirect('/1landing');
+  redirect(routes.marketing.landing1);
 }

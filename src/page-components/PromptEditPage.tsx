@@ -18,6 +18,8 @@ import {
   getPromptById,
   //   getLatestPromptVersion,
 } from '@/lib/prompts';
+import { routes } from '@/utils/routes';
+import { useApp } from '@/app/providers/app';
 
 type PromptVariable = Omit<
   Database['public']['Tables']['prompt_variables']['Row'],
@@ -49,6 +51,7 @@ export const PromptEditPage = (props: PromptEditPageProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const { selectedProjectUuid } = useApp();
 
   const addVariable = () => {
     setVariables([...variables, { name: '', type: 'STRING', required: true }]);
@@ -144,7 +147,10 @@ export const PromptEditPage = (props: PromptEditPageProps) => {
         <div className="p-6">
           <div className="mb-6 flex justify-between items-center">
             <Link
-              href={`/studio/prompts/${props.prompt.uuid}`}
+              href={routes.studio.promptDetail(
+                selectedProjectUuid!,
+                props.prompt.uuid
+              )}
               className="text-blue-500 hover:text-blue-600"
             >
               ← Back to Prompt

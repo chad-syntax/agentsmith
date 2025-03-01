@@ -1,15 +1,13 @@
 import { useApp } from '@/app/providers/app';
-import { IconChevronDown } from '@tabler/icons-react';
-import { useState } from 'react';
 import type { GetUserOrganizationDataResult } from '@/lib/onboarding';
 
 export type OrganizationSelectorProps = {
   userOrganizationData: GetUserOrganizationDataResult;
 };
 
-export const OrganizationSelector = ({
-  userOrganizationData,
-}: OrganizationSelectorProps) => {
+export const OrganizationSelector = (props: OrganizationSelectorProps) => {
+  const { userOrganizationData } = props;
+
   const {
     selectedOrganizationUuid,
     setSelectedOrganizationUuid,
@@ -18,8 +16,6 @@ export const OrganizationSelector = ({
     setSelectedProjectUuid,
     isLoading,
   } = useApp();
-
-  const [organizationName, setOrganizationName] = useState('');
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -57,9 +53,6 @@ export const OrganizationSelector = ({
                 </option>
               ))}
             </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <IconChevronDown className="h-4 w-4 text-gray-400" />
-            </div>
           </div>
         </div>
       )}
@@ -85,9 +78,6 @@ export const OrganizationSelector = ({
                 </option>
               ))}
             </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-              <IconChevronDown className="h-4 w-4 text-gray-400" />
-            </div>
           </div>
         </div>
       )}
