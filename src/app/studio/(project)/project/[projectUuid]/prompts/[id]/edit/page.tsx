@@ -29,7 +29,7 @@ export default async function PromptEdit(props: PromptEditProps) {
     <PromptEditPage
       prompt={prompt}
       initialContent={latestVersion.content}
-      initialModel={latestVersion.model}
+      initialModel={(latestVersion.config as any)?.model}
       initialVariables={latestVersion.prompt_variables}
     />
   );
