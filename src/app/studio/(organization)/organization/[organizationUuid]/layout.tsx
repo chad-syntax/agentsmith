@@ -6,7 +6,7 @@ import { getUserOrganizationData, isUserOnboarded } from '&/onboarding';
 import { getUser } from '&/user';
 import { AppProvider } from '@/app/providers/app';
 import { routes } from '@/utils/routes';
-import { getOrganization } from '@/lib/organization';
+import { getOrganizationData } from '@/lib/organization';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -37,7 +37,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
     const isOnboarded = isUserOnboarded(userOrganizationData);
 
-    const organization = await getOrganization(organizationUuid);
+    const organization = await getOrganizationData(organizationUuid);
 
     const firstOrganizationProject = organization.projects[0];
 

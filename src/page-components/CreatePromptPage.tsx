@@ -29,7 +29,9 @@ export const CreatePromptPage = (props: CreatePromptPageProps) => {
   const [variables, setVariables] = useState<PromptVariable[]>([]);
   const [content, setContent] = useState('');
   const [name, setName] = useState('');
-  const [model, setModel] = useState('openrouter/auto');
+  const [config, setConfig] = useState(
+    '{"models": ["openrouter/auto"], "temperature": 1.0}'
+  );
   const [isSaving, setIsSaving] = useState(false);
   const { selectedProjectUuid } = useApp();
 
@@ -103,7 +105,7 @@ export const CreatePromptPage = (props: CreatePromptPageProps) => {
         .insert({
           prompt_id: newPromptId,
           content,
-          model,
+          config,
           status: 'PUBLISHED',
           version: '1.0', // Default version string
         })
@@ -142,7 +144,7 @@ export const CreatePromptPage = (props: CreatePromptPageProps) => {
 
       // Redirect to the prompt detail page
       router.push(
-        routes.studio.promptDetail(selectedProjectUuid!, newPromptUuid)
+        routes.studio.promptDetail(selectedProjectUuid, newPromptUuid)
       );
     } catch (error) {
       console.error('Error creating prompt:', error);
@@ -158,7 +160,7 @@ export const CreatePromptPage = (props: CreatePromptPageProps) => {
         <div className="p-6">
           <div className="mb-6 flex justify-between items-center">
             <Link
-              href={routes.studio.prompts(selectedProjectUuid!)}
+              href={routes.studio.prompts(selectedProjectUuid)}
               className="text-blue-500 hover:text-blue-600"
             >
               ← Back to Prompts
@@ -190,14 +192,14 @@ export const CreatePromptPage = (props: CreatePromptPageProps) => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Model
+                Config
               </label>
               <input
                 type="text"
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
+                value={config}
+                onChange={(e) => setConfig(e.target.value)}
                 className="w-full px-3 py-2 border rounded-md"
-                placeholder="openrouter/auto"
+                placeholder='{"models": ["openrouter/auto"], "temperature": 1.0}'
               />
             </div>
 

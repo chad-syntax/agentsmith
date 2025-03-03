@@ -3,38 +3,38 @@
 import { GetUserOrganizationDataResult } from '@/lib/onboarding';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { ORGANIZATION_KEYS } from '@/app/constants';
+import { redirect, useRouter } from 'next/navigation';
+import { routes } from '@/utils/routes';
 
 type Organization =
   GetUserOrganizationDataResult['organization_users'][number]['organizations'];
 type Project = Organization['projects'][number];
 
 type AppContextType = {
-  selectedOrganizationUuid: string | null;
-  selectedProjectUuid: string | null;
+  selectedOrganizationUuid: string;
+  selectedProjectUuid: string;
   setSelectedOrganizationUuid: (uuid: string) => void;
   setSelectedProjectUuid: (uuid: string) => void;
-  selectedOrganization: Organization | null;
-  selectedProject: Project | null;
-  isLoading: boolean;
+  selectedOrganization: Organization;
+  selectedProject: Project;
   hasOpenRouterKey: boolean;
 };
 
 const AppContext = createContext<AppContextType>({
-  selectedOrganizationUuid: null,
-  selectedProjectUuid: null,
+  selectedOrganizationUuid: '',
+  selectedProjectUuid: '',
   setSelectedOrganizationUuid: () => {},
   setSelectedProjectUuid: () => {},
-  selectedOrganization: null,
-  selectedProject: null,
-  isLoading: true,
+  selectedOrganization: {} as Organization,
+  selectedProject: {} as Project,
   hasOpenRouterKey: false,
 });
 
 type AppProviderProps = {
   userOrganizationData: GetUserOrganizationDataResult;
+  selectedProjectUuid: string;
+  selectedOrganizationUuid: string;
   children: React.ReactNode;
-  selectedProjectUuid?: string;
-  selectedOrganizationUuid?: string;
 };
 
 export const AppProvider = (props: AppProviderProps) => {
@@ -45,33 +45,30 @@ export const AppProvider = (props: AppProviderProps) => {
     selectedOrganizationUuid: initialSelectedOrganizationUuid,
   } = props;
 
-  const [selectedOrganizationUuid, _setSelectedOrganizationUuid] = useState<
-    string | null
-  >(initialSelectedOrganizationUuid ?? null);
-  const [selectedProjectUuid, _setSelectedProjectUuid] = useState<
-    string | null
-  >(initialSelectedProjectUuid ?? null);
+  const router = useRouter();
 
-  const initialSelectedOrganization = initialSelectedOrganizationUuid
-    ? (userOrganizationData.organization_users.find(
-        (orgUser) =>
-          orgUser.organizations.uuid === initialSelectedOrganizationUuid
-      )?.organizations ?? null)
-    : null;
+  const [selectedOrganizationUuid, _setSelectedOrganizationUuid] =
+    useState<string>(initialSelectedOrganizationUuid);
+  const [selectedProjectUuid, _setSelectedProjectUuid] = useState<string>(
+    initialSelectedProjectUuid
+  );
 
-  const initialSelectedProject = initialSelectedProjectUuid
-    ? (initialSelectedOrganization?.projects.find(
-        (project) => project.uuid === initialSelectedProjectUuid
-      ) ?? null)
-    : null;
+  const initialSelectedOrganization =
+    userOrganizationData.organization_users.find(
+      (orgUser) =>
+        orgUser.organizations.uuid === initialSelectedOrganizationUuid
+    )?.organizations ??
+    userOrganizationData.organization_users[0].organizations;
+
+  const initialSelectedProject =
+    initialSelectedOrganization?.projects.find(
+      (project) => project.uuid === initialSelectedProjectUuid
+    ) ?? initialSelectedOrganization?.projects[0];
 
   const [selectedOrganization, setSelectedOrganization] =
-    useState<Organization | null>(initialSelectedOrganization);
-  const [selectedProject, setSelectedProject] = useState<Project | null>(
+    useState<Organization>(initialSelectedOrganization);
+  const [selectedProject, setSelectedProject] = useState<Project>(
     initialSelectedProject
-  );
-  const [isLoading, setIsLoading] = useState(
-    !(initialSelectedProjectUuid || initialSelectedOrganizationUuid)
   );
 
   const hasOpenRouterKey =
@@ -81,19 +78,37 @@ export const AppProvider = (props: AppProviderProps) => {
 
   const setSelectedOrganizationUuid = (uuid: string) => {
     _setSelectedOrganizationUuid(uuid);
-    setSelectedOrganization(
+
+    const targetOrganization =
       userOrganizationData.organization_users.find(
         (orgUser) => orgUser.organizations.uuid === uuid
-      )?.organizations ?? null
-    );
+      )?.organizations ?? null;
+
+    if (!targetOrganization) {
+      redirect(
+        routes.error('Cannot select organization, user is not a member.')
+      );
+    }
+
+    setSelectedOrganization(targetOrganization);
+    router.push(routes.studio.organization(uuid));
   };
 
   const setSelectedProjectUuid = (uuid: string) => {
     _setSelectedProjectUuid(uuid);
-    setSelectedProject(
+
+    const targetProject =
       selectedOrganization?.projects.find((project) => project.uuid === uuid) ??
-        null
-    );
+      null;
+
+    if (!targetProject) {
+      redirect(
+        routes.error('Cannot select project, user does not have access.')
+      );
+    }
+
+    setSelectedProject(targetProject);
+    router.push(routes.studio.project(uuid));
   };
 
   const value = useMemo(
@@ -104,7 +119,6 @@ export const AppProvider = (props: AppProviderProps) => {
       setSelectedProjectUuid,
       selectedOrganization,
       selectedProject,
-      isLoading,
       hasOpenRouterKey,
     }),
     [
@@ -112,7 +126,6 @@ export const AppProvider = (props: AppProviderProps) => {
       selectedProjectUuid,
       selectedOrganization,
       selectedProject,
-      isLoading,
       hasOpenRouterKey,
     ]
   );

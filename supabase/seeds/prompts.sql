@@ -11,7 +11,7 @@ from public.projects;
 insert into prompt_versions (
     uuid,
     prompt_id,
-    model,
+    config,
     content,
     version,
     status
@@ -19,7 +19,7 @@ insert into prompt_versions (
 select
     uuid_generate_v4(),
     id,
-    'openrouter/auto',
+    '{"models": ["openrouter/auto"], "temperature": 1.0}',
     'Respond with the following:
 
 "Hello {{ name }}, I am (the model you are)."

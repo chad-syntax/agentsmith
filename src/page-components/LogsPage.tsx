@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { getFirstProject, getLogsByProjectId } from '@/lib/logs';
+import { getLogsByProjectId } from '@/lib/logs';
 import { routes } from '@/utils/routes';
+import { getProjectData } from '@/lib/projects';
 
 type LogsPageProps = {
-  project: Awaited<ReturnType<typeof getFirstProject>>;
+  project: Awaited<ReturnType<typeof getProjectData>>;
   logs: Awaited<ReturnType<typeof getLogsByProjectId>>;
 };
 

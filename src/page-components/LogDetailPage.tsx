@@ -6,12 +6,14 @@ import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
 
 type LogDetailPageProps = {
-  log: Awaited<ReturnType<typeof getLogByUuid>>;
+  log: NonNullable<Awaited<ReturnType<typeof getLogByUuid>>>;
 };
 
 export const LogDetailPage = (props: LogDetailPageProps) => {
   const { log } = props;
-  const { selectedProjectUuid } = useApp();
+
+  const projectUuid = log.projects.uuid;
+
   // Format date for display
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), 'MMM d, yyyy h:mm a');
@@ -32,7 +34,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
       <div className="p-6">
         <div className="mb-6 flex items-center">
           <Link
-            href={routes.studio.logs(selectedProjectUuid!)}
+            href={routes.studio.logs(projectUuid)}
             className="mr-4 text-blue-600 hover:text-blue-800 flex items-center"
           >
             <IconArrowLeft className="w-4 h-4 mr-1" />
@@ -51,7 +53,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
     <div className="p-6">
       <div className="mb-6 flex items-center">
         <Link
-          href={routes.studio.logs(selectedProjectUuid!)}
+          href={routes.studio.logs(projectUuid)}
           className="mr-4 text-blue-600 hover:text-blue-800 flex items-center"
         >
           <IconArrowLeft className="w-4 h-4 mr-1" />

@@ -1,4 +1,9 @@
-import { IconPrompt, IconList, IconUser } from '@tabler/icons-react';
+import {
+  IconPrompt,
+  IconList,
+  IconUser,
+  IconPencil,
+} from '@tabler/icons-react';
 import Link from 'next/link';
 import type { GetProjectDataResult } from '@/lib/projects';
 import { routes } from '@/utils/routes';
@@ -12,7 +17,12 @@ export const ProjectPage = (props: ProjectPageProps) => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-8">Project: {projectData.name}</h1>
+      <div className="flex gap-2 justify-start items-center mb-8">
+        <h1 className="text-2xl font-bold">Project: {projectData.name}</h1>
+        <Link href={routes.studio.editProject(projectData.uuid)}>
+          <IconPencil className="w-6 h-6 text-gray-500" />
+        </Link>
+      </div>
 
       <main>
         {

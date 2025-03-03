@@ -10,7 +10,10 @@ export const routes = {
     home: '/studio',
     organization: (organizationUuid: string) =>
       `/studio/organization/${organizationUuid}`,
+    editOrganization: (organizationUuid: string) =>
+      `/studio/organization/${organizationUuid}/edit`,
     project: (projectUuid: string) => `/studio/project/${projectUuid}`,
+    editProject: (projectUuid: string) => `/studio/project/${projectUuid}/edit`,
     prompts: (projectUuid: string) => `/studio/project/${projectUuid}/prompts`,
     promptDetail: (projectUuid: string, promptId: string) =>
       `/studio/project/${projectUuid}/prompts/${promptId}`,

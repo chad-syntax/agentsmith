@@ -44,7 +44,7 @@ export const updateSession = async (request: NextRequest) => {
   }
 
   if (request.nextUrl.pathname === '/' && !error) {
-    console.log('redirecting to app because !user.error');
+    console.log('redirecting to studio because !user.error');
     return NextResponse.redirect(new URL(routes.studio.home, request.url));
   }
 

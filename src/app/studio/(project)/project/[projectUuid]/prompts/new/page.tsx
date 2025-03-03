@@ -23,8 +23,6 @@ export default async function NewPromptPage() {
 
   const projectData = userData?.projects[0];
 
-  console.log(projectData);
-
   if (!projectData) {
     // Redirect to home if user doesn't have an active project
     redirect(routes.studio.home);

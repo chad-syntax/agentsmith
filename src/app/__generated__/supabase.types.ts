@@ -213,7 +213,7 @@ export type Database = {
           id?: number
           invite_code?: string
           name: string
-          tier: Database["public"]["Enums"]["organization_tier"]
+          tier?: Database["public"]["Enums"]["organization_tier"]
           updated_at?: string
           uuid?: string
         }
@@ -322,10 +322,10 @@ export type Database = {
       }
       prompt_versions: {
         Row: {
+          config: Json
           content: string
           created_at: string
           id: number
-          model: string
           prompt_id: number | null
           status: Database["public"]["Enums"]["prompt_status"]
           updated_at: string
@@ -333,10 +333,10 @@ export type Database = {
           version: string
         }
         Insert: {
+          config: Json
           content: string
           created_at?: string
           id?: number
-          model: string
           prompt_id?: number | null
           status: Database["public"]["Enums"]["prompt_status"]
           updated_at?: string
@@ -344,10 +344,10 @@ export type Database = {
           version: string
         }
         Update: {
+          config?: Json
           content?: string
           created_at?: string
           id?: number
-          model?: string
           prompt_id?: number | null
           status?: Database["public"]["Enums"]["prompt_status"]
           updated_at?: string

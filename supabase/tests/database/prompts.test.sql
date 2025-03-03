@@ -53,11 +53,12 @@ select isnt_empty(
 -- test 2: pro member can create prompts
 select set_auth_user('pro_member@example.com');
 prepare member_create_prompt as
-insert into prompts (project_id, name, slug)
+insert into prompts (project_id, name, slug, config)
 select 
     id,
     'Test Prompt',
-    'test-prompt'
+    'test-prompt',
+    '{"models": ["openrouter/auto"], "temperature": 1.0}'
 from projects 
 where name = 'Pro Project 1';
 

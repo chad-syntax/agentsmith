@@ -53,26 +53,6 @@ export const getLogByUuid = async (uuid: string) => {
 };
 
 /**
- * Get the first project for the current user
- */
-export const getFirstProject = async () => {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from('projects')
-    .select('*')
-    .limit(1)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching project:', error);
-    return null;
-  }
-
-  return data[0];
-};
-
-/**
  * Insert a new log entry for a prompt run
  */
 export const createLogEntry = async (

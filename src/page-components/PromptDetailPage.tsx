@@ -14,6 +14,10 @@ import { getPromptById, getLatestPromptVersion } from '&/prompts';
 import { Modal } from '@/components/ui/modal';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
+import type {
+  OpenrouterResponse,
+  NonStreamingChoice,
+} from '@/app/api/[apiVersion]/prompts/[promptUuid]/run/route';
 
 type PromptDetailPageProps = {
   prompt: NonNullable<Awaited<ReturnType<typeof getPromptById>>>;
@@ -22,10 +26,16 @@ type PromptDetailPageProps = {
   >;
 };
 
+type FullResult = {
+  completion: OpenrouterResponse;
+  logUuid: string;
+};
+
 export const PromptDetailPage = (props: PromptDetailPageProps) => {
   const [isOpen, setIsOpen] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
-  const [runResult, setRunResult] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<string | null>(null);
+  const [fullResult, setFullResult] = useState<FullResult | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [testVariables, setTestVariables] = useState<Record<string, string>>(
@@ -47,7 +57,8 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
 
   const handleTestRun = async () => {
     setIsRunning(true);
-    setRunResult(null);
+    setTestResult(null);
+    setFullResult(null);
     setRunError(null);
 
     try {
@@ -64,12 +75,14 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         throw new Error(errorData.error || 'Failed to run prompt');
       }
 
-      const data = await response.json();
+      const data: FullResult = await response.json();
 
       const result =
-        data.completion.choices[0]?.message.content || 'No response content';
+        (data.completion.choices[0] as NonStreamingChoice).message.content ||
+        'No response content';
 
-      setRunResult(result);
+      setTestResult(result);
+      setFullResult(data);
     } catch (error) {
       console.error('Error running prompt:', error);
       setRunError(
@@ -97,7 +110,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         <div className="p-6">
           <div className="mb-6">
             <Link
-              href={routes.studio.prompts(selectedProjectUuid!)}
+              href={routes.studio.prompts(selectedProjectUuid)}
               className="text-blue-500 hover:text-blue-600"
             >
               ← Back to Prompts
@@ -129,7 +142,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
               </button>
               <Link
                 href={routes.studio.editPrompt(
-                  selectedProjectUuid!,
+                  selectedProjectUuid,
                   props.prompt.uuid
                 )}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
@@ -155,14 +168,33 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
             />
           </div>
 
-          {(runResult || runError) && (
+          {(testResult || runError) && (
             <div className="mt-6">
               <h2 className="text-xl font-semibold mb-3">Test Run Result</h2>
+              <div className="bg-white rounded-lg border p-4 mb-4">
+                <Link
+                  className="text-blue-500 hover:text-blue-600"
+                  href={routes.studio.logDetail(
+                    selectedProjectUuid,
+                    fullResult?.logUuid!
+                  )}
+                >
+                  View Log
+                </Link>
+              </div>
               <div className="bg-white rounded-lg border p-4">
                 {runError ? (
                   <div className="text-red-500">{runError}</div>
                 ) : (
-                  <div className="whitespace-pre-wrap">{runResult}</div>
+                  <>
+                    <div className="whitespace-pre-wrap">{testResult}</div>
+                    <div className="mt-4 border-t pt-4">
+                      <h3 className="text-lg font-semibold mb-2">Raw Output</h3>
+                      <pre className="bg-gray-100 p-3 rounded overflow-auto text-sm">
+                        {JSON.stringify(fullResult, null, 2)}
+                      </pre>
+                    </div>
+                  </>
                 )}
               </div>
             </div>

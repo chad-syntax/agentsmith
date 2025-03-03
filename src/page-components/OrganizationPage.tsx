@@ -1,21 +1,22 @@
 'use client';
 
-import type { Organization } from '@/lib/organization';
+import type { GetOrganizationDataResult } from '@/lib/organization';
 import { useEffect, useState } from 'react';
-import { IconClipboard } from '@tabler/icons-react';
+import { IconClipboard, IconPencil } from '@tabler/icons-react';
 import { useApp } from '@/app/providers/app';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
+import { connectOpenrouter } from '@/app/actions/openrouter';
 
 type OrganizationPageProps = {
-  organization: Organization;
+  organization: GetOrganizationDataResult;
 };
 
 export const OrganizationPage = (props: OrganizationPageProps) => {
   const { organization } = props;
 
-  const { selectedOrganizationUuid, isLoading, hasOpenRouterKey } = useApp();
+  const { selectedOrganizationUuid, hasOpenRouterKey } = useApp();
 
   const router = useRouter();
 
@@ -40,13 +41,18 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
       selectedOrganizationUuid !== null &&
       selectedOrganizationUuid !== organization.uuid
     ) {
-      router.push(routes.studio.organization(selectedOrganizationUuid!));
+      router.push(routes.studio.organization(selectedOrganizationUuid));
     }
   }, [selectedOrganizationUuid]);
 
   return (
     <div className="flex-1 w-full flex flex-col gap-12 p-4">
-      <h1>{organization.name}</h1>
+      <div className="flex items-center gap-2">
+        <h1>{organization.name}</h1>
+        <Link href={routes.studio.editOrganization(organization.uuid)}>
+          <IconPencil />
+        </Link>
+      </div>
       <div className="flex items-center gap-2">
         <span>Invite Code: {organization.invite_code}</span>
         <IconClipboard
@@ -78,26 +84,27 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
       </div>
       <div>
         <h2 className="font-bold text-xl mb-4">Openrouter Account</h2>
-        {isLoading ? (
-          <div>Loading...</div>
+        <p className="pb-4">
+          {hasOpenRouterKey
+            ? '✅ This organization has an Openrouter key'
+            : '❌ This organization does not have an Openrouter key'}
+        </p>
+        {hasOpenRouterKey ? (
+          <a
+            href="https://openrouter.ai/settings/keys"
+            className="text-blue-500 hover:text-blue-600 text-xs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            View your keys in Openrouter
+          </a>
         ) : (
-          <>
-            <p className="pb-4">
-              {hasOpenRouterKey
-                ? '✅ This organization has an Openrouter key'
-                : '❌ This organization does not have an Openrouter key'}
-            </p>
-            {hasOpenRouterKey && (
-              <a
-                href="https://openrouter.ai/settings/keys"
-                className="text-blue-500 hover:text-blue-600 text-xs"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View Your Openrouter Keys
-              </a>
-            )}
-          </>
+          <button
+            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded transition-colors"
+            onClick={() => connectOpenrouter(organization.uuid)}
+          >
+            Connect Openrouter
+          </button>
         )}
       </div>
     </div>

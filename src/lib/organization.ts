@@ -1,6 +1,7 @@
+import { GetUserOrganizationDataResult } from './onboarding';
 import { createClient } from './supabase/server';
 
-export const getOrganization = async (organizationUuid: string) => {
+export const getOrganizationData = async (organizationUuid: string) => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('organizations')
@@ -15,4 +16,6 @@ export const getOrganization = async (organizationUuid: string) => {
   return data;
 };
 
-export type Organization = Awaited<ReturnType<typeof getOrganization>>;
+export type GetOrganizationDataResult = Awaited<
+  ReturnType<typeof getOrganizationData>
+>;

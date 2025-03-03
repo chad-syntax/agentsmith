@@ -38,7 +38,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
             Generate Types
           </button>
           <Link
-            href={routes.studio.createPrompt(selectedProjectUuid!)}
+            href={routes.studio.createPrompt(selectedProjectUuid)}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             Create New Prompt
@@ -50,7 +50,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">No prompts found</p>
           <Link
-            href={routes.studio.createPrompt(selectedProjectUuid!)}
+            href={routes.studio.createPrompt(selectedProjectUuid)}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             Create Your First Prompt
@@ -80,7 +80,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
                   <h2 className="text-xl font-semibold">{prompt.name}</h2>
                   <Link
                     href={routes.studio.editPrompt(
-                      selectedProjectUuid!,
+                      selectedProjectUuid,
                       prompt.uuid
                     )}
                     className="text-blue-500 hover:text-blue-600"
@@ -116,7 +116,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
                   </span>
                   <Link
                     href={routes.studio.promptDetail(
-                      selectedProjectUuid!,
+                      selectedProjectUuid,
                       prompt.uuid
                     )}
                     className="text-blue-500 hover:text-blue-600 text-sm"

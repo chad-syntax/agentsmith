@@ -132,7 +132,9 @@ export const PromptEditPage = (props: PromptEditPageProps) => {
       // }
 
       // Redirect back to the prompt detail page
-      router.push(`/app/prompts/${props.prompt.uuid}`);
+      router.push(
+        routes.studio.promptDetail(selectedProjectUuid, props.prompt.uuid)
+      );
     } catch (error) {
       console.error('Error saving prompt:', error);
       alert('Failed to save prompt. Please try again.');
@@ -148,7 +150,7 @@ export const PromptEditPage = (props: PromptEditPageProps) => {
           <div className="mb-6 flex justify-between items-center">
             <Link
               href={routes.studio.promptDetail(
-                selectedProjectUuid!,
+                selectedProjectUuid,
                 props.prompt.uuid
               )}
               className="text-blue-500 hover:text-blue-600"

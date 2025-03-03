@@ -24,7 +24,7 @@ export type DashboardSidebarProps = {
 
 export const DashboardSidebar = (props: DashboardSidebarProps) => {
   const { isOnboarded, userOrganizationData } = props;
-  const { selectedOrganizationUuid } = useApp();
+  const { selectedOrganizationUuid, selectedProjectUuid } = useApp();
 
   const [isOpen, setIsOpen] = useState(true);
 
@@ -38,29 +38,35 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
       active: pathname === routes.studio.home,
     },
     {
+      name: 'Project',
+      href: routes.studio.project(selectedProjectUuid),
+      icon: IconBuilding,
+      active: pathname === routes.studio.project(selectedProjectUuid),
+    },
+    {
       name: 'Organization',
-      href: routes.studio.organization(selectedOrganizationUuid!),
+      href: routes.studio.organization(selectedOrganizationUuid),
       icon: IconBuilding,
       active: pathname.startsWith(
-        routes.studio.organization(selectedOrganizationUuid!)
+        routes.studio.organization(selectedOrganizationUuid)
       ),
     },
     ...(isOnboarded
       ? [
           {
             name: 'Prompts',
-            href: routes.studio.prompts(selectedOrganizationUuid!),
+            href: routes.studio.prompts(selectedProjectUuid),
             icon: IconPrompt,
             active: pathname.startsWith(
-              routes.studio.prompts(selectedOrganizationUuid!)
+              routes.studio.prompts(selectedProjectUuid)
             ),
           },
           {
             name: 'Logs',
-            href: routes.studio.logs(selectedOrganizationUuid!),
+            href: routes.studio.logs(selectedProjectUuid),
             icon: IconList,
             active: pathname.startsWith(
-              routes.studio.logs(selectedOrganizationUuid!)
+              routes.studio.logs(selectedProjectUuid)
             ),
           },
         ]
