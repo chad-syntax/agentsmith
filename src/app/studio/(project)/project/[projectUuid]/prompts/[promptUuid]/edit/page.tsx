@@ -3,16 +3,16 @@ import { PromptEditPage } from '@/page-components/PromptEditPage';
 import { notFound } from 'next/navigation';
 
 type PromptEditProps = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ promptUuid: string }>;
 };
 
 export default async function PromptEdit(props: PromptEditProps) {
   const { params } = props;
 
-  const { id: promptId } = await params;
+  const { promptUuid } = await params;
 
   // Fetch prompt data from Supabase
-  const prompt = await getPromptById(promptId);
+  const prompt = await getPromptById(promptUuid);
 
   if (!prompt) {
     return notFound();

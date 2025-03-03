@@ -13,18 +13,21 @@ export type Database = {
         Row: {
           auth_user_id: string
           created_at: string
+          email: string | null
           id: number
           updated_at: string
         }
         Insert: {
           auth_user_id: string
           created_at?: string
+          email?: string | null
           id?: number
           updated_at?: string
         }
         Update: {
           auth_user_id?: string
           created_at?: string
+          email?: string | null
           id?: number
           updated_at?: string
         }
@@ -452,6 +455,12 @@ export type Database = {
       has_prompt_access: {
         Args: {
           prompt_id: number
+        }
+        Returns: boolean
+      }
+      is_member_of_same_org: {
+        Args: {
+          agentsmith_user_id: number
         }
         Returns: boolean
       }

@@ -83,10 +83,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
         userOrganizationData={userOrganizationData!}
       >
         <div className="flex h-screen">
-          <DashboardSidebar
-            isOnboarded={isOnboarded!}
-            userOrganizationData={userOrganizationData!}
-          />
+          <DashboardSidebar userOrganizationData={userOrganizationData!} />
           <main className="flex-1 overflow-auto">{children}</main>
         </div>
       </AppProvider>

@@ -18,12 +18,11 @@ import type { GetUserOrganizationDataResult } from '@/lib/onboarding';
 import { routes } from '@/utils/routes';
 
 export type DashboardSidebarProps = {
-  isOnboarded: boolean;
   userOrganizationData: GetUserOrganizationDataResult;
 };
 
 export const DashboardSidebar = (props: DashboardSidebarProps) => {
-  const { isOnboarded, userOrganizationData } = props;
+  const { userOrganizationData } = props;
   const { selectedOrganizationUuid, selectedProjectUuid } = useApp();
 
   const [isOpen, setIsOpen] = useState(true);
@@ -51,26 +50,18 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
         routes.studio.organization(selectedOrganizationUuid)
       ),
     },
-    ...(isOnboarded
-      ? [
-          {
-            name: 'Prompts',
-            href: routes.studio.prompts(selectedProjectUuid),
-            icon: IconPrompt,
-            active: pathname.startsWith(
-              routes.studio.prompts(selectedProjectUuid)
-            ),
-          },
-          {
-            name: 'Logs',
-            href: routes.studio.logs(selectedProjectUuid),
-            icon: IconList,
-            active: pathname.startsWith(
-              routes.studio.logs(selectedProjectUuid)
-            ),
-          },
-        ]
-      : []),
+    {
+      name: 'Prompts',
+      href: routes.studio.prompts(selectedProjectUuid),
+      icon: IconPrompt,
+      active: pathname.startsWith(routes.studio.prompts(selectedProjectUuid)),
+    },
+    {
+      name: 'Logs',
+      href: routes.studio.logs(selectedProjectUuid),
+      icon: IconList,
+      active: pathname.startsWith(routes.studio.logs(selectedProjectUuid)),
+    },
     {
       name: 'Account',
       href: routes.studio.account,

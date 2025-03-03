@@ -107,7 +107,7 @@ export const CreatePromptPage = (props: CreatePromptPageProps) => {
           content,
           config,
           status: 'PUBLISHED',
-          version: '1.0', // Default version string
+          version: '0.0.1',
         })
         .select('id')
         .single();

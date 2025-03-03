@@ -18,6 +18,7 @@ type AppContextType = {
   selectedOrganization: Organization;
   selectedProject: Project;
   hasOpenRouterKey: boolean;
+  isOrganizationAdmin: boolean;
 };
 
 const AppContext = createContext<AppContextType>({
@@ -28,6 +29,7 @@ const AppContext = createContext<AppContextType>({
   selectedOrganization: {} as Organization,
   selectedProject: {} as Project,
   hasOpenRouterKey: false,
+  isOrganizationAdmin: false,
 });
 
 type AppProviderProps = {
@@ -76,6 +78,17 @@ export const AppProvider = (props: AppProviderProps) => {
       (key) => key.key === ORGANIZATION_KEYS.OPENROUTER_API_KEY
     ) ?? false;
 
+  const initialIsOrganizationAdmin =
+    userOrganizationData.organization_users.some(
+      (orgUser) =>
+        orgUser.organizations.uuid === selectedOrganizationUuid &&
+        orgUser.role === 'ADMIN'
+    );
+
+  const [isOrganizationAdmin, setIsOrganizationAdmin] = useState(
+    initialIsOrganizationAdmin
+  );
+
   const setSelectedOrganizationUuid = (uuid: string) => {
     _setSelectedOrganizationUuid(uuid);
 
@@ -89,6 +102,13 @@ export const AppProvider = (props: AppProviderProps) => {
         routes.error('Cannot select organization, user is not a member.')
       );
     }
+
+    setIsOrganizationAdmin(
+      userOrganizationData.organization_users.some(
+        (orgUser) =>
+          orgUser.organizations.uuid === uuid && orgUser.role === 'ADMIN'
+      )
+    );
 
     setSelectedOrganization(targetOrganization);
     router.push(routes.studio.organization(uuid));
@@ -120,6 +140,7 @@ export const AppProvider = (props: AppProviderProps) => {
       selectedOrganization,
       selectedProject,
       hasOpenRouterKey,
+      isOrganizationAdmin,
     }),
     [
       selectedOrganizationUuid,
@@ -127,6 +148,7 @@ export const AppProvider = (props: AppProviderProps) => {
       selectedOrganization,
       selectedProject,
       hasOpenRouterKey,
+      isOrganizationAdmin,
     ]
   );
 

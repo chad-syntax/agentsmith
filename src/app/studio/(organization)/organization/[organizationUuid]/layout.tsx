@@ -18,7 +18,7 @@ type DashboardLayoutProps = {
 export default async function DashboardLayout(props: DashboardLayoutProps) {
   const { children, params } = props;
 
-  const { organizationUuid } = await props.params;
+  const { organizationUuid } = await params;
 
   try {
     const supabase = await createClient();
@@ -34,8 +34,6 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
     const agentsmithUser = await getUser(user.id);
 
     const userOrganizationData = await getUserOrganizationData();
-
-    const isOnboarded = isUserOnboarded(userOrganizationData);
 
     const organization = await getOrganizationData(organizationUuid);
 
@@ -53,10 +51,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
           userOrganizationData={userOrganizationData}
         >
           <div className="flex h-screen">
-            <DashboardSidebar
-              isOnboarded={isOnboarded}
-              userOrganizationData={userOrganizationData}
-            />
+            <DashboardSidebar userOrganizationData={userOrganizationData} />
             <main className="flex-1 overflow-auto">{children}</main>
           </div>
         </AppProvider>

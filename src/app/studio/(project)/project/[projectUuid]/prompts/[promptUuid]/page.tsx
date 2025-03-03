@@ -3,14 +3,14 @@ import { PromptDetailPage } from '@/page-components/PromptDetailPage';
 import { notFound } from 'next/navigation';
 
 type PromptDetailProps = {
-  params: Promise<{ id: string }>;
+  params: Promise<{ promptUuid: string }>;
 };
 
 export default async function PromptDetail(props: PromptDetailProps) {
-  const { id: promptId } = await props.params;
+  const { promptUuid } = await props.params;
 
   // Fetch prompt data from Supabase
-  const prompt = await getPromptById(promptId);
+  const prompt = await getPromptById(promptUuid);
 
   if (!prompt) {
     return notFound();

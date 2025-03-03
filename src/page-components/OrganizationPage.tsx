@@ -16,9 +16,7 @@ type OrganizationPageProps = {
 export const OrganizationPage = (props: OrganizationPageProps) => {
   const { organization } = props;
 
-  const { selectedOrganizationUuid, hasOpenRouterKey } = useApp();
-
-  const router = useRouter();
+  const { hasOpenRouterKey, isOrganizationAdmin } = useApp();
 
   const [isCodeCopied, setIsCodeCopied] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
@@ -35,15 +33,6 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
     setIsLinkCopied(true);
     setTimeout(() => setIsLinkCopied(false), 2000);
   };
-
-  useEffect(() => {
-    if (
-      selectedOrganizationUuid !== null &&
-      selectedOrganizationUuid !== organization.uuid
-    ) {
-      router.push(routes.studio.organization(selectedOrganizationUuid));
-    }
-  }, [selectedOrganizationUuid]);
 
   return (
     <div className="flex-1 w-full flex flex-col gap-12 p-4">
@@ -82,6 +71,28 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
           ))}
         </div>
       </div>
+      <div className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Organization Users</h2>
+        <div className="flex flex-col gap-2">
+          {organization.organization_users.map((user) => (
+            <div
+              key={user.id}
+              className="flex items-center gap-2 p-2 border rounded"
+            >
+              <div className="flex-1">
+                <p className="text-sm text-gray-500">{user.role}</p>
+                <p className="font-medium">{user.agentsmith_users.email}</p>
+                <p className="text-sm text-gray-500">
+                  {user.agentsmith_users.auth_user_id}
+                </p>
+              </div>
+            </div>
+          ))}
+          {!organization.organization_users?.length && (
+            <p className="text-gray-500 italic">No users found</p>
+          )}
+        </div>
+      </div>
       <div>
         <h2 className="font-bold text-xl mb-4">Openrouter Account</h2>
         <p className="pb-4">
@@ -89,7 +100,12 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
             ? '✅ This organization has an Openrouter key'
             : '❌ This organization does not have an Openrouter key'}
         </p>
-        {hasOpenRouterKey ? (
+        {!isOrganizationAdmin ? (
+          <p>
+            You must be an admin to connect to Openrouter. Please ask your
+            organization admin to connect to Openrouter.
+          </p>
+        ) : hasOpenRouterKey ? (
           <a
             href="https://openrouter.ai/settings/keys"
             className="text-blue-500 hover:text-blue-600 text-xs"

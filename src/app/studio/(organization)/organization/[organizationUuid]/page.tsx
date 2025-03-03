@@ -1,4 +1,5 @@
 import { getOrganizationData } from '@/lib/organization';
+import { createClient } from '@/lib/supabase/server';
 import { OrganizationPage } from '@/page-components/OrganizationPage';
 
 type OrganizationProps = {

@@ -1,11 +1,10 @@
-import { GetUserOrganizationDataResult } from './onboarding';
 import { createClient } from './supabase/server';
 
 export const getOrganizationData = async (organizationUuid: string) => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('organizations')
-    .select('*, projects(*)')
+    .select('*, projects(*), organization_users(id, role, agentsmith_users(*))')
     .eq('uuid', organizationUuid)
     .single();
 

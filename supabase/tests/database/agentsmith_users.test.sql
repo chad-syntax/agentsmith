@@ -13,7 +13,7 @@ deallocate all;
 \set ON_ERROR_STOP true
 
 -- plan the number of tests
-select plan(6);
+select plan(8);
 
 -- helper function to get user ids
 create or replace function get_test_user_id(test_email text) 
@@ -204,6 +204,31 @@ select ok(
         and created_by = get_new_agentsmith_user_id()
     ),
     'default project record is automatically created'
+);
+
+-- Test same-organization access
+select set_auth_user('pro_admin@example.com');
+select results_eq(
+    $$select count(*)::text from agentsmith_users au
+    where exists (
+        select 1 from organization_users ou1
+        where ou1.user_id = au.id
+        and exists (
+            select 1 from organization_users ou2
+            where ou2.organization_id = ou1.organization_id
+            and ou2.user_id = (select id from agentsmith_users where auth_user_id = auth.uid())
+        )
+    )$$,
+    array['2'],
+    'user can view agentsmith_users records from same organization'
+);
+
+-- Test different-organization access
+select set_auth_user('enterprise_admin@example.com');
+select is_empty(
+    $$select * from agentsmith_users au
+    where au.auth_user_id = get_test_user_id('free@example.com')$$,
+    'user cannot view agentsmith_users records from different organization'
 );
 
 -- finish the tests

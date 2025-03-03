@@ -79,7 +79,8 @@ export const AuthProvider = (props: AuthProviderProps) => {
             .select(
               `
             organization_users (
-              id, 
+              id,
+              role,
               organizations (
                 uuid, 
                 name, 

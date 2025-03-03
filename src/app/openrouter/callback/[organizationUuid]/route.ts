@@ -135,7 +135,9 @@ export async function GET(
     }
 
     console.log('/connect/openrouter: successfully saved openrouter key');
-    return NextResponse.redirect(new URL(routes.studio.account, request.url));
+    return NextResponse.redirect(
+      new URL(routes.studio.organization(organizationUuid), request.url)
+    );
   } catch (error) {
     console.error('/connect/openrouter: unexpected error', error);
     return NextResponse.redirect(

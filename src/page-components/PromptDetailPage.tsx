@@ -14,10 +14,13 @@ import { getPromptById, getLatestPromptVersion } from '&/prompts';
 import { Modal } from '@/components/ui/modal';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
-import type {
-  OpenrouterResponse,
-  NonStreamingChoice,
-} from '@/app/api/[apiVersion]/prompts/[promptUuid]/run/route';
+import type { NonStreamingChoice, OpenrouterResponse } from '@/lib/openrouter';
+import { connectOpenrouter } from '@/app/actions/openrouter';
+
+type FullResult = {
+  completion: OpenrouterResponse;
+  logUuid: string;
+};
 
 type PromptDetailPageProps = {
   prompt: NonNullable<Awaited<ReturnType<typeof getPromptById>>>;
@@ -26,22 +29,30 @@ type PromptDetailPageProps = {
   >;
 };
 
-type FullResult = {
-  completion: OpenrouterResponse;
-  logUuid: string;
-};
-
 export const PromptDetailPage = (props: PromptDetailPageProps) => {
+  const { prompt, latestVersion } = props;
+
   const [isOpen, setIsOpen] = useState(true);
   const [isRunning, setIsRunning] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [fullResult, setFullResult] = useState<FullResult | null>(null);
   const [runError, setRunError] = useState<string | null>(null);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
+  const [isConnectOpenrouterModalOpen, setConnectOpenrouterModalOpen] =
+    useState(false);
+  const [isOpenRouterKeyModalOpen, setIsOpenRouterKeyModalOpen] =
+    useState(false);
   const [testVariables, setTestVariables] = useState<Record<string, string>>(
     {}
   );
-  const { selectedProjectUuid } = useApp();
+
+  const {
+    selectedOrganizationUuid,
+    selectedProjectUuid,
+    hasOpenRouterKey,
+    isOrganizationAdmin,
+  } = useApp();
+
   const handleGenerateTypes = async () => {
     const response = await generateTypes();
     const blob = new Blob([response.content], { type: 'text/typescript' });
@@ -62,7 +73,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
     setRunError(null);
 
     try {
-      const response = await fetch(`/api/v1/prompts/${props.prompt.uuid}/run`, {
+      const response = await fetch(`/api/v1/prompts/${prompt.uuid}/run`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -95,9 +106,20 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
   };
 
   const openTestModal = () => {
+    // if the org doesn't have a key and the user is an admin, we connect the org to openrouter
+    if (!hasOpenRouterKey && isOrganizationAdmin) {
+      setConnectOpenrouterModalOpen(true);
+      return;
+    }
+
+    if (!hasOpenRouterKey && !isOrganizationAdmin) {
+      setIsOpenRouterKeyModalOpen(true);
+      return;
+    }
+
     // Initialize with empty values or default sample values
     const initialVariables: Record<string, string> = {};
-    props.latestVersion.prompt_variables.forEach((variable) => {
+    latestVersion.prompt_variables.forEach((variable) => {
       initialVariables[variable.name] = '';
     });
     setTestVariables(initialVariables);
@@ -118,7 +140,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
           </div>
 
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">{props.prompt.name}</h1>
+            <h1 className="text-2xl font-bold">{prompt.name}</h1>
             <div className="space-x-4">
               <button
                 onClick={handleGenerateTypes}
@@ -143,7 +165,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
               <Link
                 href={routes.studio.editPrompt(
                   selectedProjectUuid,
-                  props.prompt.uuid
+                  prompt.uuid
                 )}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
               >
@@ -154,7 +176,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
 
           <div className="bg-white rounded-lg border">
             <Editor
-              value={props.latestVersion.content}
+              value={latestVersion.content}
               disabled
               onValueChange={() => {}}
               highlight={(code) => highlight(code, languages.django, 'django')}
@@ -223,7 +245,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         </div>
         <Collapsible.Content className="p-4">
           <div className="space-y-4">
-            {props.latestVersion.prompt_variables.map((variable) => (
+            {latestVersion.prompt_variables.map((variable) => (
               <div key={variable.id} className="bg-white p-4 rounded-lg border">
                 <div className="font-medium mb-2">{variable.name}</div>
                 <div className="text-sm text-gray-500">
@@ -242,7 +264,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         title="Test Prompt"
       >
         <div className="space-y-4">
-          {props.latestVersion.prompt_variables.map((variable) => (
+          {latestVersion.prompt_variables.map((variable) => (
             <div key={variable.id}>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {variable.name}
@@ -271,6 +293,46 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
               {isRunning ? 'Running...' : 'Run Test'}
             </button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isConnectOpenrouterModalOpen}
+        onClose={() => setConnectOpenrouterModalOpen(false)}
+        title="Connect OpenRouter"
+      >
+        <div className="space-y-4">
+          <p>
+            You must connect your organization to openrouter to run completions
+          </p>
+          <button
+            onClick={() => {
+              connectOpenrouter(selectedOrganizationUuid);
+              setConnectOpenrouterModalOpen(false);
+            }}
+            className="w-full px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            Connect OpenRouter
+          </button>
+        </div>
+      </Modal>
+
+      <Modal
+        isOpen={isOpenRouterKeyModalOpen}
+        onClose={() => setIsOpenRouterKeyModalOpen(false)}
+        title="OpenRouter Not Connected"
+      >
+        <div className="space-y-4">
+          <p>
+            Your organization admin must connect agentsmith to openrouter to run
+            completions
+          </p>
+          <button
+            onClick={() => setIsOpenRouterKeyModalOpen(false)}
+            className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+          >
+            Dismiss
+          </button>
         </div>
       </Modal>
     </div>

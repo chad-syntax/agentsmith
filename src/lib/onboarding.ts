@@ -16,7 +16,8 @@ export async function getUserOrganizationData() {
     .select(
       ` 
       organization_users (
-        id, 
+        id,
+        role, 
         organizations (
           uuid,
           name, 
