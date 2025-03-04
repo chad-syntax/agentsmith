@@ -5,6 +5,12 @@ import { Database } from '@/app/__generated__/supabase.types';
 import { FREE_MODELS, OpenrouterRequestBody } from './openrouter';
 import { createLogEntry, updateLogWithCompletion } from './logs';
 import { compareSemanticVersions } from '@/utils/versioning';
+import {
+  DEFAULT_OPENROUTER_MODEL,
+  MAX_OPENROUTER_MODELS,
+  OPENROUTER_COMPLETIONS_URL,
+  OPENROUTER_HEADERS,
+} from '@/app/constants';
 
 /**
  * Fetch the latest prompt version for a specific prompt
@@ -207,9 +213,12 @@ export const runPrompt = async (options: RunPromptOptions) => {
     messages: [{ role: 'user', content: compiledPrompt }],
     models:
       process.env.FREE_MODELS_ONLY === 'true'
-        ? FREE_MODELS.sort(() => 0.5 - Math.random()).slice(0, 3)
+        ? FREE_MODELS.sort(() => 0.5 - Math.random()).slice(
+            0,
+            MAX_OPENROUTER_MODELS
+          )
         : ((targetVersion.config as PromptConfig)?.models ?? [
-            'openrouter/auto',
+            DEFAULT_OPENROUTER_MODEL,
           ]),
   };
 
@@ -225,19 +234,14 @@ export const runPrompt = async (options: RunPromptOptions) => {
   }
 
   try {
-    const response = await fetch(
-      'https://openrouter.ai/api/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'HTTP-Referer': 'https://agentsmith.app',
-          'X-Title': 'Agentsmith',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(rawInput),
-      }
-    );
+    const response = await fetch(OPENROUTER_COMPLETIONS_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        ...OPENROUTER_HEADERS,
+      },
+      body: JSON.stringify(rawInput),
+    });
 
     const completion = await response.json();
 
