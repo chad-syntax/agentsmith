@@ -1,10 +1,9 @@
 import {
-  getLatestPromptVersion,
   getMissingVariables,
+  getPromptVersionByUuid,
   runPrompt,
 } from '@/lib/prompts';
 import { ORGANIZATION_KEYS } from '@/app/constants';
-import { getPromptById } from '@/lib/prompts';
 import { createClient } from '@/lib/supabase/server';
 import { createVaultService } from '@/lib/vault';
 import { NextResponse } from 'next/server';
@@ -15,35 +14,38 @@ type RequestBody = {
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ promptUuid: string }> }
+  { params }: { params: Promise<{ promptVersionUuid: string }> }
 ) {
-  const { promptUuid } = await params;
+  const { promptVersionUuid } = await params;
 
-  if (!promptUuid) {
+  if (!promptVersionUuid) {
     return NextResponse.json(
       { error: 'Prompt ID is required' },
       { status: 400 }
     );
   }
 
-  // Fetch the prompt from Supabase
-  const prompt = await getPromptById(promptUuid);
+  const supabase = await createClient();
 
-  if (!prompt) {
-    return NextResponse.json({ error: 'Prompt not found' }, { status: 404 });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Get the latest version
-  const latestVersion = await getLatestPromptVersion(prompt.id);
+  // Fetch the prompt from Supabase
+  const promptVersion = await getPromptVersionByUuid(promptVersionUuid);
 
-  if (!latestVersion) {
+  if (!promptVersion) {
     return NextResponse.json(
-      { error: 'No versions found for prompt' },
+      { error: 'Prompt version not found' },
       { status: 404 }
     );
   }
 
-  const variables = latestVersion.prompt_variables || [];
+  const variables = promptVersion.prompt_variables || [];
 
   let body: RequestBody;
   try {
@@ -67,37 +69,7 @@ export async function POST(
     );
   }
 
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { data: agentsmithUser, error: agentsmithUserError } = await supabase
-    .from('agentsmith_users')
-    .select('*')
-    .eq('auth_user_id', user.id)
-    .single();
-
-  if (agentsmithUserError) {
-    return NextResponse.json(
-      { error: 'Error fetching agentsmith user' },
-      { status: 500 }
-    );
-  }
-
-  if (!agentsmithUser) {
-    return NextResponse.json(
-      { error: 'Agentsmith user not found' },
-      { status: 404 }
-    );
-  }
-
-  const project = prompt.projects;
+  const project = promptVersion.prompts.projects;
   const organizationUuid = project.organizations.uuid;
 
   // Create vault service to get the OpenRouter API key
@@ -109,16 +81,19 @@ export async function POST(
 
   if (!apiKey) {
     return NextResponse.json(
-      { error: 'OpenRouter API key not found' },
-      { status: 404 }
+      {
+        error:
+          'OpenRouter API key not found. Please connect your account to OpenRouter before testing prompts.',
+      },
+      { status: 412 }
     );
   }
 
   try {
     const response = await runPrompt({
       apiKey,
-      prompt,
-      targetVersion: latestVersion,
+      prompt: promptVersion.prompts,
+      targetVersion: promptVersion,
       variables: body.variables,
     });
 

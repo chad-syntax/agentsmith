@@ -4,9 +4,12 @@ import { createClient } from '@/lib/supabase/server';
 import { Database } from '@/app/__generated__/supabase.types';
 import { FREE_MODELS, OpenrouterRequestBody } from './openrouter';
 import { createLogEntry, updateLogWithCompletion } from './logs';
+import { compareSemanticVersions } from '@/utils/versioning';
 
 /**
  * Fetch the latest prompt version for a specific prompt
+ * Prioritizes PUBLISHED versions over DRAFT versions
+ * Within each status, sorts by semantic version (highest version first)
  */
 export const getLatestPromptVersion = async (promptId: number) => {
   const supabase = await createClient();
@@ -14,15 +17,37 @@ export const getLatestPromptVersion = async (promptId: number) => {
   const { data, error } = await supabase
     .from('prompt_versions')
     .select('*, prompt_variables(*)')
-    .eq('prompt_id', promptId)
-    .eq('status', 'PUBLISHED')
-    .order('version', { ascending: false });
+    .eq('prompt_id', promptId);
 
   if (error) {
     console.error('Error fetching prompt versions:', error);
     return null;
   }
 
+  if (!data || data.length === 0) {
+    return null;
+  }
+
+  // First try to find published versions
+  const publishedVersions = data.filter((v) => v.status === 'PUBLISHED');
+
+  if (publishedVersions.length > 0) {
+    // Sort published versions by semantic version (highest first)
+    return publishedVersions.sort((a, b) =>
+      compareSemanticVersions(b.version, a.version)
+    )[0];
+  }
+
+  // If no published versions, return the latest draft by semantic version
+  const draftVersions = data.filter((v) => v.status === 'DRAFT');
+
+  if (draftVersions.length > 0) {
+    return draftVersions.sort((a, b) =>
+      compareSemanticVersions(b.version, a.version)
+    )[0];
+  }
+
+  // If no data is categorized (shouldn't happen), just return the first item
   return data[0];
 };
 
@@ -49,6 +74,10 @@ export const getPromptsByProjectId = async (projectId: number) => {
 
   return data;
 };
+
+export type GetPromptsByProjectIdResult = Awaited<
+  ReturnType<typeof getPromptsByProjectId>
+>;
 
 /**
  * Fetch a specific prompt by ID
@@ -234,7 +263,9 @@ export const getPromptVersionByUuid = async (versionUuid: string) => {
 
   const { data: versionData, error: versionError } = await supabase
     .from('prompt_versions')
-    .select('*, prompt_variables(*), prompts(*)')
+    .select(
+      '*, prompt_variables(*), prompts(*, projects(id, uuid, organizations(id, uuid)))'
+    )
     .eq('uuid', versionUuid)
     .single();
 

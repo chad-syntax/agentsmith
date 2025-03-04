@@ -1,18 +1,25 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import { generateTypes } from '@/app/actions/generate-types';
-import { getPromptsByProjectId } from '@/lib/prompts';
+import type { GetPromptsByProjectIdResult } from '@/lib/prompts';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
+import { CreatePromptModal } from '@/components/prompt/CreatePromptModal';
+import { createClient } from '@/lib/supabase/client';
+import { compareSemanticVersions } from '@/utils/versioning';
 
 type PromptsPageProps = {
-  prompts: Awaited<ReturnType<typeof getPromptsByProjectId>>;
+  prompts: Awaited<GetPromptsByProjectIdResult>;
+  projectId: number;
 };
 
 export const PromptsPage = (props: PromptsPageProps) => {
-  const { prompts } = props;
+  const { prompts, projectId } = props;
   const { selectedProjectUuid } = useApp();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
   const handleGenerateTypes = async () => {
     const response = await generateTypes();
     const blob = new Blob([response.content], { type: 'text/typescript' });
@@ -37,35 +44,55 @@ export const PromptsPage = (props: PromptsPageProps) => {
           >
             Generate Types
           </button>
-          <Link
-            href={routes.studio.createPrompt(selectedProjectUuid)}
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             Create New Prompt
-          </Link>
+          </button>
         </div>
       </div>
 
       {prompts.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 mb-4">No prompts found</p>
-          <Link
-            href={routes.studio.createPrompt(selectedProjectUuid)}
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
           >
             Create Your First Prompt
-          </Link>
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {prompts.map((prompt) => {
-            // Get the latest version
-            const sortedVersions = [...prompt.prompt_versions].sort(
-              (a, b) =>
-                new Date(b.created_at).getTime() -
-                new Date(a.created_at).getTime()
+            // First, get all published versions
+            const publishedVersions = prompt.prompt_versions.filter(
+              (v) => v.status === 'PUBLISHED'
             );
-            const latestVersion = sortedVersions[0];
+
+            // Sort published versions by semantic version (newest first)
+            const sortedPublishedVersions = [...publishedVersions].sort(
+              (a, b) => compareSemanticVersions(b.version, a.version)
+            );
+
+            // If there are no published versions, get the latest draft
+            let latestVersion;
+            if (sortedPublishedVersions.length > 0) {
+              latestVersion = sortedPublishedVersions[0];
+            } else {
+              // Get all draft versions
+              const draftVersions = prompt.prompt_versions.filter(
+                (v) => v.status === 'DRAFT'
+              );
+
+              // Sort draft versions by semantic version (newest first)
+              const sortedDraftVersions = [...draftVersions].sort((a, b) =>
+                compareSemanticVersions(b.version, a.version)
+              );
+
+              latestVersion = sortedDraftVersions[0];
+            }
 
             // Get required variables
             const requiredVariables =
@@ -79,13 +106,13 @@ export const PromptsPage = (props: PromptsPageProps) => {
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-xl font-semibold">{prompt.name}</h2>
                   <Link
-                    href={routes.studio.newPromptVersion(
+                    href={routes.studio.promptDetail(
                       selectedProjectUuid,
                       prompt.uuid
                     )}
                     className="text-blue-500 hover:text-blue-600"
                   >
-                    New Version
+                    View Details
                   </Link>
                 </div>
                 <div className="mb-4">
@@ -110,25 +137,40 @@ export const PromptsPage = (props: PromptsPageProps) => {
                     </div>
                   </div>
                 )}
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">
-                    Version: {latestVersion?.version || '1.0'}
-                  </span>
-                  <Link
-                    href={routes.studio.promptDetail(
-                      selectedProjectUuid,
-                      prompt.uuid
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">
+                      v{latestVersion?.version || '0.0.0'}
+                    </span>
+                    {latestVersion?.status && (
+                      <span
+                        className={`text-xs px-2 py-0.5 rounded ${
+                          latestVersion.status === 'PUBLISHED'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-amber-100 text-amber-800'
+                        }`}
+                      >
+                        {latestVersion.status}
+                      </span>
                     )}
-                    className="text-blue-500 hover:text-blue-600 text-sm"
-                  >
-                    View Details →
-                  </Link>
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {latestVersion
+                      ? new Date(latestVersion.created_at).toLocaleDateString()
+                      : 'No versions yet'}
+                  </span>
                 </div>
               </div>
             );
           })}
         </div>
       )}
+
+      <CreatePromptModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        projectId={projectId}
+      />
     </div>
   );
 };

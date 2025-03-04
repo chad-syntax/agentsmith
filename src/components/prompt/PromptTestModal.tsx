@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Modal } from '@/components/ui/modal';
 import { PromptVariable } from '@/components/editors/PromptContentEditor';
 import { useApp } from '@/app/providers/app';
-import { NonStreamingChoice, OpenrouterResponse } from '@/lib/openrouter';
+import { NonStreamingChoice } from '@/lib/openrouter';
 import { connectOpenrouter } from '@/app/actions/openrouter';
 import { routes } from '@/utils/routes';
 import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
@@ -14,11 +14,11 @@ type PromptTestModalProps = {
   isOpen: boolean;
   onClose: () => void;
   variables: PromptVariable[];
-  promptUuid: string;
+  promptVersionUuid: string;
 };
 
 export const PromptTestModal = (props: PromptTestModalProps) => {
-  const { isOpen, onClose, variables, promptUuid } = props;
+  const { isOpen, onClose, variables, promptVersionUuid } = props;
 
   const [testVariables, setTestVariables] = useState<Record<string, string>>(
     {}
@@ -43,15 +43,18 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
     setTestError(null);
 
     try {
-      const response = await fetch(`/api/v1/prompts/${promptUuid}/run`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          variables: testVariables,
-        }),
-      });
+      const response = await fetch(
+        routes.api.v1.executePromptVersion(promptVersionUuid),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            variables: testVariables,
+          }),
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json();

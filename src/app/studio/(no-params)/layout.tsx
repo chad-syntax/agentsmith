@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '&/supabase/server';
 import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { AuthProvider } from '@/app/providers/auth';
-import { getUserOrganizationData, isUserOnboarded } from '&/onboarding';
+import { getUserOrganizationData } from '&/onboarding';
 import { getUser } from '&/user';
 import { AppProvider } from '@/app/providers/app';
 import { routes } from '@/utils/routes';
@@ -32,8 +32,6 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
     const userOrganizationData = await getUserOrganizationData();
 
-    const isOnboarded = isUserOnboarded(userOrganizationData);
-
     const firstOrganization =
       userOrganizationData.organization_users[0].organizations;
 
@@ -51,10 +49,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
           userOrganizationData={userOrganizationData}
         >
           <div className="flex h-screen">
-            <DashboardSidebar
-              isOnboarded={isOnboarded}
-              userOrganizationData={userOrganizationData}
-            />
+            <DashboardSidebar userOrganizationData={userOrganizationData} />
             <main className="flex-1 overflow-auto">{children}</main>
           </div>
         </AppProvider>

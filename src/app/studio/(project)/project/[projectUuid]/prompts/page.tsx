@@ -1,27 +1,24 @@
 import { PromptsPage } from '@/page-components/PromptsPage';
 import { getPromptsByProjectId } from '@/lib/prompts';
 import { getProjectData } from '@/lib/projects';
-import { redirect } from 'next/navigation';
-import { routes } from '@/utils/routes';
+import { notFound } from 'next/navigation';
 
-type PromptsProps = {
-  params: Promise<{
-    projectUuid: string;
-  }>;
+type PromptLibraryProps = {
+  params: Promise<{ projectUuid: string }>;
 };
 
-export default async function Prompts(props: PromptsProps) {
+export default async function PromptLibrary(props: PromptLibraryProps) {
   const { projectUuid } = await props.params;
 
-  // Get the first project
+  // Get project first to use the ID for getting prompts
   const project = await getProjectData(projectUuid);
 
   if (!project) {
-    redirect(routes.studio.home);
+    return notFound();
   }
 
   // Fetch prompts for the project
   const prompts = await getPromptsByProjectId(project.id);
 
-  return <PromptsPage prompts={prompts} />;
+  return <PromptsPage prompts={prompts} projectId={project.id} />;
 }

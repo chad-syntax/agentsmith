@@ -17,12 +17,8 @@ export const routes = {
     prompts: (projectUuid: string) => `/studio/project/${projectUuid}/prompts`,
     promptDetail: (projectUuid: string, promptId: string) =>
       `/studio/project/${projectUuid}/prompts/${promptId}`,
-    newPromptVersion: (projectUuid: string, promptId: string) =>
-      `/studio/project/${projectUuid}/prompts/${promptId}/new`,
     editPromptVersion: (projectUuid: string, promptVersionUuid: string) =>
       `/studio/project/${projectUuid}/prompts/edit/${promptVersionUuid}`,
-    createPrompt: (projectUuid: string) =>
-      `/studio/project/${projectUuid}/prompts/new`,
     logs: (projectUuid: string) => `/studio/project/${projectUuid}/logs`,
     logDetail: (projectUuid: string, logId: string) =>
       `/studio/project/${projectUuid}/logs/${logId}`,
@@ -30,14 +26,20 @@ export const routes = {
     resetPassword: `/studio/reset-password`,
     joinOrganization: (organizationInviteCode: string) =>
       `/join/${organizationInviteCode}`,
-    runPrompt: (apiVersion: string, promptUuid: string) =>
-      `/api/${apiVersion}/prompts/${promptUuid}/run`,
   },
   auth: {
     signIn: '/sign-in',
     signUp: '/sign-up',
     forgotPassword: '/forgot-password',
     callback: '/auth/callback',
+  },
+  api: {
+    v1: {
+      executePromptVersion: (promptVersionUuid: string) =>
+        `/api/v1/promptVersion/${promptVersionUuid}/execute`,
+      compilePromptVersion: (promptVersionUuid: string) =>
+        `/api/v1/promptVersion/${promptVersionUuid}/compile`,
+    },
   },
   error: (message: string) => `/error?message=${encodeURIComponent(message)}`,
 } as const;
