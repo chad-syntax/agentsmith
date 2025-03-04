@@ -15,11 +15,10 @@ type PromptTestModalProps = {
   onClose: () => void;
   variables: PromptVariable[];
   promptUuid: string;
-  onTestResult?: (result: string, fullResponse: any) => void;
 };
 
 export const PromptTestModal = (props: PromptTestModalProps) => {
-  const { isOpen, onClose, variables, promptUuid, onTestResult } = props;
+  const { isOpen, onClose, variables, promptUuid } = props;
 
   const [testVariables, setTestVariables] = useState<Record<string, string>>(
     {}
@@ -67,12 +66,6 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
 
       setTestResult(result);
       setFullResult(data);
-
-      if (onTestResult) {
-        onTestResult(result, data);
-      }
-
-      // No longer closing the modal after test completion to show results
     } catch (error) {
       console.error('Error testing prompt:', error);
       setTestError(

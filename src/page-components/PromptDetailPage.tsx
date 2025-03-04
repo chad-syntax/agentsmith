@@ -32,8 +32,6 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
     [latestVersion.id]: true,
   });
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
-  const [testResult, setTestResult] = useState<string | null>(null);
-  const [fullResult, setFullResult] = useState<any | null>(null);
 
   const { selectedProjectUuid } = useApp();
 
@@ -48,11 +46,6 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
-  };
-
-  const handleTestResult = (result: string, fullData: any) => {
-    setTestResult(result);
-    setFullResult(fullData);
   };
 
   return (
@@ -170,7 +163,6 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         onClose={() => setIsTestModalOpen(false)}
         variables={latestVersion.prompt_variables}
         promptUuid={prompt.uuid}
-        onTestResult={handleTestResult}
       />
     </div>
   );

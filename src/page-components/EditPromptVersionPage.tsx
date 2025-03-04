@@ -33,8 +33,6 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   );
   const [isSaving, setIsSaving] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
-  const [testResult, setTestResult] = useState<string | null>(null);
-  const [fullResult, setFullResult] = useState<any | null>(null);
   const { selectedProjectUuid } = useApp();
 
   const handleSave = async (
@@ -74,11 +72,6 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const handleTestResult = (result: string, fullData: any) => {
-    setTestResult(result);
-    setFullResult(fullData);
   };
 
   return (
@@ -171,7 +164,6 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         onClose={() => setIsTestModalOpen(false)}
         variables={variables}
         promptUuid={promptVersion.prompts.uuid}
-        onTestResult={handleTestResult}
       />
     </div>
   );
