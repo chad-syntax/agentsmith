@@ -1,4 +1,8 @@
-import { getPromptById, getLatestPromptVersion } from '@/lib/prompts';
+import {
+  getPromptById,
+  getLatestPromptVersion,
+  getPromptVersions,
+} from '@/lib/prompts';
 import { PromptDetailPage } from '@/page-components/PromptDetailPage';
 import { notFound } from 'next/navigation';
 
@@ -23,5 +27,14 @@ export default async function PromptDetail(props: PromptDetailProps) {
     return notFound();
   }
 
-  return <PromptDetailPage prompt={prompt} latestVersion={latestVersion} />;
+  // Get all versions
+  const allVersions = await getPromptVersions(prompt.id);
+
+  return (
+    <PromptDetailPage
+      prompt={prompt}
+      latestVersion={latestVersion}
+      allVersions={allVersions}
+    />
+  );
 }

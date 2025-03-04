@@ -2,7 +2,7 @@
 import nunjucks from 'nunjucks/browser/nunjucks';
 import { createClient } from '@/lib/supabase/server';
 import { Database } from '@/app/__generated__/supabase.types';
-import { OpenrouterRequestBody } from './openrouter';
+import { FREE_MODELS, OpenrouterRequestBody } from './openrouter';
 import { createLogEntry, updateLogWithCompletion } from './logs';
 
 /**
@@ -16,7 +16,7 @@ export const getLatestPromptVersion = async (promptId: number) => {
     .select('*, prompt_variables(*)')
     .eq('prompt_id', promptId)
     .eq('status', 'PUBLISHED')
-    .order('version', { ascending: true });
+    .order('version', { ascending: false });
 
   if (error) {
     console.error('Error fetching prompt versions:', error);
@@ -176,9 +176,12 @@ export const runPrompt = async (options: RunPromptOptions) => {
   // Create a log entry before making the API call
   const rawInput: OpenrouterRequestBody = {
     messages: [{ role: 'user', content: compiledPrompt }],
-    models: (targetVersion.config as PromptConfig)?.models ?? [
-      'openrouter/auto',
-    ],
+    models:
+      process.env.FREE_MODELS_ONLY === 'true'
+        ? FREE_MODELS.sort(() => 0.5 - Math.random()).slice(0, 3)
+        : ((targetVersion.config as PromptConfig)?.models ?? [
+            'openrouter/auto',
+          ]),
   };
 
   const logEntry = await createLogEntry(
@@ -222,3 +225,27 @@ export const runPrompt = async (options: RunPromptOptions) => {
     throw new Error('Error calling OpenRouter API');
   }
 };
+
+/**
+ * Fetch a specific prompt version by UUID
+ */
+export const getPromptVersionByUuid = async (versionUuid: string) => {
+  const supabase = await createClient();
+
+  const { data: versionData, error: versionError } = await supabase
+    .from('prompt_versions')
+    .select('*, prompt_variables(*), prompts(*)')
+    .eq('uuid', versionUuid)
+    .single();
+
+  if (versionError) {
+    console.error('Error fetching prompt version:', versionError);
+    return null;
+  }
+
+  return versionData;
+};
+
+export type GetPromptVersionByUuidResult = Awaited<
+  ReturnType<typeof getPromptVersionByUuid>
+>;

@@ -329,7 +329,7 @@ export type Database = {
           content: string
           created_at: string
           id: number
-          prompt_id: number | null
+          prompt_id: number
           status: Database["public"]["Enums"]["prompt_status"]
           updated_at: string
           uuid: string
@@ -340,7 +340,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: number
-          prompt_id?: number | null
+          prompt_id: number
           status: Database["public"]["Enums"]["prompt_status"]
           updated_at?: string
           uuid?: string
@@ -351,7 +351,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: number
-          prompt_id?: number | null
+          prompt_id?: number
           status?: Database["public"]["Enums"]["prompt_status"]
           updated_at?: string
           uuid?: string
@@ -494,7 +494,7 @@ export type Database = {
       organization_tier: "FREE" | "PRO" | "ENTERPRISE"
       organization_user_role: "ADMIN" | "MEMBER"
       prompt_status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
-      variable_type: "STRING" | "NUMBER" | "BOOLEAN"
+      variable_type: "STRING" | "NUMBER" | "BOOLEAN" | "JSON"
     }
     CompositeTypes: {
       [_ in never]: never

@@ -26,7 +26,7 @@ export function Modal({ isOpen, onClose, children, title }: ModalProps) {
   return (
     <>
       <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-[500px] max-h-[80vh] overflow-y-auto">
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 w-[800px] max-h-[80vh] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">{title}</h2>
         {children}
       </div>

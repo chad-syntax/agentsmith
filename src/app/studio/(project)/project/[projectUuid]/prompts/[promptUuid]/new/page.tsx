@@ -1,12 +1,12 @@
 import { getPromptById, getLatestPromptVersion } from '@/lib/prompts';
-import { PromptEditPage } from '@/page-components/PromptEditPage';
+import { NewPromptVersionPage } from '@/page-components/NewPromptVersionPage';
 import { notFound } from 'next/navigation';
 
-type PromptEditProps = {
+type NewPromptVersionProps = {
   params: Promise<{ promptUuid: string }>;
 };
 
-export default async function PromptEdit(props: PromptEditProps) {
+export default async function NewPromptVersion(props: NewPromptVersionProps) {
   const { params } = props;
 
   const { promptUuid } = await params;
@@ -26,11 +26,12 @@ export default async function PromptEdit(props: PromptEditProps) {
   }
 
   return (
-    <PromptEditPage
+    <NewPromptVersionPage
       prompt={prompt}
       initialContent={latestVersion.content}
       initialModel={(latestVersion.config as any)?.model}
       initialVariables={latestVersion.prompt_variables}
+      latestVersion={latestVersion.version}
     />
   );
 }

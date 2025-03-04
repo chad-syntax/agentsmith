@@ -79,13 +79,13 @@ export const PromptsPage = (props: PromptsPageProps) => {
                 <div className="flex justify-between items-start mb-4">
                   <h2 className="text-xl font-semibold">{prompt.name}</h2>
                   <Link
-                    href={routes.studio.editPrompt(
+                    href={routes.studio.newPromptVersion(
                       selectedProjectUuid,
                       prompt.uuid
                     )}
                     className="text-blue-500 hover:text-blue-600"
                   >
-                    Edit
+                    New Version
                   </Link>
                 </div>
                 <div className="mb-4">
