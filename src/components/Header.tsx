@@ -3,6 +3,10 @@
 import Link from 'next/link';
 import { ThemeSwitcher } from './theme-switcher';
 import { IconBell, IconMail } from '@tabler/icons-react';
+import { Container } from './layout/container';
+import { H3 } from './typography';
+import { Button } from './ui/button';
+import { Separator } from './ui/separator';
 
 export const Header = () => {
   const handleJoinWaitlistClick = () => {
@@ -15,30 +19,37 @@ export const Header = () => {
   };
 
   return (
-    <header className="flex justify-center w-full border-b border-foreground/10">
-      <div className="flex items-center justify-between max-w-(--breakpoint-xl) w-full p-4">
-        <Link href="/">
-          <h3 className="text-2xl font-bold">Agentsmith</h3>
-        </Link>
-        <div className="flex items-center justify-end gap-1">
-          <ThemeSwitcher />
-          <nav className="flex items-center gap-1">
-            <a href="#brevo-email-subscribe">
-              <button
+    <header className="w-full border-b">
+      <Container>
+        <div className="flex items-center justify-between py-4">
+          <Link href="/">
+            <H3>Agentsmith</H3>
+          </Link>
+          <div className="flex items-center gap-4">
+            <ThemeSwitcher />
+            <Separator orientation="vertical" className="h-6" />
+            <nav className="flex items-center gap-2">
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
                 onClick={handleJoinWaitlistClick}
-                className="flex items-center gap-1 border border-background bg-foreground text-background px-2 py-1 rounded-md text-xs"
               >
-                <IconBell size={16} /> Join Waitlist
-              </button>
-            </a>
-            <a href="mailto:team@agentsmith.app">
-              <button className="flex items-center gap-1 border border-background bg-foreground text-background px-2 py-1 rounded-md text-xs">
-                <IconMail size={16} /> Contact Us
-              </button>
-            </a>
-          </nav>
+                <a href="#brevo-email-subscribe">
+                  <IconBell className="mr-2 h-4 w-4" />
+                  Join Waitlist
+                </a>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <a href="mailto:team@agentsmith.app">
+                  <IconMail className="mr-2 h-4 w-4" />
+                  Contact Us
+                </a>
+              </Button>
+            </nav>
+          </div>
         </div>
-      </div>
+      </Container>
     </header>
   );
 };

@@ -1,10 +1,18 @@
 'use client';
 
-import * as Collapsible from '@radix-ui/react-collapsible';
-import { IconChevronRight } from '@tabler/icons-react';
 import { useState } from 'react';
+import { ChevronRight } from 'lucide-react';
 import { PromptVariable } from '@/components/editors/PromptContentEditor';
 import { VariablesEditor } from '@/components/prompt/VariablesEditor';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/utils/shadcn';
 
 type VariablesSidebarProps = {
   variables: PromptVariable[];
@@ -24,29 +32,31 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <Collapsible.Root
+    <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className={`border-l bg-gray-50 transition-all duration-300 ${
+      className={cn(
+        'border-l bg-muted/50 transition-all duration-300',
         isOpen ? 'w-80' : 'w-12'
-      }`}
+      )}
     >
       <div className="p-4 border-b flex items-center justify-between">
         <div className="flex items-center">
-          <Collapsible.Trigger asChild>
-            <button className="p-2 hover:bg-gray-100 rounded-md">
-              <IconChevronRight
-                className={`w-5 h-5 transition-transform ${
-                  isOpen ? 'transform rotate-90' : ''
-                }`}
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <ChevronRight
+                className={cn(
+                  'h-4 w-4 transition-transform',
+                  isOpen && 'rotate-90'
+                )}
               />
-            </button>
-          </Collapsible.Trigger>
+            </Button>
+          </CollapsibleTrigger>
           {isOpen && <span className="font-medium ml-2">Variables</span>}
         </div>
       </div>
 
-      <Collapsible.Content className="p-4">
+      <CollapsibleContent className="p-4">
         {onVariablesChange ? (
           <VariablesEditor
             variables={variables}
@@ -56,26 +66,30 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
         ) : (
           <div className="space-y-4">
             {variables.map((variable) => (
-              <div
+              <Card
                 key={variable.id || variable.name}
-                className="bg-white p-4 rounded-lg border"
+                className={cn('bg-background', readOnly && 'opacity-70')}
               >
-                <div className="font-medium mb-2">{variable.name}</div>
-                <div className="text-sm text-gray-500">
-                  <p>Type: {variable.type}</p>
-                  <p>Required: {variable.required ? 'Yes' : 'No'}</p>
-                </div>
-              </div>
+                <CardContent className="pt-6">
+                  <div className="font-medium mb-2">{variable.name}</div>
+                  <div className="flex gap-2">
+                    <Badge variant="secondary">{variable.type}</Badge>
+                    {variable.required && (
+                      <Badge variant="default">Required</Badge>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             ))}
 
             {variables.length === 0 && (
-              <p className="text-gray-500 text-sm text-center py-4">
+              <p className="text-muted-foreground text-sm text-center py-4">
                 No variables found.
               </p>
             )}
           </div>
         )}
-      </Collapsible.Content>
-    </Collapsible.Root>
+      </CollapsibleContent>
+    </Collapsible>
   );
 };

@@ -18,6 +18,8 @@ import { PromptTestModal } from '@/components/prompt/PromptTestModal';
 import { createDraftVersion } from '@/app/actions/prompts';
 import { CreateVersionModal } from '@/components/prompt/CreateVersionModal';
 import { compareSemanticVersions } from '@/utils/versioning';
+import { Button } from '@/components/ui/button';
+import { H1 } from '@/components/typography';
 
 type PromptDetailPageProps = {
   prompt: NonNullable<Awaited<ReturnType<typeof getPromptById>>>;
@@ -111,36 +113,33 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
           </div>
 
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-bold">{prompt.name}</h1>
+            <H1>{prompt.name}</H1>
             <div className="space-x-4">
-              <button
-                onClick={handleGenerateTypes}
-                className="px-4 py-2 border rounded-md hover:bg-gray-50"
-              >
+              <Button onClick={handleGenerateTypes} variant="outline">
                 Generate Types
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={() => setIsTestModalOpen(true)}
-                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center gap-2"
+                className="bg-green-500 hover:bg-green-600 flex items-center gap-2"
               >
                 <IconPlayerPlay size={16} />
                 Test Run
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleCreateNewVersion}
                 disabled={isCreatingVersion}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
               >
                 {isCreatingVersion ? 'Creating...' : 'New Version'}
-              </button>
+              </Button>
             </div>
           </div>
 
           <div className="space-y-4">
             {allVersions.map((version) => (
               <div key={version.id} className="bg-white rounded-lg border">
-                <button
+                <Button
                   onClick={() => handleVersionToggle(version.id)}
+                  variant="ghost"
                   className="w-full px-4 py-3 flex justify-between items-center hover:bg-gray-50"
                 >
                   <div className="flex items-center gap-2">
@@ -166,20 +165,21 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
                     )}
                   </div>
                   <div className="flex items-center gap-4">
-                    <Link
-                      href={routes.studio.editPromptVersion(
-                        selectedProjectUuid,
-                        version.uuid
-                      )}
-                      className="text-blue-500 hover:text-blue-600"
-                    >
-                      Edit
-                    </Link>
-                    <span className="text-sm text-gray-500">
+                    <Button variant="link" asChild className="p-0">
+                      <Link
+                        href={routes.studio.editPromptVersion(
+                          selectedProjectUuid,
+                          version.uuid
+                        )}
+                      >
+                        Edit
+                      </Link>
+                    </Button>
+                    <span className="text-sm text-muted-foreground">
                       {new Date(version.created_at).toLocaleDateString()}
                     </span>
                   </div>
-                </button>
+                </Button>
                 {expandedVersions[version.id] && (
                   <div className="px-4 pb-4">
                     <PromptContentEditor

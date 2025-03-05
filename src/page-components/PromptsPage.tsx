@@ -9,6 +9,8 @@ import { useApp } from '@/app/providers/app';
 import { CreatePromptModal } from '@/components/prompt/CreatePromptModal';
 import { createClient } from '@/lib/supabase/client';
 import { compareSemanticVersions } from '@/utils/versioning';
+import { Button } from '@/components/ui/button';
+import { H1, H2, H3, P } from '@/components/typography';
 
 type PromptsPageProps = {
   prompts: Awaited<GetPromptsByProjectIdResult>;
@@ -36,32 +38,23 @@ export const PromptsPage = (props: PromptsPageProps) => {
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Prompts Library</h1>
+        <H1>Prompts Library</H1>
         <div className="space-x-4">
-          <button
-            onClick={handleGenerateTypes}
-            className="px-4 py-2 border rounded-md hover:bg-gray-50"
-          >
+          <Button onClick={handleGenerateTypes} variant="outline">
             Generate Types
-          </button>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
+          </Button>
+          <Button onClick={() => setIsCreateModalOpen(true)}>
             Create New Prompt
-          </button>
+          </Button>
         </div>
       </div>
 
       {prompts.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500 mb-4">No prompts found</p>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
+          <P className="text-muted-foreground mb-4">No prompts found</P>
+          <Button onClick={() => setIsCreateModalOpen(true)}>
             Create Your First Prompt
-          </button>
+          </Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -104,27 +97,28 @@ export const PromptsPage = (props: PromptsPageProps) => {
                 className="bg-white rounded-lg border p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-xl font-semibold">{prompt.name}</h2>
-                  <Link
-                    href={routes.studio.promptDetail(
-                      selectedProjectUuid,
-                      prompt.uuid
-                    )}
-                    className="text-blue-500 hover:text-blue-600"
-                  >
-                    View Details
-                  </Link>
+                  <H2>{prompt.name}</H2>
+                  <Button variant="link" asChild className="p-0">
+                    <Link
+                      href={routes.studio.promptDetail(
+                        selectedProjectUuid,
+                        prompt.uuid
+                      )}
+                    >
+                      View Details
+                    </Link>
+                  </Button>
                 </div>
                 <div className="mb-4">
-                  <p className="text-gray-600 line-clamp-3">
+                  <P className="text-muted-foreground line-clamp-3">
                     {latestVersion?.content}
-                  </p>
+                  </P>
                 </div>
                 {requiredVariables.length > 0 && (
                   <div className="mb-4">
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">
+                    <H3 className="text-muted-foreground mb-2">
                       Required Variables:
-                    </h3>
+                    </H3>
                     <div className="flex flex-wrap gap-2">
                       {requiredVariables.map((variable) => (
                         <span
@@ -139,7 +133,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
                 )}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-muted-foreground">
                       v{latestVersion?.version || '0.0.0'}
                     </span>
                     {latestVersion?.status && (
@@ -154,7 +148,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
                       </span>
                     )}
                   </div>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm text-muted-foreground">
                     {latestVersion
                       ? new Date(latestVersion.created_at).toLocaleDateString()
                       : 'No versions yet'}

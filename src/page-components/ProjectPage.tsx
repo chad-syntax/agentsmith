@@ -7,6 +7,7 @@ import {
 import Link from 'next/link';
 import type { GetProjectDataResult } from '@/lib/projects';
 import { routes } from '@/utils/routes';
+import { H1, H3, P } from '@/components/typography';
 
 export type ProjectPageProps = {
   projectData: NonNullable<GetProjectDataResult>;
@@ -18,7 +19,7 @@ export const ProjectPage = (props: ProjectPageProps) => {
   return (
     <div className="p-6">
       <div className="flex gap-2 justify-start items-center mb-8">
-        <h1 className="text-2xl font-bold">Project: {projectData.name}</h1>
+        <H1>Project: {projectData.name}</H1>
         <Link href={routes.studio.editProject(projectData.uuid)}>
           <IconPencil className="w-6 h-6 text-gray-500" />
         </Link>
@@ -35,10 +36,10 @@ export const ProjectPage = (props: ProjectPageProps) => {
                 <IconPrompt className="w-10 h-10 text-blue-500" />
               </div>
               <div className="mt-3">
-                <h3 className="text-lg font-medium text-center">Prompts</h3>
-                <p className="text-xs text-gray-500 text-center mt-0.5">
+                <H3 className="text-center">Prompts</H3>
+                <P className="text-xs text-gray-500 text-center mt-0.5">
                   Manage your prompt library
-                </p>
+                </P>
               </div>
             </Link>
 
@@ -50,10 +51,10 @@ export const ProjectPage = (props: ProjectPageProps) => {
                 <IconList className="w-10 h-10 text-orange-500" />
               </div>
               <div className="mt-3">
-                <h3 className="text-lg font-medium text-center">Logs</h3>
-                <p className="text-xs text-gray-500 text-center mt-0.5">
+                <H3 className="text-center">Logs</H3>
+                <P className="text-xs text-gray-500 text-center mt-0.5">
                   View prompt execution logs
-                </p>
+                </P>
               </div>
             </Link>
 
@@ -65,10 +66,10 @@ export const ProjectPage = (props: ProjectPageProps) => {
                 <IconUser className="w-10 h-10 text-green-500" />
               </div>
               <div className="mt-3">
-                <h3 className="text-lg font-medium text-center">Account</h3>
-                <p className="text-xs text-gray-500 text-center mt-0.5">
+                <H3 className="text-center">Account</H3>
+                <P className="text-xs text-gray-500 text-center mt-0.5">
                   Manage your account settings
-                </p>
+                </P>
               </div>
             </Link>
           </div>

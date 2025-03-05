@@ -1,83 +1,56 @@
 @import 'tailwindcss';
 
+/* Base color palette */
+:root {
+  /* Neutrals */
+  --white: #ffffff;
+  --off-white: #fafafa;
+  --gray-50: #e6e6e6;
+  --gray-100: #cccccc;
+  --gray-200: #b3b3b3;
+  --gray-300: #4d4d4d;
+  --gray-400: #333333;
+  --gray-500: #1a1a1a;
+  --gray-900: #0d0d0d;
+
+  /* Blues */
+  --blue-500: #0077ff;
+  --cyan-500: #00ffff;
+
+  /* Reds */
+  --red-500: #d70000;
+  --red-400: #ff3131;
+
+  /* Pinks */
+  --pink-500: #d6005a;
+  --pink-400: #ff007f;
+
+  /* Oranges */
+  --orange-500: #d48900;
+  --orange-400: #ffbf00;
+}
+
 @theme {
-  /* Base colors */
-  --color-background: #fafafa;
-  --color-background-dark: #0d0d0d;
-  --color-foreground: #0d0d0d;
-  --color-foreground-dark: #e6e6e6;
-
-  /* Primary colors */
-  --color-primary: #0077ff;
-  --color-primary-dark: #00ffff;
-  --color-primary-foreground: #ffffff;
-  --color-primary-foreground-dark: #1a1a1a;
-
-  /* Secondary colors */
-  --color-secondary: #d6005a;
-  --color-secondary-dark: #ff007f;
-  --color-secondary-foreground: #ffffff;
-  --color-secondary-foreground-dark: #1a1a1a;
-
-  /* Success colors */
-  --color-success: #008f39;
-  --color-success-dark: #00ff7f;
-  --color-success-foreground: #ffffff;
-  --color-success-foreground-dark: #1a1a1a;
-
-  /* Warning colors */
-  --color-warning: #d48900;
-  --color-warning-dark: #ffbf00;
-  --color-warning-foreground: #ffffff;
-  --color-warning-foreground-dark: #1a1a1a;
-
-  /* Info colors */
-  --color-info: #0077ff;
-  --color-info-dark: #00ffff;
-  --color-info-foreground: #ffffff;
-  --color-info-foreground-dark: #1a1a1a;
-
-  /* Destructive colors */
-  --color-destructive: #d70000;
-  --color-destructive-dark: #ff3131;
-  --color-destructive-foreground: #ffffff;
-  --color-destructive-foreground-dark: #1a1a1a;
-
-  /* Muted colors */
-  --color-muted: #e5e5e5;
-  --color-muted-dark: #333333;
-  --color-muted-foreground: #4d4d4d;
-  --color-muted-foreground-dark: #b3b3b3;
-
-  /* Accent colors */
-  --color-accent: #d48900;
-  --color-accent-dark: #ffbf00;
-  --color-accent-foreground: #ffffff;
-  --color-accent-foreground-dark: #1a1a1a;
-
-  /* Border colors */
-  --color-border: #d1d1d1;
-  --color-border-dark: #333333;
-
-  /* Input colors */
-  --color-input: #cccccc;
-  --color-input-dark: #4d4d4d;
-
-  /* Ring colors */
-  --color-ring: #0077ff;
-  --color-ring-dark: #00ffff;
-
-  /* Popover colors */
-  --color-popover: #ffffff;
-  --color-popover-dark: #1a1a1a;
-  --color-popover-foreground: #1a1a1a;
-  --color-popover-foreground-dark: #e6e6e6;
-
-  /* Card colors */
-  --color-card: #ffffff;
-  --color-card-dark: #1a1a1a;
-  --color-card-foreground: #1a1a1a;
-  --color-card-foreground-dark: #e6e6e6;
+  /* Light mode colors */
+  --color-background: var(--off-white);
+  --color-foreground: var(--gray-900);
+  --color-primary: var(--blue-500);
+  --color-primary-foreground: var(--white);
+  --color-secondary: var(--pink-500);
+  --color-secondary-foreground: var(--white);
+  --color-muted: var(--gray-50);
+  --color-muted-foreground: var(--gray-300);
+  --color-accent: var(--orange-500);
+  --color-accent-foreground: var(--white);
+  --color-destructive: var(--red-500);
+  --color-destructive-foreground: var(--white);
+  --color-border: var(--gray-100);
+  --color-input: var(--gray-100);
+  --color-ring: var(--blue-500);
+  --color-card: var(--white);
+  --color-card-foreground: var(--gray-500);
+  --color-popover: var(--white);
+  --color-popover-foreground: var(--gray-500);
 
   /* Border radius */
   --radius: 0.5rem;
@@ -91,16 +64,36 @@
 }
 
 @layer base {
+  .dark {
+    --color-background: var(--gray-900);
+    --color-foreground: var(--gray-50);
+    --color-primary: var(--cyan-500);
+    --color-primary-foreground: var(--gray-500);
+    --color-secondary: var(--pink-400);
+    --color-secondary-foreground: var(--gray-500);
+    --color-muted: var(--gray-400);
+    --color-muted-foreground: var(--gray-200);
+    --color-accent: var(--orange-400);
+    --color-accent-foreground: var(--gray-500);
+    --color-destructive: var(--red-400);
+    --color-destructive-foreground: var(--gray-500);
+    --color-border: var(--gray-400);
+    --color-input: var(--gray-300);
+    --color-ring: var(--cyan-500);
+    --color-card: var(--gray-500);
+    --color-card-foreground: var(--gray-50);
+    --color-popover: var(--gray-500);
+    --color-popover-foreground: var(--gray-50);
+  }
+
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
-
-/* Dark mode variant */
-@variant dark (&:is(.dark *));
 
 /* Animations */
 @layer utilities {

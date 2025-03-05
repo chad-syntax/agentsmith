@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useAuth } from '@/app/providers/auth';
 import { signOutAction } from '@/app/actions/auth';
 import { routes } from '@/utils/routes';
+import { Button } from '@/components/ui/button';
+import { H1, H2 } from '@/components/typography';
 
 export const AccountPage = () => {
   const { user, agentsmithUser } = useAuth();
@@ -16,29 +18,23 @@ export const AccountPage = () => {
 
   return (
     <div className="flex-1 w-full flex flex-col gap-12 p-4">
-      <h1 className="text-2xl font-bold">Account</h1>
+      <H1>Account</H1>
       <div className="flex flex-row gap-2 items-start">
-        <button
-          onClick={signOutAction}
-          className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-        >
+        <Button onClick={signOutAction} variant="outline">
           Sign Out
-        </button>
-        <Link
-          href={routes.studio.resetPassword}
-          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-        >
-          Reset Password
-        </Link>
+        </Button>
+        <Button variant="destructive" asChild>
+          <Link href={routes.studio.resetPassword}>Reset Password</Link>
+        </Button>
       </div>
       <div className="flex flex-col gap-2 items-start">
-        <h2 className="font-bold text-xl mb-4">Your auth user details</h2>
+        <H2 className="mb-4">Your auth user details</H2>
         <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
           {JSON.stringify(user, null, 2)}
         </pre>
       </div>
       <div className="flex flex-col gap-2 items-start">
-        <h2 className="font-bold text-xl mb-4">Your agentsmith user details</h2>
+        <H2 className="mb-4">Your agentsmith user details</H2>
         <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
           {JSON.stringify(agentsmithUser, null, 2)}
         </pre>

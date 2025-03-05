@@ -1,5 +1,20 @@
 import { useState } from 'react';
 import { Database } from '@/app/__generated__/supabase.types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Loader2 } from 'lucide-react';
+import { cn } from '@/utils/shadcn';
 
 type PromptVariable = {
   name: string;
@@ -46,20 +61,21 @@ export const ExecutablePrompt = ({
   );
 
   return (
-    <div className="border rounded-lg p-4 bg-white">
-      <h3 className="font-medium text-lg mb-2">{name}</h3>
-      <div className="space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>{name}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
         {variables.map((variable) => (
-          <div key={variable.name}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+          <div key={variable.name} className="space-y-2">
+            <Label>
               {variable.name}
               {variable.required && (
-                <span className="text-red-500 ml-1">*</span>
+                <span className="text-destructive ml-1">*</span>
               )}
-            </label>
+            </Label>
             {variable.type === 'string' && (
-              <textarea
-                className="w-full px-3 py-2 border rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              <Textarea
                 value={inputValues[variable.name] || ''}
                 onChange={(e) =>
                   setInputValues((prev) => ({
@@ -71,9 +87,8 @@ export const ExecutablePrompt = ({
               />
             )}
             {variable.type === 'number' && (
-              <input
+              <Input
                 type="number"
-                className="w-full px-3 py-2 border rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
                 value={inputValues[variable.name] || ''}
                 onChange={(e) =>
                   setInputValues((prev) => ({
@@ -84,55 +99,57 @@ export const ExecutablePrompt = ({
               />
             )}
             {variable.type === 'boolean' && (
-              <select
-                className="w-full px-3 py-2 border rounded-md focus:outline-hidden focus:ring-2 focus:ring-blue-500"
+              <Select
                 value={inputValues[variable.name] || ''}
-                onChange={(e) =>
+                onValueChange={(value) =>
                   setInputValues((prev) => ({
                     ...prev,
-                    [variable.name]: e.target.value,
+                    [variable.name]: value,
                   }))
                 }
               >
-                <option value="">Select...</option>
-                <option value="true">True</option>
-                <option value="false">False</option>
-              </select>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">True</SelectItem>
+                  <SelectItem value="false">False</SelectItem>
+                </SelectContent>
+              </Select>
             )}
           </div>
         ))}
 
-        <div className="mt-4">
-          <button
+        <div className="pt-4">
+          <Button
             onClick={handleExecute}
             disabled={!isValid || isExecuting}
-            className={`px-4 py-2 rounded-md text-white ${
-              !isValid || isExecuting
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-blue-500 hover:bg-blue-600'
-            }`}
+            className="w-full"
           >
+            {isExecuting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isExecuting
               ? 'Executing...'
               : `Execute ${isAction ? 'Action' : 'Reaction'}`}
-          </button>
+          </Button>
         </div>
 
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
-            {error}
-          </div>
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
         )}
 
         {response && (
-          <div className="mt-4">
-            <h4 className="font-medium text-sm mb-2">Response:</h4>
-            <pre className="bg-gray-50 p-3 rounded-md text-sm overflow-auto">
+          <div className="space-y-2">
+            <Label>Response:</Label>
+            <pre
+              className={cn('rounded-md bg-muted p-4 overflow-auto text-sm')}
+            >
               {response}
             </pre>
           </div>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

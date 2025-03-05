@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { SmtpMessage } from '../smtp-message';
 import { signInWithGithub } from '@/app/providers/auth';
+import { Button } from '@/components/ui/button';
+import { H1, P } from '@/components/typography';
 
 export default async function Signup(props: {
   searchParams: Promise<Message>;
@@ -23,16 +25,18 @@ export default async function Signup(props: {
   return (
     <>
       <div>
-        <button onClick={signInWithGithub}>Sign in with Github</button>
+        <Button onClick={signInWithGithub} variant="outline">
+          Sign in with Github
+        </Button>
       </div>
       <form className="flex flex-col min-w-64 max-w-64 mx-auto">
-        <h1 className="text-2xl font-medium">Sign up</h1>
-        <p className="text-sm text text-foreground">
+        <H1>Sign up</H1>
+        <P className="text-sm text-foreground">
           Already have an account?{' '}
           <Link className="text-primary font-medium underline" href="/sign-in">
             Sign in
           </Link>
-        </p>
+        </P>
         <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
           <Label htmlFor="email">Email</Label>
           <Input name="email" placeholder="you@example.com" required />

@@ -3,23 +3,29 @@
 import { IconTrash } from '@tabler/icons-react';
 import { PromptVariable } from '@/components/editors/PromptContentEditor';
 import { Database } from '@/app/__generated__/supabase.types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/utils/shadcn';
 
 type VariablesEditorProps = {
   variables: PromptVariable[];
   onVariablesChange: (variables: PromptVariable[]) => void;
   readOnly?: boolean;
+  className?: string;
 };
 
 export const VariablesEditor = (props: VariablesEditorProps) => {
-  const { variables, onVariablesChange, readOnly = false } = props;
-
-  const addVariable = () => {
-    if (readOnly) return;
-    onVariablesChange([
-      ...variables,
-      { name: '', type: 'STRING', required: true },
-    ]);
-  };
+  const { variables, onVariablesChange, readOnly = false, className } = props;
 
   const removeVariable = (index: number) => {
     if (readOnly) return;
@@ -44,60 +50,67 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className={cn('space-y-4', className)}>
       {variables.map((variable, index) => (
-        <div
+        <Card
           key={variable.id || `var-${index}`}
-          className="bg-white p-4 rounded-lg border"
+          className={cn(readOnly && 'opacity-70')}
         >
-          <div className="flex justify-between items-start mb-4">
-            <input
-              type="text"
-              value={variable.name}
-              onChange={(e) => updateVariable(index, 'name', e.target.value)}
-              placeholder="Variable name"
-              className="flex-1 px-2 py-1 border rounded-md mr-2"
-              disabled={readOnly}
-            />
-            {!readOnly && (
-              <button
-                onClick={() => removeVariable(index)}
-                className="p-1 text-gray-500 hover:text-red-500"
-              >
-                <IconTrash size={16} />
-              </button>
-            )}
-          </div>
-          <div className="space-y-2">
-            <select
-              value={variable.type}
-              onChange={(e) => updateVariable(index, 'type', e.target.value)}
-              className="w-full px-2 py-1 border rounded-md"
-              disabled={readOnly}
-            >
-              <option value="STRING">String</option>
-              <option value="NUMBER">Number</option>
-              <option value="BOOLEAN">Boolean</option>
-              <option value="JSON">JSON</option>
-            </select>
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                checked={variable.required}
-                onChange={(e) =>
-                  updateVariable(index, 'required', e.target.checked)
-                }
-                className="mr-2"
-                disabled={readOnly}
-              />
-              Required
-            </label>
-          </div>
-        </div>
+          <CardContent>
+            <div className="flex justify-between items-center gap-1 mb-4">
+              <div className="bg-muted p-2 rounded-md flex-1">
+                <div className="font-medium">{variable.name}</div>
+              </div>
+              {!readOnly && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeVariable(index)}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <IconTrash className="h-4 w-4 text-red-700" />
+                </Button>
+              )}
+            </div>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <Select
+                  value={variable.type}
+                  onValueChange={(value) =>
+                    updateVariable(index, 'type', value)
+                  }
+                  disabled={readOnly}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="STRING">String</SelectItem>
+                    <SelectItem value="NUMBER">Number</SelectItem>
+                    <SelectItem value="BOOLEAN">Boolean</SelectItem>
+                    <SelectItem value="JSON">JSON</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id={`required-${index}`}
+                  checked={variable.required}
+                  onCheckedChange={(checked) =>
+                    updateVariable(index, 'required', checked === true)
+                  }
+                  disabled={readOnly}
+                />
+                <Label htmlFor={`required-${index}`}>Required</Label>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       ))}
 
       {variables.length === 0 && (
-        <p className="text-gray-500 text-sm text-center py-4">
+        <p className="text-muted-foreground text-sm text-center py-4">
           No variables found. Add variables to your prompt or edit template to
           add variables.
         </p>

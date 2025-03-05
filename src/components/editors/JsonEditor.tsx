@@ -5,7 +5,10 @@ import Editor from 'react-simple-code-editor';
 import { highlight, languages } from 'prismjs';
 import 'prismjs/components/prism-json';
 import 'prismjs/themes/prism.css';
-import { IconAlertCircle } from '@tabler/icons-react';
+import { AlertCircle } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/utils/shadcn';
 
 type JsonEditorProps<T> = {
   value: T;
@@ -13,6 +16,7 @@ type JsonEditorProps<T> = {
   minHeight?: string;
   placeholder?: string;
   label?: string;
+  className?: string;
 };
 
 export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
@@ -22,6 +26,7 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
     minHeight = '100px',
     placeholder = '{}',
     label,
+    className,
   } = props;
 
   const [jsonText, setJsonText] = useState<string>(
@@ -41,13 +46,14 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
   };
 
   return (
-    <div className="space-y-2">
-      {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          {label}
-        </label>
-      )}
-      <div className="bg-white rounded-lg border">
+    <div className={cn('space-y-2', className)}>
+      {label && <Label>{label}</Label>}
+      <div
+        className={cn(
+          'rounded-md border bg-background',
+          jsonError && 'border-destructive'
+        )}
+      >
         <Editor
           value={jsonText}
           onValueChange={handleJsonChange}
@@ -59,14 +65,14 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
             fontSize: 14,
             minHeight,
           }}
-          className="border rounded-lg"
+          className="w-full"
         />
       </div>
       {jsonError && (
-        <div className="text-red-500 text-sm flex items-center gap-2 mt-2">
-          <IconAlertCircle size={18} />
-          <span>{jsonError}</span>
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{jsonError}</AlertDescription>
+        </Alert>
       )}
     </div>
   );

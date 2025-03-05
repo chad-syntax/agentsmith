@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { connectOpenrouter } from '@/app/actions/openrouter';
+import { Button } from '@/components/ui/button';
+import { H1, H2, P } from '@/components/typography';
 
 type OrganizationPageProps = {
   organization: GetOrganizationDataResult;
@@ -37,42 +39,54 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
   return (
     <div className="flex-1 w-full flex flex-col gap-12 p-4">
       <div className="flex items-center gap-2">
-        <h1>{organization.name}</h1>
-        <Link href={routes.studio.editOrganization(organization.uuid)}>
-          <IconPencil />
-        </Link>
+        <H1>{organization.name}</H1>
+        <Button variant="ghost" size="icon" asChild>
+          <Link href={routes.studio.editOrganization(organization.uuid)}>
+            <IconPencil className="h-4 w-4" />
+          </Link>
+        </Button>
       </div>
       <div className="flex items-center gap-2">
         <span>Invite Code: {organization.invite_code}</span>
-        <IconClipboard
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={handleCopyCode}
-          className={`cursor-pointer ${isCodeCopied ? 'text-green-500' : 'text-blue-500'} hover:text-blue-700`}
-          size={24}
-        />
+          className={isCodeCopied ? 'text-green-500' : 'text-blue-500'}
+        >
+          <IconClipboard className="h-4 w-4" />
+        </Button>
       </div>
-      <button
+      <Button
         onClick={handleCopyLink}
-        className={`mt-2 p-2 rounded ${isLinkCopied ? 'bg-green-500' : 'bg-blue-500'} text-white`}
+        className={
+          isLinkCopied
+            ? 'bg-green-500 hover:bg-green-600 text-white'
+            : undefined
+        }
       >
         {isLinkCopied ? 'Link Copied!' : 'Copy Invite Link'}
-      </button>
+      </Button>
 
       <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">Projects</h2>
+        <H2>Projects</H2>
         <div className="flex flex-col gap-2">
           {organization.projects.map((project) => (
-            <Link
-              href={routes.studio.project(project.uuid)}
-              className="text-blue-500 hover:underline"
+            <Button
               key={project.id}
+              variant="link"
+              asChild
+              className="justify-start"
             >
-              {project.name}
-            </Link>
+              <Link href={routes.studio.project(project.uuid)}>
+                {project.name}
+              </Link>
+            </Button>
           ))}
         </div>
       </div>
       <div className="flex flex-col gap-4">
-        <h2 className="text-lg font-semibold">Organization Users</h2>
+        <H2>Organization Users</H2>
         <div className="flex flex-col gap-2">
           {organization.organization_users.map((user) => (
             <div
@@ -80,47 +94,45 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
               className="flex items-center gap-2 p-2 border rounded"
             >
               <div className="flex-1">
-                <p className="text-sm text-gray-500">{user.role}</p>
-                <p className="font-medium">{user.agentsmith_users.email}</p>
-                <p className="text-sm text-gray-500">
+                <P className="text-sm text-muted-foreground">{user.role}</P>
+                <P className="font-medium">{user.agentsmith_users.email}</P>
+                <P className="text-sm text-muted-foreground">
                   {user.agentsmith_users.auth_user_id}
-                </p>
+                </P>
               </div>
             </div>
           ))}
           {!organization.organization_users?.length && (
-            <p className="text-gray-500 italic">No users found</p>
+            <P className="text-muted-foreground italic">No users found</P>
           )}
         </div>
       </div>
       <div>
-        <h2 className="font-bold text-xl mb-4">Openrouter Account</h2>
-        <p className="pb-4">
+        <H2 className="mb-4">Openrouter Account</H2>
+        <P className="pb-4">
           {hasOpenRouterKey
             ? '✅ This organization has an Openrouter key'
             : '❌ This organization does not have an Openrouter key'}
-        </p>
+        </P>
         {!isOrganizationAdmin ? (
-          <p>
+          <P>
             You must be an admin to connect to Openrouter. Please ask your
             organization admin to connect to Openrouter.
-          </p>
+          </P>
         ) : hasOpenRouterKey ? (
-          <a
-            href="https://openrouter.ai/settings/keys"
-            className="text-blue-500 hover:text-blue-600 text-xs"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            View your keys in Openrouter
-          </a>
+          <Button variant="link" asChild className="text-xs p-0">
+            <a
+              href="https://openrouter.ai/settings/keys"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View your keys in Openrouter
+            </a>
+          </Button>
         ) : (
-          <button
-            className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded transition-colors"
-            onClick={() => connectOpenrouter(organization.uuid)}
-          >
+          <Button onClick={() => connectOpenrouter(organization.uuid)}>
             Connect Openrouter
-          </button>
+          </Button>
         )}
       </div>
     </div>

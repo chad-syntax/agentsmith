@@ -1,17 +1,18 @@
 import { HeroHeader } from '@/components/HeroHeader';
+import { H1, H2, P, Lead } from '@/components/typography';
 
 export const PrivacyPolicyPage = () => {
   return (
     <main>
       <article className="mx-auto px-4 max-w-[1400px] py-4 md:py-12">
         <HeroHeader />
-        <h1 className="text-2xl md:text-4xl font-bold mb-4">Privacy Policy</h1>
+        <H1 className="mb-4">Privacy Policy</H1>
         <div className="space-y-4">
-          <p>
+          <P>
             <strong>Last updated:</strong> 2-7-2025
-          </p>
+          </P>
           <section aria-label="Introduction">
-            <p className="pt-6">
+            <P className="pt-6">
               This Privacy Policy describes how Chad Syntax LLC (the
               &quot;Site&quot;, &quot;we&quot;, &quot;us&quot;, or
               &quot;our&quot;) collects, uses, and discloses your personal
@@ -29,55 +30,51 @@ export const PrivacyPolicyPage = () => {
               the user of the Services, whether you are a customer, website
               visitor, or another individual whose information we have collected
               pursuant to this Privacy Policy.
-            </p>
-            <p>
+            </P>
+            <P>
               Please read this Privacy Policy carefully. By using and accessing
               any of the Services, you agree to the collection, use, and
               disclosure of your information as described in this Privacy
               Policy. If you do not agree to this Privacy Policy, please do not
               use or access any of the Services.
-            </p>
+            </P>
           </section>
 
           <section aria-label="Policy sections" className="space-y-8">
             <section aria-label="Changes to Policy">
-              <h2 className="text-2xl font-bold mb-4">
-                Changes to This Privacy Policy
-              </h2>
-              <p>
+              <H2 className="mb-4">Changes to This Privacy Policy</H2>
+              <P>
                 We may update this Privacy Policy from time to time, including
                 to reflect changes to our practices or for other operational,
                 legal, or regulatory reasons. We will post the revised Privacy
                 Policy on the Site, update the &quot;Last updated&quot; date and
                 take any other steps required by applicable law.
-              </p>
+              </P>
             </section>
 
             <section aria-label="Information Collection">
-              <h2 className="text-2xl font-bold mb-4">
+              <H2 className="mb-4">
                 How We Collect and Use Your Personal Information
-              </h2>
-              <p>
+              </H2>
+              <P>
                 To provide the Services, we collect and have collected over the
                 past 12 months personal information about you from a variety of
                 sources, as set out below. The information that we collect and
                 use varies depending on how you interact with us.
-              </p>
-              <p>
+              </P>
+              <P>
                 In addition to the specific uses set out below, we may use
                 information we collect about you to communicate with you,
                 provide the Services, comply with any applicable legal
                 obligations, enforce any applicable terms of service, and to
                 protect or defend the Services, our rights, and the rights of
                 our users or others.
-              </p>
+              </P>
             </section>
 
             <section aria-label="Personal Information Types">
-              <h2 className="text-2xl font-bold mb-4">
-                What Personal Information We Collect
-              </h2>
-              <p>
+              <H2 className="mb-4">What Personal Information We Collect</H2>
+              <P>
                 The types of personal information we obtain about you depends on
                 how you interact with our Site and use our Services. When we use
                 the term &quot;personal information&quot;, we are referring to
@@ -85,17 +82,15 @@ export const PrivacyPolicyPage = () => {
                 associated with you. The following sections describe the
                 categories and specific types of personal information we
                 collect.
-              </p>
+              </P>
             </section>
 
             <section aria-label="Direct Information Collection">
-              <h2 className="text-2xl font-bold mb-4">
-                Information We Collect Directly from You
-              </h2>
-              <p>
+              <H2 className="mb-4">Information We Collect Directly from You</H2>
+              <P>
                 Information that you directly submit to us through our Services
                 may include:
-              </p>
+              </P>
               <ul className="list-disc pl-6 space-y-2">
                 <li className="text-foreground/80">
                   Basic contact details including your name, address, phone
@@ -120,19 +115,17 @@ export const PrivacyPolicyPage = () => {
                   sending a message through the Services.
                 </li>
               </ul>
-              <p>
+              <P>
                 Some features of the Services may require you to directly
                 provide us with certain information about yourself. You may
                 elect not to provide this information, but doing so may prevent
                 you from using or accessing these features.
-              </p>
+              </P>
             </section>
 
             <section aria-label="Cookie Information">
-              <h2 className="text-2xl font-bold mb-4">
-                Information We Collect through Cookies
-              </h2>
-              <p>
+              <H2 className="mb-4">Information We Collect through Cookies</H2>
+              <P>
                 We also automatically collect certain information about your
                 interaction with the Services (&quot;Usage Data&quot;). To do
                 this, we may use cookies, pixels and similar technologies
@@ -141,18 +134,16 @@ export const PrivacyPolicyPage = () => {
                 device information, browser information, information about your
                 network connection, your IP address and other information
                 regarding your interaction with the Services.
-              </p>
+              </P>
             </section>
 
             <section aria-label="Third Party Information">
-              <h2 className="text-2xl font-bold mb-4">
-                Information We Obtain from Third Parties
-              </h2>
-              <p>
+              <H2 className="mb-4">Information We Obtain from Third Parties</H2>
+              <P>
                 Finally, we may obtain information about you from third parties,
                 including from vendors and service providers who may collect
                 information on our behalf, such as:
-              </p>
+              </P>
               <ul className="list-disc pl-6 space-y-2">
                 <li className="text-foreground/80">
                   Companies who support our Site and Services, such as Google.
@@ -177,20 +168,18 @@ export const PrivacyPolicyPage = () => {
                   and cookies.
                 </li>
               </ul>
-              <p>
+              <P>
                 Any information we obtain from third parties will be treated in
                 accordance with this Privacy Policy. We are not responsible or
                 liable for the accuracy of the information provided to us by
                 third parties and are not responsible for any third party&#x27;s
                 policies or practices. For more information, see the section
                 below, Third Party Websites and Links.
-              </p>
+              </P>
             </section>
 
             <section aria-label="Information Usage">
-              <h2 className="text-2xl font-bold mb-4">
-                How We Use Your Personal Information
-              </h2>
+              <H2 className="mb-4">How We Use Your Personal Information</H2>
               <ul className="list-disc pl-6 space-y-2">
                 <li className="text-foreground/80">
                   Providing Products and Services. We use your personal
@@ -239,93 +228,28 @@ export const PrivacyPolicyPage = () => {
             </section>
 
             <section aria-label="Information Disclosure">
-              <h2 className="text-2xl font-bold mb-4">
-                How We Disclose Personal Information
-              </h2>
-              <p>
+              <H2 className="mb-4">How We Disclose Personal Information</H2>
+              <P>
                 In certain circumstances, we may disclose your personal
                 information to third parties for legitimate purposes subject to
                 this Privacy Policy. Such circumstances may include:
-              </p>
+              </P>
+              <P>Category:</P>
+              <ul className="list-disc pl-6 space-y-2">
+                <li className="text-foreground/80">Service Providers</li>
+              </ul>
+              <P>Categories of Recipients:</P>
               <ul className="list-disc pl-6 space-y-2">
                 <li className="text-foreground/80">
-                  With vendors or other third parties who perform services on
-                  our behalf (e.g., IT management, payment processing, data
-                  analytics, customer support, cloud storage, fulfillment and
-                  shipping).
+                  We share your personal information with third parties that
+                  provide services to help us provide the Services and operate
+                  our business.
                 </li>
               </ul>
-              <ul className="list-disc pl-6 space-y-2">
-                <li className="text-foreground/80">
-                  When you direct, request us or otherwise consent to our
-                  disclosure of certain information to third parties, such as to
-                  bill you or through your use of social media widgets or login
-                  integrations, with your consent.
-                </li>
-              </ul>
-              <ul className="list-disc pl-6 space-y-2">
-                <li className="text-foreground/80">
-                  With our affiliates or otherwise within our corporate group,
-                  in our legitimate interests to run a successful business.
-                </li>
-              </ul>
-              <ul className="list-disc pl-6 space-y-2">
-                <li className="text-foreground/80">
-                  In connection with a business transaction such as a merger or
-                  bankruptcy, to comply with any applicable legal obligations
-                  (including to respond to subpoenas, search warrants and
-                  similar requests), to enforce any applicable terms of service,
-                  and to protect or defend the Services, our rights, and the
-                  rights of our users or others.
-                </li>
-              </ul>
-              <p>
-                We have, in the past 12 months disclosed the following
-                categories of personal information and sensitive personal
-                information (denoted by *) about users for the purposes set out
-                above in &quot;How we Collect and Use your Personal
-                Information&quot; and &quot;How we Disclose Personal
-                Information&quot;:
-              </p>
-              <p>Category:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li className="text-foreground/80">
-                  Identifiers such as basic contact details and certain order
-                  and account information
-                </li>
-              </ul>
-              <ul className="list-disc pl-6 space-y-2">
-                <li className="text-foreground/80">
-                  Commercial information such as order information, and customer
-                  support information
-                </li>
-              </ul>
-              <ul className="list-disc pl-6 space-y-2">
-                <li className="text-foreground/80">
-                  Internet or other similar network activity, such as Usage Data
-                </li>
-              </ul>
-              <p>Categories of Recipients:</p>
-              <ul className="list-disc pl-6 space-y-2">
-                <li className="text-foreground/80">
-                  Vendors and third parties who perform services on our behalf
-                  (such as Internet service providers, payment processors,
-                  fulfillment partners, customer support partners and data
-                  analytics providers)
-                </li>
-              </ul>
-              <ul className="list-disc pl-6 space-y-2">
-                <li className="text-foreground/80">
-                  Business and marketing partners
-                </li>
-              </ul>
-              <ul className="list-disc pl-6 space-y-2">
-                <li className="text-foreground/80">Affiliates</li>
-              </ul>
-              <p>
-                We do not use or disclose sensitive personal information for the
-                purposes of inferring characteristics about you.
-              </p>
+              <P>
+                We may also share your personal information in the following
+                circumstances:
+              </P>
             </section>
 
             <section aria-label="User Generated Content">
@@ -372,20 +296,18 @@ export const PrivacyPolicyPage = () => {
             </section>
 
             <section aria-label="Children's Data">
-              <h2 className="text-2xl font-bold mb-4">Children's Data</h2>
-              <p>
-                The Services are not intended to be used by children, and we do
-                not knowingly collect any personal information about children.
-                If you are the parent or guardian of a child who has provided us
-                with their personal information, you may contact us using the
-                contact details set out below to request that it be deleted.
-              </p>
-              <p>
-                As of the Effective Date of this Privacy Policy, we do not have
-                actual knowledge that we &quot;share&quot; or &quot;sell&quot;
-                (as those terms are defined in applicable law) personal
-                information of individuals under 16 years of age.
-              </p>
+              <H2 className="mb-4">Children's Data</H2>
+              <P>
+                The Services are not intended for use by children under the age
+                of 13. We do not knowingly collect personal information from
+                children under the age of 13. If you are a parent or guardian
+                and believe we have collected information from your child,
+                please contact us.
+              </P>
+              <P>
+                If we discover that we have collected personal information from
+                a child under 13, we will promptly delete such information.
+              </P>
             </section>
 
             <section aria-label="Security and Retention">
@@ -529,22 +451,15 @@ export const PrivacyPolicyPage = () => {
                 <br />
               </p>
             </section>
-          </section>
 
-          <section aria-label="Contact Information">
-            <h2 className="text-2xl font-bold mb-4">Contact</h2>
-            <p>
-              Should you have any questions about our privacy practices or this
-              Privacy Policy, or if you would like to exercise any of the rights
-              available to you, please email us at{' '}
-              <a
-                href="mailto:privacy@chadsyntax.com"
-                className="underline hover:text-gray-600"
-              >
-                privacy@chadsyntax.com
-              </a>
-              .
-            </p>
+            <section aria-label="Contact Information">
+              <H2 className="mb-4">Contact Us</H2>
+              <P>
+                If you have any questions about this Privacy Policy or our
+                privacy practices, please contact us at:
+              </P>
+              <P>Email: privacy@chadsyntax.com</P>
+            </section>
           </section>
         </div>
       </article>

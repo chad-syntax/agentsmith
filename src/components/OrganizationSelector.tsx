@@ -1,5 +1,13 @@
 import { useApp } from '@/app/providers/app';
 import type { GetUserOrganizationDataResult } from '@/lib/onboarding';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 export type OrganizationSelectorProps = {
   userOrganizationData: GetUserOrganizationDataResult;
@@ -22,48 +30,43 @@ export const OrganizationSelector = (props: OrganizationSelectorProps) => {
     ) || [];
 
   return (
-    <div>
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Organization
-        </label>
-        <div className="relative">
-          <select
-            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-hidden focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-            value={selectedOrganizationUuid ?? 'choose-organization'}
-            onChange={(e) => setSelectedOrganizationUuid(e.target.value)}
-          >
-            <option disabled value="choose-organization">
-              Choose Organization
-            </option>
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Label>Organization</Label>
+        <Select
+          value={selectedOrganizationUuid ?? 'choose-organization'}
+          onValueChange={setSelectedOrganizationUuid}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Choose Organization" />
+          </SelectTrigger>
+          <SelectContent>
             {organizations.map((org: any) => (
-              <option key={org.uuid} value={org.uuid}>
+              <SelectItem key={org.uuid} value={org.uuid}>
                 {org.name}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-        </div>
+          </SelectContent>
+        </Select>
       </div>
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Project
-        </label>
-        <div className="relative">
-          <select
-            className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-hidden focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-            value={selectedProjectUuid ?? 'choose-project'}
-            onChange={(e) => setSelectedProjectUuid(e.target.value)}
-          >
-            <option disabled value="choose-project">
-              Choose Project
-            </option>
+
+      <div className="space-y-2">
+        <Label>Project</Label>
+        <Select
+          value={selectedProjectUuid ?? 'choose-project'}
+          onValueChange={setSelectedProjectUuid}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Choose Project" />
+          </SelectTrigger>
+          <SelectContent>
             {selectedOrganization?.projects.map((project: any) => (
-              <option key={project.uuid} value={project.uuid}>
+              <SelectItem key={project.uuid} value={project.uuid}>
                 {`Project ${project.name}`}
-              </option>
+              </SelectItem>
             ))}
-          </select>
-        </div>
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

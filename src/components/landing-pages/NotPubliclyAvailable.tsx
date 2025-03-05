@@ -2,7 +2,10 @@
 
 import { usePostHog } from 'posthog-js/react';
 import { useRef, useState } from 'react';
-import { twMerge } from 'tailwind-merge';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/utils/shadcn';
+import { H1, H2 } from '@/components/typography';
 
 type NotPubliclyAvailableProps = {
   withAlphaClub?: boolean;
@@ -29,30 +32,33 @@ export const NotPubliclyAvailable = (props: NotPubliclyAvailableProps) => {
 
   return (
     <div className="max-w-[1400px] w-full mx-auto md:px-16 md:py-12 pt-8">
-      <h2 className="text-2xl font-bold text-foreground/60 text-center mb-8">
+      <H2 className="text-muted-foreground text-center mb-8">
         Agentsmith is not publicly available yet.
-      </h2>
-      <h1 className="text-4xl font-bold text-center mb-8">
+      </H2>
+      <H1 className="text-center mb-8">
         Join the waitlist to be invited to our private beta!
-      </h1>
+      </H1>
       {withAlphaClub && (
         <div className="flex flex-col items-center justify-center">
-          <button
+          <Button
             onClick={() => handleAlphaClubClick()}
-            className="flex items-center gap-1 border border-success bg-success/15 text-success px-2 py-1 rounded-md text-xs"
+            variant="outline"
+            className="bg-success/15 text-success hover:bg-success/25 hover:text-success border-success"
+            size="sm"
           >
             Get 50% off the first year of public launch by joining the Alpha
             Club!
-          </button>
+          </Button>
 
-          <p
-            className={twMerge(
-              'text-sm text-foreground/60 text-center transition-opacity duration-300 mb-2 mt-2 md:mb-0 md:mt-4 border rounded border-foreground p-1',
+          <Badge
+            variant="outline"
+            className={cn(
+              'mt-4 transition-opacity duration-300',
               alphaClubClicked ? 'opacity-100' : 'opacity-0'
             )}
           >
             Coming soon!
-          </p>
+          </Badge>
         </div>
       )}
     </div>

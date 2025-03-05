@@ -4,6 +4,8 @@ import { IconArrowLeft } from '@tabler/icons-react';
 import { getLogByUuid } from '@/lib/logs';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
+import { H1, H2, P } from '@/components/typography';
+import { Button } from '@/components/ui/button';
 
 type LogDetailPageProps = {
   log: NonNullable<Awaited<ReturnType<typeof getLogByUuid>>>;
@@ -33,17 +35,20 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
     return (
       <div className="p-6">
         <div className="mb-6 flex items-center">
-          <Link
-            href={routes.studio.logs(projectUuid)}
-            className="mr-4 text-blue-600 hover:text-blue-800 flex items-center"
+          <Button
+            variant="link"
+            asChild
+            className="mr-4 text-blue-600 hover:text-blue-800 flex items-center p-0"
           >
-            <IconArrowLeft className="w-4 h-4 mr-1" />
-            Back to Logs
-          </Link>
-          <h1 className="text-2xl font-bold">Log Details</h1>
+            <Link href={routes.studio.logs(projectUuid)}>
+              <IconArrowLeft className="w-4 h-4 mr-1" />
+              Back to Logs
+            </Link>
+          </Button>
+          <H1>Log Details</H1>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm text-center">
-          <p className="text-gray-500">Log not found.</p>
+          <P className="text-gray-500">Log not found.</P>
         </div>
       </div>
     );
@@ -52,27 +57,30 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
   return (
     <div className="p-6">
       <div className="mb-6 flex items-center">
-        <Link
-          href={routes.studio.logs(projectUuid)}
-          className="mr-4 text-blue-600 hover:text-blue-800 flex items-center"
+        <Button
+          variant="link"
+          asChild
+          className="mr-4 text-blue-600 hover:text-blue-800 flex items-center p-0"
         >
-          <IconArrowLeft className="w-4 h-4 mr-1" />
-          Back to Logs
-        </Link>
-        <h1 className="text-2xl font-bold">Log Details</h1>
+          <Link href={routes.studio.logs(projectUuid)}>
+            <IconArrowLeft className="w-4 h-4 mr-1" />
+            Back to Logs
+          </Link>
+        </Button>
+        <H1>Log Details</H1>
       </div>
 
       <div className="space-y-6">
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-lg font-semibold mb-4">Overview</h2>
+          <H2 className="mb-4">Overview</H2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-500">Project</p>
-              <p className="font-medium">{log.projects.name}</p>
+              <P className="text-sm text-gray-500">Project</P>
+              <P className="font-medium">{log.projects.name}</P>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Status</p>
-              <p>
+              <P className="text-sm text-gray-500">Status</P>
+              <P>
                 <span
                   className={`px-2 py-1 text-xs font-semibold rounded-full ${
                     log.end_time
@@ -82,40 +90,40 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
                 >
                   {log.end_time ? 'Completed' : 'Running'}
                 </span>
-              </p>
+              </P>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Start Time</p>
-              <p className="font-medium">{formatDate(log.start_time)}</p>
+              <P className="text-sm text-gray-500">Start Time</P>
+              <P className="font-medium">{formatDate(log.start_time)}</P>
             </div>
             <div>
-              <p className="text-sm text-gray-500">End Time</p>
-              <p className="font-medium">
+              <P className="text-sm text-gray-500">End Time</P>
+              <P className="font-medium">
                 {log.end_time ? formatDate(log.end_time) : 'Still running'}
-              </p>
+              </P>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Duration</p>
-              <p className="font-medium">
+              <P className="text-sm text-gray-500">Duration</P>
+              <P className="font-medium">
                 {getDuration(log.start_time, log.end_time)}
-              </p>
+              </P>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Prompt Version</p>
-              <p className="font-medium">{log.prompt_versions?.version}</p>
+              <P className="text-sm text-gray-500">Prompt Version</P>
+              <P className="font-medium">{log.prompt_versions?.version}</P>
             </div>
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-lg font-semibold mb-4">Variables</h2>
+          <H2 className="mb-4">Variables</H2>
           <pre className="bg-gray-50 p-4 rounded-md overflow-auto text-sm">
             {JSON.stringify(log.prompt_variables, null, 2)}
           </pre>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-sm">
-          <h2 className="text-lg font-semibold mb-4">Raw Input</h2>
+          <H2 className="mb-4">Raw Input</H2>
           <pre className="bg-gray-50 p-4 rounded-md overflow-auto text-sm">
             {JSON.stringify(log.raw_input, null, 2)}
           </pre>
@@ -123,7 +131,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
 
         {log.raw_output && (
           <div className="bg-white p-6 rounded-lg shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">Raw Output</h2>
+            <H2 className="mb-4">Raw Output</H2>
             <pre className="bg-gray-50 p-4 rounded-md overflow-auto text-sm">
               {JSON.stringify(log.raw_output, null, 2)}
             </pre>

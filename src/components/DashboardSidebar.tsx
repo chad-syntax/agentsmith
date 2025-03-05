@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import * as Collapsible from '@radix-ui/react-collapsible';
 import { useState } from 'react';
 import {
   IconPrompt,
@@ -16,6 +15,18 @@ import { useApp } from '@/app/providers/app';
 import { OrganizationSelector } from '@/components/OrganizationSelector';
 import type { GetUserOrganizationDataResult } from '@/lib/onboarding';
 import { routes } from '@/utils/routes';
+import { Button } from '@/components/ui/button';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetTitle,
+  SheetDescription,
+} from '@/components/ui/sheet';
+import { cn } from '@/utils/shadcn';
+import { H3 } from './typography';
+import { Separator } from './ui/separator';
+import { ThemeSwitcher } from './theme-switcher';
 
 export type DashboardSidebarProps = {
   userOrganizationData: GetUserOrganizationDataResult;
@@ -24,9 +35,7 @@ export type DashboardSidebarProps = {
 export const DashboardSidebar = (props: DashboardSidebarProps) => {
   const { userOrganizationData } = props;
   const { selectedOrganizationUuid, selectedProjectUuid } = useApp();
-
   const [isOpen, setIsOpen] = useState(true);
-
   const pathname = usePathname();
 
   const navItems = [
@@ -70,41 +79,79 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
     },
   ];
 
-  return (
-    <Collapsible.Root
-      open={isOpen}
-      onOpenChange={setIsOpen}
-      className={`bg-gray-50 border-r transition-all duration-300 ${
-        isOpen ? 'w-64' : 'w-16'
-      }`}
-    >
-      <div className="p-4 border-b flex items-center justify-between">
-        <span className={`font-bold ${!isOpen && 'hidden'}`}>Dashboard</span>
-        <Collapsible.Trigger asChild>
-          <button className="p-2 hover:bg-gray-100 rounded-md">
-            <IconMenu2
-              className={`w-5 h-5 transition-transform ${
-                isOpen ? '' : 'transform rotate-180'
-              }`}
-            />
-          </button>
-        </Collapsible.Trigger>
+  const SidebarContent = () => (
+    <div className="h-full flex flex-col">
+      <div className="p-4 flex items-center justify-between">
+        <H3 className={cn('transition-opacity', !isOpen && 'opacity-0')}>
+          Dashboard
+        </H3>
+        <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
+          <IconMenu2
+            className={cn(
+              'h-4 w-4 transition-transform',
+              !isOpen && 'rotate-180'
+            )}
+          />
+        </Button>
       </div>
-      <nav className="p-4">
+      <Separator />
+      <nav className="flex-1 p-4">
         {navItems.map((item) => (
-          <Link
+          <Button
             key={item.name}
-            href={item.href}
-            className={`flex items-center space-x-2 p-2 rounded-md mb-2 ${
-              item.active ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100'
-            }`}
+            variant={item.active ? 'secondary' : 'ghost'}
+            asChild
+            className={cn(
+              'w-full justify-start mb-1',
+              !isOpen && 'justify-center'
+            )}
           >
-            <item.icon className="w-5 h-5" />
-            {isOpen && <span>{item.name}</span>}
-          </Link>
+            <Link href={item.href}>
+              <item.icon className={cn('h-4 w-4', isOpen && 'mr-2')} />
+              {isOpen && <span>{item.name}</span>}
+            </Link>
+          </Button>
         ))}
       </nav>
-      <OrganizationSelector userOrganizationData={userOrganizationData} />
-    </Collapsible.Root>
+      <Separator />
+      <div className="p-4 space-y-4">
+        <OrganizationSelector userOrganizationData={userOrganizationData} />
+        <div
+          className={cn('flex', isOpen ? 'justify-start' : 'justify-center')}
+        >
+          <ThemeSwitcher />
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside
+        className={cn(
+          'hidden lg:block border-r bg-background transition-all duration-300',
+          isOpen ? 'w-64' : 'w-16'
+        )}
+      >
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile Sidebar */}
+      <Sheet>
+        <SheetTrigger asChild>
+          <Button variant="ghost" size="icon" className="lg:hidden">
+            <IconMenu2 className="h-4 w-4" />
+          </Button>
+        </SheetTrigger>
+        <SheetContent side="left" className="p-0">
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+          <SheetDescription className="sr-only">
+            Main navigation menu for mobile devices
+          </SheetDescription>
+          <SidebarContent />
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };

@@ -1,5 +1,8 @@
 import { GetUserOrganizationDataResult } from '@/lib/onboarding';
 import { routes } from '@/utils/routes';
+import { H1, P } from '@/components/typography';
+import { Button } from '@/components/ui/button';
+
 type StudioPageProps = {
   userOrganizationData: GetUserOrganizationDataResult;
 };
@@ -9,37 +12,47 @@ export const StudioPage = (props: StudioPageProps) => {
 
   return (
     <div>
-      <h1>Studio Home</h1>
+      <H1>Studio Home</H1>
       <div className="mt-6">
         {userOrganizationData.organization_users.length === 0 ? (
-          <p>You don't have any organizations yet.</p>
+          <P>You don't have any organizations yet.</P>
         ) : (
           <div className="flex flex-col gap-6">
             {userOrganizationData.organization_users.map((orgUser) => (
               <div
                 key={orgUser.organizations.uuid}
-                className="border rounded-md p-4"
+                className="border rounded-md p-4 bg-background"
               >
-                <a
-                  href={routes.studio.organization(orgUser.organizations.uuid)}
-                  className="text-xl font-semibold text-blue-600 hover:underline"
+                <Button
+                  variant="link"
+                  asChild
+                  className="text-xl font-semibold text-primary hover:underline p-0"
                 >
-                  {orgUser.organizations.name}
-                </a>
+                  <a
+                    href={routes.studio.organization(
+                      orgUser.organizations.uuid
+                    )}
+                  >
+                    {orgUser.organizations.name}
+                  </a>
+                </Button>
 
                 <div className="mt-2 ml-4">
                   {orgUser.organizations.projects.length === 0 ? (
-                    <p className="text-gray-500 italic">No projects</p>
+                    <P className="text-muted-foreground italic">No projects</P>
                   ) : (
                     <ul className="space-y-1">
                       {orgUser.organizations.projects.map((project) => (
                         <li key={project.uuid}>
-                          <a
-                            href={routes.studio.project(project.uuid)}
-                            className="text-blue-500 hover:underline"
+                          <Button
+                            variant="link"
+                            asChild
+                            className="text-primary hover:underline p-0"
                           >
-                            {project.name}
-                          </a>
+                            <a href={routes.studio.project(project.uuid)}>
+                              {project.name}
+                            </a>
+                          </Button>
                         </li>
                       ))}
                     </ul>

@@ -16,6 +16,10 @@ import {
 import { VariablesSidebar } from '@/components/prompt/VariablesSidebar';
 import { PromptTestModal } from '@/components/prompt/PromptTestModal';
 import { PublishUpdateConfirmModal } from '@/components/prompt/PublishUpdateConfirmModal';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { H1 } from '@/components/typography';
 
 type EditPromptVersionPageProps = {
   promptVersion: NonNullable<GetPromptVersionByUuidResult>;
@@ -169,76 +173,70 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
               ← Back to Prompt
             </Link>
             <div className="space-x-4">
-              <button
+              <Button
                 onClick={handleTest}
-                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 flex items-center gap-2"
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
               >
                 <IconPlayerPlay size={16} />
                 Test Prompt
-              </button>
+              </Button>
 
               {isDraft && (
                 <>
-                  <button
-                    onClick={() => handleSave('DRAFT')}
+                  <Button
+                    onClick={() => handleSave('DRAFT', false)}
                     disabled={isSaving}
-                    className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+                    variant="secondary"
                   >
                     {isSaving ? 'Saving...' : 'Save'}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={() => handleSave('PUBLISHED')}
                     disabled={isSaving}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                   >
                     {isSaving ? 'Publishing...' : 'Publish'}
-                  </button>
+                  </Button>
                 </>
               )}
 
               {isPublished && (
                 <>
-                  <button
+                  <Button
                     onClick={() => handleSave('PUBLISHED')}
                     disabled={isSaving}
-                    className="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600"
+                    className="bg-amber-500 hover:bg-amber-600"
                   >
                     {isSaving ? 'Updating...' : 'Update Published Version'}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     onClick={handleCreateNewVersion}
                     disabled={isCreatingVersion || isSaving}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
                   >
                     {isCreatingVersion ? 'Creating...' : 'Create New Version'}
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
           </div>
 
+          <H1 className="mb-6">{promptVersion.prompts.name}</H1>
+
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Version
-                </label>
-                <input
-                  type="text"
+                <Label>Version</Label>
+                <Input
                   value={promptVersion.version}
                   disabled
-                  className="w-full px-3 py-2 border rounded-md bg-gray-50"
+                  className="bg-gray-50"
                 />
               </div>
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <input
-                  type="text"
+                <Label>Status</Label>
+                <Input
                   value={promptVersion.status}
                   disabled
-                  className={`w-full px-3 py-2 border rounded-md bg-gray-50 ${
+                  className={`bg-gray-50 ${
                     isPublished
                       ? 'text-green-600 font-medium'
                       : 'text-amber-600 font-medium'
@@ -248,24 +246,20 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Model
-              </label>
-              <input
+              <Label>Model</Label>
+              <Input
                 type="text"
                 value={model}
                 onChange={(e) => {
                   setModel(e.target.value);
                 }}
-                className="w-full px-3 py-2 border rounded-md"
+                className="bg-gray-50"
                 placeholder="openrouter/auto"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Content
-              </label>
+              <Label>Content</Label>
               <PromptContentEditor
                 content={content}
                 onContentChange={handleContentChange}

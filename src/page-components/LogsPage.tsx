@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import { getLogsByProjectId } from '@/lib/logs';
 import { routes } from '@/utils/routes';
 import { getProjectData } from '@/lib/projects';
+import { H1, H2, P } from '@/components/typography';
+import { Button } from '@/components/ui/button';
 
 type LogsPageProps = {
   project: Awaited<ReturnType<typeof getProjectData>>;
@@ -20,11 +22,11 @@ export const LogsPage = (props: LogsPageProps) => {
   if (!project) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Logs</h1>
+        <H1 className="mb-4">Logs</H1>
         <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-          <p className="text-gray-500">
+          <P className="text-gray-500">
             No projects found. Create a project first.
-          </p>
+          </P>
         </div>
       </div>
     );
@@ -32,15 +34,15 @@ export const LogsPage = (props: LogsPageProps) => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Logs</h1>
+      <H1 className="mb-4">Logs</H1>
 
       <div className="mb-6">
-        <h2 className="text-lg font-medium">Project: {project.name}</h2>
+        <H2>Project: {project.name}</H2>
       </div>
 
       {logs.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm p-6 text-center">
-          <p className="text-gray-500">No logs found for this project.</p>
+          <P className="text-gray-500">No logs found for this project.</P>
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
@@ -95,12 +97,13 @@ export const LogsPage = (props: LogsPageProps) => {
                       {duration}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Link
-                        href={routes.studio.logDetail(project.uuid, log.uuid)}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        View Details
-                      </Link>
+                      <Button variant="link" asChild className="p-0">
+                        <Link
+                          href={routes.studio.logDetail(project.uuid, log.uuid)}
+                        >
+                          View Details
+                        </Link>
+                      </Button>
                     </td>
                   </tr>
                 );

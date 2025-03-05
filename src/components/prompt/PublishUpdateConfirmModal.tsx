@@ -1,6 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle } from 'lucide-react';
 
 type PublishUpdateConfirmModalProps = {
   isOpen: boolean;
@@ -14,43 +23,37 @@ export const PublishUpdateConfirmModal = (
 ) => {
   const { isOpen, onClose, onConfirm, isUpdating } = props;
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">Update Published Version</h2>
-
-        <div className="mb-6">
-          <p className="mb-2">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Update Published Version</DialogTitle>
+          <DialogDescription>
             In order to test your changes, you need to update the published
             version.
-          </p>
-          <p className="text-amber-600">
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex items-start gap-2 text-amber-600">
+          <AlertTriangle className="h-5 w-5 shrink-0" />
+          <p className="text-sm">
             <strong>Warning:</strong> This will immediately update the published
             version that may be in use by your application.
           </p>
         </div>
-
-        <div className="flex justify-end space-x-3">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 border rounded-md hover:bg-gray-50"
-            disabled={isUpdating}
-          >
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isUpdating}>
             Cancel
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant="default"
             onClick={onConfirm}
-            className="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600"
             disabled={isUpdating}
+            className="bg-amber-500 hover:bg-amber-600"
           >
             {isUpdating ? 'Updating...' : 'Update Published Version'}
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };

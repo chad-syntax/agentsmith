@@ -6,6 +6,10 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { routes } from '@/utils/routes';
 import { Database } from '@/app/__generated__/supabase.types';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { H1 } from '@/components/typography';
 
 type ProjectEditPageProps = {
   projectData: Database['public']['Tables']['projects']['Row'];
@@ -56,7 +60,7 @@ export const ProjectEditPage = (props: ProjectEditPageProps) => {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-8">Edit Project</h1>
+      <H1 className="mb-8">Edit Project</H1>
 
       <div className="max-w-lg">
         {error && (
@@ -66,33 +70,24 @@ export const ProjectEditPage = (props: ProjectEditPageProps) => {
         )}
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Project Name
-          </label>
-          <input
+          <Label htmlFor="projectName">Project Name</Label>
+          <Input
+            id="projectName"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border rounded-md"
             placeholder="Enter project name"
           />
         </div>
 
         <div className="flex gap-4">
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-          >
+          <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? 'Saving...' : 'Save Changes'}
-          </button>
+          </Button>
 
-          <Link
-            href={routes.studio.project(projectData.uuid)}
-            className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </Link>
+          <Button variant="outline" asChild>
+            <Link href={routes.studio.project(projectData.uuid)}>Cancel</Link>
+          </Button>
         </div>
       </div>
     </div>

@@ -6,9 +6,11 @@ import { highlight, languages } from 'prismjs';
 import 'prismjs/components/prism-markup-templating';
 import 'prismjs/components/prism-django';
 import 'prismjs/themes/prism.css';
-import { IconAlertCircle } from '@tabler/icons-react';
+import { AlertCircle } from 'lucide-react';
 import { extractTemplateVariables } from '@/lib/template-utils';
 import { Database } from '@/app/__generated__/supabase.types';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/utils/shadcn';
 
 export type PromptVariable = {
   id?: number;
@@ -23,6 +25,7 @@ type PromptContentEditorProps = {
   onVariablesChange?: (variables: PromptVariable[]) => void;
   readOnly?: boolean;
   minHeight?: string;
+  className?: string;
 };
 
 export const PromptContentEditor = (props: PromptContentEditorProps) => {
@@ -32,6 +35,7 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
     onVariablesChange,
     readOnly = false,
     minHeight = '300px',
+    className,
   } = props;
 
   const [templateError, setTemplateError] = useState<string | null>(null);
@@ -56,8 +60,14 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
   }, [content, onVariablesChange]);
 
   return (
-    <div className="space-y-2">
-      <div className="bg-white rounded-lg border">
+    <div className={cn('space-y-2', className)}>
+      <div
+        className={cn(
+          'rounded-md border bg-background',
+          templateError && 'border-destructive',
+          readOnly && 'opacity-70'
+        )}
+      >
         <Editor
           value={content}
           onValueChange={readOnly ? () => {} : onContentChange}
@@ -74,11 +84,13 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
       </div>
 
       {templateError && (
-        <div className="text-red-500 text-sm flex items-center gap-2">
-          <IconAlertCircle size={18} />
-          <span className="font-bold">Template Error:</span>
-          <span>{templateError}</span>
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            <span className="font-bold">Template Error: </span>
+            {templateError}
+          </AlertDescription>
+        </Alert>
       )}
     </div>
   );

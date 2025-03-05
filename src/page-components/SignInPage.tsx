@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { SubmitButton } from '@/components/submit-button';
 import { FormMessage, Message } from '@/components/form-message';
 import { signInAction } from '@/app/actions/auth';
+import { Button } from '@/components/ui/button';
+import { H1, P } from '@/components/typography';
 
 type SignInPageProps = {
   searchParams: Message;
@@ -18,11 +20,13 @@ export const SignInPage = (props: SignInPageProps) => {
   return (
     <>
       <div>
-        <button onClick={signInWithGithub}>Sign in with Github</button>
+        <Button onClick={signInWithGithub} variant="outline">
+          Sign in with Github
+        </Button>
       </div>
       <form className="flex-1 flex flex-col min-w-64">
-        <h1 className="text-2xl font-medium">Sign in</h1>
-        <p className="text-sm text-foreground">
+        <H1>Sign in</H1>
+        <P className="text-sm">
           Don't have an account?{' '}
           <Link
             className="text-foreground font-medium underline"
@@ -30,7 +34,7 @@ export const SignInPage = (props: SignInPageProps) => {
           >
             Sign up
           </Link>
-        </p>
+        </P>
         <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
           <Label htmlFor="email">Email</Label>
           <Input name="email" placeholder="you@example.com" required />
