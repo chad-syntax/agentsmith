@@ -11,6 +11,7 @@ import {
   OPENROUTER_COMPLETIONS_URL,
   OPENROUTER_HEADERS,
 } from '@/app/constants';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Fetch the latest prompt version for a specific prompt
@@ -201,10 +202,11 @@ type RunPromptOptions = {
   prompt: NonNullable<GetPromptByIdResult>;
   targetVersion: NonNullable<GetLatestPromptVersionResult>;
   variables: Record<string, string | number | boolean>;
+  alternateClient?: SupabaseClient;
 };
 
 export const runPrompt = async (options: RunPromptOptions) => {
-  const { apiKey, prompt, targetVersion, variables } = options;
+  const { apiKey, prompt, targetVersion, variables, alternateClient } = options;
 
   const compiledPrompt = compilePrompt(targetVersion.content, variables);
 
@@ -226,7 +228,8 @@ export const runPrompt = async (options: RunPromptOptions) => {
     prompt.projects.id,
     targetVersion.id,
     variables,
-    rawInput
+    rawInput,
+    alternateClient
   );
 
   if (!logEntry) {
@@ -246,14 +249,18 @@ export const runPrompt = async (options: RunPromptOptions) => {
     const completion = await response.json();
 
     // Update the log entry with the completion data
-    await updateLogWithCompletion(logEntry.uuid, completion);
+    await updateLogWithCompletion(logEntry.uuid, completion, alternateClient);
 
     return { completion, logUuid: logEntry.uuid };
   } catch (error) {
     console.error(error);
 
     // In case of error, still update the log but with the error information
-    await updateLogWithCompletion(logEntry.uuid, { error: String(error) });
+    await updateLogWithCompletion(
+      logEntry.uuid,
+      { error: String(error) },
+      alternateClient
+    );
 
     throw new Error('Error calling OpenRouter API');
   }
@@ -262,8 +269,11 @@ export const runPrompt = async (options: RunPromptOptions) => {
 /**
  * Fetch a specific prompt version by UUID
  */
-export const getPromptVersionByUuid = async (versionUuid: string) => {
-  const supabase = await createClient();
+export const getPromptVersionByUuid = async (
+  versionUuid: string,
+  alternateClient?: SupabaseClient
+) => {
+  const supabase = alternateClient ?? (await createClient());
 
   const { data: versionData, error: versionError } = await supabase
     .from('prompt_versions')

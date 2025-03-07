@@ -80,7 +80,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
       await updatePromptVersion({
         promptVersionUuid: promptVersion.uuid,
         content,
-        model,
+        config: { models: [model] },
         status,
         variables: variables.map((v) => ({
           id: v.id,

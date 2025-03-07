@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Fetch logs for a specific project
@@ -59,9 +60,10 @@ export const createLogEntry = async (
   projectId: number,
   promptVersionId: number,
   promptVariables: Record<string, any>,
-  rawInput: Record<string, any>
+  rawInput: Record<string, any>,
+  alternateClient?: SupabaseClient
 ) => {
-  const supabase = await createClient();
+  const supabase = alternateClient ?? (await createClient());
 
   const { data, error } = await supabase
     .from('llm_logs')
@@ -88,9 +90,10 @@ export const createLogEntry = async (
  */
 export const updateLogWithCompletion = async (
   uuid: string,
-  rawOutput: Record<string, any>
+  rawOutput: Record<string, any>,
+  alternateClient?: SupabaseClient
 ) => {
-  const supabase = await createClient();
+  const supabase = alternateClient ?? (await createClient());
 
   const { data, error } = await supabase
     .from('llm_logs')

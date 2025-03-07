@@ -127,6 +127,7 @@ export type Database = {
           created_at: string
           id: number
           key: string
+          key_hash: string
           organization_id: number
           updated_at: string
           vault_secret_id: string
@@ -135,6 +136,7 @@ export type Database = {
           created_at?: string
           id?: number
           key: string
+          key_hash: string
           organization_id: number
           updated_at?: string
           vault_secret_id: string
@@ -143,6 +145,7 @@ export type Database = {
           created_at?: string
           id?: number
           key?: string
+          key_hash?: string
           organization_id?: number
           updated_at?: string
           vault_secret_id?: string
@@ -439,6 +442,18 @@ export type Database = {
       gen_invite_code: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      gen_random_alphanumeric: {
+        Args: {
+          length: number
+        }
+        Returns: string
+      }
+      get_organization_by_api_key_hash: {
+        Args: {
+          arg_api_key_hash: string
+        }
+        Returns: Json
       }
       get_organization_vault_secret: {
         Args: {

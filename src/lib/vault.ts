@@ -250,8 +250,10 @@ export class VaultService {
 /**
  * Create a vault service instance
  */
-export const createVaultService = async (): Promise<VaultService> => {
-  const supabase = await createClient();
+export const createVaultService = async (
+  alternateClient?: SupabaseClient
+): Promise<VaultService> => {
+  const supabase = alternateClient ?? (await createClient());
   return new VaultService(supabase);
 };
 

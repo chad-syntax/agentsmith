@@ -5,6 +5,10 @@ import {
 } from '@/lib/prompts';
 import { ORGANIZATION_KEYS } from '@/app/constants';
 import { createClient } from '@/lib/supabase/server';
+import {
+  createJwtClient,
+  exchangeApiKeyForJwt,
+} from '@/lib/supabase/server-api-key';
 import { createVaultService } from '@/lib/vault';
 import { NextResponse } from 'next/server';
 
@@ -25,7 +29,21 @@ export async function POST(
     );
   }
 
-  const supabase = await createClient();
+  const apiKeyHeader = request.headers.get('x-api-key');
+  let jwt: string | null = null;
+  if (apiKeyHeader) {
+    try {
+      jwt = await exchangeApiKeyForJwt(apiKeyHeader);
+    } catch (error) {
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+    }
+  }
+
+  if (apiKeyHeader && jwt === null) {
+    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+  }
+
+  const supabase = jwt ? await createJwtClient(jwt) : await createClient();
 
   const {
     data: { user },
@@ -35,8 +53,15 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  if (jwt) {
+    console.log('assumed user', JSON.stringify(user, null, 2));
+  }
+
   // Fetch the prompt from Supabase
-  const promptVersion = await getPromptVersionByUuid(promptVersionUuid);
+  const promptVersion = await getPromptVersionByUuid(
+    promptVersionUuid,
+    supabase
+  );
 
   if (!promptVersion) {
     return NextResponse.json(
@@ -72,8 +97,10 @@ export async function POST(
   const project = promptVersion.prompts.projects;
   const organizationUuid = project.organizations.uuid;
 
+  console.log('target promptVersion', JSON.stringify(promptVersion, null, 2));
+
   // Create vault service to get the OpenRouter API key
-  const vaultService = await createVaultService();
+  const vaultService = await createVaultService(supabase);
   const { value: apiKey } = await vaultService.getOrganizationKeySecret(
     organizationUuid,
     ORGANIZATION_KEYS.OPENROUTER_API_KEY
@@ -95,6 +122,7 @@ export async function POST(
       prompt: promptVersion.prompts,
       targetVersion: promptVersion,
       variables: body.variables,
+      alternateClient: supabase,
     });
 
     return NextResponse.json(response, { status: 200 });

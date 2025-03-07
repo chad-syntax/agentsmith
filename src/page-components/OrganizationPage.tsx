@@ -10,6 +10,7 @@ import { routes } from '@/utils/routes';
 import { connectOpenrouter } from '@/app/actions/openrouter';
 import { Button } from '@/components/ui/button';
 import { H1, H2, P } from '@/components/typography';
+import { ApiKeyReveal } from '@/components/ApiKeyReveal';
 
 type OrganizationPageProps = {
   organization: GetOrganizationDataResult;
@@ -134,6 +135,23 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
             Connect Openrouter
           </Button>
         )}
+      </div>
+      <div>
+        <H2 className="mb-4">API Key</H2>
+        <P className="pb-4">
+          Use this API key to authenticate requests to the Agentsmith API from
+          your applications.
+        </P>
+        <div className="mb-4">
+          <ApiKeyReveal
+            organizationUuid={organization.uuid}
+            keyName="SDK_API_KEY"
+          />
+        </div>
+        <P className="text-sm text-muted-foreground">
+          This API key grants access to run prompts and other operations as your
+          organization. Keep it secure and never expose it in client-side code.
+        </P>
       </div>
     </div>
   );
