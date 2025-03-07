@@ -11,9 +11,11 @@ import {
 } from '@/lib/supabase/server-api-key';
 import { createVaultService } from '@/lib/vault';
 import { NextResponse } from 'next/server';
+import { PromptConfig } from '@/lib/openrouter';
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
+  config?: PromptConfig;
 };
 
 export async function POST(
@@ -51,10 +53,6 @@ export async function POST(
 
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  if (jwt) {
-    console.log('assumed user', JSON.stringify(user, null, 2));
   }
 
   // Fetch the prompt from Supabase
@@ -97,8 +95,6 @@ export async function POST(
   const project = promptVersion.prompts.projects;
   const organizationUuid = project.organizations.uuid;
 
-  console.log('target promptVersion', JSON.stringify(promptVersion, null, 2));
-
   // Create vault service to get the OpenRouter API key
   const vaultService = await createVaultService(supabase);
   const { value: apiKey } = await vaultService.getOrganizationKeySecret(
@@ -123,6 +119,10 @@ export async function POST(
       targetVersion: promptVersion,
       variables: body.variables,
       alternateClient: supabase,
+      config: {
+        ...(promptVersion.config as PromptConfig),
+        ...(body.config ?? {}),
+      },
     });
 
     return NextResponse.json(response, { status: 200 });

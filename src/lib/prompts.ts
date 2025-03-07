@@ -2,7 +2,11 @@
 import nunjucks from 'nunjucks/browser/nunjucks';
 import { createClient } from '@/lib/supabase/server';
 import { Database } from '@/app/__generated__/supabase.types';
-import { FREE_MODELS, OpenrouterRequestBody } from './openrouter';
+import {
+  fetchFreeOpenrouterModels,
+  OpenrouterRequestBody,
+  PromptConfig,
+} from './openrouter';
 import { createLogEntry, updateLogWithCompletion } from './logs';
 import { compareSemanticVersions } from '@/utils/versioning';
 import {
@@ -192,36 +196,41 @@ export const compilePrompt = (
   return nunjucks.renderString(promptContent, variables);
 };
 
-type PromptConfig = {
-  models: string[];
-  temperature: number;
-};
-
 type RunPromptOptions = {
   apiKey: string;
   prompt: NonNullable<GetPromptByIdResult>;
+  config: PromptConfig;
   targetVersion: NonNullable<GetLatestPromptVersionResult>;
   variables: Record<string, string | number | boolean>;
   alternateClient?: SupabaseClient;
 };
 
 export const runPrompt = async (options: RunPromptOptions) => {
-  const { apiKey, prompt, targetVersion, variables, alternateClient } = options;
+  const { apiKey, prompt, config, targetVersion, variables, alternateClient } =
+    options;
 
   const compiledPrompt = compilePrompt(targetVersion.content, variables);
+
+  const freeModelsOnlyEnabled = process.env.FREE_MODELS_ONLY === 'true';
+
+  if (freeModelsOnlyEnabled) {
+    console.log(
+      'FREE_MODELS_ONLY is enabled, all completions will be made with a random free model'
+    );
+  }
 
   // Create a log entry before making the API call
   const rawInput: OpenrouterRequestBody = {
     messages: [{ role: 'user', content: compiledPrompt }],
-    models:
-      process.env.FREE_MODELS_ONLY === 'true'
-        ? FREE_MODELS.sort(() => 0.5 - Math.random()).slice(
-            0,
-            MAX_OPENROUTER_MODELS
-          )
-        : ((targetVersion.config as PromptConfig)?.models ?? [
-            DEFAULT_OPENROUTER_MODEL,
-          ]),
+    ...config,
+    models: freeModelsOnlyEnabled
+      ? (await fetchFreeOpenrouterModels())
+          .sort(() => 0.5 - Math.random())
+          .slice(0, MAX_OPENROUTER_MODELS)
+          .map((m) => m.id)
+      : ((targetVersion.config as PromptConfig)?.models ?? [
+          DEFAULT_OPENROUTER_MODEL,
+        ]),
   };
 
   const logEntry = await createLogEntry(

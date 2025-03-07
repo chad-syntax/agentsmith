@@ -122,6 +122,72 @@ export type ProviderPreferencesSchema = {
   sort?: SortStrategy | null;
 };
 
+// https://openrouter.ai/docs/features/web-search
+type WebPlugin = {
+  id: 'web';
+  max_results: number; // Defaults to 5
+  /**
+   * Search prompt default at time of writing (check the docs for updates):
+   *
+   * A web search was conducted on `date`. Incorporate the following web search results into your response.
+   *
+   * IMPORTANT: Cite them using markdown links named using the domain of the source.
+   * Example: [nytimes.com](https://nytimes.com/some-page).
+   *
+   */
+  search_prompt: string;
+};
+
+type OpenrouterPlugin = WebPlugin;
+
+// Basic JSON Schema types
+export type JSONSchemaType =
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'integer'
+  | 'object'
+  | 'array'
+  | 'null';
+
+// Property definition for JSON Schema
+export type JSONSchemaPropertyDefinition = {
+  type?: JSONSchemaType | JSONSchemaType[]; // Allows type unions like ["string", "null"]
+  description?: string;
+  enum?: any[];
+  items?: JSONSchemaPropertyDefinition | { $ref: string };
+  properties?: Record<string, JSONSchemaPropertyDefinition>;
+  required?: string[];
+  additionalProperties?: boolean;
+  anyOf?: JSONSchemaPropertyDefinition[];
+  $ref?: string; // For schema references
+};
+
+// Schema definition
+export type JSONSchemaDefinition = {
+  type: JSONSchemaType | JSONSchemaType[];
+  description?: string;
+  properties?: Record<string, JSONSchemaPropertyDefinition>;
+  required?: string[];
+  additionalProperties?: boolean;
+  anyOf?: JSONSchemaPropertyDefinition[];
+  $defs?: Record<string, JSONSchemaDefinition>; // For schema definitions
+  items?: JSONSchemaPropertyDefinition | { $ref: string };
+};
+
+// JSON Schema configuration
+export type JSONSchema = {
+  name?: string;
+  strict: boolean; // Must be true for Structured Outputs
+  schema: JSONSchemaDefinition;
+};
+
+// Structured Outputs Response Format
+export type ResponseFormat = {
+  type: 'json_schema';
+  json_schema: JSONSchema;
+};
+
 // Definitions of subtypes are below
 export type OpenrouterRequestBody = {
   // Either "messages" or "prompt" is required
@@ -133,7 +199,7 @@ export type OpenrouterRequestBody = {
 
   // Allows to force the model to produce specific output format.
   // See models page and note on this docs page for which models support it.
-  response_format?: { type: 'json_object' };
+  response_format?: ResponseFormat;
 
   stop?: string | string[];
   stream?: boolean; // Enable streaming
@@ -174,7 +240,10 @@ export type OpenrouterRequestBody = {
   route?: 'fallback';
   // See "Provider Routing" section: openrouter.ai/docs/provider-routing
   provider?: ProviderPreferencesSchema;
+  plugins?: OpenrouterPlugin[];
 };
+
+export type PromptConfig = Omit<OpenrouterRequestBody, 'messages' | 'prompt'>;
 
 // Subtypes:
 
@@ -229,46 +298,6 @@ export type ToolChoice =
         name: string;
       };
     };
-
-// Manually copied list of free models from openrouter
-export const FREE_MODELS = [
-  'moonshotai/moonlight-16b-a3b-instruct:free',
-  'nousresearch/deephermes-3-llama-3-8b-preview:free',
-  'cognitivecomputations/dolphin3.0-r1-mistral-24b:free',
-  'cognitivecomputations/dolphin3.0-mistral-24b:free',
-  'google/gemini-2.0-flash-lite-preview-02-05:free',
-  'google/gemini-2.0-pro-exp-02-05:free',
-  'qwen/qwen-vl-plus:free',
-  'qwen/qwen2.5-vl-72b-instruct:free',
-  'mistralai/mistral-small-24b-instruct-2501:free',
-  'deepseek/deepseek-r1-distill-llama-70b:free',
-  'google/gemini-2.0-flash-thinking-exp:free',
-  'deepseek/deepseek-r1:free',
-  'sophosympatheia/rogue-rose-103b-v0.2:free',
-  'deepseek/deepseek-chat:free',
-  'google/gemini-2.0-flash-thinking-exp-1219:free',
-  'google/gemini-2.0-flash-exp:free',
-  'google/gemini-exp-1206:free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'google/learnlm-1.5-pro-experimental:free',
-  'qwen/qwen-2.5-coder-32b-instruct:free',
-  'nvidia/llama-3.1-nemotron-70b-instruct:free',
-  'meta-llama/llama-3.2-1b-instruct:free',
-  'meta-llama/llama-3.2-11b-vision-instruct:free',
-  'google/gemini-flash-1.5-8b-exp',
-  'meta-llama/llama-3.1-8b-instruct:free',
-  'mistralai/mistral-nemo:free',
-  'qwen/qwen-2-7b-instruct:free',
-  'google/gemma-2-9b-it:free',
-  'mistralai/mistral-7b-instruct:free',
-  'microsoft/phi-3-mini-128k-instruct:free',
-  'microsoft/phi-3-medium-128k-instruct:free',
-  'meta-llama/llama-3-8b-instruct:free',
-  'openchat/openchat-7b:free',
-  'undi95/toppy-m-7b:free',
-  'huggingfaceh4/zephyr-7b-beta:free',
-  'gryphe/mythomax-l2-13b:free',
-];
 
 // If the provider returns usage, we pass it down
 // as-is. Otherwise, we count using the GPT-4 tokenizer.
@@ -340,4 +369,30 @@ export type OpenrouterResponse = {
   // When streaming, you will get one usage object at
   // the end accompanied by an empty choices array.
   usage?: ResponseUsage;
+};
+
+export type OpenrouterModel = {
+  id: string;
+  name: string;
+  description: string;
+  pricing: {
+    prompt: number;
+    completion: number;
+  };
+};
+
+export const fetchOpenrouterModels = async () => {
+  const response = await fetch('https://openrouter.ai/api/v1/models');
+  const data = await response.json();
+  return data as OpenrouterModel[];
+};
+
+export const fetchFreeOpenrouterModels = async () => {
+  const models = await fetchOpenrouterModels();
+  return models.filter((model) => model.id.includes('free'));
+};
+
+export const DEFAULT_OPENROUTER_CONFIG: PromptConfig = {
+  models: ['openrouter/auto'],
+  temperature: 1,
 };

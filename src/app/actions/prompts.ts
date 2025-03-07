@@ -4,11 +4,12 @@ import { createClient } from '@/lib/supabase/server';
 import { Database } from '@/app/__generated__/supabase.types';
 import { compareSemanticVersions, incrementVersion } from '@/utils/versioning';
 import { SEMVER_PATTERN } from '@/app/constants';
+import { DEFAULT_OPENROUTER_CONFIG, PromptConfig } from '@/lib/openrouter';
 
 type CreatePromptVersionOptions = {
   promptId: number;
   content: string;
-  model: string;
+  config: PromptConfig;
   version: string;
   status: Database['public']['Enums']['prompt_status'];
   variables: Array<{
@@ -19,7 +20,7 @@ type CreatePromptVersionOptions = {
 };
 
 export async function createPromptVersion(options: CreatePromptVersionOptions) {
-  const { promptId, content, model, version, status, variables } = options;
+  const { promptId, content, config, version, status, variables } = options;
   const supabase = await createClient();
 
   try {
@@ -29,7 +30,7 @@ export async function createPromptVersion(options: CreatePromptVersionOptions) {
       .insert({
         prompt_id: promptId,
         content,
-        config: { model },
+        config: config as any,
         status,
         version,
       })
@@ -74,7 +75,7 @@ export async function createPromptVersion(options: CreatePromptVersionOptions) {
 type UpdatePromptVersionOptions = {
   promptVersionUuid: string;
   content: string;
-  config: any; // TODO: type this
+  config: PromptConfig;
   status: Database['public']['Enums']['prompt_status'];
   variables: Array<{
     id?: number;
@@ -109,7 +110,7 @@ export async function updatePromptVersion(options: UpdatePromptVersionOptions) {
       .from('prompt_versions')
       .update({
         content,
-        config,
+        config: config as any,
         status,
       })
       .eq('uuid', promptVersionUuid);
@@ -177,7 +178,7 @@ type CreatePromptOptions = {
   name: string;
   projectId: number;
   content: string;
-  config: any;
+  config: PromptConfig;
   variables: Array<{
     name: string;
     type: Database['public']['Enums']['variable_type'];
@@ -220,7 +221,7 @@ export async function createPrompt(options: CreatePromptOptions) {
       .insert({
         prompt_id: newPromptId,
         content,
-        config,
+        config: config as any,
         status: 'PUBLISHED',
         version: '0.0.1',
       })
@@ -306,7 +307,7 @@ export async function createPromptWithDraftVersion(
       .insert({
         prompt_id: newPromptId,
         content: '',
-        config: { models: ['openrouter/auto'], temperature: 1 },
+        config: DEFAULT_OPENROUTER_CONFIG as any,
         status: 'DRAFT',
         version: '0.0.1',
       })
@@ -333,7 +334,6 @@ export async function createPromptWithDraftVersion(
 
 type CreateDraftVersionOptions = {
   promptId: number;
-  promptUuid: string;
   latestVersion: string;
   customVersion?: string;
   versionType?: 'major' | 'minor' | 'patch';
@@ -342,7 +342,6 @@ type CreateDraftVersionOptions = {
 export async function createDraftVersion(options: CreateDraftVersionOptions) {
   const {
     promptId,
-    promptUuid,
     latestVersion,
     customVersion,
     versionType = 'patch',
@@ -411,6 +410,12 @@ export async function createDraftVersion(options: CreateDraftVersionOptions) {
         'Failed to find latest version: ' + latestVersionError?.message
       );
     }
+
+    console.log(
+      'will create new draft version with content and config of',
+      latestVersionData.content,
+      latestVersionData.config
+    );
 
     // Create new draft version
     const { data: newVersionData, error: newVersionError } = await supabase

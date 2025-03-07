@@ -4,6 +4,8 @@ import {
   getPromptVersionByUuid,
 } from '@/lib/prompts';
 import { createClient } from '@/lib/supabase/server';
+import { createJwtClient } from '@/lib/supabase/server-api-key';
+import { exchangeApiKeyForJwt } from '@/lib/supabase/server-api-key';
 import { NextResponse } from 'next/server';
 
 type RequestBody = {
@@ -23,7 +25,21 @@ export async function POST(
     );
   }
 
-  const supabase = await createClient();
+  const apiKeyHeader = request.headers.get('x-api-key');
+  let jwt: string | null = null;
+  if (apiKeyHeader) {
+    try {
+      jwt = await exchangeApiKeyForJwt(apiKeyHeader);
+    } catch (error) {
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+    }
+  }
+
+  if (apiKeyHeader && jwt === null) {
+    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+  }
+
+  const supabase = jwt ? await createJwtClient(jwt) : await createClient();
 
   const {
     data: { user },
@@ -34,7 +50,10 @@ export async function POST(
   }
 
   // Fetch the prompt from Supabase
-  const promptVersion = await getPromptVersionByUuid(promptVersionUuid);
+  const promptVersion = await getPromptVersionByUuid(
+    promptVersionUuid,
+    supabase
+  );
 
   if (!promptVersion) {
     return NextResponse.json(

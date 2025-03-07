@@ -20,6 +20,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { H1 } from '@/components/typography';
+import type { PromptConfig } from '@/lib/openrouter';
+import { JsonEditor } from '@/components/editors/JsonEditor';
 
 type EditPromptVersionPageProps = {
   promptVersion: NonNullable<GetPromptVersionByUuidResult>;
@@ -33,7 +35,6 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   const router = useRouter();
   // Store initial values to properly detect changes
   const [initialContent] = useState(promptVersion.content);
-  const [initialModel] = useState((promptVersion.config as any)?.model || '');
   const [initialVariables] = useState<PromptVariable[]>(
     promptVersion.prompt_variables
   );
@@ -42,9 +43,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     promptVersion.prompt_variables
   );
   const [content, setContent] = useState(promptVersion.content);
-  const [model, setModel] = useState(
-    (promptVersion.config as any)?.model || ''
-  );
+  const [config, setConfig] = useState(promptVersion.config as PromptConfig);
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingVersion, setIsCreatingVersion] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
@@ -54,7 +53,6 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   // Computed property to check if content has been modified
   const hasChanges =
     content !== initialContent ||
-    model !== initialModel ||
     JSON.stringify(variables) !== JSON.stringify(initialVariables);
 
   const handleContentChange = (newContent: string) => {
@@ -80,7 +78,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
       await updatePromptVersion({
         promptVersionUuid: promptVersion.uuid,
         content,
-        config: { models: [model] },
+        config,
         status,
         variables: variables.map((v) => ({
           id: v.id,
@@ -115,7 +113,6 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     try {
       const { versionUuid } = await createDraftVersion({
         promptId: promptVersion.prompts.id,
-        promptUuid: promptVersion.prompts.uuid,
         latestVersion: promptVersion.version,
         versionType: 'patch', // Default to patch version increment
       });
@@ -246,8 +243,8 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
             </div>
 
             <div>
-              <Label>Model</Label>
-              <Input
+              <Label>Config</Label>
+              {/* <Input
                 type="text"
                 value={model}
                 onChange={(e) => {
@@ -255,6 +252,10 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
                 }}
                 className="bg-gray-50"
                 placeholder="openrouter/auto"
+              /> */}
+              <JsonEditor
+                value={config}
+                onChange={(value) => setConfig(value as PromptConfig)}
               />
             </div>
 
