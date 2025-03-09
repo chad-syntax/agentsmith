@@ -13,7 +13,6 @@ import {
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/app/providers/app';
 import { OrganizationSelector } from '@/components/OrganizationSelector';
-import type { GetUserOrganizationDataResult } from '@/lib/onboarding';
 import { routes } from '@/utils/routes';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +26,7 @@ import { cn } from '@/utils/shadcn';
 import { H3 } from './typography';
 import { Separator } from './ui/separator';
 import { ThemeSwitcher } from './theme-switcher';
+import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 
 export type DashboardSidebarProps = {
   userOrganizationData: GetUserOrganizationDataResult;

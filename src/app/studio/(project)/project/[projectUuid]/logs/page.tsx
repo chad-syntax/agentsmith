@@ -1,5 +1,5 @@
-import { getProjectData } from '@/lib/projects';
-import { getLogsByProjectId } from '@/lib/logs';
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
+import { createClient } from '@/lib/supabase/server';
 import { LogsPage } from '@/page-components/LogsPage';
 
 type LogsProps = {
@@ -9,11 +9,18 @@ type LogsProps = {
 export default async function Logs(props: LogsProps) {
   const { projectUuid } = await props.params;
 
+  const supabase = await createClient();
+
+  const agentsmith = new AgentsmithServices({ supabase });
+
   // Get the first project
-  const project = await getProjectData(projectUuid);
+  const project =
+    await agentsmith.services.projects.getProjectData(projectUuid);
 
   // If no project exists, pass empty logs array
-  const logs = project ? await getLogsByProjectId(project.id) : [];
+  const logs = project
+    ? await agentsmith.services.llmLogs.getLogsByProjectId(project.id)
+    : [];
 
   return <LogsPage project={project} logs={logs} />;
 }

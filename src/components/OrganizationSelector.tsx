@@ -1,5 +1,5 @@
 import { useApp } from '@/app/providers/app';
-import type { GetUserOrganizationDataResult } from '@/lib/onboarding';
+import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 import {
   Select,
   SelectContent,

@@ -5,14 +5,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { routes } from '@/utils/routes';
-import { GetOrganizationDataResult } from '@/lib/organization';
+import { GetOrganizationDataResult } from '@/lib/OrganizationsService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { H1 } from '@/components/typography';
 
 type OrganizationEditPageProps = {
-  organizationData: GetOrganizationDataResult;
+  organizationData: NonNullable<GetOrganizationDataResult>;
 };
 
 export const OrganizationEditPage = (props: OrganizationEditPageProps) => {

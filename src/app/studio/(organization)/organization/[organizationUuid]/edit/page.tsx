@@ -1,6 +1,7 @@
 import { OrganizationEditPage } from '@/page-components/OrganizationEditPage';
-import { getOrganizationData } from '@/lib/organization';
-
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
+import { createClient } from '@/lib/supabase/server';
+import { notFound } from 'next/navigation';
 type OrganizationEditProps = {
   params: Promise<{
     organizationUuid: string;
@@ -10,7 +11,18 @@ type OrganizationEditProps = {
 export default async function OrganizationEdit(props: OrganizationEditProps) {
   const { organizationUuid } = await props.params;
 
-  const organizationData = await getOrganizationData(organizationUuid);
+  const supabase = await createClient();
+
+  const agentsmith = new AgentsmithServices({ supabase });
+
+  const organizationData =
+    await agentsmith.services.organizations.getOrganizationData(
+      organizationUuid
+    );
+
+  if (!organizationData) {
+    return notFound();
+  }
 
   return <OrganizationEditPage organizationData={organizationData} />;
 }

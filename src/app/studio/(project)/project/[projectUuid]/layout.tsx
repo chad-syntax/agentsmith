@@ -2,14 +2,10 @@ import { redirect } from 'next/navigation';
 import { createClient } from '&/supabase/server';
 import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { AuthProvider } from '@/app/providers/auth';
-import {
-  getUserOrganizationData,
-  GetUserOrganizationDataResult,
-  isUserOnboarded,
-} from '&/onboarding';
-import { getUser, GetUserResult } from '&/user';
 import { AppProvider } from '@/app/providers/app';
 import { routes } from '@/utils/routes';
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
+import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -25,26 +21,25 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const agentsmith = new AgentsmithServices({ supabase });
 
-  if (!user) {
+  const { authUser } = await agentsmith.services.users.initialize();
+
+  if (!authUser) {
     redirect(routes.auth.signIn);
   }
 
+  const agentsmithUser = await agentsmith.services.users.getAgentsmithUser(
+    authUser.id
+  );
+
   let redirectUrl: string | null = null;
 
-  let agentsmithUser: GetUserResult | null = null;
   let userOrganizationData: GetUserOrganizationDataResult | null = null;
-  let isOnboarded: boolean | null = null;
 
   try {
-    agentsmithUser = await getUser(user.id);
-
-    userOrganizationData = await getUserOrganizationData();
-
-    isOnboarded = isUserOnboarded(userOrganizationData);
+    userOrganizationData =
+      await agentsmith.services.users.getUserOrganizationData();
   } catch (error) {
     redirectUrl = routes.error('Failed to fetch user data');
   }
@@ -73,7 +68,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   return (
     <AuthProvider
-      user={user}
+      user={authUser}
       agentsmithUser={agentsmithUser ?? undefined}
       organizationData={userOrganizationData!}
     >

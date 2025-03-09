@@ -1,10 +1,10 @@
 'use client';
 
-import { GetUserOrganizationDataResult } from '@/lib/onboarding';
 import { createContext, useContext, useMemo, useState } from 'react';
 import { ORGANIZATION_KEYS } from '@/app/constants';
 import { redirect, useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
+import type { GetUserOrganizationDataResult } from '@/lib/UsersService';
 
 type Organization =
   GetUserOrganizationDataResult['organization_users'][number]['organizations'];

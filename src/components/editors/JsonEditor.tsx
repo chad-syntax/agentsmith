@@ -9,6 +9,7 @@ import { AlertCircle } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/utils/shadcn';
+import './json-editor.css';
 
 type JsonEditorProps<T> = {
   value: T;

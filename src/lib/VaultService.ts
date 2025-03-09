@@ -1,9 +1,8 @@
-import { ORGANIZATION_KEYS } from '@/app/constants';
-import { createClient } from './supabase/server';
-import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@/app/__generated__/supabase.types';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { AgentsmithSupabaseService } from './AgentsmithSupabaseService';
+import { AgentsmithServicesDirectory } from './AgentsmithServices';
 
-// Return type definitions
 type GetSecretResult = {
   data: string | null;
   error?: string;
@@ -25,13 +24,6 @@ type GetOrganizationKeyResult = {
   error?: string;
 };
 
-type GetOrCreateOpenrouterCodeVerifierResult = {
-  success: boolean;
-  codeVerifier?: string;
-  error?: string;
-};
-
-// Options type definitions
 type CreateOrganizationKeyOptions = {
   organizationUuid: string;
   key: string;
@@ -46,14 +38,15 @@ type ReplaceOrganizationKeyOptions = {
   description?: string;
 };
 
-/**
- * Vault service for securely storing and retrieving organization keys
- */
-export class VaultService {
-  private supabase: SupabaseClient<Database>;
+type VaultServiceConstructorOptions = {
+  supabase: SupabaseClient<Database>;
+};
 
-  constructor(supabase: SupabaseClient<Database>) {
-    this.supabase = supabase;
+export class VaultService extends AgentsmithSupabaseService {
+  public services!: AgentsmithServicesDirectory;
+
+  constructor(options: VaultServiceConstructorOptions) {
+    super({ ...options, serviceName: 'vault' });
   }
 
   /**
@@ -246,85 +239,3 @@ export class VaultService {
     }
   }
 }
-
-/**
- * Create a vault service instance
- */
-export const createVaultService = async (
-  alternateClient?: SupabaseClient
-): Promise<VaultService> => {
-  const supabase = alternateClient ?? (await createClient());
-  return new VaultService(supabase);
-};
-
-// Helper for OpenRouter integration
-const generateRandomString = (length: number): string => {
-  const chars =
-    '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-};
-
-/**
- * Gets or creates an OpenRouter code verifier for an organization
- */
-export const getOrCreateOpenrouterCodeVerifier = async (
-  organizationUuid: string
-): Promise<GetOrCreateOpenrouterCodeVerifierResult> => {
-  const vaultService = await createVaultService();
-
-  // Try to get existing code verifier
-  const { value, error } = await vaultService.getOrganizationKeySecret(
-    organizationUuid,
-    ORGANIZATION_KEYS.OPENROUTER_CODE_VERIFIER
-  );
-
-  console.log(
-    'existing code verifier for organization',
-    organizationUuid,
-    value
-  );
-
-  if (error) {
-    console.error('Error getting OpenRouter code verifier:', error);
-    return {
-      success: false,
-      error: `Failed to get OpenRouter code verifier: ${error}`,
-    };
-  }
-
-  // If code verifier exists, return it
-  if (value) {
-    return {
-      success: true,
-      codeVerifier: value,
-    };
-  }
-
-  // Generate and store a new code verifier
-  const newCodeVerifier = generateRandomString(32);
-
-  const { success, error: createError } =
-    await vaultService.createOrganizationKey({
-      organizationUuid,
-      key: ORGANIZATION_KEYS.OPENROUTER_CODE_VERIFIER,
-      value: newCodeVerifier,
-      description: 'OpenRouter code verifier',
-    });
-
-  if (!success) {
-    console.error('Error creating OpenRouter code verifier:', createError);
-    return {
-      success: false,
-      error: `Failed to create OpenRouter code verifier: ${createError}`,
-    };
-  }
-
-  return {
-    success: true,
-    codeVerifier: newCodeVerifier,
-  };
-};

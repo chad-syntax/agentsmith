@@ -1,14 +1,13 @@
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { IconArrowLeft } from '@tabler/icons-react';
-import { getLogByUuid } from '@/lib/logs';
 import { routes } from '@/utils/routes';
-import { useApp } from '@/app/providers/app';
 import { H1, H2, P } from '@/components/typography';
 import { Button } from '@/components/ui/button';
+import { GetLogByUuidResult } from '@/lib/LLMLogsService';
 
 type LogDetailPageProps = {
-  log: NonNullable<Awaited<ReturnType<typeof getLogByUuid>>>;
+  log: NonNullable<GetLogByUuidResult>;
 };
 
 export const LogDetailPage = (props: LogDetailPageProps) => {

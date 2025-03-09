@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { IconPlayerPlay } from '@tabler/icons-react';
 import { Database } from '@/app/__generated__/supabase.types';
-import { GetPromptVersionByUuidResult } from '@/lib/prompts';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
 import { updatePromptVersion, createDraftVersion } from '@/app/actions/prompts';
@@ -20,8 +19,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { H1 } from '@/components/typography';
-import type { PromptConfig } from '@/lib/openrouter';
+import type { CompletionConfig } from '@/lib/openrouter';
 import { JsonEditor } from '@/components/editors/JsonEditor';
+import { GetPromptVersionByUuidResult } from '@/lib/PromptsService';
 
 type EditPromptVersionPageProps = {
   promptVersion: NonNullable<GetPromptVersionByUuidResult>;
@@ -43,7 +43,9 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     promptVersion.prompt_variables
   );
   const [content, setContent] = useState(promptVersion.content);
-  const [config, setConfig] = useState(promptVersion.config as PromptConfig);
+  const [config, setConfig] = useState(
+    promptVersion.config as CompletionConfig
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingVersion, setIsCreatingVersion] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
@@ -221,19 +223,19 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <div className="flex-1">
-                <Label>Version</Label>
+                <Label className="pb-2">Version</Label>
                 <Input
                   value={promptVersion.version}
                   disabled
-                  className="bg-gray-50"
+                  className="bg-muted"
                 />
               </div>
               <div className="flex-1">
-                <Label>Status</Label>
+                <Label className="pb-2">Status</Label>
                 <Input
                   value={promptVersion.status}
                   disabled
-                  className={`bg-gray-50 ${
+                  className={`bg-muted ${
                     isPublished
                       ? 'text-green-600 font-medium'
                       : 'text-amber-600 font-medium'
@@ -243,24 +245,15 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
             </div>
 
             <div>
-              <Label>Config</Label>
-              {/* <Input
-                type="text"
-                value={model}
-                onChange={(e) => {
-                  setModel(e.target.value);
-                }}
-                className="bg-gray-50"
-                placeholder="openrouter/auto"
-              /> */}
+              <Label className="pb-2">Config</Label>
               <JsonEditor
                 value={config}
-                onChange={(value) => setConfig(value as PromptConfig)}
+                onChange={(value) => setConfig(value as CompletionConfig)}
               />
             </div>
 
             <div>
-              <Label>Content</Label>
+              <Label className="pb-2">Content</Label>
               <PromptContentEditor
                 content={content}
                 onContentChange={handleContentChange}

@@ -3,17 +3,16 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { generateTypes } from '@/app/actions/generate-types';
-import type { GetPromptsByProjectIdResult } from '@/lib/prompts';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
 import { CreatePromptModal } from '@/components/prompt/CreatePromptModal';
-import { createClient } from '@/lib/supabase/client';
 import { compareSemanticVersions } from '@/utils/versioning';
 import { Button } from '@/components/ui/button';
 import { H1, H2, H3, P } from '@/components/typography';
+import { GetPromptsByProjectIdResult } from '@/lib/PromptsService';
 
 type PromptsPageProps = {
-  prompts: Awaited<GetPromptsByProjectIdResult>;
+  prompts: NonNullable<GetPromptsByProjectIdResult>;
   projectId: number;
 };
 
@@ -94,7 +93,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
             return (
               <div
                 key={prompt.uuid}
-                className="bg-white rounded-lg border p-6 hover:shadow-md transition-shadow"
+                className="bg-background rounded-lg border p-6 hover:shadow-md transition-shadow"
               >
                 <div className="flex justify-between items-start mb-4">
                   <H2>{prompt.name}</H2>
@@ -123,7 +122,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
                       {requiredVariables.map((variable) => (
                         <span
                           key={variable.id}
-                          className="px-2 py-1 bg-gray-100 rounded-md text-xs"
+                          className="px-2 py-1 bg-muted rounded-md text-xs"
                         >
                           {variable.name}
                         </span>

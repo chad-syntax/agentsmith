@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { ORGANIZATION_KEYS } from '@/app/constants';
-import { createVaultService } from '@/lib/vault';
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
 import { routes } from '@/utils/routes';
-
+import { OPENROUTER_OAUTH_PKCE_URL } from '@/lib/openrouter';
 type OpenrouterCallbackParams = Promise<{
   organizationUuid: string;
 }>;
@@ -12,6 +12,10 @@ export async function GET(
   request: Request,
   { params }: { params: OpenrouterCallbackParams }
 ) {
+  const supabase = await createClient();
+
+  const agentsmith = new AgentsmithServices({ supabase });
+
   try {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
@@ -40,12 +44,9 @@ export async function GET(
       );
     }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { authUser } = await agentsmith.services.users.initialize();
 
-    if (!user) {
+    if (!authUser) {
       console.error('/connect/openrouter: no user found');
       return NextResponse.redirect(
         new URL(
@@ -56,11 +57,11 @@ export async function GET(
     }
 
     // Get the code verifier from the organization's vault
-    const vaultService = await createVaultService();
-    const { value: codeVerifier } = await vaultService.getOrganizationKeySecret(
-      organizationUuid,
-      ORGANIZATION_KEYS.OPENROUTER_CODE_VERIFIER
-    );
+    const { value: codeVerifier } =
+      await agentsmith.services.vault.getOrganizationKeySecret(
+        organizationUuid,
+        ORGANIZATION_KEYS.OPENROUTER_CODE_VERIFIER
+      );
 
     if (!codeVerifier) {
       console.error('/connect/openrouter: no code verifier found');
@@ -73,7 +74,7 @@ export async function GET(
     }
 
     console.log('/connect/openrouter: exchanging code for API key');
-    const response = await fetch('https://openrouter.ai/api/v1/auth/keys', {
+    const response = await fetch(OPENROUTER_OAUTH_PKCE_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -114,7 +115,7 @@ export async function GET(
 
     // Store the API key in the vault
     const { success, error: vaultError } =
-      await vaultService.createOrganizationKey({
+      await agentsmith.services.vault.createOrganizationKey({
         organizationUuid,
         key: ORGANIZATION_KEYS.OPENROUTER_API_KEY,
         value: openrouterResponse.key,

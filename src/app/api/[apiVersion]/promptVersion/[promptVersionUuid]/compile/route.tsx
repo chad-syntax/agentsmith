@@ -1,8 +1,4 @@
-import {
-  compilePrompt,
-  getMissingVariables,
-  getPromptVersionByUuid,
-} from '@/lib/prompts';
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
 import { createJwtClient } from '@/lib/supabase/server-api-key';
 import { exchangeApiKeyForJwt } from '@/lib/supabase/server-api-key';
@@ -41,19 +37,17 @@ export async function POST(
 
   const supabase = jwt ? await createJwtClient(jwt) : await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const agentsmith = new AgentsmithServices({ supabase });
 
-  if (!user) {
+  const { authUser } = await agentsmith.services.users.initialize();
+
+  if (!authUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   // Fetch the prompt from Supabase
-  const promptVersion = await getPromptVersionByUuid(
-    promptVersionUuid,
-    supabase
-  );
+  const promptVersion =
+    await agentsmith.services.prompts.getPromptVersionByUuid(promptVersionUuid);
 
   if (!promptVersion) {
     return NextResponse.json(
@@ -74,7 +68,10 @@ export async function POST(
     );
   }
 
-  const missingVariables = getMissingVariables(variables, body.variables);
+  const missingVariables = agentsmith.services.prompts.getMissingVariables(
+    variables,
+    body.variables
+  );
 
   if (missingVariables.length > 0) {
     return NextResponse.json(
@@ -86,7 +83,10 @@ export async function POST(
     );
   }
 
-  const compiledPrompt = compilePrompt(promptVersion.content, body.variables);
+  const compiledPrompt = agentsmith.services.prompts.compilePrompt(
+    promptVersion.content,
+    body.variables
+  );
 
   return NextResponse.json({ compiledPrompt }, { status: 200 });
 }

@@ -1,19 +1,18 @@
 'use client';
 
-import type { GetOrganizationDataResult } from '@/lib/organization';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { IconClipboard, IconPencil } from '@tabler/icons-react';
 import { useApp } from '@/app/providers/app';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { connectOpenrouter } from '@/app/actions/openrouter';
 import { Button } from '@/components/ui/button';
 import { H1, H2, P } from '@/components/typography';
 import { ApiKeyReveal } from '@/components/ApiKeyReveal';
+import { GetOrganizationDataResult } from '@/lib/OrganizationsService';
 
 type OrganizationPageProps = {
-  organization: GetOrganizationDataResult;
+  organization: NonNullable<GetOrganizationDataResult>;
 };
 
 export const OrganizationPage = (props: OrganizationPageProps) => {

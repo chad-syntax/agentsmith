@@ -2,11 +2,9 @@ import { redirect } from 'next/navigation';
 import { createClient } from '&/supabase/server';
 import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { AuthProvider } from '@/app/providers/auth';
-import { getUserOrganizationData, isUserOnboarded } from '&/onboarding';
-import { getUser } from '&/user';
 import { AppProvider } from '@/app/providers/app';
 import { routes } from '@/utils/routes';
-import { getOrganizationData } from '@/lib/organization';
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -20,28 +18,38 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   const { organizationUuid } = await params;
 
+  const supabase = await createClient();
+
+  const agentsmith = new AgentsmithServices({ supabase });
+
   try {
-    const supabase = await createClient();
+    const { authUser } = await agentsmith.services.users.initialize();
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
+    if (!authUser) {
       redirect(routes.auth.signIn);
     }
 
-    const agentsmithUser = await getUser(user.id);
+    const agentsmithUser = await agentsmith.services.users.getAgentsmithUser(
+      authUser.id
+    );
 
-    const userOrganizationData = await getUserOrganizationData();
+    const userOrganizationData =
+      await agentsmith.services.users.getUserOrganizationData();
 
-    const organization = await getOrganizationData(organizationUuid);
+    const organization =
+      await agentsmith.services.organizations.getOrganizationData(
+        organizationUuid
+      );
 
-    const firstOrganizationProject = organization.projects[0];
+    const firstOrganizationProject = organization?.projects[0];
+
+    if (!firstOrganizationProject) {
+      redirect(routes.error('No projects found'));
+    }
 
     return (
       <AuthProvider
-        user={user}
+        user={authUser}
         agentsmithUser={agentsmithUser ?? undefined}
         organizationData={userOrganizationData}
       >

@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 import { routes } from '@/utils/routes';
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ inviteCode: string }> }
@@ -9,12 +11,12 @@ export async function GET(
 
   const supabase = await createClient();
 
-  // if the user is not logged in, redirect to the login page
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const agentsmith = new AgentsmithServices({ supabase });
 
-  if (!user) {
+  // if the user is not logged in, redirect to the login page
+  const { authUser } = await agentsmith.services.users.initialize();
+
+  if (!authUser) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
   }
 

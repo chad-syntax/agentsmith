@@ -1,4 +1,5 @@
-import { getLogByUuid } from '@/lib/logs';
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
+import { createClient } from '@/lib/supabase/server';
 import { LogDetailPage } from '@/page-components/LogDetailPage';
 import { routes } from '@/utils/routes';
 import { redirect } from 'next/navigation';
@@ -10,7 +11,12 @@ type PageProps = {
 export default async function LogDetail(props: PageProps) {
   const { params } = props;
   const { logId, projectUuid } = await params;
-  const log = await getLogByUuid(logId);
+
+  const supabase = await createClient();
+
+  const agentsmith = new AgentsmithServices({ supabase });
+
+  const log = await agentsmith.services.llmLogs.getLogByUuid(logId);
 
   if (!log) {
     redirect(routes.studio.logs(projectUuid));

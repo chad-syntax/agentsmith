@@ -243,7 +243,10 @@ export type OpenrouterRequestBody = {
   plugins?: OpenrouterPlugin[];
 };
 
-export type PromptConfig = Omit<OpenrouterRequestBody, 'messages' | 'prompt'>;
+export type CompletionConfig = Omit<
+  OpenrouterRequestBody,
+  'messages' | 'prompt'
+>;
 
 // Subtypes:
 
@@ -381,6 +384,21 @@ export type OpenrouterModel = {
   };
 };
 
+export const OPENROUTER_OAUTH_PKCE_URL =
+  'https://openrouter.ai/api/v1/auth/keys';
+
+export const OPENROUTER_HEADERS = {
+  'HTTP-Referer': 'https://agentsmith.app',
+  'X-Title': 'Agentsmith',
+  'Content-Type': 'application/json',
+};
+
+export const OPENROUTER_COMPLETIONS_URL =
+  'https://openrouter.ai/api/v1/chat/completions';
+
+export const DEFAULT_OPENROUTER_MODEL = 'openrouter/auto';
+export const MAX_OPENROUTER_MODELS = 3;
+
 export const fetchOpenrouterModels = async () => {
   const response = await fetch('https://openrouter.ai/api/v1/models');
   const data = await response.json();
@@ -392,7 +410,7 @@ export const fetchFreeOpenrouterModels = async () => {
   return models.filter((model) => model.id.includes('free'));
 };
 
-export const DEFAULT_OPENROUTER_CONFIG: PromptConfig = {
+export const DEFAULT_OPENROUTER_CONFIG: CompletionConfig = {
   models: ['openrouter/auto'],
   temperature: 1,
 };

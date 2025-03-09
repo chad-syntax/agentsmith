@@ -2,15 +2,22 @@
 
 import { redirect } from 'next/navigation';
 import crypto from 'crypto';
-import { getOrCreateOpenrouterCodeVerifier } from '@/lib/vault';
+import { createClient } from '@/lib/supabase/server';
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
 
 const sha256CodeChallenge = async (input: string) =>
   crypto.createHash('sha256').update(input).digest('base64url');
 
 // read more: https://openrouter.ai/docs/use-cases/oauth-pkce
 export const connectOpenrouter = async (organizationUuid: string) => {
+  const supabase = await createClient();
+
+  const agentsmith = new AgentsmithServices({ supabase });
+
   const codeVerifierResponse =
-    await getOrCreateOpenrouterCodeVerifier(organizationUuid);
+    await agentsmith.services.organizations.getOrCreateOpenrouterCodeVerifier(
+      organizationUuid
+    );
 
   if (!codeVerifierResponse.success) {
     return codeVerifierResponse;
@@ -19,9 +26,6 @@ export const connectOpenrouter = async (organizationUuid: string) => {
   const generatedCodeChallenge = await sha256CodeChallenge(
     codeVerifierResponse.codeVerifier!
   );
-
-  // Save the code verifier to the environment variable for the callback
-  process.env.OPENROUTER_CODE_VERIFIER = codeVerifierResponse.codeVerifier;
 
   const callbackUrl = encodeURIComponent(
     `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/openrouter/callback/${organizationUuid}`

@@ -2,35 +2,34 @@ import { redirect } from 'next/navigation';
 import { createClient } from '&/supabase/server';
 import { DashboardSidebar } from '@/components/DashboardSidebar';
 import { AuthProvider } from '@/app/providers/auth';
-import { getUserOrganizationData } from '&/onboarding';
-import { getUser } from '&/user';
 import { AppProvider } from '@/app/providers/app';
 import { routes } from '@/utils/routes';
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
-  params: Promise<{
-    projectUuid: string;
-  }>;
 };
 
 export default async function DashboardLayout(props: DashboardLayoutProps) {
-  const { children, params } = props;
+  const { children } = props;
 
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const agentsmith = new AgentsmithServices({ supabase });
 
-  if (!user) {
+  const { authUser } = await agentsmith.services.users.initialize();
+
+  if (!authUser) {
     redirect(routes.auth.signIn);
   }
 
   try {
-    const agentsmithUser = await getUser(user.id);
+    const agentsmithUser = await agentsmith.services.users.getAgentsmithUser(
+      authUser.id
+    );
 
-    const userOrganizationData = await getUserOrganizationData();
+    const userOrganizationData =
+      await agentsmith.services.users.getUserOrganizationData();
 
     const firstOrganization =
       userOrganizationData.organization_users[0].organizations;
@@ -39,7 +38,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
     return (
       <AuthProvider
-        user={user}
+        user={authUser}
         agentsmithUser={agentsmithUser ?? undefined}
         organizationData={userOrganizationData}
       >

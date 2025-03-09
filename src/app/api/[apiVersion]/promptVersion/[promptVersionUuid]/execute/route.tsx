@@ -1,21 +1,16 @@
-import {
-  getMissingVariables,
-  getPromptVersionByUuid,
-  runPrompt,
-} from '@/lib/prompts';
 import { ORGANIZATION_KEYS } from '@/app/constants';
 import { createClient } from '@/lib/supabase/server';
 import {
   createJwtClient,
   exchangeApiKeyForJwt,
 } from '@/lib/supabase/server-api-key';
-import { createVaultService } from '@/lib/vault';
 import { NextResponse } from 'next/server';
-import { PromptConfig } from '@/lib/openrouter';
+import { CompletionConfig } from '@/lib/openrouter';
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
-  config?: PromptConfig;
+  config?: CompletionConfig;
 };
 
 export async function POST(
@@ -31,35 +26,34 @@ export async function POST(
     );
   }
 
-  const apiKeyHeader = request.headers.get('x-api-key');
+  const apiKey = request.headers.get('x-api-key');
+
   let jwt: string | null = null;
-  if (apiKeyHeader) {
+
+  if (apiKey) {
     try {
-      jwt = await exchangeApiKeyForJwt(apiKeyHeader);
+      jwt = await exchangeApiKeyForJwt(apiKey);
     } catch (error) {
       return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
     }
   }
 
-  if (apiKeyHeader && jwt === null) {
+  if (apiKey && jwt === null) {
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
   }
 
   const supabase = jwt ? await createJwtClient(jwt) : await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const agentsmith = new AgentsmithServices({ supabase });
 
-  if (!user) {
+  const { authUser } = await agentsmith.services.users.initialize();
+
+  if (!authUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  // Fetch the prompt from Supabase
-  const promptVersion = await getPromptVersionByUuid(
-    promptVersionUuid,
-    supabase
-  );
+  const promptVersion =
+    await agentsmith.services.prompts.getPromptVersionByUuid(promptVersionUuid);
 
   if (!promptVersion) {
     return NextResponse.json(
@@ -80,7 +74,10 @@ export async function POST(
     );
   }
 
-  const missingVariables = getMissingVariables(variables, body.variables);
+  const missingVariables = agentsmith.services.prompts.getMissingVariables(
+    variables,
+    body.variables
+  );
 
   if (missingVariables.length > 0) {
     return NextResponse.json(
@@ -92,17 +89,13 @@ export async function POST(
     );
   }
 
-  const project = promptVersion.prompts.projects;
-  const organizationUuid = project.organizations.uuid;
+  const openrouterApiKey =
+    await agentsmith.services.organizations.getOrganizationKeySecret(
+      promptVersion.prompts.projects.organizations.uuid,
+      ORGANIZATION_KEYS.OPENROUTER_API_KEY
+    );
 
-  // Create vault service to get the OpenRouter API key
-  const vaultService = await createVaultService(supabase);
-  const { value: apiKey } = await vaultService.getOrganizationKeySecret(
-    organizationUuid,
-    ORGANIZATION_KEYS.OPENROUTER_API_KEY
-  );
-
-  if (!apiKey) {
+  if (!openrouterApiKey) {
     return NextResponse.json(
       {
         error:
@@ -113,16 +106,14 @@ export async function POST(
   }
 
   try {
-    const response = await runPrompt({
-      apiKey,
+    const response = await agentsmith.services.prompts.executePrompt({
       prompt: promptVersion.prompts,
-      targetVersion: promptVersion,
-      variables: body.variables,
-      alternateClient: supabase,
       config: {
-        ...(promptVersion.config as PromptConfig),
+        ...(promptVersion.config as CompletionConfig),
         ...(body.config ?? {}),
       },
+      targetVersion: promptVersion,
+      variables: body.variables,
     });
 
     return NextResponse.json(response, { status: 200 });

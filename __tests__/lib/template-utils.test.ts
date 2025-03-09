@@ -1,4 +1,4 @@
-import { extractTemplateVariables } from '../../src/lib/template-utils';
+import { extractTemplateVariables } from '../../src/utils/template-utils';
 
 describe('extractTemplateVariables', () => {
   it('should extract simple variables', () => {

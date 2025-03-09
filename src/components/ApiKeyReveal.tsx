@@ -107,7 +107,7 @@ export const ApiKeyReveal = (props: ApiKeyRevealProps) => {
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <div className="p-2 flex items-center border rounded bg-gray-50 dark:bg-gray-900">
+            <div className="p-2 flex items-center border rounded bg-muted">
               <span className="font-mono text-sm flex-1">
                 {isRevealed ? apiKey : 'sdk_••••••••••••••••••••••••••••••••'}
               </span>

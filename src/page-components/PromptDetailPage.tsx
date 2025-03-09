@@ -5,11 +5,6 @@ import { useState } from 'react';
 import { IconChevronRight, IconPlayerPlay } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { generateTypes } from '@/app/actions/generate-types';
-import {
-  getPromptById,
-  getLatestPromptVersion,
-  getPromptVersions,
-} from '@/lib/prompts';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
 import { PromptContentEditor } from '@/components/editors/PromptContentEditor';
@@ -20,17 +15,21 @@ import { CreateVersionModal } from '@/components/prompt/CreateVersionModal';
 import { compareSemanticVersions } from '@/utils/versioning';
 import { Button } from '@/components/ui/button';
 import { H1 } from '@/components/typography';
+import {
+  GetPromptByIdResult,
+  GetAllPromptVersionsResult,
+  GetLatestPromptVersionResult,
+} from '@/lib/PromptsService';
 
 type PromptDetailPageProps = {
-  prompt: NonNullable<Awaited<ReturnType<typeof getPromptById>>>;
-  latestVersion: NonNullable<
-    Awaited<ReturnType<typeof getLatestPromptVersion>>
-  >;
-  allVersions: NonNullable<Awaited<ReturnType<typeof getPromptVersions>>>;
+  prompt: NonNullable<GetPromptByIdResult>;
+  latestVersion: NonNullable<GetLatestPromptVersionResult>;
+  allVersions: NonNullable<GetAllPromptVersionsResult>;
 };
 
 export const PromptDetailPage = (props: PromptDetailPageProps) => {
   const { prompt, latestVersion, allVersions } = props;
+
   const { selectedProjectUuid } = useApp();
   const router = useRouter();
   const [expandedVersions, setExpandedVersions] = useState<
@@ -71,7 +70,6 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
     try {
       const { versionUuid } = await createDraftVersion({
         promptId: prompt.id,
-        promptUuid: prompt.uuid,
         latestVersion: latestVersion.version,
         customVersion,
       });
@@ -136,11 +134,11 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
 
           <div className="space-y-4">
             {allVersions.map((version) => (
-              <div key={version.id} className="bg-white rounded-lg border">
+              <div key={version.id} className="bg-background rounded-lg border">
                 <Button
                   onClick={() => handleVersionToggle(version.id)}
                   variant="ghost"
-                  className="w-full px-4 py-3 flex justify-between items-center hover:bg-gray-50"
+                  className="w-full px-4 py-3 flex justify-between items-center hover:bg-muted"
                 >
                   <div className="flex items-center gap-2">
                     <IconChevronRight

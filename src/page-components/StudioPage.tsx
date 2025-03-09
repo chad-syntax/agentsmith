@@ -1,10 +1,10 @@
-import { GetUserOrganizationDataResult } from '@/lib/onboarding';
 import { routes } from '@/utils/routes';
 import { H1, P } from '@/components/typography';
 import { Button } from '@/components/ui/button';
+import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 
 type StudioPageProps = {
-  userOrganizationData: GetUserOrganizationDataResult;
+  userOrganizationData: NonNullable<GetUserOrganizationDataResult>;
 };
 
 export const StudioPage = (props: StudioPageProps) => {

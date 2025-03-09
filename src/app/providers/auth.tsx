@@ -4,7 +4,7 @@ import { createClient } from '&/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { Database } from '../__generated__/supabase.types';
-import { GetUserOrganizationDataResult } from '&/onboarding';
+import type { GetUserOrganizationDataResult } from '@/lib/UsersService';
 
 export type AgentsmithUser =
   Database['public']['Tables']['agentsmith_users']['Row'];

@@ -5,9 +5,9 @@ import {
   IconPencil,
 } from '@tabler/icons-react';
 import Link from 'next/link';
-import type { GetProjectDataResult } from '@/lib/projects';
 import { routes } from '@/utils/routes';
 import { H1, H3, P } from '@/components/typography';
+import { GetProjectDataResult } from '@/lib/ProjectsService';
 
 export type ProjectPageProps = {
   projectData: NonNullable<GetProjectDataResult>;
@@ -21,7 +21,7 @@ export const ProjectPage = (props: ProjectPageProps) => {
       <div className="flex gap-2 justify-start items-center mb-8">
         <H1>Project: {projectData.name}</H1>
         <Link href={routes.studio.editProject(projectData.uuid)}>
-          <IconPencil className="w-6 h-6 text-gray-500" />
+          <IconPencil className="w-6 h-6 text-muted-foreground" />
         </Link>
       </div>
 
@@ -30,7 +30,7 @@ export const ProjectPage = (props: ProjectPageProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl">
             <Link
               href={routes.studio.prompts(projectData.uuid)}
-              className="aspect-square bg-white rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
+              className="aspect-square bg-background rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
             >
               <div className="flex items-center justify-center flex-1">
                 <IconPrompt className="w-10 h-10 text-blue-500" />
@@ -45,7 +45,7 @@ export const ProjectPage = (props: ProjectPageProps) => {
 
             <Link
               href={routes.studio.logs(projectData.uuid)}
-              className="aspect-square bg-white rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
+              className="aspect-square bg-background rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
             >
               <div className="flex items-center justify-center flex-1">
                 <IconList className="w-10 h-10 text-orange-500" />
@@ -60,7 +60,7 @@ export const ProjectPage = (props: ProjectPageProps) => {
 
             <Link
               href={routes.studio.account}
-              className="aspect-square bg-white rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
+              className="aspect-square bg-background rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
             >
               <div className="flex items-center justify-center flex-1">
                 <IconUser className="w-10 h-10 text-green-500" />

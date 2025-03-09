@@ -4,12 +4,12 @@ import { createClient } from '@/lib/supabase/server';
 import { Database } from '@/app/__generated__/supabase.types';
 import { compareSemanticVersions, incrementVersion } from '@/utils/versioning';
 import { SEMVER_PATTERN } from '@/app/constants';
-import { DEFAULT_OPENROUTER_CONFIG, PromptConfig } from '@/lib/openrouter';
+import { DEFAULT_OPENROUTER_CONFIG, CompletionConfig } from '@/lib/openrouter';
 
 type CreatePromptVersionOptions = {
   promptId: number;
   content: string;
-  config: PromptConfig;
+  config: CompletionConfig;
   version: string;
   status: Database['public']['Enums']['prompt_status'];
   variables: Array<{
@@ -75,7 +75,7 @@ export async function createPromptVersion(options: CreatePromptVersionOptions) {
 type UpdatePromptVersionOptions = {
   promptVersionUuid: string;
   content: string;
-  config: PromptConfig;
+  config: CompletionConfig;
   status: Database['public']['Enums']['prompt_status'];
   variables: Array<{
     id?: number;
@@ -178,7 +178,7 @@ type CreatePromptOptions = {
   name: string;
   projectId: number;
   content: string;
-  config: PromptConfig;
+  config: CompletionConfig;
   variables: Array<{
     name: string;
     type: Database['public']['Enums']['variable_type'];

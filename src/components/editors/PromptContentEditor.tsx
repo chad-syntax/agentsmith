@@ -7,7 +7,7 @@ import 'prismjs/components/prism-markup-templating';
 import 'prismjs/components/prism-django';
 import 'prismjs/themes/prism.css';
 import { AlertCircle } from 'lucide-react';
-import { extractTemplateVariables } from '@/lib/template-utils';
+import { extractTemplateVariables } from '@/utils/template-utils';
 import { Database } from '@/app/__generated__/supabase.types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/utils/shadcn';

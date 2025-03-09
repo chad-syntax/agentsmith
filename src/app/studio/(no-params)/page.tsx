@@ -1,22 +1,23 @@
-import { getUserOrganizationData } from '@/lib/onboarding';
 import { createClient } from '@/lib/supabase/server';
 import { StudioPage } from '@/page-components/StudioPage';
 import { routes } from '@/utils/routes';
 import { redirect } from 'next/navigation';
+import { AgentsmithServices } from '@/lib/AgentsmithServices';
 
 export default async function WebStudioHome() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const agentsmith = new AgentsmithServices({ supabase });
 
-  if (!user) {
+  const { authUser } = await agentsmith.services.users.initialize();
+
+  if (!authUser) {
     redirect(routes.auth.signIn);
   }
 
   // get the user's organization data, and redirect to the project page if only one organization and only one project exists
-  const userOrganizationData = await getUserOrganizationData();
+  const userOrganizationData =
+    await agentsmith.services.users.getUserOrganizationData();
 
   return <StudioPage userOrganizationData={userOrganizationData} />;
 }

@@ -3,87 +3,102 @@
 /* Base color palette */
 :root {
   /* Neutrals */
-  --white: #ffffff;
-  --off-white: #fafafa;
-  --gray-50: #e6e6e6;
-  --gray-100: #cccccc;
-  --gray-200: #b3b3b3;
-  --gray-300: #4d4d4d;
-  --gray-400: #333333;
-  --gray-500: #1a1a1a;
-  --gray-900: #0d0d0d;
+  --color-white: #ffffff;
+  --color-off-white: #fafafa;
+  --color-gray-50: #e6e6e6;
+  --color-gray-100: #cccccc;
+  --color-gray-200: #b3b3b3;
+  --color-gray-300: #4d4d4d;
+  --color-gray-400: #333333;
+  --color-gray-500: #1a1a1a;
+  --color-gray-900: #0d0d0d;
 
   /* Blues */
-  --blue-500: #0077ff;
-  --cyan-500: #00ffff;
+  --color-blue-500: #0077ff;
+  --color-cyan-500: #00ffff;
 
   /* Reds */
-  --red-500: #d70000;
-  --red-400: #ff3131;
+  --color-red-500: #d70000;
+  --color-red-400: #ff3131;
 
   /* Pinks */
-  --pink-500: #d6005a;
-  --pink-400: #ff007f;
+  --color-pink-500: #d6005a;
+  --color-pink-400: #ff007f;
 
   /* Oranges */
-  --orange-500: #d48900;
-  --orange-400: #ffbf00;
+  --color-orange-500: #d48900;
+  --color-orange-400: #ffbf00;
 }
 
 @theme {
   /* Light mode colors */
-  --color-background: var(--off-white);
-  --color-foreground: var(--gray-900);
-  --color-primary: var(--blue-500);
-  --color-primary-foreground: var(--white);
-  --color-secondary: var(--pink-500);
-  --color-secondary-foreground: var(--white);
-  --color-muted: var(--gray-50);
-  --color-muted-foreground: var(--gray-300);
-  --color-accent: var(--orange-500);
-  --color-accent-foreground: var(--white);
-  --color-destructive: var(--red-500);
-  --color-destructive-foreground: var(--white);
-  --color-border: var(--gray-100);
-  --color-input: var(--gray-100);
-  --color-ring: var(--blue-500);
-  --color-card: var(--white);
-  --color-card-foreground: var(--gray-500);
-  --color-popover: var(--white);
-  --color-popover-foreground: var(--gray-500);
+  --color-background: var(--color-off-white);
+  --color-foreground: var(--color-gray-900);
+  --color-primary: var(--color-blue-500);
+  --color-primary-foreground: var(--color-white);
+  --color-secondary: var(--color-pink-500);
+  --color-secondary-foreground: var(--color-white);
+  --color-muted: var(--color-gray-50);
+  --color-muted-foreground: var(--color-gray-300);
+  --color-accent: var(--color-orange-500);
+  --color-accent-foreground: var(--color-white);
+  --color-destructive: var(--color-red-500);
+  --color-destructive-foreground: var(--color-white);
+  --color-border: var(--color-gray-100);
+  --color-input: var(--color-gray-100);
+  --color-ring: var(--color-blue-500);
+  --color-card: var(--color-white);
+  --color-card-foreground: var(--color-gray-500);
+  --color-popover: var(--color-white);
+  --color-popover-foreground: var(--color-gray-500);
 
   /* Border radius */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
   --radius: 0.5rem;
-  --radius-sm: calc(var(--radius) - 0.25rem);
-  --radius-md: calc(var(--radius) - 0.125rem);
-  --radius-lg: calc(var(--radius) + 0.125rem);
+  --radius-md: 0.625rem;
+  --radius-lg: 0.75rem;
 
   /* Container settings */
   --container-padding: 2rem;
   --container-max-width-2xl: 1400px;
+
+  /* Spacing scale */
+  --spacing: 0.25rem;
+
+  /* Breakpoints */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1400px;
+  --breakpoint-3xl: 1920px;
+
+  /* Transitions */
+  --ease-fluid: cubic-bezier(0.3, 0, 0, 1);
 }
 
 @layer base {
   .dark {
-    --color-background: var(--gray-900);
-    --color-foreground: var(--gray-50);
-    --color-primary: var(--cyan-500);
-    --color-primary-foreground: var(--gray-500);
-    --color-secondary: var(--pink-400);
-    --color-secondary-foreground: var(--gray-500);
-    --color-muted: var(--gray-400);
-    --color-muted-foreground: var(--gray-200);
-    --color-accent: var(--orange-400);
-    --color-accent-foreground: var(--gray-500);
-    --color-destructive: var(--red-400);
-    --color-destructive-foreground: var(--gray-500);
-    --color-border: var(--gray-400);
-    --color-input: var(--gray-300);
-    --color-ring: var(--cyan-500);
-    --color-card: var(--gray-500);
-    --color-card-foreground: var(--gray-50);
-    --color-popover: var(--gray-500);
-    --color-popover-foreground: var(--gray-50);
+    --color-background: var(--color-gray-900);
+    --color-foreground: var(--color-gray-50);
+    --color-primary: var(--color-cyan-500);
+    --color-primary-foreground: var(--color-gray-500);
+    --color-secondary: var(--color-pink-400);
+    --color-secondary-foreground: var(--color-gray-500);
+    --color-muted: var(--color-gray-400);
+    --color-muted-foreground: var(--color-gray-200);
+    --color-accent: var(--color-orange-400);
+    --color-accent-foreground: var(--color-gray-500);
+    --color-destructive: var(--color-red-400);
+    --color-destructive-foreground: var(--color-gray-500);
+    --color-border: var(--color-gray-400);
+    --color-input: var(--color-gray-300);
+    --color-ring: var(--color-cyan-500);
+    --color-card: var(--color-gray-500);
+    --color-card-foreground: var(--color-gray-50);
+    --color-popover: var(--color-gray-500);
+    --color-popover-foreground: var(--color-gray-50);
   }
 
   * {
@@ -98,10 +113,10 @@
 /* Animations */
 @layer utilities {
   .animate-accordion-up {
-    animation: accordion-up 0.2s ease-out;
+    animation: accordion-up 0.2s var(--ease-fluid);
   }
   .animate-accordion-down {
-    animation: accordion-down 0.2s ease-out;
+    animation: accordion-down 0.2s var(--ease-fluid);
   }
 }
 
