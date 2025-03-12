@@ -13,10 +13,13 @@ import { H1 } from '@/components/typography';
 
 type ProjectEditPageProps = {
   projectData: Database['public']['Tables']['projects']['Row'];
+  githubAppInstallation:
+    | Database['public']['Tables']['github_app_installations']['Row']
+    | null;
 };
 
 export const ProjectEditPage = (props: ProjectEditPageProps) => {
-  const { projectData } = props;
+  const { projectData, githubAppInstallation } = props;
   const router = useRouter();
 
   const [name, setName] = useState(projectData.name);
@@ -79,6 +82,15 @@ export const ProjectEditPage = (props: ProjectEditPageProps) => {
             placeholder="Enter project name"
           />
         </div>
+
+        {!githubAppInstallation && (
+          <div>
+            <Label htmlFor="githubAppInstallation">
+              GitHub App Installation
+            </Label>
+            <Button>Connect GitHub Repository</Button>
+          </div>
+        )}
 
         <div className="flex gap-4">
           <Button onClick={handleSave} disabled={isSaving}>

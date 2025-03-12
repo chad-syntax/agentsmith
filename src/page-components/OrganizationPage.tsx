@@ -1,7 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { IconClipboard, IconPencil } from '@tabler/icons-react';
+import {
+  IconClipboard,
+  IconNotebook,
+  IconPencil,
+  IconPlus,
+} from '@tabler/icons-react';
 import { useApp } from '@/app/providers/app';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
@@ -10,18 +15,36 @@ import { Button } from '@/components/ui/button';
 import { H1, H2, P } from '@/components/typography';
 import { ApiKeyReveal } from '@/components/ApiKeyReveal';
 import { GetOrganizationDataResult } from '@/lib/OrganizationsService';
+import { Database } from '@/app/__generated__/supabase.types';
+import { installGithubApp } from '@/app/actions/github';
+import {
+  GetInstallationRepositoriesResult,
+  GetProjectRepositoriesForOrganizationResult,
+} from '@/lib/GitHubService';
+import { ConnectProjectModal } from '@/components/ConnectProjectModal';
 
 type OrganizationPageProps = {
   organization: NonNullable<GetOrganizationDataResult>;
+  githubAppInstallation:
+    | Database['public']['Tables']['github_app_installations']['Row']
+    | null;
+  installationRepositories: GetInstallationRepositoriesResult;
+  projectRepositories: GetProjectRepositoriesForOrganizationResult;
 };
 
 export const OrganizationPage = (props: OrganizationPageProps) => {
-  const { organization } = props;
+  const {
+    organization,
+    githubAppInstallation,
+    installationRepositories,
+    projectRepositories,
+  } = props;
 
   const { hasOpenRouterKey, isOrganizationAdmin } = useApp();
 
   const [isCodeCopied, setIsCodeCopied] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
+  const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(false);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(organization.invite_code);
@@ -107,6 +130,96 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
           )}
         </div>
       </div>
+      <div>
+        <H2 className="mb-4">GitHub App Installation</H2>
+        <P className="pb-4">
+          {githubAppInstallation
+            ? '✅ This organization has a GitHub App installation'
+            : '❌ This organization does not have a GitHub App installation'}
+        </P>
+        {!isOrganizationAdmin ? (
+          <P>
+            You must be an admin to connect to GitHub. Please ask your
+            organization admin to connect to GitHub.
+          </P>
+        ) : githubAppInstallation ? (
+          <Button variant="link" asChild className="text-xs p-0">
+            <a
+              href={`https://github.com/settings/installations/${githubAppInstallation.installation_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              View your GitHub App Installation Settings
+            </a>
+          </Button>
+        ) : (
+          <Button onClick={() => installGithubApp(organization.uuid)}>
+            Install GitHub App
+          </Button>
+        )}
+      </div>
+      {githubAppInstallation && (
+        <div>
+          <H2 className="mb-4">GitHub App Installation Repositories</H2>
+          {installationRepositories.length > 0 ? (
+            <div className="flex flex-col gap-2">
+              <ConnectProjectModal
+                open={connectProjectModalOpen}
+                onOpenChange={setConnectProjectModalOpen}
+                installationRepositories={installationRepositories}
+              />
+              {installationRepositories.map((repo) => {
+                const connectedProject = projectRepositories.find(
+                  (projectRepo) => projectRepo.repository_id === repo.id
+                );
+
+                return (
+                  <div key={repo.id} className="flex items-center gap-2">
+                    <IconNotebook />
+                    <Button variant="link" asChild className="text-xs p-0">
+                      <a
+                        href={repo.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {repo.full_name}
+                      </a>
+                    </Button>
+                    {connectedProject ? (
+                      <span>Connected to {connectedProject.projects.name}</span>
+                    ) : (
+                      <Button
+                        className="text-xs text-accent hover:text-accent"
+                        variant="outline"
+                        onClick={() => setConnectProjectModalOpen(true)}
+                      >
+                        <IconPlus className="h-4 w-4" />
+                        Connect to Project
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div>
+              <P className="text-muted-foreground italic">
+                No repositories accessible, please check your GitHub App
+                installation permissions.
+              </P>
+              <Button variant="link" asChild className="text-xs p-0">
+                <a
+                  href={`https://github.com/settings/installations/${githubAppInstallation.installation_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View your GitHub App Installation Settings
+                </a>
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
       <div>
         <H2 className="mb-4">Openrouter Account</H2>
         <P className="pb-4">

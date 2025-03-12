@@ -4,6 +4,7 @@ import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
 import { routes } from '@/utils/routes';
 import { OPENROUTER_OAUTH_PKCE_URL } from '@/lib/openrouter';
+
 type OpenrouterCallbackParams = Promise<{
   organizationUuid: string;
 }>;

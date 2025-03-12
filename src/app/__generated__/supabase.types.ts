@@ -33,6 +33,38 @@ export type Database = {
         }
         Relationships: []
       }
+      github_app_installations: {
+        Row: {
+          created_at: string
+          id: number
+          installation_id: number
+          organization_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          installation_id: number
+          organization_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          installation_id?: number
+          organization_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "github_app_installations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       global_contexts: {
         Row: {
           content: Json
@@ -239,6 +271,67 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "agentsmith_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_repositories: {
+        Row: {
+          agentsmith_folder: string
+          created_at: string
+          github_app_installation_id: number
+          id: number
+          organization_id: number
+          project_id: number
+          repository_full_name: string
+          repository_id: number
+          repository_name: string
+          updated_at: string
+        }
+        Insert: {
+          agentsmith_folder: string
+          created_at?: string
+          github_app_installation_id: number
+          id?: number
+          organization_id: number
+          project_id: number
+          repository_full_name: string
+          repository_id: number
+          repository_name: string
+          updated_at?: string
+        }
+        Update: {
+          agentsmith_folder?: string
+          created_at?: string
+          github_app_installation_id?: number
+          id?: number
+          organization_id?: number
+          project_id?: number
+          repository_full_name?: string
+          repository_id?: number
+          repository_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_repositories_github_app_installation_id_fkey"
+            columns: ["github_app_installation_id"]
+            isOneToOne: false
+            referencedRelation: "github_app_installations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_repositories_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_repositories_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]

@@ -6,6 +6,7 @@ import { PromptsService } from './PromptsService';
 import { UsersService } from './UsersService';
 import { VaultService } from './VaultService';
 import { ProjectsService } from './ProjectsService';
+import { GitHubService } from './GitHubService';
 
 export type AgentsmithServicesDirectory = {
   users: UsersService;
@@ -14,6 +15,7 @@ export type AgentsmithServicesDirectory = {
   vault: VaultService;
   llmLogs: LLMLogsService;
   projects: ProjectsService;
+  github: GitHubService;
 };
 
 type AgentsmithServicesConstructorOptions = {
@@ -32,6 +34,7 @@ export class AgentsmithServices {
     const vault = new VaultService({ supabase });
     const llmLogs = new LLMLogsService({ supabase });
     const projects = new ProjectsService({ supabase });
+    const github = new GitHubService({ supabase });
 
     this.services = {
       users,
@@ -40,6 +43,7 @@ export class AgentsmithServices {
       vault,
       llmLogs,
       projects,
+      github,
     };
 
     users.services = this.services;
@@ -48,5 +52,6 @@ export class AgentsmithServices {
     vault.services = this.services;
     llmLogs.services = this.services;
     projects.services = this.services;
+    github.services = this.services;
   }
 }
