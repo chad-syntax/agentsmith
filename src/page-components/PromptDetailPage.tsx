@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { IconChevronRight, IconPlayerPlay } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
-import { generateTypes } from '@/app/actions/generate-types';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
 import { PromptContentEditor } from '@/components/editors/PromptContentEditor';
@@ -45,19 +44,6 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
       ...prev,
       [versionId]: !prev[versionId],
     }));
-  };
-
-  const handleGenerateTypes = async () => {
-    const response = await generateTypes();
-    const blob = new Blob([response.content], { type: 'text/typescript' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = response.filename;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
   };
 
   const handleCreateNewVersion = () => {
@@ -113,9 +99,6 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
           <div className="flex justify-between items-center mb-6">
             <H1>{prompt.name}</H1>
             <div className="space-x-4">
-              <Button onClick={handleGenerateTypes} variant="outline">
-                Generate Types
-              </Button>
               <Button
                 onClick={() => setIsTestModalOpen(true)}
                 className="bg-green-500 hover:bg-green-600 flex items-center gap-2"

@@ -178,18 +178,14 @@ export class PromptsService extends AgentsmithSupabaseService {
     return data;
   }
 
-  /**
-   * Fetch variables for a specific prompt version
-   */
-  async getPromptVariables(versionId: number) {
+  public async getAllPromptsData(projectId: number) {
     const { data, error } = await this.supabase
-      .from('prompt_variables')
-      .select('*')
-      .eq('prompt_version_id', versionId)
-      .order('name', { ascending: true });
+      .from('prompts')
+      .select('*, prompt_versions(*, prompt_variables(*))')
+      .eq('project_id', projectId);
 
     if (error) {
-      console.error('Error fetching prompt variables:', error);
+      console.error('Error fetching prompts:', error);
       return [];
     }
 
@@ -301,4 +297,8 @@ export type GetPromptVersionByUuidResult = Awaited<
 
 export type GetPromptsByProjectIdResult = Awaited<
   ReturnType<typeof PromptsService.prototype.getPromptsByProjectId>
+>;
+
+export type GetAllPromptsDataResult = Awaited<
+  ReturnType<typeof PromptsService.prototype.getAllPromptsData>
 >;

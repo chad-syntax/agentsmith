@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { generateTypes } from '@/app/actions/generate-types';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
 import { CreatePromptModal } from '@/components/prompt/CreatePromptModal';
@@ -21,27 +20,11 @@ export const PromptsPage = (props: PromptsPageProps) => {
   const { selectedProjectUuid } = useApp();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
-  const handleGenerateTypes = async () => {
-    const response = await generateTypes();
-    const blob = new Blob([response.content], { type: 'text/typescript' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = response.filename;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-  };
-
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
         <H1>Prompts Library</H1>
         <div className="space-x-4">
-          <Button onClick={handleGenerateTypes} variant="outline">
-            Generate Types
-          </Button>
           <Button onClick={() => setIsCreateModalOpen(true)}>
             Create New Prompt
           </Button>
