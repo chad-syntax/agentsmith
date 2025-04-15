@@ -124,7 +124,7 @@ select set_auth_user('pro_member@example.com');
 select isnt_empty(
     $$select key from organization_keys ok
     where ok.organization_id = $$ || get_pro_organization_id() || $$
-    and key = 'test-key-$$ || get_pro_organization_id() || $$'$$,
+    and key = 'SDK_API_KEY'$$,
     'organization member can view organization keys'
 );
 
@@ -134,7 +134,7 @@ select set_auth_user('pro_admin@example.com');
 select isnt_empty(
     $$select key from organization_keys ok
     where ok.organization_id = $$ || get_pro_organization_id() || $$
-    and key = 'test-key-$$ || get_pro_organization_id() || $$'$$,
+    and key = 'SDK_API_KEY'$$,
     'organization admin can view organization keys'
 );
 
