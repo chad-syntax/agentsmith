@@ -15,6 +15,11 @@ jobs:
         with:
           version: latest
 
+      - name: Overwrite Supabase db version
+        run: |
+          mkdir -p supabase/.temp
+          echo "15.8.1.038" > supabase/.temp/postgres-version
+
       - name: Start Supabase local development setup
         run: supabase db start
 
