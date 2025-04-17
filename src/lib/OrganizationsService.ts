@@ -19,12 +19,25 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     super({ ...options, serviceName: 'organizations' });
   }
 
+  public async getOrganizationId(organizationUuid: string) {
+    const { data, error } = await this.supabase
+      .from('organizations')
+      .select('id')
+      .eq('uuid', organizationUuid)
+      .single();
+
+    if (error) {
+      console.error('Error fetching organization id', error);
+      return null;
+    }
+
+    return data.id;
+  }
+
   public async getOrganizationData(organizationUuid: string) {
     const { data, error } = await this.supabase
       .from('organizations')
-      .select(
-        '*, projects(*), organization_users(id, role, agentsmith_users(*))'
-      )
+      .select('*, projects(*), organization_users(id, role, agentsmith_users(*))')
       .eq('uuid', organizationUuid)
       .single();
 
@@ -37,10 +50,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
   }
 
   public async getOrganizationKeySecret(organizationUuid: string, key: string) {
-    const response = await this.services.vault.getOrganizationKeySecret(
-      organizationUuid,
-      key
-    );
+    const response = await this.services.vault.getOrganizationKeySecret(organizationUuid, key);
 
     if (response.error) {
       console.error('Error fetching organization key secret', response.error);
@@ -51,12 +61,12 @@ export class OrganizationsService extends AgentsmithSupabaseService {
   }
 
   async getOrCreateOpenrouterCodeVerifier(
-    organizationUuid: string
+    organizationUuid: string,
   ): Promise<GetOrCreateOpenrouterCodeVerifierResult> {
     // Try to get existing code verifier
     const { value, error } = await this.services.vault.getOrganizationKeySecret(
       organizationUuid,
-      ORGANIZATION_KEYS.OPENROUTER_CODE_VERIFIER
+      ORGANIZATION_KEYS.OPENROUTER_CODE_VERIFIER,
     );
 
     if (error) {
@@ -78,13 +88,12 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     // Generate and store a new code verifier
     const newCodeVerifier = genAlphaNumeric(32);
 
-    const { success, error: createError } =
-      await this.services.vault.createOrganizationKey({
-        organizationUuid,
-        key: ORGANIZATION_KEYS.OPENROUTER_CODE_VERIFIER,
-        value: newCodeVerifier,
-        description: 'OpenRouter code verifier',
-      });
+    const { success, error: createError } = await this.services.vault.createOrganizationKey({
+      organizationUuid,
+      key: ORGANIZATION_KEYS.OPENROUTER_CODE_VERIFIER,
+      value: newCodeVerifier,
+      description: 'OpenRouter code verifier',
+    });
 
     if (!success) {
       console.error('Error creating OpenRouter code verifier:', createError);

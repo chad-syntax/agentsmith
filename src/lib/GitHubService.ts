@@ -8,31 +8,38 @@ import { Octokit } from '@octokit/core';
 import { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
 import { GetProjectDataResult } from './ProjectsService';
 
+type VerifyInstallationOptions = {
+  installationId: number;
+  organizationUuid: string;
+};
+
 type CreateInstallationOptions = {
   organizationUuid: string;
   installationId: number;
 };
 
-type SaveProjectRepositoryOptions = {
-  projectId: number;
-  organizationId: number;
-  agentsmithFolder: string;
-  repositoryId: number;
+type CreateInstallationRepositoriesOptions = {
+  githubAppInstallationRecordId: number;
+  organizationUuid: string;
+  installationId: number;
 };
 
 export class GitHubService extends AgentsmithSupabaseService {
   public app: App;
+  private appId: number;
 
   constructor(options: AgentsmithSupabaseServiceConstructorOptions) {
     super({ ...options, serviceName: 'github' });
 
-    const appId = process.env.GITHUB_APP_ID as string;
-    const privateKey = process.env.GITHUB_APP_PRIVATE_KEY as string;
-    const webhookSecret = process.env.GITHUB_APP_WEBHOOK_SECRET as string;
+    const appId = process.env.GITHUB_APP_ID!;
+    const privateKey = process.env.GITHUB_APP_PRIVATE_KEY!;
+    const webhookSecret = process.env.GITHUB_APP_WEBHOOK_SECRET!;
 
     if (!appId || !privateKey || !webhookSecret) {
       throw new Error('GitHub app credentials not found');
     }
+
+    this.appId = Number(appId);
 
     this.app = new App({
       appId,
@@ -51,9 +58,7 @@ export class GitHubService extends AgentsmithSupabaseService {
         // Do something
         console.log('github webhook: pull request opened', payload);
       } catch (e) {
-        console.error(
-          `pull_request.opened handler failed with error: ${(<Error>e).message}`
-        );
+        console.error(`pull_request.opened handler failed with error: ${(<Error>e).message}`);
       }
     });
 
@@ -62,9 +67,7 @@ export class GitHubService extends AgentsmithSupabaseService {
         // Do something else
         console.log('github webhook: pull request edited', payload);
       } catch (e) {
-        console.error(
-          `pull_request.edited handler failed with error: ${(<Error>e).message}`
-        );
+        console.error(`pull_request.edited handler failed with error: ${(<Error>e).message}`);
       }
     });
 
@@ -78,6 +81,74 @@ export class GitHubService extends AgentsmithSupabaseService {
     });
   }
 
+  async createAppInstallationRecord(organizationUuid: string) {
+    const organizationId = await this.services.organizations.getOrganizationId(organizationUuid);
+
+    if (!organizationId) {
+      throw new Error(`Organization not found: ${organizationUuid}`);
+    }
+
+    const { error } = await this.supabase.from('github_app_installations').insert({
+      organization_id: organizationId,
+    });
+
+    if (error) {
+      throw new Error(`Failed to create installation record: ${error.message}`);
+    }
+  }
+
+  async verifyInstallation(options: VerifyInstallationOptions) {
+    const { installationId, organizationUuid } = options;
+
+    const {
+      data: { session },
+    } = await this.supabase.auth.getSession();
+
+    if (!session) {
+      throw new Error('No session found, cannot verify installation');
+    }
+
+    const octokit = new Octokit({
+      auth: session.provider_token,
+    });
+
+    const response = await octokit.request('GET /user/installations', {
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    });
+
+    const isValidInstallationId = response.data.installations.some(
+      (installation) => installation.app_id === this.appId && installation.id === installationId,
+    );
+
+    const { data, error } = await this.supabase
+      .from('github_app_installations')
+      .select('id, organizations(uuid)')
+      .eq('installation_id', installationId)
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to verify installation: ${error.message}`);
+    }
+
+    const isValidOrganization = data.organizations.uuid === organizationUuid;
+
+    const isValid = isValidInstallationId && isValidOrganization;
+
+    if (isValid) {
+      const { error } = await this.supabase
+        .from('github_app_installations')
+        .update({ status: 'ACTIVE' });
+
+      if (error) {
+        throw new Error(`Failed to update installation status: ${error.message}`);
+      }
+    }
+
+    return { isValid, githubAppInstallationRecordId: data.id };
+  }
+
   async getInstallation(organizationId: number) {
     const { data, error } = await this.supabase
       .from('github_app_installations')
@@ -88,7 +159,7 @@ export class GitHubService extends AgentsmithSupabaseService {
     if (error) {
       console.error(
         `Failed to fetch github app installation for organization ${organizationId}`,
-        error
+        error,
       );
       throw error;
     }
@@ -96,13 +167,11 @@ export class GitHubService extends AgentsmithSupabaseService {
     return data;
   }
 
-  async handleInstallationWebhook(
-    payload: EmitterWebhookEvent<'installation'>['payload']
-  ) {
+  async handleInstallationWebhook(payload: EmitterWebhookEvent<'installation'>['payload']) {
     console.log('handleInstallationWebhook', payload);
   }
 
-  async createInstallation(options: CreateInstallationOptions) {
+  async createInstallationRecord(options: CreateInstallationOptions) {
     const { organizationUuid, installationId } = options;
 
     const { data, error } = await this.supabase
@@ -117,17 +186,25 @@ export class GitHubService extends AgentsmithSupabaseService {
     }
 
     if (!data) {
-      console.error(
-        'Organization not found, cannot create github installation record'
-      );
-      throw new Error(
-        'Organization not found, cannot create github installation record'
-      );
+      console.error('Organization not found, cannot create github installation record');
+      throw new Error('Organization not found, cannot create github installation record');
     }
+
+    const {
+      data: { session },
+    } = await this.supabase.auth.getSession();
+
+    if (!session) {
+      console.error('No session found, cannot create github installation record');
+      throw new Error('No session found, cannot create github installation record');
+    }
+
+    const githubAccountId = session.user.user_metadata.provider_id;
 
     const { data: installation, error: installationError } = await this.supabase
       .from('github_app_installations')
       .insert({
+        github_account_id: githubAccountId,
         organization_id: data.id,
         installation_id: installationId,
       })
@@ -135,10 +212,7 @@ export class GitHubService extends AgentsmithSupabaseService {
       .single();
 
     if (installationError) {
-      console.error(
-        'Failed to create github installation record',
-        installationError
-      );
+      console.error('Failed to create github installation record', installationError);
       throw installationError;
     }
 
@@ -158,58 +232,38 @@ export class GitHubService extends AgentsmithSupabaseService {
       .eq('projects.organization_id', organizationId);
 
     if (error) {
-      console.error(
-        'Failed to fetch project repositories for organization',
-        error
-      );
+      console.error('Failed to fetch project repositories for organization', error);
       throw error;
     }
 
     return data;
   }
 
-  async saveProjectRepository(options: SaveProjectRepositoryOptions) {
-    const { projectId, organizationId, agentsmithFolder, repositoryId } =
-      options;
+  async createInstallationRepositories(options: CreateInstallationRepositoriesOptions) {
+    const { organizationUuid, installationId, githubAppInstallationRecordId } = options;
 
-    const gitHubAppInstallation = await this.getInstallation(organizationId);
+    const organizationId = await this.services.organizations.getOrganizationId(organizationUuid);
 
-    if (!gitHubAppInstallation) {
-      throw new Error('Organization does not have GitHub App Installed');
+    if (!organizationId) {
+      throw new Error('Organization not found, cannot create repository records');
     }
 
-    const repositories = await this.getInstallationRepositories(
-      gitHubAppInstallation.installation_id
+    const repositories = await this.getInstallationRepositories(installationId);
+
+    const { error } = await this.supabase.from('project_repositories').insert(
+      repositories.map((repo) => ({
+        github_app_installation_id: githubAppInstallationRecordId,
+        repository_id: repo.id,
+        repository_name: repo.name,
+        repository_full_name: repo.full_name,
+        organization_id: organizationId,
+      })),
     );
 
-    const repository = repositories.find((repo) => repo.id === repositoryId);
-
-    if (!repository) {
-      throw new Error(
-        `Repository with ID ${repositoryId} not found in installation ${gitHubAppInstallation.installation_id}`
-      );
-    }
-
-    const { data, error } = await this.supabase
-      .from('project_repositories')
-      .insert({
-        organization_id: organizationId,
-        project_id: projectId,
-        repository_name: repository.name,
-        repository_full_name: repository.full_name,
-        agentsmith_folder: agentsmithFolder,
-        github_app_installation_id: gitHubAppInstallation.id,
-        repository_id: repositoryId,
-      })
-      .select('*')
-      .single();
-
     if (error) {
-      console.error('Failed to save project repository', error);
+      console.error('Failed to create project repositories', error);
       throw error;
     }
-
-    return data;
   }
 
   async getProjectRepository(projectId: number) {
@@ -243,21 +297,18 @@ export class GitHubService extends AgentsmithSupabaseService {
     }
 
     const octokit = await this.app.getInstallationOctokit(
-      projectRepository.github_app_installation_id
+      projectRepository.github_app_installation_id,
     );
 
     const [owner, repo] = projectRepository.repository_full_name.split('/');
 
     // check repository for any pending pull requests that are agentsmith pull requests
-    const pullRequests = await octokit.request(
-      'GET /repos/{owner}/{repo}/pulls',
-      {
-        owner,
-        repo,
-        state: 'open',
-        labels: 'agentsmith',
-      }
-    );
+    const pullRequests = await octokit.request('GET /repos/{owner}/{repo}/pulls', {
+      owner,
+      repo,
+      state: 'open',
+      labels: 'agentsmith',
+    });
 
     if (pullRequests.data.length > 0) {
       const pullRequest = pullRequests.data[0];
@@ -267,18 +318,15 @@ export class GitHubService extends AgentsmithSupabaseService {
         repo,
         project,
         projectRepository,
-        pullRequest.head.ref
+        pullRequest.head.ref,
       );
     } else {
       // Create a new PR
       // 1. Get default branch
-      const { data: repository } = await octokit.request(
-        'GET /repos/{owner}/{repo}',
-        {
-          owner,
-          repo,
-        }
-      );
+      const { data: repository } = await octokit.request('GET /repos/{owner}/{repo}', {
+        owner,
+        repo,
+      });
 
       const defaultBranch = repository.default_branch;
 
@@ -289,7 +337,7 @@ export class GitHubService extends AgentsmithSupabaseService {
           owner,
           repo,
           branch: defaultBranch,
-        }
+        },
       );
 
       const sha = ref.object.sha;
@@ -304,27 +352,17 @@ export class GitHubService extends AgentsmithSupabaseService {
       });
 
       // 4. Sync files to the new branch
-      await this.syncPRFiles(
-        octokit,
-        owner,
-        repo,
-        project,
-        projectRepository,
-        branchName
-      );
+      await this.syncPRFiles(octokit, owner, repo, project, projectRepository, branchName);
 
       // 5. Create a new PR
-      const { data: newPR } = await octokit.request(
-        'POST /repos/{owner}/{repo}/pulls',
-        {
-          owner,
-          repo,
-          title: 'Agentsmith Sync',
-          body: 'Syncing prompts and variables from Agentsmith',
-          head: branchName,
-          base: defaultBranch,
-        }
-      );
+      const { data: newPR } = await octokit.request('POST /repos/{owner}/{repo}/pulls', {
+        owner,
+        repo,
+        title: 'Agentsmith Sync',
+        body: 'Syncing prompts and variables from Agentsmith',
+        head: branchName,
+        base: defaultBranch,
+      });
 
       // 6. Add the agentsmith label to the PR
       // First get or create the label if it doesn't exist
@@ -345,15 +383,12 @@ export class GitHubService extends AgentsmithSupabaseService {
       }
 
       // Then add the label to the PR
-      await octokit.request(
-        'POST /repos/{owner}/{repo}/issues/{issue_number}/labels',
-        {
-          owner,
-          repo,
-          issue_number: newPR.number,
-          labels: ['agentsmith'],
-        }
-      );
+      await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/labels', {
+        owner,
+        repo,
+        issue_number: newPR.number,
+        labels: ['agentsmith'],
+      });
     }
   }
 
@@ -364,11 +399,9 @@ export class GitHubService extends AgentsmithSupabaseService {
     repo: string,
     project: NonNullable<GetProjectDataResult>,
     projectRepository: NonNullable<GetProjectRepositoryResult>,
-    branchName: string
+    branchName: string,
   ) {
-    const promptsData = await this.services.prompts.getAllPromptsData(
-      project.id
-    );
+    const promptsData = await this.services.prompts.getAllPromptsData(project.id);
 
     // Check if all prompts and prompt versions exist in the repository
     const missingFiles: FileToSync[] = [];
@@ -377,15 +410,12 @@ export class GitHubService extends AgentsmithSupabaseService {
     // Retrieve the current state of the agentsmith folder
     let repoFiles;
     try {
-      const response = await octokit.request(
-        'GET /repos/{owner}/{repo}/git/trees/{tree_sha}',
-        {
-          owner,
-          repo,
-          tree_sha: branchName,
-          recursive: '1',
-        }
-      );
+      const response = await octokit.request('GET /repos/{owner}/{repo}/git/trees/{tree_sha}', {
+        owner,
+        repo,
+        tree_sha: branchName,
+        recursive: '1',
+      });
       repoFiles = response.data.tree;
     } catch (error) {
       console.error('Failed to fetch repository file structure', error);
@@ -414,15 +444,12 @@ export class GitHubService extends AgentsmithSupabaseService {
       } else {
         // Check if prompt.json needs update by comparing content
         try {
-          const fileContent = await octokit.request(
-            'GET /repos/{owner}/{repo}/contents/{path}',
-            {
-              owner,
-              repo,
-              path: promptJsonPath,
-              ref: branchName,
-            }
-          );
+          const fileContent = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
+            owner,
+            repo,
+            path: promptJsonPath,
+            ref: branchName,
+          });
 
           // Check if response is a file and has content
           if (
@@ -430,10 +457,7 @@ export class GitHubService extends AgentsmithSupabaseService {
             fileContent.data.type === 'file' &&
             fileContent.data.content
           ) {
-            const existingContent = Buffer.from(
-              fileContent.data.content,
-              'base64'
-            ).toString();
+            const existingContent = Buffer.from(fileContent.data.content, 'base64').toString();
             const currentContent = JSON.stringify(prompt, null, 2);
 
             if (existingContent !== currentContent) {
@@ -463,15 +487,12 @@ export class GitHubService extends AgentsmithSupabaseService {
         } else {
           // Check if version.json needs update
           try {
-            const fileContent = await octokit.request(
-              'GET /repos/{owner}/{repo}/contents/{path}',
-              {
-                owner,
-                repo,
-                path: versionJsonPath,
-                ref: branchName,
-              }
-            );
+            const fileContent = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
+              owner,
+              repo,
+              path: versionJsonPath,
+              ref: branchName,
+            });
 
             // Check if response is a file and has content
             if (
@@ -479,10 +500,7 @@ export class GitHubService extends AgentsmithSupabaseService {
               fileContent.data.type === 'file' &&
               fileContent.data.content
             ) {
-              const existingContent = Buffer.from(
-                fileContent.data.content,
-                'base64'
-              ).toString();
+              const existingContent = Buffer.from(fileContent.data.content, 'base64').toString();
               const currentContent = JSON.stringify(version, null, 2);
 
               if (existingContent !== currentContent) {
@@ -493,10 +511,7 @@ export class GitHubService extends AgentsmithSupabaseService {
               }
             }
           } catch (error) {
-            console.error(
-              `Failed to fetch content for ${versionJsonPath}`,
-              error
-            );
+            console.error(`Failed to fetch content for ${versionJsonPath}`, error);
           }
         }
 
@@ -517,7 +532,7 @@ export class GitHubService extends AgentsmithSupabaseService {
                   repo,
                   path: variablesJsonPath,
                   ref: branchName,
-                }
+                },
               );
 
               // Check if response is a file and has content
@@ -526,15 +541,8 @@ export class GitHubService extends AgentsmithSupabaseService {
                 fileContent.data.type === 'file' &&
                 fileContent.data.content
               ) {
-                const existingContent = Buffer.from(
-                  fileContent.data.content,
-                  'base64'
-                ).toString();
-                const currentContent = JSON.stringify(
-                  version.prompt_variables,
-                  null,
-                  2
-                );
+                const existingContent = Buffer.from(fileContent.data.content, 'base64').toString();
+                const currentContent = JSON.stringify(version.prompt_variables, null, 2);
 
                 if (existingContent !== currentContent) {
                   updateNeededFiles.push({
@@ -544,10 +552,7 @@ export class GitHubService extends AgentsmithSupabaseService {
                 }
               }
             } catch (error) {
-              console.error(
-                `Failed to fetch content for ${variablesJsonPath}`,
-                error
-              );
+              console.error(`Failed to fetch content for ${variablesJsonPath}`, error);
             }
           }
         }
@@ -557,7 +562,7 @@ export class GitHubService extends AgentsmithSupabaseService {
     // If there are missing or outdated files, update the pull request
     if (missingFiles.length > 0 || updateNeededFiles.length > 0) {
       console.log(
-        `Found ${missingFiles.length} missing files and ${updateNeededFiles.length} files needing updates`
+        `Found ${missingFiles.length} missing files and ${updateNeededFiles.length} files needing updates`,
       );
 
       // Update or create files in the pull request
@@ -581,15 +586,12 @@ export class GitHubService extends AgentsmithSupabaseService {
       for (const file of updateNeededFiles) {
         try {
           // First get the current file to get its SHA
-          const currentFile = await octokit.request(
-            'GET /repos/{owner}/{repo}/contents/{path}',
-            {
-              owner,
-              repo,
-              path: file.path,
-              ref: branchName,
-            }
-          );
+          const currentFile = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
+            owner,
+            repo,
+            path: file.path,
+            ref: branchName,
+          });
 
           // Check if response is a file and has sha
           if (
@@ -623,13 +625,7 @@ export type GetInstallationRepositoriesResult = Awaited<
 >;
 
 export type GetProjectRepositoriesForOrganizationResult = Awaited<
-  ReturnType<
-    typeof GitHubService.prototype.getProjectRepositoriesForOrganization
-  >
->;
-
-export type SaveProjectRepositoryResult = Awaited<
-  ReturnType<typeof GitHubService.prototype.saveProjectRepository>
+  ReturnType<typeof GitHubService.prototype.getProjectRepositoriesForOrganization>
 >;
 
 export type GetProjectRepositoryResult = Awaited<

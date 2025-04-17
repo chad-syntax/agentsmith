@@ -36,26 +36,29 @@ export type Database = {
       github_app_installations: {
         Row: {
           created_at: string
-          github_account_id: number
+          github_account_id: number | null
           id: number
-          installation_id: number
+          installation_id: number | null
           organization_id: number
+          status: Database["public"]["Enums"]["github_app_installation_status"]
           updated_at: string
         }
         Insert: {
           created_at?: string
-          github_account_id: number
+          github_account_id?: number | null
           id?: number
-          installation_id: number
+          installation_id?: number | null
           organization_id: number
+          status?: Database["public"]["Enums"]["github_app_installation_status"]
           updated_at?: string
         }
         Update: {
           created_at?: string
-          github_account_id?: number
+          github_account_id?: number | null
           id?: number
-          installation_id?: number
+          installation_id?: number | null
           organization_id?: number
+          status?: Database["public"]["Enums"]["github_app_installation_status"]
           updated_at?: string
         }
         Relationships: [
@@ -285,19 +288,19 @@ export type Database = {
           github_app_installation_id: number
           id: number
           organization_id: number
-          project_id: number
+          project_id: number | null
           repository_full_name: string
           repository_id: number
           repository_name: string
           updated_at: string
         }
         Insert: {
-          agentsmith_folder: string
+          agentsmith_folder?: string
           created_at?: string
           github_app_installation_id: number
           id?: number
           organization_id: number
-          project_id: number
+          project_id?: number | null
           repository_full_name: string
           repository_id: number
           repository_name: string
@@ -309,7 +312,7 @@ export type Database = {
           github_app_installation_id?: number
           id?: number
           organization_id?: number
-          project_id?: number
+          project_id?: number | null
           repository_full_name?: string
           repository_id?: number
           repository_name?: string
@@ -602,6 +605,11 @@ export type Database = {
       }
     }
     Enums: {
+      github_app_installation_status:
+        | "PENDING"
+        | "ACTIVE"
+        | "SUSPENDED"
+        | "DELETED"
       organization_tier: "FREE" | "PRO" | "ENTERPRISE"
       organization_user_role: "ADMIN" | "MEMBER"
       prompt_status: "DRAFT" | "PUBLISHED" | "ARCHIVED"

@@ -15,8 +15,7 @@ const defaultUrl =
 export const metadata = {
   metadataBase: new URL(defaultUrl),
   title: 'Agentsmith - AI Agent Development Platform',
-  description:
-    'Agentsmith is the fastest way to build and iterate on LLM-powered apps',
+  description: 'Agentsmith is the fastest way to build and iterate on LLM-powered apps',
 };
 
 const robotoMono = Roboto_Mono({
