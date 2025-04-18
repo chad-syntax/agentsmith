@@ -17,30 +17,33 @@ export default async function Organization(props: OrganizationProps) {
   const supabase = await createClient();
   const agentsmith = new AgentsmithServices({ supabase });
 
-  const organization = await agentsmith.services.organizations.getOrganizationData(organizationUuid);
+  const organization =
+    await agentsmith.services.organizations.getOrganizationData(organizationUuid);
   if (!organization) {
     return notFound();
   }
 
-  const githubAppInstallation = await agentsmith.services.github.getInstallation(organization.id);
+  const activeGithubAppInstallation = await agentsmith.services.github.getActiveInstallation(
+    organization.id,
+  );
 
   let installationRepositories: GetInstallationRepositoriesResult = [];
   let projectRepositories: GetProjectRepositoriesForOrganizationResult = [];
 
-  if (githubAppInstallation?.installation_id) {
+  if (activeGithubAppInstallation?.installation_id) {
     installationRepositories = await agentsmith.services.github.getInstallationRepositories(
-      githubAppInstallation.installation_id
+      activeGithubAppInstallation.installation_id,
     );
 
     projectRepositories = await agentsmith.services.github.getProjectRepositoriesForOrganization(
-      organization.id
+      organization.id,
     );
   }
 
   return (
     <OrganizationPage
       organization={organization}
-      githubAppInstallation={githubAppInstallation}
+      githubAppInstallation={activeGithubAppInstallation}
       installationRepositories={installationRepositories}
       projectRepositories={projectRepositories}
     />

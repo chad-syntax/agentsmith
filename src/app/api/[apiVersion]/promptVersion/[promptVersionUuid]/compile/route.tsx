@@ -10,15 +10,12 @@ type RequestBody = {
 
 export async function POST(
   request: Request,
-  { params }: { params: Promise<{ promptVersionUuid: string }> }
+  { params }: { params: Promise<{ promptVersionUuid: string }> },
 ) {
   const { promptVersionUuid } = await params;
 
   if (!promptVersionUuid) {
-    return NextResponse.json(
-      { error: 'Prompt Version UUID is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Prompt Version UUID is required' }, { status: 400 });
   }
 
   const apiKeyHeader = request.headers.get('x-api-key');
@@ -35,7 +32,7 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
   }
 
-  const supabase = jwt ? await createJwtClient(jwt) : await createClient();
+  const supabase = jwt ? createJwtClient(jwt) : await createClient();
 
   const agentsmith = new AgentsmithServices({ supabase });
 
@@ -46,14 +43,10 @@ export async function POST(
   }
 
   // Fetch the prompt from Supabase
-  const promptVersion =
-    await agentsmith.services.prompts.getPromptVersionByUuid(promptVersionUuid);
+  const promptVersion = await agentsmith.services.prompts.getPromptVersionByUuid(promptVersionUuid);
 
   if (!promptVersion) {
-    return NextResponse.json(
-      { error: 'Prompt version not found' },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: 'Prompt version not found' }, { status: 404 });
   }
 
   const variables = promptVersion.prompt_variables || [];
@@ -62,15 +55,12 @@ export async function POST(
   try {
     body = await request.json();
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Invalid request body' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
   const missingVariables = agentsmith.services.prompts.getMissingVariables(
     variables,
-    body.variables
+    body.variables,
   );
 
   if (missingVariables.length > 0) {
@@ -79,13 +69,13 @@ export async function POST(
         error: 'Missing required variables',
         missingVariables,
       },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const compiledPrompt = agentsmith.services.prompts.compilePrompt(
     promptVersion.content,
-    body.variables
+    body.variables,
   );
 
   return NextResponse.json({ compiledPrompt }, { status: 200 });

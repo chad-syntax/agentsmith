@@ -42,6 +42,7 @@ export type Database = {
           organization_id: number
           status: Database["public"]["Enums"]["github_app_installation_status"]
           updated_at: string
+          uuid: string
         }
         Insert: {
           created_at?: string
@@ -51,6 +52,7 @@ export type Database = {
           organization_id: number
           status?: Database["public"]["Enums"]["github_app_installation_status"]
           updated_at?: string
+          uuid?: string
         }
         Update: {
           created_at?: string
@@ -60,6 +62,7 @@ export type Database = {
           organization_id?: number
           status?: Database["public"]["Enums"]["github_app_installation_status"]
           updated_at?: string
+          uuid?: string
         }
         Relationships: [
           {

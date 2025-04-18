@@ -3,10 +3,18 @@ import { Database } from '@/app/__generated__/supabase.types';
 import { sha256Hash } from '@/utils/hash';
 import { createSigner } from 'fast-jwt';
 
+type CreateSupabaseTokenOptions = {
+  userEmail: string;
+  authUserId: string;
+  role?: string;
+};
+
 /**
  * Creates a Supabase JWT for a user based on the organization API key
  */
-export function createSupabaseToken(userEmail: string, authUserId: string) {
+export function createSupabaseToken(options: CreateSupabaseTokenOptions) {
+  const { userEmail, authUserId, role = 'authenticated' } = options;
+
   // JWT secret should match Supabase's JWT secret
   // This is typically accessed via environment variable
   const jwtSecret = process.env.SUPABASE_JWT_SECRET;
@@ -29,7 +37,7 @@ export function createSupabaseToken(userEmail: string, authUserId: string) {
     exp,
     sub: authUserId,
     email: userEmail,
-    role: 'authenticated',
+    role,
   };
 
   return signer(payload);
@@ -48,15 +56,12 @@ export const exchangeApiKeyForJwt = async (apiKey: string) => {
 
   const tempClient = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 
-  const { data, error } = await tempClient.rpc(
-    'get_organization_by_api_key_hash',
-    {
-      arg_api_key_hash: apiKeyHash,
-    }
-  );
+  const { data, error } = await tempClient.rpc('get_organization_by_api_key_hash', {
+    arg_api_key_hash: apiKeyHash,
+  });
 
   if (error) {
     console.error('Error getting organization by API key hash', error);
@@ -69,10 +74,27 @@ export const exchangeApiKeyForJwt = async (apiKey: string) => {
 
   const result = data as ApiKeyOrgResult;
 
-  return createSupabaseToken(result.email, result.auth_user_id);
+  const jwt = createSupabaseToken({ userEmail: result.email, authUserId: result.auth_user_id });
+
+  return jwt;
 };
 
-export const createJwtClient = async (jwt: string) => {
+export const getGithubWebhookUserJwt = () => {
+  const GITHUB_WEBHOOK_SERVICE_USER_ID = process.env.GITHUB_WEBHOOK_SERVICE_USER_ID;
+  if (!GITHUB_WEBHOOK_SERVICE_USER_ID) {
+    throw new Error('GITHUB_WEBHOOK_SERVICE_USER_ID is not defined');
+  }
+
+  const jwt = createSupabaseToken({
+    userEmail: 'github_webhook@agentsmith.app',
+    authUserId: GITHUB_WEBHOOK_SERVICE_USER_ID,
+    role: 'github_webhook',
+  });
+
+  return jwt;
+};
+
+export const createJwtClient = (jwt: string) => {
   if (!jwt) {
     throw new Error('JWT is required');
   }
@@ -86,6 +108,6 @@ export const createJwtClient = async (jwt: string) => {
           Authorization: `Bearer ${jwt}`,
         },
       },
-    }
+    },
   );
 };

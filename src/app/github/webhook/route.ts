@@ -1,10 +1,11 @@
 import { NextRequest } from 'next/server';
 import { EmitterWebhookEventName } from '@octokit/webhooks/dist-types/types';
-import { createClient } from '@/lib/supabase/server';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
+import { createJwtClient, getGithubWebhookUserJwt } from '@/lib/supabase/server-api-key';
 
 const handler = async (req: NextRequest) => {
-  const supabase = await createClient();
+  const jwt = getGithubWebhookUserJwt();
+  const supabase = createJwtClient(jwt);
 
   const agentsmith = new AgentsmithServices({ supabase });
 

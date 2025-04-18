@@ -6,10 +6,10 @@ import { NextResponse } from 'next/server';
 export const GET = async (request: Request) => {
   const searchParams = new URL(request.url).searchParams;
 
-  const organizationUuid = searchParams.get('state');
+  const state = searchParams.get('state');
   const installationId = Number(searchParams.get('installation_id'));
 
-  if (!organizationUuid || !installationId) {
+  if (!state || !installationId) {
     return new Response('Invalid parameters', { status: 400 });
   }
 
@@ -18,8 +18,12 @@ export const GET = async (request: Request) => {
   const agentsmith = new AgentsmithServices({ supabase });
 
   try {
+    const { organizationUuid, installationRecordUuid } =
+      agentsmith.services.github.decodeState(state);
+
     const { isValid, githubAppInstallationRecordId } =
       await agentsmith.services.github.verifyInstallation({
+        installationRecordUuid,
         installationId,
         organizationUuid,
       });

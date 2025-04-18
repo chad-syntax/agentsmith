@@ -17,22 +17,17 @@ export default async function ProjectEdit(props: ProjectEditPageProps) {
 
   const agentsmith = new AgentsmithServices({ supabase });
 
-  const projectData =
-    await agentsmith.services.projects.getProjectData(projectUuid);
+  const projectData = await agentsmith.services.projects.getProjectData(projectUuid);
 
   if (!projectData) {
     redirect(routes.studio.home);
   }
 
-  const githubAppInstallation =
-    await agentsmith.services.github.getInstallation(
-      projectData.organization_id
-    );
+  const githubAppInstallation = await agentsmith.services.github.getActiveInstallation(
+    projectData.organization_id,
+  );
 
   return (
-    <ProjectEditPage
-      projectData={projectData}
-      githubAppInstallation={githubAppInstallation}
-    />
+    <ProjectEditPage projectData={projectData} githubAppInstallation={githubAppInstallation} />
   );
 }

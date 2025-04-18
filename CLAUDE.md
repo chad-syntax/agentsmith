@@ -13,7 +13,7 @@
 - **Components**: Use named exports only; default exports only for Next.js page files
 - **Functions**: Declare with const arrow format: `const myFunc = (params: Type) => {}`
 - **Types**: Always explicitly type props as separate types, not inline
-- **File Structure**: 
+- **File Structure**:
   - Components in `/components` folder with max 2 components per file
   - Page components in `/page-components`
 - **Imports**: Use path aliases: `@/` for src, `&/` for lib, `~/` for root

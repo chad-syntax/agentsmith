@@ -7,15 +7,17 @@ import { EmitterWebhookEvent } from '@octokit/webhooks/dist-types/types';
 import { Octokit } from '@octokit/core';
 import { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
 import { GetProjectDataResult } from './ProjectsService';
+import { base64Decode, base64Encode } from '@/utils/base64';
 
 type VerifyInstallationOptions = {
   installationId: number;
+  installationRecordUuid: string;
   organizationUuid: string;
 };
 
-type CreateInstallationOptions = {
+type GetInstallationUrlOptions = {
   organizationUuid: string;
-  installationId: number;
+  installationRecordUuid: string;
 };
 
 type CreateInstallationRepositoriesOptions = {
@@ -24,9 +26,17 @@ type CreateInstallationRepositoriesOptions = {
   installationId: number;
 };
 
+type SaveGithubProviderTokensOptions = {
+  supabaseUserId: string;
+  sessionId: string;
+  providerToken: string;
+  providerRefreshToken: string;
+};
+
 export class GitHubService extends AgentsmithSupabaseService {
   public app: App;
   private appId: number;
+  private githubAppName: string;
 
   constructor(options: AgentsmithSupabaseServiceConstructorOptions) {
     super({ ...options, serviceName: 'github' });
@@ -34,12 +44,14 @@ export class GitHubService extends AgentsmithSupabaseService {
     const appId = process.env.GITHUB_APP_ID!;
     const privateKey = process.env.GITHUB_APP_PRIVATE_KEY!;
     const webhookSecret = process.env.GITHUB_APP_WEBHOOK_SECRET!;
+    const githubAppName = process.env.GITHUB_APP_NAME!;
 
-    if (!appId || !privateKey || !webhookSecret) {
+    if (!appId || !privateKey || !webhookSecret || !githubAppName) {
       throw new Error('GitHub app credentials not found');
     }
 
     this.appId = Number(appId);
+    this.githubAppName = githubAppName;
 
     this.app = new App({
       appId,
@@ -49,8 +61,24 @@ export class GitHubService extends AgentsmithSupabaseService {
       },
     });
 
-    this.app.webhooks.on('installation', async ({ payload }) => {
-      await this.handleInstallationWebhook(payload);
+    this.app.webhooks.on('installation.suspend', async ({ payload }) => {
+      await this.handleInstallationSuspended(payload);
+    });
+
+    this.app.webhooks.on('installation.unsuspend', async ({ payload }) => {
+      await this.handleInstallationUnsuspended(payload);
+    });
+
+    this.app.webhooks.on('installation.deleted', async ({ payload }) => {
+      await this.handleInstallationDeleted(payload);
+    });
+
+    this.app.webhooks.on('installation_repositories.added', async ({ payload }) => {
+      await this.handleInstallationRepositoriesAdded(payload);
+    });
+
+    this.app.webhooks.on('installation_repositories.removed', async ({ payload }) => {
+      await this.handleInstallationRepositoriesRemoved(payload);
     });
 
     this.app.webhooks.on('pull_request.opened', async ({ payload }) => {
@@ -81,6 +109,13 @@ export class GitHubService extends AgentsmithSupabaseService {
     });
   }
 
+  async saveGithubProviderTokens(options: SaveGithubProviderTokensOptions) {
+    const { supabaseUserId, providerToken, providerRefreshToken } = options;
+
+    // TODO
+    // save these tokens to the vault, link those vault ids to their agentsmith_user records
+  }
+
   async createAppInstallationRecord(organizationUuid: string) {
     const organizationId = await this.services.organizations.getOrganizationId(organizationUuid);
 
@@ -88,17 +123,40 @@ export class GitHubService extends AgentsmithSupabaseService {
       throw new Error(`Organization not found: ${organizationUuid}`);
     }
 
-    const { error } = await this.supabase.from('github_app_installations').insert({
-      organization_id: organizationId,
-    });
+    const { data, error } = await this.supabase
+      .from('github_app_installations')
+      .insert({
+        organization_id: organizationId,
+      })
+      .select('uuid')
+      .single();
 
     if (error) {
       throw new Error(`Failed to create installation record: ${error.message}`);
     }
+
+    return data;
+  }
+
+  getInstallationUrl(options: GetInstallationUrlOptions) {
+    const { organizationUuid, installationRecordUuid } = options;
+
+    const state = base64Encode(JSON.stringify({ organizationUuid, installationRecordUuid }));
+
+    const url = `https://github.com/apps/${this.githubAppName}/installations/new?state=${state}`;
+
+    return url;
+  }
+
+  decodeState(state: string) {
+    const decodedState = base64Decode(state);
+    const parsedState = JSON.parse(decodedState);
+
+    return parsedState;
   }
 
   async verifyInstallation(options: VerifyInstallationOptions) {
-    const { installationId, organizationUuid } = options;
+    const { installationId, installationRecordUuid, organizationUuid } = options;
 
     const {
       data: { session },
@@ -118,14 +176,16 @@ export class GitHubService extends AgentsmithSupabaseService {
       },
     });
 
-    const isValidInstallationId = response.data.installations.some(
+    const targetInstallation = response.data.installations.find(
       (installation) => installation.app_id === this.appId && installation.id === installationId,
     );
 
+    const isValidInstallationId = targetInstallation !== undefined;
+
     const { data, error } = await this.supabase
       .from('github_app_installations')
-      .select('id, organizations(uuid)')
-      .eq('installation_id', installationId)
+      .select('id, organizations(id, uuid)')
+      .eq('uuid', installationRecordUuid)
       .single();
 
     if (error) {
@@ -137,9 +197,17 @@ export class GitHubService extends AgentsmithSupabaseService {
     const isValid = isValidInstallationId && isValidOrganization;
 
     if (isValid) {
+      const githubAccountId = targetInstallation!.account!.id;
+
       const { error } = await this.supabase
         .from('github_app_installations')
-        .update({ status: 'ACTIVE' });
+        .update({
+          status: 'ACTIVE',
+          github_account_id: githubAccountId,
+          installation_id: installationId,
+          organization_id: data.organizations.id,
+        })
+        .eq('uuid', installationRecordUuid);
 
       if (error) {
         throw new Error(`Failed to update installation status: ${error.message}`);
@@ -149,11 +217,12 @@ export class GitHubService extends AgentsmithSupabaseService {
     return { isValid, githubAppInstallationRecordId: data.id };
   }
 
-  async getInstallation(organizationId: number) {
+  async getActiveInstallation(organizationId: number) {
     const { data, error } = await this.supabase
       .from('github_app_installations')
       .select('*')
       .eq('organization_id', organizationId)
+      .eq('status', 'ACTIVE')
       .maybeSingle();
 
     if (error) {
@@ -167,56 +236,121 @@ export class GitHubService extends AgentsmithSupabaseService {
     return data;
   }
 
-  async handleInstallationWebhook(payload: EmitterWebhookEvent<'installation'>['payload']) {
-    console.log('handleInstallationWebhook', payload);
+  private async handleInstallationDeleted(
+    payload: EmitterWebhookEvent<'installation.deleted'>['payload'],
+  ) {
+    try {
+      const { error } = await this.supabase
+        .from('github_app_installations')
+        .update({ status: 'DELETED' })
+        .eq('installation_id', payload.installation.id);
+
+      if (error) {
+        console.error('Failed to update installation status to DELETED:', error);
+        throw error;
+      }
+    } catch (e) {
+      console.error(`installation.deleted handler failed with error: ${(<Error>e).message}`);
+    }
   }
 
-  async createInstallationRecord(options: CreateInstallationOptions) {
-    const { organizationUuid, installationId } = options;
+  private async handleInstallationSuspended(
+    payload: EmitterWebhookEvent<'installation.suspend'>['payload'],
+  ) {
+    try {
+      const { error } = await this.supabase
+        .from('github_app_installations')
+        .update({ status: 'SUSPENDED' })
+        .eq('installation_id', payload.installation.id);
 
-    const { data, error } = await this.supabase
-      .from('organizations')
-      .select('id')
-      .eq('uuid', organizationUuid)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Failed to fetch organization', error);
-      throw error;
+      if (error) {
+        console.error('Failed to update installation status to SUSPENDED:', error);
+      }
+    } catch (e) {
+      console.error(`installation.suspended handler failed with error: ${(<Error>e).message}`);
     }
+  }
 
-    if (!data) {
-      console.error('Organization not found, cannot create github installation record');
-      throw new Error('Organization not found, cannot create github installation record');
+  private async handleInstallationUnsuspended(
+    payload: EmitterWebhookEvent<'installation.unsuspend'>['payload'],
+  ) {
+    try {
+      const { error } = await this.supabase
+        .from('github_app_installations')
+        .update({ status: 'ACTIVE' })
+        .eq('installation_id', payload.installation.id);
+
+      if (error) {
+        console.error('Failed to update installation status to ACTIVE:', error);
+        throw error;
+      }
+    } catch (e) {
+      console.error(`installation.unsuspend handler failed with error: ${(<Error>e).message}`);
     }
+  }
 
-    const {
-      data: { session },
-    } = await this.supabase.auth.getSession();
+  private async handleInstallationRepositoriesAdded(
+    payload: EmitterWebhookEvent<'installation_repositories.added'>['payload'],
+  ) {
+    try {
+      const { repositories_added, installation } = payload;
+      if (!repositories_added?.length) return;
 
-    if (!session) {
-      console.error('No session found, cannot create github installation record');
-      throw new Error('No session found, cannot create github installation record');
+      const { data: installationRecord } = await this.supabase
+        .from('github_app_installations')
+        .select('id, organizations(id)')
+        .eq('installation_id', installation.id)
+        .single();
+
+      if (!installationRecord) {
+        throw new Error(`No installation record found for installation ID ${installation.id}`);
+      }
+
+      const { error } = await this.supabase.from('project_repositories').insert(
+        repositories_added.map((repo) => ({
+          github_app_installation_id: installationRecord.id,
+          organization_id: installationRecord.organizations.id,
+          repository_id: repo.id,
+          repository_name: repo.name,
+          repository_full_name: repo.full_name,
+        })),
+      );
+
+      if (error) {
+        console.error('Failed to insert repository records:', error);
+        throw error;
+      }
+    } catch (e) {
+      console.error(
+        `installation_repositories.added handler failed with error: ${(<Error>e).message}`,
+      );
     }
+  }
 
-    const githubAccountId = session.user.user_metadata.provider_id;
+  private async handleInstallationRepositoriesRemoved(
+    payload: EmitterWebhookEvent<'installation_repositories.removed'>['payload'],
+  ) {
+    try {
+      const { repositories_removed } = payload;
+      if (!repositories_removed?.length) return;
 
-    const { data: installation, error: installationError } = await this.supabase
-      .from('github_app_installations')
-      .insert({
-        github_account_id: githubAccountId,
-        organization_id: data.id,
-        installation_id: installationId,
-      })
-      .select('*')
-      .single();
+      const { error } = await this.supabase
+        .from('project_repositories')
+        .delete()
+        .in(
+          'repository_id',
+          repositories_removed.map((repo) => repo.id),
+        );
 
-    if (installationError) {
-      console.error('Failed to create github installation record', installationError);
-      throw installationError;
+      if (error) {
+        console.error('Failed to delete repository records:', error);
+        throw error;
+      }
+    } catch (e) {
+      console.error(
+        `installation_repositories.removed handler failed with error: ${(<Error>e).message}`,
+      );
     }
-
-    return installation;
   }
 
   async getInstallationRepositories(installationId: number) {
@@ -630,6 +764,10 @@ export type GetProjectRepositoriesForOrganizationResult = Awaited<
 
 export type GetProjectRepositoryResult = Awaited<
   ReturnType<typeof GitHubService.prototype.getProjectRepository>
+>;
+
+export type CreateAppInstallationRecordResult = Awaited<
+  ReturnType<typeof GitHubService.prototype.createAppInstallationRecord>
 >;
 
 export type FileToSync = {

@@ -1,12 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  IconClipboard,
-  IconNotebook,
-  IconPencil,
-  IconPlus,
-} from '@tabler/icons-react';
+import { IconClipboard, IconNotebook, IconPencil, IconPlus } from '@tabler/icons-react';
 import { useApp } from '@/app/providers/app';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
@@ -25,20 +20,14 @@ import { ConnectProjectModal } from '@/components/ConnectProjectModal';
 
 type OrganizationPageProps = {
   organization: NonNullable<GetOrganizationDataResult>;
-  githubAppInstallation:
-    | Database['public']['Tables']['github_app_installations']['Row']
-    | null;
+  githubAppInstallation: Database['public']['Tables']['github_app_installations']['Row'] | null;
   installationRepositories: GetInstallationRepositoriesResult;
   projectRepositories: GetProjectRepositoriesForOrganizationResult;
 };
 
 export const OrganizationPage = (props: OrganizationPageProps) => {
-  const {
-    organization,
-    githubAppInstallation,
-    installationRepositories,
-    projectRepositories,
-  } = props;
+  const { organization, githubAppInstallation, installationRepositories, projectRepositories } =
+    props;
 
   const { hasOpenRouterKey, isOrganizationAdmin } = useApp();
 
@@ -82,11 +71,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
       </div>
       <Button
         onClick={handleCopyLink}
-        className={
-          isLinkCopied
-            ? 'bg-green-500 hover:bg-green-600 text-white'
-            : undefined
-        }
+        className={isLinkCopied ? 'bg-green-500 hover:bg-green-600 text-white' : undefined}
       >
         {isLinkCopied ? 'Link Copied!' : 'Copy Invite Link'}
       </Button>
@@ -95,15 +80,8 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
         <H2>Projects</H2>
         <div className="flex flex-col gap-2">
           {organization.projects.map((project) => (
-            <Button
-              key={project.id}
-              variant="link"
-              asChild
-              className="justify-start"
-            >
-              <Link href={routes.studio.project(project.uuid)}>
-                {project.name}
-              </Link>
+            <Button key={project.id} variant="link" asChild className="justify-start">
+              <Link href={routes.studio.project(project.uuid)}>{project.name}</Link>
             </Button>
           ))}
         </div>
@@ -112,10 +90,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
         <H2>Organization Users</H2>
         <div className="flex flex-col gap-2">
           {organization.organization_users.map((user) => (
-            <div
-              key={user.id}
-              className="flex items-center gap-2 p-2 border rounded"
-            >
+            <div key={user.id} className="flex items-center gap-2 p-2 border rounded">
               <div className="flex-1">
                 <P className="text-sm text-muted-foreground">{user.role}</P>
                 <P className="font-medium">{user.agentsmith_users.email}</P>
@@ -139,8 +114,8 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
         </P>
         {!isOrganizationAdmin ? (
           <P>
-            You must be an admin to connect to GitHub. Please ask your
-            organization admin to connect to GitHub.
+            You must be an admin to connect to GitHub. Please ask your organization admin to connect
+            to GitHub.
           </P>
         ) : githubAppInstallation ? (
           <Button variant="link" asChild className="text-xs p-0">
@@ -153,9 +128,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
             </a>
           </Button>
         ) : (
-          <Button onClick={() => installGithubApp(organization.uuid)}>
-            Install GitHub App
-          </Button>
+          <Button onClick={() => installGithubApp(organization.uuid)}>Install GitHub App</Button>
         )}
       </div>
       {githubAppInstallation && (
@@ -170,23 +143,19 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
               />
               {installationRepositories.map((repo) => {
                 const connectedProject = projectRepositories.find(
-                  (projectRepo) => projectRepo.repository_id === repo.id
+                  (projectRepo) => projectRepo.repository_id === repo.id,
                 );
 
                 return (
                   <div key={repo.id} className="flex items-center gap-2">
                     <IconNotebook />
                     <Button variant="link" asChild className="text-xs p-0">
-                      <a
-                        href={repo.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
+                      <a href={repo.html_url} target="_blank" rel="noopener noreferrer">
                         {repo.full_name}
                       </a>
                     </Button>
                     {connectedProject ? (
-                      <span>Connected to {connectedProject.projects.name}</span>
+                      <span>Connected to {connectedProject?.projects?.name}</span>
                     ) : (
                       <Button
                         className="text-xs text-accent hover:text-accent"
@@ -204,8 +173,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
           ) : (
             <div>
               <P className="text-muted-foreground italic">
-                No repositories accessible, please check your GitHub App
-                installation permissions.
+                No repositories accessible, please check your GitHub App installation permissions.
               </P>
               <Button variant="link" asChild className="text-xs p-0">
                 <a
@@ -229,40 +197,30 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
         </P>
         {!isOrganizationAdmin ? (
           <P>
-            You must be an admin to connect to Openrouter. Please ask your
-            organization admin to connect to Openrouter.
+            You must be an admin to connect to Openrouter. Please ask your organization admin to
+            connect to Openrouter.
           </P>
         ) : hasOpenRouterKey ? (
           <Button variant="link" asChild className="text-xs p-0">
-            <a
-              href="https://openrouter.ai/settings/keys"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
+            <a href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener noreferrer">
               View your keys in Openrouter
             </a>
           </Button>
         ) : (
-          <Button onClick={() => connectOpenrouter(organization.uuid)}>
-            Connect Openrouter
-          </Button>
+          <Button onClick={() => connectOpenrouter(organization.uuid)}>Connect Openrouter</Button>
         )}
       </div>
       <div>
         <H2 className="mb-4">API Key</H2>
         <P className="pb-4">
-          Use this API key to authenticate requests to the Agentsmith API from
-          your applications.
+          Use this API key to authenticate requests to the Agentsmith API from your applications.
         </P>
         <div className="mb-4">
-          <ApiKeyReveal
-            organizationUuid={organization.uuid}
-            keyName="SDK_API_KEY"
-          />
+          <ApiKeyReveal organizationUuid={organization.uuid} keyName="SDK_API_KEY" />
         </div>
         <P className="text-sm text-muted-foreground">
-          This API key grants access to run prompts and other operations as your
-          organization. Keep it secure and never expose it in client-side code.
+          This API key grants access to run prompts and other operations as your organization. Keep
+          it secure and never expose it in client-side code.
         </P>
       </div>
     </div>
