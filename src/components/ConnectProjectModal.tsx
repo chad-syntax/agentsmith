@@ -1,17 +1,6 @@
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from '@/components/ui/form';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -25,11 +14,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useApp } from '@/app/providers/app';
 import { connectProject } from '@/actions/connect-project';
-import { GetInstallationRepositoriesResult } from '@/lib/GitHubService';
+import { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubService';
 
 const formSchema = z.object({
   projectId: z.string(),
-  repositoryId: z.number(),
+  projectRepositoryId: z.number(),
   agentsmithFolder: z.string().default('agentsmith'),
 });
 
@@ -38,11 +27,11 @@ type FormValues = z.infer<typeof formSchema>;
 interface ConnectProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  installationRepositories: GetInstallationRepositoriesResult;
+  projectRepositories: GetProjectRepositoriesForOrganizationResult;
 }
 
 export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
-  const { open, onOpenChange, installationRepositories } = props;
+  const { open, onOpenChange, projectRepositories } = props;
   const { selectedOrganization } = useApp();
 
   const form = useForm<FormValues>({
@@ -57,7 +46,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
       await connectProject({
         projectUuid: values.projectId,
         agentsmithFolder: values.agentsmithFolder,
-        repositoryId: values.repositoryId,
+        projectRepositoryId: values.projectRepositoryId,
       });
       onOpenChange(false);
     } catch (error) {
@@ -66,11 +55,11 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
   };
 
   const handleRepositoryChange = (repoId: string) => {
-    const repository = installationRepositories.find(
-      (repo) => repo.id === Number(repoId)
+    const repository = projectRepositories.find(
+      (projectRepository) => projectRepository.id === Number(repoId),
     );
     if (repository) {
-      form.setValue('repositoryId', repository.id);
+      form.setValue('projectRepositoryId', repository.id);
     }
   };
 
@@ -89,10 +78,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Project</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a project" />
@@ -112,7 +98,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
 
             <FormField
               control={form.control}
-              name="repositoryId"
+              name="projectRepositoryId"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Repository</FormLabel>
@@ -126,9 +112,12 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {installationRepositories.map((repo) => (
-                        <SelectItem key={repo.id} value={repo.id.toString()}>
-                          {repo.full_name}
+                      {projectRepositories.map((projectRepository) => (
+                        <SelectItem
+                          key={projectRepository.id}
+                          value={projectRepository.id.toString()}
+                        >
+                          {projectRepository.repository_full_name}
                         </SelectItem>
                       ))}
                     </SelectContent>

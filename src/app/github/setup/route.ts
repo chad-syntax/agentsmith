@@ -28,8 +28,10 @@ export const GET = async (request: Request) => {
         organizationUuid,
       });
 
-    if (!isValid) {
-      return new Response('Invalid installation', { status: 400 });
+    if (!isValid || !githubAppInstallationRecordId) {
+      return NextResponse.redirect(
+        new URL(routes.error('Invalid Installation, please uninstall and try again'), request.url),
+      );
     }
 
     await agentsmith.services.github.createInstallationRepositories({

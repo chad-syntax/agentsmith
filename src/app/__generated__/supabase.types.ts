@@ -36,7 +36,6 @@ export type Database = {
       github_app_installations: {
         Row: {
           created_at: string
-          github_account_id: number | null
           id: number
           installation_id: number | null
           organization_id: number
@@ -46,7 +45,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          github_account_id?: number | null
           id?: number
           installation_id?: number | null
           organization_id: number
@@ -56,7 +54,6 @@ export type Database = {
         }
         Update: {
           created_at?: string
-          github_account_id?: number | null
           id?: number
           installation_id?: number | null
           organization_id?: number

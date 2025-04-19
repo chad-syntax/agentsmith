@@ -33,9 +33,14 @@ type SaveGithubProviderTokensOptions = {
   providerRefreshToken: string;
 };
 
+type ConnectProjectRepositoryOptions = {
+  projectId: number;
+  projectRepositoryId: number;
+  agentsmithFolder?: string;
+};
+
 export class GitHubService extends AgentsmithSupabaseService {
   public app: App;
-  private appId: number;
   private githubAppName: string;
 
   constructor(options: AgentsmithSupabaseServiceConstructorOptions) {
@@ -50,7 +55,6 @@ export class GitHubService extends AgentsmithSupabaseService {
       throw new Error('GitHub app credentials not found');
     }
 
-    this.appId = Number(appId);
     this.githubAppName = githubAppName;
 
     this.app = new App({
@@ -158,29 +162,20 @@ export class GitHubService extends AgentsmithSupabaseService {
   async verifyInstallation(options: VerifyInstallationOptions) {
     const { installationId, installationRecordUuid, organizationUuid } = options;
 
-    const {
-      data: { session },
-    } = await this.supabase.auth.getSession();
+    try {
+      await this.getInstallationRepositories(installationId);
+    } catch (error: any) {
+      // if we get a 404 error, means the installation does not exist
+      console.error('Error fetching installation repositories:', error.status);
 
-    if (!session) {
-      throw new Error('No session found, cannot verify installation');
+      if (error.status === 404) {
+        return {
+          isValid: false,
+        };
+      }
+
+      throw error;
     }
-
-    const octokit = new Octokit({
-      auth: session.provider_token,
-    });
-
-    const response = await octokit.request('GET /user/installations', {
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-    });
-
-    const targetInstallation = response.data.installations.find(
-      (installation) => installation.app_id === this.appId && installation.id === installationId,
-    );
-
-    const isValidInstallationId = targetInstallation !== undefined;
 
     const { data, error } = await this.supabase
       .from('github_app_installations')
@@ -189,21 +184,17 @@ export class GitHubService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      throw new Error(`Failed to verify installation: ${error.message}`);
+      console.error('Error fetching installation:', error.message);
+      throw new Error('Failed to verify installtion, organization not found for installation');
     }
 
     const isValidOrganization = data.organizations.uuid === organizationUuid;
 
-    const isValid = isValidInstallationId && isValidOrganization;
-
-    if (isValid) {
-      const githubAccountId = targetInstallation!.account!.id;
-
+    if (isValidOrganization) {
       const { error } = await this.supabase
         .from('github_app_installations')
         .update({
           status: 'ACTIVE',
-          github_account_id: githubAccountId,
           installation_id: installationId,
           organization_id: data.organizations.id,
         })
@@ -214,7 +205,7 @@ export class GitHubService extends AgentsmithSupabaseService {
       }
     }
 
-    return { isValid, githubAppInstallationRecordId: data.id };
+    return { isValid: isValidOrganization, githubAppInstallationRecordId: data.id };
   }
 
   async getActiveInstallation(organizationId: number) {
@@ -231,6 +222,28 @@ export class GitHubService extends AgentsmithSupabaseService {
         error,
       );
       throw error;
+    }
+
+    return data;
+  }
+
+  async connectProjectRepository(options: ConnectProjectRepositoryOptions) {
+    const { projectId, projectRepositoryId, agentsmithFolder } = options;
+    const { data, error } = await this.supabase
+      .from('project_repositories')
+      .update({
+        project_id: projectId,
+        agentsmith_folder: agentsmithFolder,
+      })
+      .eq('id', projectRepositoryId)
+      .single();
+
+    if (error) {
+      console.error(
+        `Failed to connect project ${projectId} to repository ${projectRepositoryId}`,
+        error,
+      );
+      throw new Error('Failed to connect project to repository');
     }
 
     return data;
@@ -362,8 +375,8 @@ export class GitHubService extends AgentsmithSupabaseService {
   async getProjectRepositoriesForOrganization(organizationId: number) {
     const { data, error } = await this.supabase
       .from('project_repositories')
-      .select('*, projects!inner(organization_id, name)')
-      .eq('projects.organization_id', organizationId);
+      .select('*, organizations!inner(id), projects(uuid, name)')
+      .eq('organizations.id', organizationId);
 
     if (error) {
       console.error('Failed to fetch project repositories for organization', error);

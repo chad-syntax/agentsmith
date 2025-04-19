@@ -23,18 +23,14 @@ export default async function Organization(props: OrganizationProps) {
     return notFound();
   }
 
+  // TODO maybe fetch all, not just active and render the installation status
   const activeGithubAppInstallation = await agentsmith.services.github.getActiveInstallation(
     organization.id,
   );
 
-  let installationRepositories: GetInstallationRepositoriesResult = [];
   let projectRepositories: GetProjectRepositoriesForOrganizationResult = [];
 
   if (activeGithubAppInstallation?.installation_id) {
-    installationRepositories = await agentsmith.services.github.getInstallationRepositories(
-      activeGithubAppInstallation.installation_id,
-    );
-
     projectRepositories = await agentsmith.services.github.getProjectRepositoriesForOrganization(
       organization.id,
     );
@@ -44,7 +40,6 @@ export default async function Organization(props: OrganizationProps) {
     <OrganizationPage
       organization={organization}
       githubAppInstallation={activeGithubAppInstallation}
-      installationRepositories={installationRepositories}
       projectRepositories={projectRepositories}
     />
   );

@@ -12,22 +12,17 @@ import { ApiKeyReveal } from '@/components/ApiKeyReveal';
 import { GetOrganizationDataResult } from '@/lib/OrganizationsService';
 import { Database } from '@/app/__generated__/supabase.types';
 import { installGithubApp } from '@/app/actions/github';
-import {
-  GetInstallationRepositoriesResult,
-  GetProjectRepositoriesForOrganizationResult,
-} from '@/lib/GitHubService';
+import { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubService';
 import { ConnectProjectModal } from '@/components/ConnectProjectModal';
 
 type OrganizationPageProps = {
   organization: NonNullable<GetOrganizationDataResult>;
   githubAppInstallation: Database['public']['Tables']['github_app_installations']['Row'] | null;
-  installationRepositories: GetInstallationRepositoriesResult;
   projectRepositories: GetProjectRepositoriesForOrganizationResult;
 };
 
 export const OrganizationPage = (props: OrganizationPageProps) => {
-  const { organization, githubAppInstallation, installationRepositories, projectRepositories } =
-    props;
+  const { organization, githubAppInstallation, projectRepositories } = props;
 
   const { hasOpenRouterKey, isOrganizationAdmin } = useApp();
 
@@ -134,41 +129,46 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
       {githubAppInstallation && (
         <div>
           <H2 className="mb-4">GitHub App Installation Repositories</H2>
-          {installationRepositories.length > 0 ? (
+          {projectRepositories.length > 0 ? (
             <div className="flex flex-col gap-2">
               <ConnectProjectModal
                 open={connectProjectModalOpen}
                 onOpenChange={setConnectProjectModalOpen}
-                installationRepositories={installationRepositories}
+                projectRepositories={projectRepositories}
               />
-              {installationRepositories.map((repo) => {
-                const connectedProject = projectRepositories.find(
-                  (projectRepo) => projectRepo.repository_id === repo.id,
-                );
-
-                return (
-                  <div key={repo.id} className="flex items-center gap-2">
-                    <IconNotebook />
-                    <Button variant="link" asChild className="text-xs p-0">
-                      <a href={repo.html_url} target="_blank" rel="noopener noreferrer">
-                        {repo.full_name}
-                      </a>
-                    </Button>
-                    {connectedProject ? (
-                      <span>Connected to {connectedProject?.projects?.name}</span>
-                    ) : (
-                      <Button
-                        className="text-xs text-accent hover:text-accent"
-                        variant="outline"
-                        onClick={() => setConnectProjectModalOpen(true)}
-                      >
-                        <IconPlus className="h-4 w-4" />
-                        Connect to Project
+              {projectRepositories.map((projectRepository) => (
+                <div key={projectRepository.id} className="flex items-center gap-2">
+                  <IconNotebook />
+                  <Button variant="link" asChild className="text-xs p-0">
+                    <a
+                      href={`https://github.com/${projectRepository.repository_full_name}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {projectRepository.repository_full_name}
+                    </a>
+                  </Button>
+                  {projectRepository.projects ? (
+                    <div className="text-xs">
+                      Connected to{' '}
+                      <Button variant="link" asChild className="text-xs p-0">
+                        <Link href={routes.studio.project(projectRepository.projects.uuid)}>
+                          {projectRepository.projects.name}
+                        </Link>
                       </Button>
-                    )}
-                  </div>
-                );
-              })}
+                    </div>
+                  ) : (
+                    <Button
+                      className="text-xs text-accent hover:text-accent"
+                      variant="outline"
+                      onClick={() => setConnectProjectModalOpen(true)}
+                    >
+                      <IconPlus className="h-4 w-4" />
+                      Connect to Project
+                    </Button>
+                  )}
+                </div>
+              ))}
             </div>
           ) : (
             <div>
