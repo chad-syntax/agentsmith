@@ -23,6 +23,7 @@ export async function connectProject(options: ConnectProjectOptions) {
 
   await agentsmith.services.github.connectProjectRepository({
     projectId: project.id,
+    projectUuid,
     agentsmithFolder,
     projectRepositoryId,
   });

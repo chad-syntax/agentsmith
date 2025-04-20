@@ -10,9 +10,9 @@ import {
   fetchFreeOpenrouterModels,
   DEFAULT_OPENROUTER_MODEL,
   MAX_OPENROUTER_MODELS,
-  OPENROUTER_COMPLETIONS_URL,
   OPENROUTER_HEADERS,
 } from './openrouter';
+import { routes } from '@/utils/routes';
 import { ORGANIZATION_KEYS } from '@/app/constants';
 import { compareSemanticVersions } from '@/utils/versioning';
 
@@ -39,9 +39,7 @@ export class PromptsService extends AgentsmithSupabaseService {
   public async getPromptVersionByUuid(promptVersionUuid: string) {
     const { data, error } = await this.supabase
       .from('prompt_versions')
-      .select(
-        '*, prompt_variables(*), prompts(*, projects(id, uuid, organizations(id, uuid)))'
-      )
+      .select('*, prompt_variables(*), prompts(*, projects(id, uuid, organizations(id, uuid)))')
       .eq('uuid', promptVersionUuid)
       .single();
 
@@ -71,9 +69,7 @@ export class PromptsService extends AgentsmithSupabaseService {
   public async getPromptsByProjectId(projectId: number) {
     const { data, error } = await this.supabase
       .from('prompts')
-      .select(
-        '*, prompt_versions(*, prompt_variables(*)), projects(id, organizations(uuid))'
-      )
+      .select('*, prompt_versions(*, prompt_variables(*)), projects(id, organizations(uuid))')
       .eq('project_id', projectId);
 
     if (error) {
@@ -86,7 +82,7 @@ export class PromptsService extends AgentsmithSupabaseService {
 
   public getMissingVariables = (
     variables: PromptVariable[],
-    variablesToCheck: Record<string, string | number | boolean>
+    variablesToCheck: Record<string, string | number | boolean>,
   ) => {
     const missingVariables = variables
       .filter((v) => v.required)
@@ -98,7 +94,7 @@ export class PromptsService extends AgentsmithSupabaseService {
 
   public compilePrompt = (
     promptContent: string,
-    variables: Record<string, string | number | boolean>
+    variables: Record<string, string | number | boolean>,
   ) => {
     nunjucks.configure({ autoescape: false });
     return nunjucks.renderString(promptContent, variables);
@@ -142,18 +138,14 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     if (publishedVersions.length > 0) {
       // Sort published versions by semantic version (highest first)
-      return publishedVersions.sort((a, b) =>
-        compareSemanticVersions(b.version, a.version)
-      )[0];
+      return publishedVersions.sort((a, b) => compareSemanticVersions(b.version, a.version))[0];
     }
 
     // If no published versions, return the latest draft by semantic version
     const draftVersions = data.filter((v) => v.status === 'DRAFT');
 
     if (draftVersions.length > 0) {
-      return draftVersions.sort((a, b) =>
-        compareSemanticVersions(b.version, a.version)
-      )[0];
+      return draftVersions.sort((a, b) => compareSemanticVersions(b.version, a.version))[0];
     }
 
     // If no data is categorized (shouldn't happen), just return the first item
@@ -201,7 +193,7 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     if (freeModelsOnlyEnabled) {
       console.log(
-        'FREE_MODELS_ONLY is enabled, all completions will be made with a random free model'
+        'FREE_MODELS_ONLY is enabled, all completions will be made with a random free model',
       );
     }
 
@@ -214,9 +206,7 @@ export class PromptsService extends AgentsmithSupabaseService {
             .sort(() => 0.5 - Math.random())
             .slice(0, MAX_OPENROUTER_MODELS)
             .map((m) => m.id)
-        : ((targetVersion.config as CompletionConfig)?.models ?? [
-            DEFAULT_OPENROUTER_MODEL,
-          ]),
+        : ((targetVersion.config as CompletionConfig)?.models ?? [DEFAULT_OPENROUTER_MODEL]),
     };
 
     const logEntry = await this.services.llmLogs.createLogEntry({
@@ -234,7 +224,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       const { value: openrouterApiKey, error } =
         await this.services.organizations.getOrganizationKeySecret(
           prompt.projects.organizations.uuid,
-          ORGANIZATION_KEYS.OPENROUTER_API_KEY
+          ORGANIZATION_KEYS.OPENROUTER_API_KEY,
         );
 
       if (error) {
@@ -245,7 +235,7 @@ export class PromptsService extends AgentsmithSupabaseService {
         throw new Error('OpenRouter API key not found');
       }
 
-      const response = await fetch(OPENROUTER_COMPLETIONS_URL, {
+      const response = await fetch(routes.openrouter.chatCompletions, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${openrouterApiKey}`,
@@ -261,10 +251,7 @@ export class PromptsService extends AgentsmithSupabaseService {
 
       const completion = await response.json();
 
-      await this.services.llmLogs.updateLogWithCompletion(
-        logEntry.uuid,
-        completion
-      );
+      await this.services.llmLogs.updateLogWithCompletion(logEntry.uuid, completion);
 
       return { completion, logUuid: logEntry.uuid };
     } catch (error) {

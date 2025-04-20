@@ -112,10 +112,14 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
             You must be an admin to connect to GitHub. Please ask your organization admin to connect
             to GitHub.
           </P>
-        ) : githubAppInstallation ? (
+        ) : !githubAppInstallation?.installation_id ? (
+          <P>
+            App installation process not completed, please uninstall and reinstall the GitHub App.
+          </P>
+        ) : githubAppInstallation?.installation_id ? (
           <Button variant="link" asChild className="text-xs p-0">
             <a
-              href={`https://github.com/settings/installations/${githubAppInstallation.installation_id}`}
+              href={routes.github.installation(githubAppInstallation.installation_id)}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -126,7 +130,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
           <Button onClick={() => installGithubApp(organization.uuid)}>Install GitHub App</Button>
         )}
       </div>
-      {githubAppInstallation && (
+      {githubAppInstallation?.installation_id && (
         <div>
           <H2 className="mb-4">GitHub App Installation Repositories</H2>
           {projectRepositories.length > 0 ? (
@@ -141,7 +145,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
                   <IconNotebook />
                   <Button variant="link" asChild className="text-xs p-0">
                     <a
-                      href={`https://github.com/${projectRepository.repository_full_name}`}
+                      href={routes.github.repository(projectRepository.repository_full_name)}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
@@ -177,7 +181,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
               </P>
               <Button variant="link" asChild className="text-xs p-0">
                 <a
-                  href={`https://github.com/settings/installations/${githubAppInstallation.installation_id}`}
+                  href={routes.github.installation(githubAppInstallation.installation_id)}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -202,7 +206,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
           </P>
         ) : hasOpenRouterKey ? (
           <Button variant="link" asChild className="text-xs p-0">
-            <a href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener noreferrer">
+            <a href={routes.openrouter.settingsKeys} target="_blank" rel="noopener noreferrer">
               View your keys in Openrouter
             </a>
           </Button>

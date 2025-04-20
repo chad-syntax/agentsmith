@@ -8,6 +8,7 @@ import { Octokit } from '@octokit/core';
 import { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
 import { GetProjectDataResult } from './ProjectsService';
 import { base64Decode, base64Encode } from '@/utils/base64';
+import { routes } from '@/utils/routes';
 
 type VerifyInstallationOptions = {
   installationId: number;
@@ -35,6 +36,7 @@ type SaveGithubProviderTokensOptions = {
 
 type ConnectProjectRepositoryOptions = {
   projectId: number;
+  projectUuid: string;
   projectRepositoryId: number;
   agentsmithFolder?: string;
 };
@@ -147,7 +149,7 @@ export class GitHubService extends AgentsmithSupabaseService {
 
     const state = base64Encode(JSON.stringify({ organizationUuid, installationRecordUuid }));
 
-    const url = `https://github.com/apps/${this.githubAppName}/installations/new?state=${state}`;
+    const url = routes.github.createInstallation(this.githubAppName, state);
 
     return url;
   }
@@ -228,7 +230,7 @@ export class GitHubService extends AgentsmithSupabaseService {
   }
 
   async connectProjectRepository(options: ConnectProjectRepositoryOptions) {
-    const { projectId, projectRepositoryId, agentsmithFolder } = options;
+    const { projectId, projectUuid, projectRepositoryId, agentsmithFolder } = options;
     const { data, error } = await this.supabase
       .from('project_repositories')
       .update({
@@ -245,6 +247,9 @@ export class GitHubService extends AgentsmithSupabaseService {
       );
       throw new Error('Failed to connect project to repository');
     }
+
+    // TODO: sync repo
+    // await this.syncRepository(projectUuid);
 
     return data;
   }

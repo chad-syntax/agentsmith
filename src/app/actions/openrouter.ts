@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import crypto from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
+import { routes } from '@/utils/routes';
 
 const sha256CodeChallenge = async (input: string) =>
   crypto.createHash('sha256').update(input).digest('base64url');
@@ -31,7 +32,7 @@ export const connectOpenrouter = async (organizationUuid: string) => {
     `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/openrouter/callback/${organizationUuid}`
   );
 
-  const redirectUrl = `https://openrouter.ai/auth?callback_url=${callbackUrl}&code_challenge=${generatedCodeChallenge}&code_challenge_method=S256`;
+  const redirectUrl = `${routes.openrouter.oauthInitiate}?callback_url=${callbackUrl}&code_challenge=${generatedCodeChallenge}&code_challenge_method=S256`;
 
   return redirect(redirectUrl);
 };
