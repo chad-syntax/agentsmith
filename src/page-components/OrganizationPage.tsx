@@ -11,7 +11,7 @@ import { H1, H2, P } from '@/components/typography';
 import { ApiKeyReveal } from '@/components/ApiKeyReveal';
 import { GetOrganizationDataResult } from '@/lib/OrganizationsService';
 import { Database } from '@/app/__generated__/supabase.types';
-import { installGithubApp } from '@/app/actions/github';
+import { installGithubApp, syncProject } from '@/app/actions/github';
 import { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubService';
 import { ConnectProjectModal } from '@/components/ConnectProjectModal';
 
@@ -112,7 +112,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
             You must be an admin to connect to GitHub. Please ask your organization admin to connect
             to GitHub.
           </P>
-        ) : !githubAppInstallation?.installation_id ? (
+        ) : githubAppInstallation && !githubAppInstallation?.installation_id ? (
           <P>
             App installation process not completed, please uninstall and reinstall the GitHub App.
           </P>
@@ -159,6 +159,12 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
                         <Link href={routes.studio.project(projectRepository.projects.uuid)}>
                           {projectRepository.projects.name}
                         </Link>
+                      </Button>
+                      <Button
+                        className="text-xs ml-4"
+                        onClick={() => syncProject(projectRepository.projects!.uuid)}
+                      >
+                        Sync
                       </Button>
                     </div>
                   ) : (

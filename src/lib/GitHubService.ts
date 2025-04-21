@@ -248,8 +248,7 @@ export class GitHubService extends AgentsmithSupabaseService {
       throw new Error('Failed to connect project to repository');
     }
 
-    // TODO: sync repo
-    // await this.syncRepository(projectUuid);
+    await this.syncRepository(projectUuid);
 
     return data;
   }
@@ -380,7 +379,10 @@ export class GitHubService extends AgentsmithSupabaseService {
   async getProjectRepositoriesForOrganization(organizationId: number) {
     const { data, error } = await this.supabase
       .from('project_repositories')
-      .select('*, organizations!inner(id), projects(uuid, name)')
+      .select(
+        '*, github_app_installations!inner(status), organizations!inner(id), projects(uuid, name)',
+      )
+      .eq('github_app_installations.status', 'ACTIVE')
       .eq('organizations.id', organizationId);
 
     if (error) {
@@ -421,7 +423,7 @@ export class GitHubService extends AgentsmithSupabaseService {
   async getProjectRepository(projectId: number) {
     const { data, error } = await this.supabase
       .from('project_repositories')
-      .select('*')
+      .select('*, github_app_installations(installation_id)')
       .eq('project_id', projectId)
       .maybeSingle();
 
@@ -435,6 +437,8 @@ export class GitHubService extends AgentsmithSupabaseService {
 
   // gets triggered by "sync" button press
   async syncRepository(projectUuid: string) {
+    console.log('begin repository sync');
+
     // fetch the project that is connected to the project repository
     const project = await this.services.projects.getProjectData(projectUuid);
 
@@ -448,11 +452,18 @@ export class GitHubService extends AgentsmithSupabaseService {
       throw new Error('Project is not connected to a GitHub repository');
     }
 
-    const octokit = await this.app.getInstallationOctokit(
-      projectRepository.github_app_installation_id,
-    );
+    const installationId = projectRepository.github_app_installations.installation_id;
+
+    if (!installationId) {
+      throw new Error('Installation ID not found, cannot sync repository');
+    }
+
+    const octokit = await this.app.getInstallationOctokit(installationId);
 
     const [owner, repo] = projectRepository.repository_full_name.split('/');
+
+    console.log('owner:', owner);
+    console.log('repo:', repo);
 
     // check repository for any pending pull requests that are agentsmith pull requests
     const pullRequests = await octokit.request('GET /repos/{owner}/{repo}/pulls', {
@@ -463,6 +474,7 @@ export class GitHubService extends AgentsmithSupabaseService {
     });
 
     if (pullRequests.data.length > 0) {
+      console.log('pending pull requests found, running this.syncPRFiles');
       const pullRequest = pullRequests.data[0];
       await this.syncPRFiles(
         octokit,
@@ -473,6 +485,8 @@ export class GitHubService extends AgentsmithSupabaseService {
         pullRequest.head.ref,
       );
     } else {
+      console.log('no pull requests found, creating new PR...');
+
       // Create a new PR
       // 1. Get default branch
       const { data: repository } = await octokit.request('GET /repos/{owner}/{repo}', {

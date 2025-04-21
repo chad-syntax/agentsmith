@@ -1,10 +1,12 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '&/supabase/server';
 import { DashboardSidebar } from '@/components/DashboardSidebar';
-import { AuthProvider } from '@/app/providers/auth';
+import { AgentsmithUser, AuthProvider } from '@/app/providers/auth';
 import { AppProvider } from '@/app/providers/app';
 import { routes } from '@/utils/routes';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
+import { User } from '@supabase/supabase-js';
+import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -22,51 +24,66 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   const agentsmith = new AgentsmithServices({ supabase });
 
+  let redirectUrl: string | null = null;
+  let authUser: User | null = null;
+  let agentsmithUser: AgentsmithUser | null = null;
+  let userOrganizationData: GetUserOrganizationDataResult | null = null;
+  let firstOrganizationProject:
+    | GetUserOrganizationDataResult['organization_users'][number]['organizations']['projects'][number]
+    | undefined;
+
   try {
-    const { authUser } = await agentsmith.services.users.initialize();
+    const userData = await agentsmith.services.users.initialize();
+
+    authUser = userData.authUser;
 
     if (!authUser) {
-      redirect(routes.auth.signIn);
+      redirectUrl = routes.auth.signIn;
     }
 
-    const agentsmithUser = await agentsmith.services.users.getAgentsmithUser(
-      authUser.id
-    );
+    if (authUser) {
+      agentsmithUser = await agentsmith.services.users.getAgentsmithUser(authUser.id);
 
-    const userOrganizationData =
-      await agentsmith.services.users.getUserOrganizationData();
+      userOrganizationData = await agentsmith.services.users.getUserOrganizationData();
 
-    const organization =
-      await agentsmith.services.organizations.getOrganizationData(
-        organizationUuid
-      );
+      const organization =
+        await agentsmith.services.organizations.getOrganizationData(organizationUuid);
 
-    const firstOrganizationProject = organization?.projects[0];
+      firstOrganizationProject = organization?.projects[0];
 
-    if (!firstOrganizationProject) {
-      redirect(routes.error('No projects found'));
+      if (!firstOrganizationProject) {
+        redirectUrl = routes.error('No projects found');
+      }
     }
-
-    return (
-      <AuthProvider
-        user={authUser}
-        agentsmithUser={agentsmithUser ?? undefined}
-        organizationData={userOrganizationData}
-      >
-        <AppProvider
-          selectedProjectUuid={firstOrganizationProject.uuid}
-          selectedOrganizationUuid={organizationUuid}
-          userOrganizationData={userOrganizationData}
-        >
-          <div className="flex h-screen">
-            <DashboardSidebar userOrganizationData={userOrganizationData} />
-            <main className="flex-1 overflow-auto">{children}</main>
-          </div>
-        </AppProvider>
-      </AuthProvider>
-    );
   } catch (error) {
     console.error(error);
-    redirect(routes.error('Failed to fetch user data'));
+    redirectUrl = routes.error('Failed to fetch user data');
+  } finally {
+    if (redirectUrl) {
+      redirect(redirectUrl);
+    }
   }
+
+  if (!authUser || !agentsmithUser || !userOrganizationData || !firstOrganizationProject) {
+    return null;
+  }
+
+  return (
+    <AuthProvider
+      user={authUser}
+      agentsmithUser={agentsmithUser ?? undefined}
+      organizationData={userOrganizationData}
+    >
+      <AppProvider
+        selectedProjectUuid={firstOrganizationProject.uuid}
+        selectedOrganizationUuid={organizationUuid}
+        userOrganizationData={userOrganizationData}
+      >
+        <div className="flex h-screen">
+          <DashboardSidebar userOrganizationData={userOrganizationData} />
+          <main className="flex-1 overflow-auto">{children}</main>
+        </div>
+      </AppProvider>
+    </AuthProvider>
+  );
 }

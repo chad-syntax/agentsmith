@@ -938,6 +938,8 @@ create index on github_app_installations(uuid);
 create index on github_app_installations(installation_id);
 create index on github_app_installations(created_at);
 
+create unique index on github_app_installations (organization_id) where status = 'ACTIVE';
+
 alter table github_app_installations enable row level security;
 
 create policy "Users can view github app installations they have access to"
@@ -976,7 +978,7 @@ create table project_repositories (
     repository_full_name text not null,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
-    unique(project_id, repository_id)
+    unique(github_app_installation_id, project_id, repository_id)
 );
 
 create index on project_repositories(project_id);

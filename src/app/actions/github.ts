@@ -19,3 +19,11 @@ export const installGithubApp = async (organizationUuid: string) => {
 
   redirect(installUrl);
 };
+
+export const syncProject = async (projectUuid: string) => {
+  const supabase = await createClient();
+
+  const agentsmith = new AgentsmithServices({ supabase });
+
+  await agentsmith.services.github.syncRepository(projectUuid);
+};
