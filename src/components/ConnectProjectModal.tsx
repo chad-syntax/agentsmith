@@ -15,6 +15,7 @@ import * as z from 'zod';
 import { useApp } from '@/app/providers/app';
 import { connectProject } from '@/actions/connect-project';
 import { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubService';
+import { useEffect } from 'react';
 
 const formSchema = z.object({
   projectId: z.string(),
@@ -28,18 +29,30 @@ interface ConnectProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   projectRepositories: GetProjectRepositoriesForOrganizationResult;
+  defaultRepositoryId?: number;
 }
 
 export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
-  const { open, onOpenChange, projectRepositories } = props;
+  const { open, onOpenChange, projectRepositories, defaultRepositoryId } = props;
   const { selectedOrganization } = useApp();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       agentsmithFolder: 'agentsmith',
+      projectRepositoryId: defaultRepositoryId,
     },
   });
+
+  useEffect(() => {
+    if (open && defaultRepositoryId !== undefined) {
+      if (form.getValues('projectRepositoryId') !== defaultRepositoryId) {
+        form.setValue('projectRepositoryId', defaultRepositoryId, { shouldValidate: true });
+      }
+    } else if (!open) {
+      // Keep the value for now, reset can be handled by parent if needed.
+    }
+  }, [open, defaultRepositoryId, form]);
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -47,6 +60,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
         projectUuid: values.projectId,
         agentsmithFolder: values.agentsmithFolder,
         projectRepositoryId: values.projectRepositoryId,
+        organizationUuid: selectedOrganization!.uuid,
       });
       onOpenChange(false);
     } catch (error) {
@@ -104,7 +118,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
                   <FormLabel>Repository</FormLabel>
                   <Select
                     onValueChange={handleRepositoryChange}
-                    defaultValue={field.value?.toString()}
+                    defaultValue={defaultRepositoryId?.toString()}
                   >
                     <FormControl>
                       <SelectTrigger>

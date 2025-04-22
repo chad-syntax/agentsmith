@@ -2,15 +2,18 @@
 
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
+import { routes } from '@/utils/routes';
 
 type ConnectProjectOptions = {
   projectUuid: string;
   projectRepositoryId: number;
   agentsmithFolder?: string;
+  organizationUuid: string;
 };
 
 export async function connectProject(options: ConnectProjectOptions) {
-  const { projectUuid, projectRepositoryId, agentsmithFolder } = options;
+  const { projectUuid, projectRepositoryId, agentsmithFolder, organizationUuid } = options;
 
   const supabase = await createClient();
   const agentsmith = new AgentsmithServices({ supabase });
@@ -27,4 +30,6 @@ export async function connectProject(options: ConnectProjectOptions) {
     agentsmithFolder,
     projectRepositoryId,
   });
+
+  revalidatePath(routes.studio.organization(organizationUuid));
 }

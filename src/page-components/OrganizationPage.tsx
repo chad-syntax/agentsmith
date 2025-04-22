@@ -29,6 +29,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
   const [isCodeCopied, setIsCodeCopied] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(false);
+  const [targetRepositoryId, setTargetRepositoryId] = useState<number | undefined>(undefined);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(organization.invite_code);
@@ -137,8 +138,14 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
             <div className="flex flex-col gap-2">
               <ConnectProjectModal
                 open={connectProjectModalOpen}
-                onOpenChange={setConnectProjectModalOpen}
+                onOpenChange={(open) => {
+                  setConnectProjectModalOpen(open);
+                  if (!open) {
+                    setTargetRepositoryId(undefined);
+                  }
+                }}
                 projectRepositories={projectRepositories}
+                defaultRepositoryId={targetRepositoryId}
               />
               {projectRepositories.map((projectRepository) => (
                 <div key={projectRepository.id} className="flex items-center gap-2">
@@ -171,7 +178,10 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
                     <Button
                       className="text-xs text-accent hover:text-accent"
                       variant="outline"
-                      onClick={() => setConnectProjectModalOpen(true)}
+                      onClick={() => {
+                        setTargetRepositoryId(projectRepository.id);
+                        setConnectProjectModalOpen(true);
+                      }}
                     >
                       <IconPlus className="h-4 w-4" />
                       Connect to Project

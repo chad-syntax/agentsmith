@@ -289,6 +289,7 @@ export type Database = {
           id: number
           organization_id: number
           project_id: number | null
+          repository_default_branch: string
           repository_full_name: string
           repository_id: number
           repository_name: string
@@ -301,6 +302,7 @@ export type Database = {
           id?: number
           organization_id: number
           project_id?: number | null
+          repository_default_branch: string
           repository_full_name: string
           repository_id: number
           repository_name: string
@@ -313,6 +315,7 @@ export type Database = {
           id?: number
           organization_id?: number
           project_id?: number | null
+          repository_default_branch?: string
           repository_full_name?: string
           repository_id?: number
           repository_name?: string
@@ -396,6 +399,7 @@ export type Database = {
           required: boolean
           type: Database["public"]["Enums"]["variable_type"]
           updated_at: string
+          uuid: string
         }
         Insert: {
           created_at?: string
@@ -405,6 +409,7 @@ export type Database = {
           required: boolean
           type: Database["public"]["Enums"]["variable_type"]
           updated_at?: string
+          uuid?: string
         }
         Update: {
           created_at?: string
@@ -414,6 +419,7 @@ export type Database = {
           required?: boolean
           type?: Database["public"]["Enums"]["variable_type"]
           updated_at?: string
+          uuid?: string
         }
         Relationships: [
           {

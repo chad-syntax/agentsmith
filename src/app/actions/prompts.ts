@@ -38,9 +38,7 @@ export async function createPromptVersion(options: CreatePromptVersionOptions) {
       .single();
 
     if (versionError || !versionData) {
-      throw new Error(
-        'Failed to create prompt version: ' + versionError?.message
-      );
+      throw new Error('Failed to create prompt version: ' + versionError?.message);
     }
 
     const newVersionId = versionData.id;
@@ -59,9 +57,7 @@ export async function createPromptVersion(options: CreatePromptVersionOptions) {
         .insert(variablesToInsert);
 
       if (variablesError) {
-        throw new Error(
-          'Failed to create prompt variables: ' + variablesError.message
-        );
+        throw new Error('Failed to create prompt variables: ' + variablesError.message);
       }
     }
 
@@ -98,9 +94,7 @@ export async function updatePromptVersion(options: UpdatePromptVersionOptions) {
       .single();
 
     if (getVersionError || !versionData) {
-      throw new Error(
-        'Failed to find prompt version: ' + getVersionError?.message
-      );
+      throw new Error('Failed to find prompt version: ' + getVersionError?.message);
     }
 
     const promptVersionId = versionData.id;
@@ -116,9 +110,7 @@ export async function updatePromptVersion(options: UpdatePromptVersionOptions) {
       .eq('uuid', promptVersionUuid);
 
     if (versionError) {
-      throw new Error(
-        'Failed to update prompt version: ' + versionError.message
-      );
+      throw new Error('Failed to update prompt version: ' + versionError.message);
     }
 
     // Get existing variables
@@ -128,9 +120,7 @@ export async function updatePromptVersion(options: UpdatePromptVersionOptions) {
       .eq('prompt_version_id', promptVersionId);
 
     if (getVariablesError) {
-      throw new Error(
-        'Failed to fetch existing variables: ' + getVariablesError.message
-      );
+      throw new Error('Failed to fetch existing variables: ' + getVariablesError.message);
     }
 
     // Delete existing variables
@@ -141,9 +131,7 @@ export async function updatePromptVersion(options: UpdatePromptVersionOptions) {
         .eq('prompt_version_id', promptVersionId);
 
       if (deleteError) {
-        throw new Error(
-          'Failed to delete existing variables: ' + deleteError.message
-        );
+        throw new Error('Failed to delete existing variables: ' + deleteError.message);
       }
     }
 
@@ -161,9 +149,7 @@ export async function updatePromptVersion(options: UpdatePromptVersionOptions) {
         .insert(variablesToInsert);
 
       if (variablesError) {
-        throw new Error(
-          'Failed to create prompt variables: ' + variablesError.message
-        );
+        throw new Error('Failed to create prompt variables: ' + variablesError.message);
       }
     }
 
@@ -231,9 +217,7 @@ export async function createPrompt(options: CreatePromptOptions) {
     if (versionError || !versionData) {
       // If we failed to create a version, delete the prompt to avoid orphans
       await supabase.from('prompts').delete().eq('id', newPromptId);
-      throw new Error(
-        'Failed to create prompt version: ' + versionError?.message
-      );
+      throw new Error('Failed to create prompt version: ' + versionError?.message);
     }
 
     const newVersionId = versionData.id;
@@ -252,9 +236,7 @@ export async function createPrompt(options: CreatePromptOptions) {
         .insert(variablesToInsert);
 
       if (variablesError) {
-        throw new Error(
-          'Failed to create prompt variables: ' + variablesError.message
-        );
+        throw new Error('Failed to create prompt variables: ' + variablesError.message);
       }
     }
 
@@ -270,9 +252,7 @@ type CreatePromptWithDraftVersionOptions = {
   projectId: number;
 };
 
-export async function createPromptWithDraftVersion(
-  options: CreatePromptWithDraftVersionOptions
-) {
+export async function createPromptWithDraftVersion(options: CreatePromptWithDraftVersionOptions) {
   const { name, projectId } = options;
   const supabase = await createClient();
 
@@ -317,9 +297,7 @@ export async function createPromptWithDraftVersion(
     if (versionError || !versionData) {
       // If we failed to create a version, delete the prompt to avoid orphans
       await supabase.from('prompts').delete().eq('id', newPromptId);
-      throw new Error(
-        'Failed to create prompt version: ' + versionError?.message
-      );
+      throw new Error('Failed to create prompt version: ' + versionError?.message);
     }
 
     return {
@@ -340,12 +318,7 @@ type CreateDraftVersionOptions = {
 };
 
 export async function createDraftVersion(options: CreateDraftVersionOptions) {
-  const {
-    promptId,
-    latestVersion,
-    customVersion,
-    versionType = 'patch',
-  } = options;
+  const { promptId, latestVersion, customVersion, versionType = 'patch' } = options;
   const supabase = await createClient();
 
   try {
@@ -364,20 +337,14 @@ export async function createDraftVersion(options: CreateDraftVersionOptions) {
 
     if (customVersion) {
       // If a custom version is provided, use it but verify it doesn't already exist
-      const versionExists = allVersions?.some(
-        (v) => v.version === customVersion
-      );
+      const versionExists = allVersions?.some((v) => v.version === customVersion);
       if (versionExists) {
-        throw new Error(
-          `Version ${customVersion} already exists for this prompt`
-        );
+        throw new Error(`Version ${customVersion} already exists for this prompt`);
       }
 
       // Validate semantic versioning pattern
       if (!SEMVER_PATTERN.test(customVersion)) {
-        throw new Error(
-          'Version must follow semantic versioning (e.g., 1.0.0)'
-        );
+        throw new Error('Version must follow semantic versioning (e.g., 1.0.0)');
       }
 
       newVersion = customVersion;
@@ -386,9 +353,7 @@ export async function createDraftVersion(options: CreateDraftVersionOptions) {
       let highestVersion = latestVersion;
       if (allVersions && allVersions.length > 0) {
         highestVersion = allVersions.reduce((highest, current) => {
-          return compareSemanticVersions(current.version, highest) > 0
-            ? current.version
-            : highest;
+          return compareSemanticVersions(current.version, highest) > 0 ? current.version : highest;
         }, latestVersion);
       }
 
@@ -397,24 +362,21 @@ export async function createDraftVersion(options: CreateDraftVersionOptions) {
     }
 
     // Get latest version to copy content
-    const { data: latestVersionData, error: latestVersionError } =
-      await supabase
-        .from('prompt_versions')
-        .select('content, config, prompt_variables(*)')
-        .eq('prompt_id', promptId)
-        .eq('version', latestVersion)
-        .single();
+    const { data: latestVersionData, error: latestVersionError } = await supabase
+      .from('prompt_versions')
+      .select('content, config, prompt_variables(*)')
+      .eq('prompt_id', promptId)
+      .eq('version', latestVersion)
+      .single();
 
     if (latestVersionError || !latestVersionData) {
-      throw new Error(
-        'Failed to find latest version: ' + latestVersionError?.message
-      );
+      throw new Error('Failed to find latest version: ' + latestVersionError?.message);
     }
 
     console.log(
       'will create new draft version with content and config of',
       latestVersionData.content,
-      latestVersionData.config
+      latestVersionData.config,
     );
 
     // Create new draft version
@@ -431,33 +393,24 @@ export async function createDraftVersion(options: CreateDraftVersionOptions) {
       .single();
 
     if (newVersionError || !newVersionData) {
-      throw new Error(
-        'Failed to create new version: ' + newVersionError?.message
-      );
+      throw new Error('Failed to create new version: ' + newVersionError?.message);
     }
 
     // Copy variables from the latest version
-    if (
-      latestVersionData.prompt_variables &&
-      latestVersionData.prompt_variables.length > 0
-    ) {
-      const variablesToInsert = latestVersionData.prompt_variables.map(
-        (variable: any) => ({
-          prompt_version_id: newVersionData.id,
-          name: variable.name,
-          type: variable.type,
-          required: variable.required,
-        })
-      );
+    if (latestVersionData.prompt_variables && latestVersionData.prompt_variables.length > 0) {
+      const variablesToInsert = latestVersionData.prompt_variables.map((variable: any) => ({
+        prompt_version_id: newVersionData.id,
+        name: variable.name,
+        type: variable.type,
+        required: variable.required,
+      }));
 
       const { error: variablesError } = await supabase
         .from('prompt_variables')
         .insert(variablesToInsert);
 
       if (variablesError) {
-        throw new Error(
-          'Failed to copy prompt variables: ' + variablesError.message
-        );
+        throw new Error('Failed to copy prompt variables: ' + variablesError.message);
       }
     }
 

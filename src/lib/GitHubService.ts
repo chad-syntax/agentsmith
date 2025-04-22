@@ -115,13 +115,6 @@ export class GitHubService extends AgentsmithSupabaseService {
     });
   }
 
-  async saveGithubProviderTokens(options: SaveGithubProviderTokensOptions) {
-    const { supabaseUserId, providerToken, providerRefreshToken } = options;
-
-    // TODO
-    // save these tokens to the vault, link those vault ids to their agentsmith_user records
-  }
-
   async createAppInstallationRecord(organizationUuid: string) {
     const organizationId = await this.services.organizations.getOrganizationId(organizationUuid);
 
@@ -323,13 +316,28 @@ export class GitHubService extends AgentsmithSupabaseService {
         throw new Error(`No installation record found for installation ID ${installation.id}`);
       }
 
+      // Fetch full repository data to get accurate default branch info
+      const octokit = await this.app.getInstallationOctokit(installation.id);
+      const fullRepoData = await Promise.all(
+        repositories_added.map(async (repoAdded) => {
+          const [owner, repo] = repoAdded.full_name.split('/');
+
+          const { data } = await octokit.request('GET /repos/{owner}/{repo}', {
+            owner,
+            repo,
+          });
+          return data;
+        }),
+      );
+
       const { error } = await this.supabase.from('project_repositories').insert(
-        repositories_added.map((repo) => ({
+        fullRepoData.map((repo) => ({
           github_app_installation_id: installationRecord.id,
           organization_id: installationRecord.organizations.id,
           repository_id: repo.id,
           repository_name: repo.name,
           repository_full_name: repo.full_name,
+          repository_default_branch: repo.default_branch,
         })),
       );
 
@@ -402,17 +410,19 @@ export class GitHubService extends AgentsmithSupabaseService {
       throw new Error('Organization not found, cannot create repository records');
     }
 
-    const repositories = await this.getInstallationRepositories(installationId);
+    const octokit = await this.app.getInstallationOctokit(installationId);
+    const { data: installationRepos } = await octokit.request('GET /installation/repositories');
 
-    const { error } = await this.supabase.from('project_repositories').insert(
-      repositories.map((repo) => ({
-        github_app_installation_id: githubAppInstallationRecordId,
-        repository_id: repo.id,
-        repository_name: repo.name,
-        repository_full_name: repo.full_name,
-        organization_id: organizationId,
-      })),
-    );
+    const repositoriesToInsert = installationRepos.repositories.map((repo) => ({
+      github_app_installation_id: githubAppInstallationRecordId,
+      repository_id: repo.id,
+      repository_name: repo.name,
+      repository_full_name: repo.full_name,
+      repository_default_branch: repo.default_branch,
+      organization_id: organizationId,
+    }));
+
+    const { error } = await this.supabase.from('project_repositories').insert(repositoriesToInsert);
 
     if (error) {
       console.error('Failed to create project repositories', error);
@@ -437,7 +447,7 @@ export class GitHubService extends AgentsmithSupabaseService {
 
   // gets triggered by "sync" button press
   async syncRepository(projectUuid: string) {
-    console.log('begin repository sync');
+    console.log('begin repository sync for project', projectUuid);
 
     // fetch the project that is connected to the project repository
     const project = await this.services.projects.getProjectData(projectUuid);
@@ -462,9 +472,6 @@ export class GitHubService extends AgentsmithSupabaseService {
 
     const [owner, repo] = projectRepository.repository_full_name.split('/');
 
-    console.log('owner:', owner);
-    console.log('repo:', repo);
-
     // check repository for any pending pull requests that are agentsmith pull requests
     const pullRequests = await octokit.request('GET /repos/{owner}/{repo}/pulls', {
       owner,
@@ -487,22 +494,13 @@ export class GitHubService extends AgentsmithSupabaseService {
     } else {
       console.log('no pull requests found, creating new PR...');
 
-      // Create a new PR
-      // 1. Get default branch
-      const { data: repository } = await octokit.request('GET /repos/{owner}/{repo}', {
-        owner,
-        repo,
-      });
-
-      const defaultBranch = repository.default_branch;
-
       // 2. Get the latest commit SHA from the default branch
       const { data: ref } = await octokit.request(
         'GET /repos/{owner}/{repo}/git/ref/heads/{branch}',
         {
           owner,
           repo,
-          branch: defaultBranch,
+          branch: projectRepository.repository_default_branch,
         },
       );
 
@@ -518,43 +516,66 @@ export class GitHubService extends AgentsmithSupabaseService {
       });
 
       // 4. Sync files to the new branch
-      await this.syncPRFiles(octokit, owner, repo, project, projectRepository, branchName);
-
-      // 5. Create a new PR
-      const { data: newPR } = await octokit.request('POST /repos/{owner}/{repo}/pulls', {
+      const wereChangesMade = await this.syncPRFiles(
+        octokit,
         owner,
         repo,
-        title: 'Agentsmith Sync',
-        body: 'Syncing prompts and variables from Agentsmith',
-        head: branchName,
-        base: defaultBranch,
-      });
+        project,
+        projectRepository,
+        branchName,
+      );
 
-      // 6. Add the agentsmith label to the PR
-      // First get or create the label if it doesn't exist
-      try {
-        await octokit.request('GET /repos/{owner}/{repo}/labels/agentsmith', {
+      if (wereChangesMade) {
+        // 5. Create a new PR only if changes were made
+        const { data: newPR } = await octokit.request('POST /repos/{owner}/{repo}/pulls', {
           owner,
           repo,
+          title: 'Agentsmith Sync',
+          body: 'Syncing prompts and variables from Agentsmith',
+          head: branchName,
+          base: projectRepository.repository_default_branch,
         });
-      } catch (error) {
-        // Label doesn't exist, create it
-        await octokit.request('POST /repos/{owner}/{repo}/labels', {
+
+        // 6. Add the agentsmith label to the PR
+        // First get or create the label if it doesn't exist
+        try {
+          await octokit.request('GET /repos/{owner}/{repo}/labels/agentsmith', {
+            owner,
+            repo,
+          });
+        } catch (error) {
+          // Label doesn't exist, create it
+          await octokit.request('POST /repos/{owner}/{repo}/labels', {
+            owner,
+            repo,
+            name: 'agentsmith',
+            color: '0E8A16', // Green color
+            description: 'PRs created by Agentsmith',
+          });
+        }
+
+        // Then add the label to the PR
+        await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/labels', {
           owner,
           repo,
-          name: 'agentsmith',
-          color: '0E8A16', // Green color
-          description: 'PRs created by Agentsmith',
+          issue_number: newPR.number,
+          labels: ['agentsmith'],
         });
+      } else {
+        // No changes were made, so no PR is needed. We might want to delete the unused branch.
+        console.log('No file changes detected. Skipping Pull Request creation.');
+        // Optional: Delete the newly created branch since it's identical to the base
+        try {
+          await octokit.request('DELETE /repos/{owner}/{repo}/git/refs/heads/{ref}', {
+            owner,
+            repo,
+            ref: branchName,
+          });
+          console.log(`Deleted unused branch: ${branchName}`);
+        } catch (deleteError) {
+          console.error(`Failed to delete unused branch ${branchName}:`, deleteError);
+        }
       }
-
-      // Then add the label to the PR
-      await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/labels', {
-        owner,
-        repo,
-        issue_number: newPR.number,
-        labels: ['agentsmith'],
-      });
     }
   }
 
@@ -566,12 +587,13 @@ export class GitHubService extends AgentsmithSupabaseService {
     project: NonNullable<GetProjectDataResult>,
     projectRepository: NonNullable<GetProjectRepositoryResult>,
     branchName: string,
-  ) {
+  ): Promise<boolean> {
     const promptsData = await this.services.prompts.getAllPromptsData(project.id);
 
     // Check if all prompts and prompt versions exist in the repository
     const missingFiles: FileToSync[] = [];
     const updateNeededFiles: FileToSync[] = [];
+    let changesMade = false; // Flag to track if changes were committed
 
     // Retrieve the current state of the agentsmith folder
     let repoFiles;
@@ -601,11 +623,23 @@ export class GitHubService extends AgentsmithSupabaseService {
       const promptPath = `${projectRepository.agentsmith_folder}/prompts/${prompt.slug}`;
       const promptJsonPath = `${promptPath}/prompt.json`;
 
+      // 1. Prepare data for prompt.json
+      const { id, project_id, prompt_versions, ...promptRest } = prompt;
+      const promptJsonData = {
+        ...promptRest,
+        versions: (prompt_versions || []).map((v) => ({
+          version: v.version,
+          status: v.status,
+        })),
+      };
+
+      const promptJsonContent = JSON.stringify(promptJsonData, null, 2);
+
       // Check if prompt.json exists
       if (!fileMap.has(promptJsonPath)) {
         missingFiles.push({
           path: promptJsonPath,
-          content: JSON.stringify(prompt, null, 2),
+          content: promptJsonContent,
         });
       } else {
         // Check if prompt.json needs update by comparing content
@@ -624,12 +658,10 @@ export class GitHubService extends AgentsmithSupabaseService {
             fileContent.data.content
           ) {
             const existingContent = Buffer.from(fileContent.data.content, 'base64').toString();
-            const currentContent = JSON.stringify(prompt, null, 2);
-
-            if (existingContent !== currentContent) {
+            if (existingContent !== promptJsonContent) {
               updateNeededFiles.push({
                 path: promptJsonPath,
-                content: currentContent,
+                content: promptJsonContent,
               });
             }
           }
@@ -644,11 +676,27 @@ export class GitHubService extends AgentsmithSupabaseService {
         const versionJsonPath = `${versionPath}/version.json`;
         const variablesJsonPath = `${versionPath}/variables.json`;
 
+        // 2. Prepare data for version.json
+        const { id, prompt_id, prompt_variables, ...versionRest } = version;
+        const versionJsonData = versionRest;
+
+        const versionJsonContent = JSON.stringify(versionJsonData, null, 2);
+
+        // 3. Prepare data for variables.json
+        let variablesJsonContent: string | null = null;
+        if (version.prompt_variables && version.prompt_variables.length > 0) {
+          const variablesJsonData = version.prompt_variables.map((variable) => {
+            const { id, prompt_version_id, ...rest } = variable;
+            return rest;
+          });
+          variablesJsonContent = JSON.stringify(variablesJsonData, null, 2);
+        }
+
         // Check if version.json exists
         if (!fileMap.has(versionJsonPath)) {
           missingFiles.push({
             path: versionJsonPath,
-            content: JSON.stringify(version, null, 2),
+            content: versionJsonContent,
           });
         } else {
           // Check if version.json needs update
@@ -667,12 +715,10 @@ export class GitHubService extends AgentsmithSupabaseService {
               fileContent.data.content
             ) {
               const existingContent = Buffer.from(fileContent.data.content, 'base64').toString();
-              const currentContent = JSON.stringify(version, null, 2);
-
-              if (existingContent !== currentContent) {
+              if (existingContent !== versionJsonContent) {
                 updateNeededFiles.push({
                   path: versionJsonPath,
-                  content: currentContent,
+                  content: versionJsonContent,
                 });
               }
             }
@@ -682,11 +728,11 @@ export class GitHubService extends AgentsmithSupabaseService {
         }
 
         // Check if variables.json exists
-        if (version.prompt_variables && version.prompt_variables.length > 0) {
+        if (variablesJsonContent) {
           if (!fileMap.has(variablesJsonPath)) {
             missingFiles.push({
               path: variablesJsonPath,
-              content: JSON.stringify(version.prompt_variables, null, 2),
+              content: variablesJsonContent,
             });
           } else {
             // Check if variables.json needs update
@@ -708,12 +754,10 @@ export class GitHubService extends AgentsmithSupabaseService {
                 fileContent.data.content
               ) {
                 const existingContent = Buffer.from(fileContent.data.content, 'base64').toString();
-                const currentContent = JSON.stringify(version.prompt_variables, null, 2);
-
-                if (existingContent !== currentContent) {
+                if (existingContent !== variablesJsonContent) {
                   updateNeededFiles.push({
                     path: variablesJsonPath,
-                    content: currentContent,
+                    content: variablesJsonContent,
                   });
                 }
               }
@@ -730,6 +774,7 @@ export class GitHubService extends AgentsmithSupabaseService {
       console.log(
         `Found ${missingFiles.length} missing files and ${updateNeededFiles.length} files needing updates`,
       );
+      changesMade = true; // Set flag as changes are detected
 
       // Update or create files in the pull request
       // First handle missing files
@@ -783,6 +828,8 @@ export class GitHubService extends AgentsmithSupabaseService {
     } else {
       console.log('All prompt files are up to date, no changes needed');
     }
+
+    return changesMade;
   }
 }
 
