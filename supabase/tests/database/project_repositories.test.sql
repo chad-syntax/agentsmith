@@ -146,7 +146,8 @@ insert into project_repositories (
     github_app_installation_id,
     repository_id,
     repository_name,
-    repository_full_name
+    repository_full_name,
+    repository_default_branch
 )
 select 
     get_pro_project_id(),
@@ -154,7 +155,8 @@ select
     get_test_installation_id(),
     54321,
     'test-repo',
-    'org/test-repo'
+    'org/test-repo',
+    'main'
 where not exists (
     select 1 from project_repositories 
     where organization_id = get_pro_admin_org_id()
@@ -186,7 +188,8 @@ insert into project_repositories (
     github_app_installation_id,
     repository_id,
     repository_name,
-    repository_full_name
+    repository_full_name,
+    repository_default_branch
 )
 select 
     get_pro_project_id(),
@@ -194,7 +197,8 @@ select
     get_test_installation_id(),
     99999,
     'new-repo',
-    'org/new-repo';
+    'org/new-repo',
+    'main';
 
 select throws_ok(
     'member_create_repository',
@@ -212,7 +216,8 @@ insert into project_repositories (
     github_app_installation_id,
     repository_id,
     repository_name,
-    repository_full_name
+    repository_full_name,
+    repository_default_branch
 )
 select 
     get_pro_project_id(),
@@ -220,7 +225,8 @@ select
     get_test_installation_id(),
     99999,
     'new-repo',
-    'org/new-repo';
+    'org/new-repo',
+    'main';
 
 select lives_ok(
     'admin_create_repository',
@@ -255,7 +261,8 @@ insert into project_repositories (
     github_app_installation_id,
     repository_id,
     repository_name,
-    repository_full_name
+    repository_full_name,
+    repository_default_branch
 )
 select 
     get_pro_project_id(),
@@ -263,7 +270,8 @@ select
     get_test_installation_id(),
     88888,
     'webhook-repo',
-    'org/webhook-repo';
+    'org/webhook-repo',
+    'main';
 
 select throws_ok(
     'webhook_create_repository',
@@ -292,7 +300,8 @@ insert into project_repositories (
     github_app_installation_id,
     repository_id,
     repository_name,
-    repository_full_name
+    repository_full_name,
+    repository_default_branch
 )
 select 
     get_pro_project_id(),
@@ -300,7 +309,8 @@ select
     get_test_installation_id(),
     54321, -- Same repository_id as in setup
     'test-repo-dupe',
-    'org/test-repo-dupe';
+    'org/test-repo-dupe',
+    'main';
 
 select throws_ok(
     'duplicate_repository',
