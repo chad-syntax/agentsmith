@@ -13,7 +13,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useApp } from '@/app/providers/app';
-import { connectProject } from '@/actions/connect-project';
+import { connectProject } from '@/app/actions/connect-project';
 import { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubService';
 import { useEffect } from 'react';
 

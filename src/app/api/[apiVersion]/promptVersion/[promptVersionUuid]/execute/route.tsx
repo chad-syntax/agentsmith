@@ -40,7 +40,7 @@ export async function POST(
 
   const agentsmith = new AgentsmithServices({ supabase });
 
-  const { authUser } = await agentsmith.services.users.initialize();
+  const { authUser } = await agentsmith.services.users.getAuthUser();
 
   if (!authUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

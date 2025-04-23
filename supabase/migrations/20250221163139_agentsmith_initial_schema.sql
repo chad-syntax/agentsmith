@@ -564,6 +564,7 @@ create table prompt_variables (
     name text not null,
     type variable_type not null,
     required boolean not null,
+    default_value text,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
 );

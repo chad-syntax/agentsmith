@@ -17,14 +17,13 @@ export default async function Project(props: ProjectPageProps) {
 
   const agentsmith = new AgentsmithServices({ supabase });
 
-  const { authUser } = await agentsmith.services.users.initialize();
+  const { authUser } = await agentsmith.services.users.getAuthUser();
 
   if (!authUser) {
     redirect(routes.auth.signIn);
   }
 
-  const projectData =
-    await agentsmith.services.projects.getProjectData(projectUuid);
+  const projectData = await agentsmith.services.projects.getProjectData(projectUuid);
 
   if (!projectData) {
     redirect(routes.error('Project not found'));

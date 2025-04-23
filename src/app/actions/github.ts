@@ -10,9 +10,9 @@ export const installGithubApp = async (organizationUuid: string) => {
   const agentsmith = new AgentsmithServices({ supabase });
 
   const { uuid: installationRecordUuid } =
-    await agentsmith.services.github.createAppInstallationRecord(organizationUuid);
+    await agentsmith.services.githubApp.createAppInstallationRecord(organizationUuid);
 
-  const installUrl = agentsmith.services.github.getInstallationUrl({
+  const installUrl = agentsmith.services.githubApp.getInstallationUrl({
     organizationUuid,
     installationRecordUuid,
   });
@@ -25,5 +25,5 @@ export const syncProject = async (projectUuid: string) => {
 
   const agentsmith = new AgentsmithServices({ supabase });
 
-  await agentsmith.services.github.syncRepository(projectUuid);
+  await agentsmith.services.githubSync.syncRepository(projectUuid);
 };

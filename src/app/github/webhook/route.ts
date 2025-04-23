@@ -7,9 +7,11 @@ const handler = async (req: NextRequest) => {
   const jwt = getGithubWebhookUserJwt();
   const supabase = createJwtClient(jwt);
 
-  const agentsmith = new AgentsmithServices({ supabase });
+  const agentsmith = new AgentsmithServices({ supabase, initialize: false });
 
-  await agentsmith.services.github.app.webhooks.verifyAndReceive({
+  agentsmith.services.githubWebhook.initialize();
+
+  await agentsmith.services.githubApp.app.webhooks.verifyAndReceive({
     id: req.headers.get('X-GitHub-Delivery') as string,
     name: req.headers.get('X-GitHub-Event') as EmitterWebhookEventName,
     signature: req.headers.get('X-Hub-Signature-256') as string,

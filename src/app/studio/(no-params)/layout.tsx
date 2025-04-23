@@ -17,22 +17,18 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   const agentsmith = new AgentsmithServices({ supabase });
 
-  const { authUser } = await agentsmith.services.users.initialize();
+  const { authUser } = await agentsmith.services.users.getAuthUser();
 
   if (!authUser) {
     redirect(routes.auth.signIn);
   }
 
   try {
-    const agentsmithUser = await agentsmith.services.users.getAgentsmithUser(
-      authUser.id
-    );
+    const agentsmithUser = await agentsmith.services.users.getAgentsmithUser(authUser.id);
 
-    const userOrganizationData =
-      await agentsmith.services.users.getUserOrganizationData();
+    const userOrganizationData = await agentsmith.services.users.getUserOrganizationData();
 
-    const firstOrganization =
-      userOrganizationData.organization_users[0].organizations;
+    const firstOrganization = userOrganizationData.organization_users[0].organizations;
 
     const firstOrganizationProject = firstOrganization.projects[0];
 

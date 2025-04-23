@@ -68,25 +68,31 @@ export async function createPromptVersion(options: CreatePromptVersionOptions) {
   }
 }
 
+type PromptVariableBase = Omit<
+  Database['public']['Tables']['prompt_variables']['Row'],
+  'created_at' | 'prompt_version_id' | 'uuid' | 'updated_at'
+>;
+
+type PromptVariableInput = Omit<PromptVariableBase, 'id'> & { id?: number };
+
+type PromptVariableExisting = Pick<
+  Database['public']['Tables']['prompt_variables']['Row'],
+  'id' | 'name' | 'type' | 'required'
+>;
+
 type UpdatePromptVersionOptions = {
   promptVersionUuid: string;
   content: string;
   config: CompletionConfig;
   status: Database['public']['Enums']['prompt_status'];
-  variables: Array<{
-    id?: number;
-    name: string;
-    type: Database['public']['Enums']['variable_type'];
-    required: boolean;
-  }>;
+  variables: Array<PromptVariableInput>;
 };
 
 export async function updatePromptVersion(options: UpdatePromptVersionOptions) {
-  const { promptVersionUuid, content, config, status, variables } = options;
+  const { promptVersionUuid, content, config, status, variables: incomingVariables } = options;
   const supabase = await createClient();
 
   try {
-    // Get the prompt version ID from UUID
     const { data: versionData, error: getVersionError } = await supabase
       .from('prompt_versions')
       .select('id')
@@ -99,7 +105,6 @@ export async function updatePromptVersion(options: UpdatePromptVersionOptions) {
 
     const promptVersionId = versionData.id;
 
-    // Update the version
     const { error: versionError } = await supabase
       .from('prompt_versions')
       .update({
@@ -113,47 +118,84 @@ export async function updatePromptVersion(options: UpdatePromptVersionOptions) {
       throw new Error('Failed to update prompt version: ' + versionError.message);
     }
 
-    // Get existing variables
-    const { data: existingVariables, error: getVariablesError } = await supabase
+    // 1. Fetch current variables with full details
+    const { data: currentVariablesData, error: getVariablesError } = await supabase
       .from('prompt_variables')
-      .select('id')
+      .select('id, name, type, required')
       .eq('prompt_version_id', promptVersionId);
 
     if (getVariablesError) {
-      throw new Error('Failed to fetch existing variables: ' + getVariablesError.message);
+      throw new Error('Failed to fetch current variables: ' + getVariablesError.message);
+    }
+    const currentVariables: PromptVariableExisting[] = currentVariablesData || [];
+
+    // 2. Prepare map for efficient comparison
+    const currentVariablesMap = new Map(currentVariables.map((v) => [v.name, v]));
+
+    // 3. Identify variables to add, update, or delete
+    const variablesToAdd: PromptVariableInput[] = [];
+    const variablesToUpdate: PromptVariableExisting[] = [];
+    const variableIdsToDelete: number[] = [];
+
+    for (const incomingVar of incomingVariables) {
+      const currentVar = currentVariablesMap.get(incomingVar.name);
+      if (currentVar) {
+        const variableNeedsUpdating =
+          incomingVar.type !== currentVar.type || incomingVar.required !== currentVar.required;
+
+        if (variableNeedsUpdating) {
+          variablesToUpdate.push({ ...incomingVar, id: currentVar.id });
+        }
+        currentVariablesMap.delete(incomingVar.name);
+      } else {
+        variablesToAdd.push(incomingVar);
+      }
     }
 
-    // Delete existing variables
-    if (existingVariables.length > 0) {
+    for (const currentVarToDelete of Array.from(currentVariablesMap.values())) {
+      variableIdsToDelete.push(currentVarToDelete.id);
+    }
+
+    // 4. Perform database operations
+    if (variableIdsToDelete.length > 0) {
       const { error: deleteError } = await supabase
         .from('prompt_variables')
         .delete()
-        .eq('prompt_version_id', promptVersionId);
+        .in('id', variableIdsToDelete);
 
       if (deleteError) {
-        throw new Error('Failed to delete existing variables: ' + deleteError.message);
+        throw new Error('Failed to delete variables: ' + deleteError.message);
       }
     }
 
-    // Create new variables
-    if (variables.length > 0) {
-      const variablesToInsert = variables.map((variable) => ({
-        prompt_version_id: promptVersionId,
-        name: variable.name,
-        type: variable.type,
-        required: variable.required,
-      }));
+    if (variablesToAdd.length > 0) {
+      const { error: insertError } = await supabase.from('prompt_variables').insert(
+        variablesToAdd.map((v) => ({
+          prompt_version_id: promptVersionId,
+          name: v.name,
+          type: v.type,
+          required: v.required,
+        })),
+      );
 
-      const { error: variablesError } = await supabase
-        .from('prompt_variables')
-        .insert(variablesToInsert);
-
-      if (variablesError) {
-        throw new Error('Failed to create prompt variables: ' + variablesError.message);
+      if (insertError) {
+        throw new Error('Failed to add new variables: ' + insertError.message);
       }
     }
 
-    return true;
+    if (variablesToUpdate.length > 0) {
+      for (const variableToUpdate of variablesToUpdate) {
+        const { id, name, type, required } = variableToUpdate;
+        const { error: updateError } = await supabase
+          .from('prompt_variables')
+          .update({ name, type, required })
+          .eq('id', id);
+
+        if (updateError) {
+          throw new Error(`Failed to update variable ${name} (ID: ${id}): ${updateError.message}`);
+        }
+      }
+    }
   } catch (error) {
     console.error('Error updating prompt version:', error);
     throw error;

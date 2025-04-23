@@ -6,7 +6,9 @@ import { PromptsService } from './PromptsService';
 import { UsersService } from './UsersService';
 import { VaultService } from './VaultService';
 import { ProjectsService } from './ProjectsService';
-import { GitHubService } from './GitHubService';
+import { GitHubAppService } from './GitHubAppService';
+import { GitHubWebhookService } from './GitHubWebhookService';
+import { GitHubSyncService } from './GitHubSyncService';
 
 export type AgentsmithServicesDirectory = {
   users: UsersService;
@@ -15,18 +17,23 @@ export type AgentsmithServicesDirectory = {
   vault: VaultService;
   llmLogs: LLMLogsService;
   projects: ProjectsService;
-  github: GitHubService;
+  githubApp: GitHubAppService;
+  githubWebhook: GitHubWebhookService;
+  githubSync: GitHubSyncService;
 };
 
 type AgentsmithServicesConstructorOptions = {
   supabase: SupabaseClient<Database>;
+  // if true, will call the initialize method on all services
+  initialize?: boolean;
 };
 
 export class AgentsmithServices {
   public services!: AgentsmithServicesDirectory;
+  public initializePromise: Promise<any[]> | null = null;
 
   constructor(options: AgentsmithServicesConstructorOptions) {
-    const { supabase } = options;
+    const { supabase, initialize = true } = options;
 
     const users = new UsersService({ supabase });
     const organizations = new OrganizationsService({ supabase });
@@ -34,7 +41,9 @@ export class AgentsmithServices {
     const vault = new VaultService({ supabase });
     const llmLogs = new LLMLogsService({ supabase });
     const projects = new ProjectsService({ supabase });
-    const github = new GitHubService({ supabase });
+    const githubApp = new GitHubAppService({ supabase });
+    const githubWebhook = new GitHubWebhookService({ supabase });
+    const githubSync = new GitHubSyncService({ supabase });
 
     this.services = {
       users,
@@ -43,7 +52,9 @@ export class AgentsmithServices {
       vault,
       llmLogs,
       projects,
-      github,
+      githubApp,
+      githubWebhook,
+      githubSync,
     };
 
     users.services = this.services;
@@ -52,6 +63,27 @@ export class AgentsmithServices {
     vault.services = this.services;
     llmLogs.services = this.services;
     projects.services = this.services;
-    github.services = this.services;
+    githubApp.services = this.services;
+    githubWebhook.services = this.services;
+    githubSync.services = this.services;
+
+    if (initialize) {
+      for (const service of Object.values(this.services)) {
+        service.services = this.services;
+        const promises = [];
+
+        if (typeof (service as any).initialize === 'function') {
+          const result = (service as any).initialize();
+          if (result instanceof Promise) {
+            result.catch((error) => {
+              console.error(`Failed to initialize service ${service.serviceName}:`, error);
+            });
+            promises.push(result);
+          }
+        }
+
+        this.initializePromise = Promise.all(promises);
+      }
+    }
   }
 }

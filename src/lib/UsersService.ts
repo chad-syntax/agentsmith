@@ -52,6 +52,14 @@ export class UsersService extends AgentsmithSupabaseService {
     };
   }
 
+  public async getAuthUser() {
+    if (!this.authUser) {
+      await this.initialize();
+    }
+
+    return { authUser: this.authUser };
+  }
+
   async getAgentsmithUser(authUserId: string, refetch = false) {
     if (this.agentsmithUser && !refetch) {
       return this.agentsmithUser;
@@ -104,7 +112,7 @@ export class UsersService extends AgentsmithSupabaseService {
               name
             )
           )
-        )`
+        )`,
       )
       .eq('id', this.agentsmithUser.id)
       .single();

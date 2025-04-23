@@ -24,7 +24,7 @@ export async function connectProject(options: ConnectProjectOptions) {
     throw new Error('Project not found, cannot connect project to repository');
   }
 
-  await agentsmith.services.github.connectProjectRepository({
+  await agentsmith.services.githubApp.connectProjectRepository({
     projectId: project.id,
     projectUuid,
     agentsmithFolder,

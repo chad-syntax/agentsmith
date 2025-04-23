@@ -36,7 +36,7 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
       );
     }
 
-    const { authUser } = await agentsmith.services.users.initialize();
+    const { authUser } = await agentsmith.services.users.getAuthUser();
 
     if (!authUser) {
       console.error('/connect/openrouter: no user found');

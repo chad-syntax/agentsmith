@@ -8,10 +8,7 @@ import { Database } from '@/app/__generated__/supabase.types';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
 import { updatePromptVersion, createDraftVersion } from '@/app/actions/prompts';
-import {
-  PromptContentEditor,
-  PromptVariable,
-} from '@/components/editors/PromptContentEditor';
+import { PromptContentEditor, PromptVariable } from '@/components/editors/PromptContentEditor';
 import { VariablesSidebar } from '@/components/prompt/VariablesSidebar';
 import { PromptTestModal } from '@/components/prompt/PromptTestModal';
 import { PublishUpdateConfirmModal } from '@/components/prompt/PublishUpdateConfirmModal';
@@ -28,34 +25,30 @@ type EditPromptVersionPageProps = {
 };
 
 export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
-  const { promptVersion } = props;
-  const isDraft = promptVersion.status === 'DRAFT';
-  const isPublished = promptVersion.status === 'PUBLISHED';
+  const { promptVersion: initialPromptVersion } = props;
+  const [currentPromptVersion, setCurrentPromptVersion] = useState(initialPromptVersion);
+
+  const isDraft = currentPromptVersion.status === 'DRAFT';
+  const isPublished = currentPromptVersion.status === 'PUBLISHED';
 
   const router = useRouter();
-  // Store initial values to properly detect changes
-  const [initialContent] = useState(promptVersion.content);
-  const [initialVariables] = useState<PromptVariable[]>(
-    promptVersion.prompt_variables
-  );
+  const [initialContent] = useState(initialPromptVersion.content);
+  const [initialVariables] = useState<PromptVariable[]>(initialPromptVersion.prompt_variables);
 
   const [variables, setVariables] = useState<PromptVariable[]>(
-    promptVersion.prompt_variables
+    currentPromptVersion.prompt_variables,
   );
-  const [content, setContent] = useState(promptVersion.content);
-  const [config, setConfig] = useState(
-    promptVersion.config as CompletionConfig
-  );
+  const [content, setContent] = useState(currentPromptVersion.content);
+  const [config, setConfig] = useState(currentPromptVersion.config as CompletionConfig);
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingVersion, setIsCreatingVersion] = useState(false);
+  const [isSettingDraft, setIsSettingDraft] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const { selectedProjectUuid } = useApp();
 
-  // Computed property to check if content has been modified
   const hasChanges =
-    content !== initialContent ||
-    JSON.stringify(variables) !== JSON.stringify(initialVariables);
+    content !== initialContent || JSON.stringify(variables) !== JSON.stringify(initialVariables);
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
@@ -67,7 +60,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
 
   const handleSave = async (
     status: Database['public']['Enums']['prompt_status'],
-    shouldRedirect = true
+    shouldRedirect = true,
   ) => {
     if (!content.trim()) {
       alert('Please provide content for the prompt');
@@ -78,7 +71,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
 
     try {
       await updatePromptVersion({
-        promptVersionUuid: promptVersion.uuid,
+        promptVersionUuid: currentPromptVersion.uuid,
         content,
         config,
         status,
@@ -90,15 +83,16 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         })),
       });
 
-      // Redirect back to the prompt detail page if requested
       if (shouldRedirect) {
         router.push(
-          routes.studio.promptDetail(
-            selectedProjectUuid,
-            promptVersion.prompts.uuid
-          )
+          routes.studio.promptDetail(selectedProjectUuid, currentPromptVersion.prompts.uuid),
         );
       }
+
+      setCurrentPromptVersion({
+        ...currentPromptVersion,
+        status,
+      });
 
       return true;
     } catch (error) {
@@ -110,19 +104,29 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     }
   };
 
+  const handleSetToDraft = async () => {
+    setIsSettingDraft(true);
+    try {
+      await handleSave('DRAFT', false);
+      setCurrentPromptVersion({
+        ...currentPromptVersion,
+        status: 'DRAFT',
+      });
+    } finally {
+      setIsSettingDraft(false);
+    }
+  };
+
   const handleCreateNewVersion = async () => {
     setIsCreatingVersion(true);
     try {
       const { versionUuid } = await createDraftVersion({
-        promptId: promptVersion.prompts.id,
-        latestVersion: promptVersion.version,
-        versionType: 'patch', // Default to patch version increment
+        promptId: currentPromptVersion.prompts.id,
+        latestVersion: currentPromptVersion.version,
+        versionType: 'patch',
       });
 
-      // Redirect to the edit page for the new draft version
-      router.push(
-        routes.studio.editPromptVersion(selectedProjectUuid, versionUuid)
-      );
+      router.push(routes.studio.editPromptVersion(selectedProjectUuid, versionUuid));
     } catch (error) {
       console.error('Error creating new version:', error);
       alert('Failed to create new version. Please try again.');
@@ -132,19 +136,16 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
 
   const handleTest = async () => {
     if (!hasChanges) {
-      // If no changes, just open the test modal
       setIsTestModalOpen(true);
       return;
     }
 
     if (isDraft) {
-      // For drafts, auto-save before testing
       const saveSuccess = await handleSave('DRAFT', false);
       if (saveSuccess) {
         setIsTestModalOpen(true);
       }
     } else if (isPublished) {
-      // For published versions, show confirmation modal
       setIsPublishConfirmOpen(true);
     }
   };
@@ -165,7 +166,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
             <Link
               href={routes.studio.promptDetail(
                 selectedProjectUuid,
-                promptVersion.prompts.uuid
+                currentPromptVersion.prompts.uuid,
               )}
               className="text-blue-500 hover:text-blue-600"
             >
@@ -189,10 +190,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
                   >
                     {isSaving ? 'Saving...' : 'Save'}
                   </Button>
-                  <Button
-                    onClick={() => handleSave('PUBLISHED')}
-                    disabled={isSaving}
-                  >
+                  <Button onClick={() => handleSave('PUBLISHED')} disabled={isSaving}>
                     {isSaving ? 'Publishing...' : 'Publish'}
                   </Button>
                 </>
@@ -207,38 +205,36 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
                   >
                     {isSaving ? 'Updating...' : 'Update Published Version'}
                   </Button>
-                  <Button
-                    onClick={handleCreateNewVersion}
-                    disabled={isCreatingVersion || isSaving}
-                  >
+                  <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion || isSaving}>
                     {isCreatingVersion ? 'Creating...' : 'Create New Version'}
+                  </Button>
+                  <Button
+                    onClick={handleSetToDraft}
+                    disabled={isSaving || isSettingDraft}
+                    variant="secondary"
+                  >
+                    {isSettingDraft ? 'Setting to Draft...' : 'Set to Draft'}
                   </Button>
                 </>
               )}
             </div>
           </div>
 
-          <H1 className="mb-6">{promptVersion.prompts.name}</H1>
+          <H1 className="mb-6">{currentPromptVersion.prompts.name}</H1>
 
           <div className="space-y-6">
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <Label className="pb-2">Version</Label>
-                <Input
-                  value={promptVersion.version}
-                  disabled
-                  className="bg-muted"
-                />
+                <Input value={currentPromptVersion.version} disabled className="bg-muted" />
               </div>
               <div className="flex-1">
                 <Label className="pb-2">Status</Label>
                 <Input
-                  value={promptVersion.status}
+                  value={currentPromptVersion.status}
                   disabled
                   className={`bg-muted ${
-                    isPublished
-                      ? 'text-green-600 font-medium'
-                      : 'text-amber-600 font-medium'
+                    isPublished ? 'text-green-600 font-medium' : 'text-amber-600 font-medium'
                   }`}
                 />
               </div>
@@ -265,16 +261,13 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         </div>
       </div>
 
-      <VariablesSidebar
-        variables={variables}
-        onVariablesChange={handleVariablesChange}
-      />
+      <VariablesSidebar variables={variables} onVariablesChange={handleVariablesChange} />
 
       <PromptTestModal
         isOpen={isTestModalOpen}
         onClose={() => setIsTestModalOpen(false)}
         variables={variables}
-        promptVersionUuid={promptVersion.uuid}
+        promptVersionUuid={currentPromptVersion.uuid}
       />
 
       <PublishUpdateConfirmModal

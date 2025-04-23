@@ -5,7 +5,7 @@ export type AgentsmithServiceConstructorOptions = {
 };
 
 export class AgentsmithService {
-  protected serviceName: string;
+  public serviceName: string;
   public services!: AgentsmithServicesDirectory;
 
   constructor(options: AgentsmithServiceConstructorOptions) {

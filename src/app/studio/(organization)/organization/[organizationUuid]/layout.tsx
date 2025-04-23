@@ -33,7 +33,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
     | undefined;
 
   try {
-    const userData = await agentsmith.services.users.initialize();
+    const userData = await agentsmith.services.users.getAuthUser();
 
     authUser = userData.authUser;
 

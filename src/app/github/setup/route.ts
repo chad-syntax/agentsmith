@@ -19,10 +19,10 @@ export const GET = async (request: Request) => {
 
   try {
     const { organizationUuid, installationRecordUuid } =
-      agentsmith.services.github.decodeState(state);
+      agentsmith.services.githubApp.decodeState(state);
 
     const { isValid, githubAppInstallationRecordId } =
-      await agentsmith.services.github.verifyInstallation({
+      await agentsmith.services.githubApp.verifyInstallation({
         installationRecordUuid,
         installationId,
         organizationUuid,
@@ -34,7 +34,7 @@ export const GET = async (request: Request) => {
       );
     }
 
-    await agentsmith.services.github.createInstallationRepositories({
+    await agentsmith.services.githubApp.createInstallationRepositories({
       githubAppInstallationRecordId,
       organizationUuid,
       installationId,

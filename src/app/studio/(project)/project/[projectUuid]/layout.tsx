@@ -23,23 +23,20 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   const agentsmith = new AgentsmithServices({ supabase });
 
-  const { authUser } = await agentsmith.services.users.initialize();
+  const { authUser } = await agentsmith.services.users.getAuthUser();
 
   if (!authUser) {
     redirect(routes.auth.signIn);
   }
 
-  const agentsmithUser = await agentsmith.services.users.getAgentsmithUser(
-    authUser.id
-  );
+  const agentsmithUser = await agentsmith.services.users.getAgentsmithUser(authUser.id);
 
   let redirectUrl: string | null = null;
 
   let userOrganizationData: GetUserOrganizationDataResult | null = null;
 
   try {
-    userOrganizationData =
-      await agentsmith.services.users.getUserOrganizationData();
+    userOrganizationData = await agentsmith.services.users.getUserOrganizationData();
   } catch (error) {
     redirectUrl = routes.error('Failed to fetch user data');
   }
@@ -58,9 +55,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   const selectedOrganization = userOrganizationData!.organization_users
     .flatMap((orgUser) => orgUser.organizations)
-    .find((org) =>
-      org.projects.some((project) => project.uuid === projectUuid)
-    );
+    .find((org) => org.projects.some((project) => project.uuid === projectUuid));
 
   if (!selectedProject || !selectedOrganization) {
     redirect(routes.studio.home);

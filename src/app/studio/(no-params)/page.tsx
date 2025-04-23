@@ -9,15 +9,14 @@ export default async function WebStudioHome() {
 
   const agentsmith = new AgentsmithServices({ supabase });
 
-  const { authUser } = await agentsmith.services.users.initialize();
+  const { authUser } = await agentsmith.services.users.getAuthUser();
 
   if (!authUser) {
     redirect(routes.auth.signIn);
   }
 
   // get the user's organization data, and redirect to the project page if only one organization and only one project exists
-  const userOrganizationData =
-    await agentsmith.services.users.getUserOrganizationData();
+  const userOrganizationData = await agentsmith.services.users.getUserOrganizationData();
 
   return <StudioPage userOrganizationData={userOrganizationData} />;
 }
