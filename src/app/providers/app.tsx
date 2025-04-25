@@ -6,8 +6,7 @@ import { redirect, useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
 import type { GetUserOrganizationDataResult } from '@/lib/UsersService';
 
-type Organization =
-  GetUserOrganizationDataResult['organization_users'][number]['organizations'];
+type Organization = GetUserOrganizationDataResult['organization_users'][number]['organizations'];
 type Project = Organization['projects'][number];
 
 type AppContextType = {
@@ -49,65 +48,55 @@ export const AppProvider = (props: AppProviderProps) => {
 
   const router = useRouter();
 
-  const [selectedOrganizationUuid, _setSelectedOrganizationUuid] =
-    useState<string>(initialSelectedOrganizationUuid);
+  const [selectedOrganizationUuid, _setSelectedOrganizationUuid] = useState<string>(
+    initialSelectedOrganizationUuid,
+  );
   const [selectedProjectUuid, _setSelectedProjectUuid] = useState<string>(
-    initialSelectedProjectUuid
+    initialSelectedProjectUuid,
   );
 
   const initialSelectedOrganization =
     userOrganizationData.organization_users.find(
-      (orgUser) =>
-        orgUser.organizations.uuid === initialSelectedOrganizationUuid
-    )?.organizations ??
-    userOrganizationData.organization_users[0].organizations;
+      (orgUser) => orgUser.organizations.uuid === initialSelectedOrganizationUuid,
+    )?.organizations ?? userOrganizationData.organization_users[0].organizations;
 
   const initialSelectedProject =
     initialSelectedOrganization?.projects.find(
-      (project) => project.uuid === initialSelectedProjectUuid
+      (project) => project.uuid === initialSelectedProjectUuid,
     ) ?? initialSelectedOrganization?.projects[0];
 
-  const [selectedOrganization, setSelectedOrganization] =
-    useState<Organization>(initialSelectedOrganization);
-  const [selectedProject, setSelectedProject] = useState<Project>(
-    initialSelectedProject
+  const [selectedOrganization, setSelectedOrganization] = useState<Organization>(
+    initialSelectedOrganization,
   );
+  const [selectedProject, setSelectedProject] = useState<Project>(initialSelectedProject);
 
   const hasOpenRouterKey =
     selectedOrganization?.organization_keys.some(
-      (key) => key.key === ORGANIZATION_KEYS.OPENROUTER_API_KEY
+      (key) => key.key === ORGANIZATION_KEYS.OPENROUTER_API_KEY,
     ) ?? false;
 
-  const initialIsOrganizationAdmin =
-    userOrganizationData.organization_users.some(
-      (orgUser) =>
-        orgUser.organizations.uuid === selectedOrganizationUuid &&
-        orgUser.role === 'ADMIN'
-    );
-
-  const [isOrganizationAdmin, setIsOrganizationAdmin] = useState(
-    initialIsOrganizationAdmin
+  const initialIsOrganizationAdmin = userOrganizationData.organization_users.some(
+    (orgUser) =>
+      orgUser.organizations.uuid === selectedOrganizationUuid && orgUser.role === 'ADMIN',
   );
+
+  const [isOrganizationAdmin, setIsOrganizationAdmin] = useState(initialIsOrganizationAdmin);
 
   const setSelectedOrganizationUuid = (uuid: string) => {
     _setSelectedOrganizationUuid(uuid);
 
     const targetOrganization =
-      userOrganizationData.organization_users.find(
-        (orgUser) => orgUser.organizations.uuid === uuid
-      )?.organizations ?? null;
+      userOrganizationData.organization_users.find((orgUser) => orgUser.organizations.uuid === uuid)
+        ?.organizations ?? null;
 
     if (!targetOrganization) {
-      redirect(
-        routes.error('Cannot select organization, user is not a member.')
-      );
+      redirect(routes.error('Cannot select organization, user is not a member.'));
     }
 
     setIsOrganizationAdmin(
       userOrganizationData.organization_users.some(
-        (orgUser) =>
-          orgUser.organizations.uuid === uuid && orgUser.role === 'ADMIN'
-      )
+        (orgUser) => orgUser.organizations.uuid === uuid && orgUser.role === 'ADMIN',
+      ),
     );
 
     setSelectedOrganization(targetOrganization);
@@ -118,13 +107,10 @@ export const AppProvider = (props: AppProviderProps) => {
     _setSelectedProjectUuid(uuid);
 
     const targetProject =
-      selectedOrganization?.projects.find((project) => project.uuid === uuid) ??
-      null;
+      selectedOrganization?.projects.find((project) => project.uuid === uuid) ?? null;
 
     if (!targetProject) {
-      redirect(
-        routes.error('Cannot select project, user does not have access.')
-      );
+      redirect(routes.error('Cannot select project, user does not have access.'));
     }
 
     setSelectedProject(targetProject);
@@ -149,7 +135,7 @@ export const AppProvider = (props: AppProviderProps) => {
       selectedProject,
       hasOpenRouterKey,
       isOrganizationAdmin,
-    ]
+    ],
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

@@ -3,15 +3,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { routes } from '@/utils/routes';
+
 export const createOrganization = async (name: string) => {
   const supabase = await createClient();
 
-  const { data: newOrganizationUuid, error } = await supabase.rpc(
-    'create_organization',
-    {
-      arg_name: name,
-    }
-  );
+  const { data: newOrganizationUuid, error } = await supabase.rpc('create_organization', {
+    arg_name: name,
+  });
 
   if (error) {
     throw new Error(error.message);
@@ -26,10 +24,7 @@ export const createOrganization = async (name: string) => {
   return redirect(redirectUrl);
 };
 
-export const renameOrganization = async (
-  organizationUuid: string,
-  name: string
-) => {
+export const renameOrganization = async (organizationUuid: string, name: string) => {
   const supabase = await createClient();
 
   const { data, error } = await supabase.rpc('rename_organization', {

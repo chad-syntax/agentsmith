@@ -4,11 +4,7 @@ import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { PromptVariable } from '@/components/editors/PromptContentEditor';
 import { VariablesEditor } from '@/components/prompt/VariablesEditor';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,12 +18,7 @@ type VariablesSidebarProps = {
 };
 
 export const VariablesSidebar = (props: VariablesSidebarProps) => {
-  const {
-    variables,
-    onVariablesChange,
-    readOnly = false,
-    defaultOpen = true,
-  } = props;
+  const { variables, onVariablesChange, readOnly = false, defaultOpen = true } = props;
 
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
@@ -35,21 +26,13 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className={cn(
-        'border-l bg-muted/50 transition-all duration-300',
-        isOpen ? 'w-80' : 'w-12'
-      )}
+      className={cn('border-l bg-muted/50 transition-all duration-300', isOpen ? 'w-80' : 'w-12')}
     >
       <div className="p-4 border-b flex items-center justify-between">
         <div className="flex items-center">
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
-              <ChevronRight
-                className={cn(
-                  'h-4 w-4 transition-transform',
-                  isOpen && 'rotate-90'
-                )}
-              />
+              <ChevronRight className={cn('h-4 w-4 transition-transform', isOpen && 'rotate-90')} />
             </Button>
           </CollapsibleTrigger>
           {isOpen && <span className="font-medium ml-2">Variables</span>}
@@ -57,38 +40,11 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
       </div>
 
       <CollapsibleContent className="p-4">
-        {onVariablesChange ? (
-          <VariablesEditor
-            variables={variables}
-            onVariablesChange={onVariablesChange}
-            readOnly={readOnly}
-          />
-        ) : (
-          <div className="space-y-4">
-            {variables.map((variable) => (
-              <Card
-                key={variable.id || variable.name}
-                className={cn('bg-background', readOnly && 'opacity-70')}
-              >
-                <CardContent className="pt-6">
-                  <div className="font-medium mb-2">{variable.name}</div>
-                  <div className="flex gap-2">
-                    <Badge variant="secondary">{variable.type}</Badge>
-                    {variable.required && (
-                      <Badge variant="default">Required</Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-
-            {variables.length === 0 && (
-              <p className="text-muted-foreground text-sm text-center py-4">
-                No variables found.
-              </p>
-            )}
-          </div>
-        )}
+        <VariablesEditor
+          variables={variables}
+          onVariablesChange={onVariablesChange}
+          readOnly={readOnly || !onVariablesChange}
+        />
       </CollapsibleContent>
     </Collapsible>
   );

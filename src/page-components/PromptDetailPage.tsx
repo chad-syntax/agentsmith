@@ -31,9 +31,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
 
   const { selectedProjectUuid } = useApp();
   const router = useRouter();
-  const [expandedVersions, setExpandedVersions] = useState<
-    Record<number, boolean>
-  >({
+  const [expandedVersions, setExpandedVersions] = useState<Record<number, boolean>>({
     [latestVersion.id]: true,
   });
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
@@ -61,9 +59,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
       });
 
       // Redirect to the edit page for the new draft version
-      router.push(
-        routes.studio.editPromptVersion(selectedProjectUuid, versionUuid)
-      );
+      router.push(routes.studio.editPromptVersion(selectedProjectUuid, versionUuid));
     } catch (error) {
       console.error('Error creating new version:', error);
       alert('Failed to create new version. Please try again.');
@@ -75,9 +71,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
     if (!allVersions || allVersions.length === 0) return latestVersion.version;
 
     return allVersions.reduce((highest, current) => {
-      return compareSemanticVersions(current.version, highest) > 0
-        ? current.version
-        : highest;
+      return compareSemanticVersions(current.version, highest) > 0 ? current.version : highest;
     }, latestVersion.version);
   };
 
@@ -106,10 +100,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
                 <IconPlayerPlay size={16} />
                 Test Run
               </Button>
-              <Button
-                onClick={handleCreateNewVersion}
-                disabled={isCreatingVersion}
-              >
+              <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion}>
                 {isCreatingVersion ? 'Creating...' : 'New Version'}
               </Button>
             </div>
@@ -126,14 +117,10 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
                   <div className="flex items-center gap-2">
                     <IconChevronRight
                       className={`w-5 h-5 transition-transform ${
-                        expandedVersions[version.id]
-                          ? 'transform rotate-90'
-                          : ''
+                        expandedVersions[version.id] ? 'transform rotate-90' : ''
                       }`}
                     />
-                    <span className="font-medium">
-                      Version {version.version}
-                    </span>
+                    <span className="font-medium">Version {version.version}</span>
                     {version.id === latestVersion.id && (
                       <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
                         Latest
@@ -148,10 +135,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
                   <div className="flex items-center gap-4">
                     <Button variant="link" asChild className="p-0">
                       <Link
-                        href={routes.studio.editPromptVersion(
-                          selectedProjectUuid,
-                          version.uuid
-                        )}
+                        href={routes.studio.editPromptVersion(selectedProjectUuid, version.uuid)}
                       >
                         Edit
                       </Link>
@@ -166,7 +150,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
                     <PromptContentEditor
                       content={version.content}
                       onContentChange={() => {}}
-                      readOnly={true}
+                      readOnly
                     />
                   </div>
                 )}
@@ -176,10 +160,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         </div>
       </div>
 
-      <VariablesSidebar
-        variables={latestVersion.prompt_variables}
-        readOnly={true}
-      />
+      <VariablesSidebar variables={latestVersion.prompt_variables} readOnly />
 
       <PromptTestModal
         isOpen={isTestModalOpen}

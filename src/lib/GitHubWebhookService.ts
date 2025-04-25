@@ -51,12 +51,13 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
     });
 
     app.webhooks.on('push', async ({ payload }) => {
-      try {
-        // Do something else
-        console.log('github webhook: push', payload);
-      } catch (e) {
-        console.error(`push handler failed with error: ${(<Error>e).message}`);
-      }
+      await this.handlePush(payload);
+      // try {
+      //   // Do something else
+      //   console.log('github webhook: push', payload);
+      // } catch (e) {
+      //   console.error(`push handler failed with error: ${(<Error>e).message}`);
+      // }
     });
   }
 
@@ -190,5 +191,15 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         `installation_repositories.removed handler failed with error: ${(<Error>e).message}`,
       );
     }
+  }
+
+  private async handlePush(payload: EmitterWebhookEvent<'push'>['payload']) {
+    console.log('github webhook: push', payload);
+
+    // whenever a push is made, we need to sync the prompts that are in the repo to the agentsmith database
+
+    // if the push was made to a feature branch, we need to make sure the prompts are in "DRAFT" status, even if the JSON says it's "PUBLISHED"
+
+    // if its to the main branch we just use whatever is in the JSON file, this is just to protect against accidental publishes
   }
 }

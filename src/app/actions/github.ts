@@ -25,5 +25,5 @@ export const syncProject = async (projectUuid: string) => {
 
   const agentsmith = new AgentsmithServices({ supabase });
 
-  await agentsmith.services.githubSync.syncRepository(projectUuid);
+  await agentsmith.services.githubSync.syncRepositoryFromAgentsmith(projectUuid);
 };

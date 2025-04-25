@@ -9,6 +9,7 @@ import {
   IconList,
   IconHome,
   IconBuilding,
+  IconActivity,
 } from '@tabler/icons-react';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/app/providers/app';
@@ -55,9 +56,7 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
       name: 'Organization',
       href: routes.studio.organization(selectedOrganizationUuid),
       icon: IconBuilding,
-      active: pathname.startsWith(
-        routes.studio.organization(selectedOrganizationUuid)
-      ),
+      active: pathname.startsWith(routes.studio.organization(selectedOrganizationUuid)),
     },
     {
       name: 'Prompts',
@@ -72,6 +71,12 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
       active: pathname.startsWith(routes.studio.logs(selectedProjectUuid)),
     },
     {
+      name: 'Events',
+      href: routes.studio.events(selectedProjectUuid),
+      icon: IconActivity,
+      active: pathname.startsWith(routes.studio.events(selectedProjectUuid)),
+    },
+    {
       name: 'Account',
       href: routes.studio.account,
       icon: IconUser,
@@ -82,16 +87,9 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
   const SidebarContent = () => (
     <div className="h-full flex flex-col">
       <div className="p-4 flex items-center justify-between">
-        <H3 className={cn('transition-opacity', !isOpen && 'opacity-0')}>
-          Dashboard
-        </H3>
+        <H3 className={cn('transition-opacity', !isOpen && 'opacity-0')}>Dashboard</H3>
         <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
-          <IconMenu2
-            className={cn(
-              'h-4 w-4 transition-transform',
-              !isOpen && 'rotate-180'
-            )}
-          />
+          <IconMenu2 className={cn('h-4 w-4 transition-transform', !isOpen && 'rotate-180')} />
         </Button>
       </div>
       <Separator />
@@ -101,10 +99,7 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
             key={item.name}
             variant={item.active ? 'secondary' : 'ghost'}
             asChild
-            className={cn(
-              'w-full justify-start mb-1',
-              !isOpen && 'justify-center'
-            )}
+            className={cn('w-full justify-start mb-1', !isOpen && 'justify-center')}
           >
             <Link href={item.href}>
               <item.icon className={cn('h-4 w-4', isOpen && 'mr-2')} />
@@ -116,9 +111,7 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
       <Separator />
       <div className="p-4 space-y-4">
         <OrganizationSelector userOrganizationData={userOrganizationData} />
-        <div
-          className={cn('flex', isOpen ? 'justify-start' : 'justify-center')}
-        >
+        <div className={cn('flex', isOpen ? 'justify-start' : 'justify-center')}>
           <ThemeSwitcher />
         </div>
       </div>
@@ -131,7 +124,7 @@ export const DashboardSidebar = (props: DashboardSidebarProps) => {
       <aside
         className={cn(
           'hidden lg:block border-r bg-background transition-all duration-300',
-          isOpen ? 'w-64' : 'w-16'
+          isOpen ? 'w-64' : 'w-16',
         )}
       >
         <SidebarContent />

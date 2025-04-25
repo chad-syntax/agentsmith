@@ -9,6 +9,7 @@ import { ProjectsService } from './ProjectsService';
 import { GitHubAppService } from './GitHubAppService';
 import { GitHubWebhookService } from './GitHubWebhookService';
 import { GitHubSyncService } from './GitHubSyncService';
+import { EventsService } from './EventsService';
 
 export type AgentsmithServicesDirectory = {
   users: UsersService;
@@ -20,6 +21,7 @@ export type AgentsmithServicesDirectory = {
   githubApp: GitHubAppService;
   githubWebhook: GitHubWebhookService;
   githubSync: GitHubSyncService;
+  events: EventsService;
 };
 
 type AgentsmithServicesConstructorOptions = {
@@ -41,6 +43,7 @@ export class AgentsmithServices {
     const vault = new VaultService({ supabase });
     const llmLogs = new LLMLogsService({ supabase });
     const projects = new ProjectsService({ supabase });
+    const events = new EventsService({ supabase });
     const githubApp = new GitHubAppService({ supabase });
     const githubWebhook = new GitHubWebhookService({ supabase });
     const githubSync = new GitHubSyncService({ supabase });
@@ -55,6 +58,7 @@ export class AgentsmithServices {
       githubApp,
       githubWebhook,
       githubSync,
+      events,
     };
 
     users.services = this.services;
@@ -66,6 +70,7 @@ export class AgentsmithServices {
     githubApp.services = this.services;
     githubWebhook.services = this.services;
     githubSync.services = this.services;
+    events.services = this.services;
 
     if (initialize) {
       for (const service of Object.values(this.services)) {

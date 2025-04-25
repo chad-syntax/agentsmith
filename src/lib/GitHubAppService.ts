@@ -183,7 +183,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       throw new Error('Failed to connect project to repository');
     }
 
-    await this.services.githubSync.syncRepository(projectUuid);
+    await this.services.githubSync.syncRepositoryFromAgentsmith(projectUuid);
 
     return data;
   }

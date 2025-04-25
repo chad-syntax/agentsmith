@@ -8,6 +8,7 @@ type ParsedVariable = {
   name: string;
   type: Database['public']['Enums']['variable_type'];
   required: boolean;
+  default_value: string | null;
 };
 
 /**
@@ -16,7 +17,7 @@ type ParsedVariable = {
  * @returns Array of extracted variable names with detected types
  */
 export const extractTemplateVariables = (
-  content: string
+  content: string,
 ): { variables: ParsedVariable[]; error?: Error } => {
   try {
     // Parse the template
@@ -24,10 +25,7 @@ export const extractTemplateVariables = (
     const ast = transform(nunjucks.parser.parse(content));
 
     // Map to track variables and their detected types
-    const variableMap = new Map<
-      string,
-      Database['public']['Enums']['variable_type']
-    >();
+    const variableMap = new Map<string, Database['public']['Enums']['variable_type']>();
 
     // Set to track local variable names (like loop variables) that shouldn't be extracted
     const localVariables = new Set<string>();
@@ -93,16 +91,7 @@ export const extractTemplateVariables = (
       // Handle objects - walk through all properties that could be nodes or arrays of nodes
       if (node && typeof node === 'object') {
         // Process common properties that might contain nodes
-        [
-          'children',
-          'body',
-          'cond',
-          'else_',
-          'target',
-          'val',
-          'arr',
-          'args',
-        ].forEach((prop) => {
+        ['children', 'body', 'cond', 'else_', 'target', 'val', 'arr', 'args'].forEach((prop) => {
           if (node[prop]) {
             walkAst(node[prop]);
           }
@@ -114,16 +103,7 @@ export const extractTemplateVariables = (
           if (
             value &&
             typeof value === 'object' &&
-            ![
-              'children',
-              'body',
-              'cond',
-              'else_',
-              'target',
-              'val',
-              'arr',
-              'args',
-            ].includes(key) &&
+            !['children', 'body', 'cond', 'else_', 'target', 'val', 'arr', 'args'].includes(key) &&
             !key.startsWith('_') // Skip internal properties
           ) {
             walkAst(value);
@@ -140,6 +120,7 @@ export const extractTemplateVariables = (
       name,
       type,
       required: true, // Default to required
+      default_value: null,
     }));
 
     return { variables };
@@ -155,9 +136,7 @@ export const extractTemplateVariables = (
  * Validates if a Nunjucks template is syntactically correct
  * Note: Currently not used in the application, but kept for potential future use
  */
-export const validateTemplate = (
-  content: string
-): { isValid: boolean; error?: string } => {
+export const validateTemplate = (content: string): { isValid: boolean; error?: string } => {
   try {
     // Configure nunjucks to throw errors
     const env = new nunjucks.Environment(null, { throwOnUndefined: true });

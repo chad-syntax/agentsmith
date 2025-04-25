@@ -16,20 +16,16 @@ export const connectOpenrouter = async (organizationUuid: string) => {
   const agentsmith = new AgentsmithServices({ supabase });
 
   const codeVerifierResponse =
-    await agentsmith.services.organizations.getOrCreateOpenrouterCodeVerifier(
-      organizationUuid
-    );
+    await agentsmith.services.organizations.getOrCreateOpenrouterCodeVerifier(organizationUuid);
 
   if (!codeVerifierResponse.success) {
     return codeVerifierResponse;
   }
 
-  const generatedCodeChallenge = await sha256CodeChallenge(
-    codeVerifierResponse.codeVerifier!
-  );
+  const generatedCodeChallenge = await sha256CodeChallenge(codeVerifierResponse.codeVerifier);
 
   const callbackUrl = encodeURIComponent(
-    `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/openrouter/callback/${organizationUuid}`
+    `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/openrouter/callback/${organizationUuid}`,
   );
 
   const redirectUrl = `${routes.openrouter.oauthInitiate}?callback_url=${callbackUrl}&code_challenge=${generatedCodeChallenge}&code_challenge_method=S256`;

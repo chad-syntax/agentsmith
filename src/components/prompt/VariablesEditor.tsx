@@ -19,7 +19,7 @@ import { cn } from '@/utils/shadcn';
 
 type VariablesEditorProps = {
   variables: PromptVariable[];
-  onVariablesChange: (variables: PromptVariable[]) => void;
+  onVariablesChange?: (variables: PromptVariable[]) => void;
   readOnly?: boolean;
   className?: string;
 };
@@ -28,16 +28,12 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
   const { variables, onVariablesChange, readOnly = false, className } = props;
 
   const removeVariable = (index: number) => {
-    if (readOnly) return;
+    if (readOnly || !onVariablesChange) return;
     onVariablesChange(variables.filter((_, i) => i !== index));
   };
 
-  const updateVariable = (
-    index: number,
-    field: keyof PromptVariable,
-    value: string | boolean
-  ) => {
-    if (readOnly) return;
+  const updateVariable = (index: number, field: keyof PromptVariable, value: string | boolean) => {
+    if (readOnly || !onVariablesChange) return;
     const newVariables = [...variables];
     newVariables[index] = {
       ...newVariables[index],
@@ -52,10 +48,7 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
   return (
     <div className={cn('space-y-4', className)}>
       {variables.map((variable, index) => (
-        <Card
-          key={variable.id || `var-${index}`}
-          className={cn(readOnly && 'opacity-70')}
-        >
+        <Card key={variable.id || `var-${index}`} className={cn(readOnly && 'opacity-70')}>
           <CardContent>
             <div className="flex justify-between items-center gap-1 mb-4">
               <div className="bg-muted p-2 rounded-md flex-1">
@@ -77,9 +70,7 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
                 <Label>Type</Label>
                 <Select
                   value={variable.type}
-                  onValueChange={(value) =>
-                    updateVariable(index, 'type', value)
-                  }
+                  onValueChange={(value) => updateVariable(index, 'type', value)}
                   disabled={readOnly}
                 >
                   <SelectTrigger>
@@ -97,13 +88,22 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
                 <Checkbox
                   id={`required-${index}`}
                   checked={variable.required}
-                  onCheckedChange={(checked) =>
-                    updateVariable(index, 'required', checked === true)
-                  }
+                  onCheckedChange={(checked) => updateVariable(index, 'required', checked === true)}
                   disabled={readOnly}
                 />
                 <Label htmlFor={`required-${index}`}>Required</Label>
               </div>
+              {!variable.required && (
+                <div className="space-y-2">
+                  <Label>Default Value</Label>
+                  <Input
+                    value={variable.default_value ?? ''}
+                    onChange={(e) => updateVariable(index, 'default_value', e.target.value)}
+                    disabled={readOnly}
+                    placeholder="Optional default value"
+                  />
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -111,8 +111,7 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
 
       {variables.length === 0 && (
         <p className="text-muted-foreground text-sm text-center py-4">
-          No variables found. Add variables to your prompt or edit template to
-          add variables.
+          No variables found. Add variables to your prompt or edit template to add variables.
         </p>
       )}
     </div>

@@ -5,7 +5,7 @@
 import SmeeClient from 'smee-client';
 import { config } from 'dotenv';
 
-config({ path: '.env.local' });
+config();
 
 const SMEE_WEBHOOK_PROXY_URL = process.env.SMEE_WEBHOOK_PROXY_URL;
 

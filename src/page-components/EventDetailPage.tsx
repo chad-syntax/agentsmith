@@ -1,0 +1,126 @@
+'use client';
+
+import Link from 'next/link';
+import { format } from 'date-fns';
+import { IconArrowLeft } from '@tabler/icons-react';
+import { routes } from '@/utils/routes';
+import { H1, H2, P } from '@/components/typography';
+import { Button } from '@/components/ui/button';
+import { GetEventByUuidResult } from '@/lib/EventsService';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Database } from '@/app/__generated__/supabase.types';
+
+type EventDetailPageProps = {
+  event: NonNullable<GetEventByUuidResult>;
+};
+
+export const EventDetailPage = (props: EventDetailPageProps) => {
+  const { event } = props;
+
+  const projectUuid = event.projects?.uuid; // Use optional chaining as project might not always be linked
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), 'MMM d, yyyy h:mm a');
+  };
+
+  const severityColor = (severity: Database['public']['Enums']['agentsmith_event_severity']) => {
+    switch (severity) {
+      case 'ERROR':
+        return 'border border-red-500/50 bg-red-500/10 text-red-700 dark:text-red-400';
+      case 'WARN':
+        return 'border border-yellow-500/50 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400';
+      case 'INFO':
+        return 'border border-blue-500/50 bg-blue-500/10 text-blue-700 dark:text-blue-400';
+      case 'DEBUG':
+      default:
+        return 'border border-gray-500/50 bg-gray-500/10 text-gray-700 dark:text-gray-400';
+    }
+  };
+
+  if (!event || !projectUuid) {
+    return (
+      <div className="p-6">
+        <div className="mb-6 flex items-center">
+          <H1>Event Details</H1>
+        </div>
+        <div className="bg-card p-6 rounded-lg shadow-sm text-center">
+          <P className="text-muted-foreground">Event not found or project link missing.</P>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6">
+      <div className="mb-6 flex items-center">
+        <Button
+          variant="link"
+          asChild
+          className="mr-4 text-primary hover:text-primary/90 flex items-center p-0"
+        >
+          <Link href={routes.studio.events(projectUuid)}>
+            <IconArrowLeft className="w-4 h-4 mr-1" />
+            Back to Events
+          </Link>
+        </Button>
+        <H1>Event Details</H1>
+      </div>
+
+      <div className="space-y-6">
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <P className="text-sm text-muted-foreground">Project</P>
+                <P className="font-medium">{event.projects?.name || 'N/A'}</P>
+              </div>
+              <div>
+                <P className="text-sm text-muted-foreground">Type</P>
+                <P className="font-medium">{event.type}</P>
+              </div>
+              <div>
+                <P className="text-sm text-muted-foreground">Name</P>
+                <P className="font-medium">{event.name}</P>
+              </div>
+              <div>
+                <P className="text-sm text-muted-foreground">Severity</P>
+                <P>
+                  <span
+                    className={`px-2 py-1 text-xs font-semibold rounded-full ${severityColor(
+                      event.severity,
+                    )}`}
+                  >
+                    {event.severity}
+                  </span>
+                </P>
+              </div>
+              <div>
+                <P className="text-sm text-muted-foreground">Date</P>
+                <P className="font-medium">{formatDate(event.created_at)}</P>
+              </div>
+              <div>
+                <P className="text-sm text-muted-foreground">Description</P>
+                <P className="font-medium">{event.description}</P>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle>Details</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="bg-muted p-4 rounded-md overflow-auto text-sm">
+              {JSON.stringify(event.details, null, 2)}
+            </pre>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};

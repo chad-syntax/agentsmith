@@ -11,12 +11,45 @@ import {
   DEFAULT_OPENROUTER_MODEL,
   MAX_OPENROUTER_MODELS,
   OPENROUTER_HEADERS,
+  DEFAULT_OPENROUTER_CONFIG,
 } from './openrouter';
 import { routes } from '@/utils/routes';
-import { ORGANIZATION_KEYS } from '@/app/constants';
-import { compareSemanticVersions } from '@/utils/versioning';
+import { ORGANIZATION_KEYS, SEMVER_PATTERN } from '@/app/constants';
+import { compareSemanticVersions, incrementVersion } from '@/utils/versioning';
 
 type PromptVariable = Database['public']['Tables']['prompt_variables']['Row'];
+
+type PromptVariableBase = Omit<
+  Database['public']['Tables']['prompt_variables']['Row'],
+  'created_at' | 'prompt_version_id' | 'uuid' | 'updated_at'
+>;
+
+type PromptVariableInput = Omit<PromptVariableBase, 'id'> & { id?: number };
+
+type PromptVariableExisting = Pick<
+  Database['public']['Tables']['prompt_variables']['Row'],
+  'id' | 'name' | 'type' | 'required' | 'default_value'
+>;
+
+export type UpdatePromptVersionOptions = {
+  promptVersionUuid: string;
+  content: string;
+  config: CompletionConfig;
+  status: Database['public']['Enums']['prompt_status'];
+  variables: Array<PromptVariableInput>;
+};
+
+export type CreatePromptWithDraftVersionOptions = {
+  name: string;
+  projectId: number;
+};
+
+export type CreateDraftVersionOptions = {
+  promptId: number;
+  latestVersion: string;
+  customVersion?: string;
+  versionType?: 'major' | 'minor' | 'patch';
+};
 
 type PromptsServiceConstructorOptions = {
   supabase: SupabaseClient<Database>;
@@ -80,16 +113,28 @@ export class PromptsService extends AgentsmithSupabaseService {
     return data;
   }
 
-  public getMissingVariables = (
+  public compileVariables = (
     variables: PromptVariable[],
     variablesToCheck: Record<string, string | number | boolean>,
-  ) => {
-    const missingVariables = variables
+  ): {
+    missingRequiredVariables: PromptVariable[];
+    variablesWithDefaults: Record<string, string | number | boolean>;
+  } => {
+    const missingRequiredVariables = variables
       .filter((v) => v.required)
-      .filter((v) => !(v.name in variablesToCheck))
-      .map((v) => v.name);
+      .filter((v) => !(v.name in variablesToCheck));
 
-    return missingVariables;
+    const defaultValues = variables.reduce(
+      (acc, v) => (v.default_value ? { ...acc, [v.name]: v.default_value } : acc),
+      {},
+    );
+
+    const variablesWithDefaults = {
+      ...defaultValues,
+      ...variablesToCheck,
+    };
+
+    return { missingRequiredVariables, variablesWithDefaults };
   };
 
   public compilePrompt = (
@@ -182,6 +227,265 @@ export class PromptsService extends AgentsmithSupabaseService {
     }
 
     return data;
+  }
+
+  public async updatePromptVersion(options: UpdatePromptVersionOptions) {
+    const { promptVersionUuid, content, config, status, variables: incomingVariables } = options;
+
+    const { data: versionData, error: getVersionError } = await this.supabase
+      .from('prompt_versions')
+      .select('id')
+      .eq('uuid', promptVersionUuid)
+      .single();
+
+    if (getVersionError || !versionData) {
+      throw new Error('Failed to find prompt version: ' + getVersionError?.message);
+    }
+
+    const promptVersionId = versionData.id;
+
+    const { error: versionError } = await this.supabase
+      .from('prompt_versions')
+      .update({
+        content,
+        config: config as any,
+        status,
+      })
+      .eq('uuid', promptVersionUuid);
+
+    if (versionError) {
+      throw new Error('Failed to update prompt version: ' + versionError.message);
+    }
+
+    // 1. Fetch current variables with full details
+    const { data: currentVariablesData, error: getVariablesError } = await this.supabase
+      .from('prompt_variables')
+      .select('id, name, type, required, default_value')
+      .eq('prompt_version_id', promptVersionId);
+
+    if (getVariablesError) {
+      throw new Error('Failed to fetch current variables: ' + getVariablesError.message);
+    }
+    const currentVariables: PromptVariableExisting[] = currentVariablesData || [];
+
+    // 2. Prepare map for efficient comparison
+    const currentVariablesMap = new Map(currentVariables.map((v) => [v.name, v]));
+
+    // 3. Identify variables to add, update, or delete
+    const variablesToAdd: PromptVariableInput[] = [];
+    const variablesToUpdate: PromptVariableExisting[] = [];
+    const variableIdsToDelete: number[] = [];
+
+    for (const incomingVar of incomingVariables) {
+      const currentVar = currentVariablesMap.get(incomingVar.name);
+      if (currentVar) {
+        const variableNeedsUpdating =
+          incomingVar.type !== currentVar.type ||
+          incomingVar.required !== currentVar.required ||
+          incomingVar.default_value !== currentVar.default_value;
+
+        if (variableNeedsUpdating) {
+          variablesToUpdate.push({ ...incomingVar, id: currentVar.id });
+        }
+        currentVariablesMap.delete(incomingVar.name);
+      } else {
+        variablesToAdd.push(incomingVar);
+      }
+    }
+
+    for (const currentVarToDelete of Array.from(currentVariablesMap.values())) {
+      variableIdsToDelete.push(currentVarToDelete.id);
+    }
+
+    // 4. Perform database operations
+    if (variableIdsToDelete.length > 0) {
+      const { error: deleteError } = await this.supabase
+        .from('prompt_variables')
+        .delete()
+        .in('id', variableIdsToDelete);
+
+      if (deleteError) {
+        throw new Error('Failed to delete variables: ' + deleteError.message);
+      }
+    }
+
+    if (variablesToAdd.length > 0) {
+      const { error: insertError } = await this.supabase.from('prompt_variables').insert(
+        variablesToAdd.map((v) => ({
+          prompt_version_id: promptVersionId,
+          name: v.name,
+          type: v.type,
+          required: v.required,
+          default_value: v.default_value,
+        })),
+      );
+
+      if (insertError) {
+        throw new Error('Failed to add new variables: ' + insertError.message);
+      }
+    }
+
+    if (variablesToUpdate.length > 0) {
+      for (const variableToUpdate of variablesToUpdate) {
+        const { id, name, type, required, default_value } = variableToUpdate;
+        const { error: updateError } = await this.supabase
+          .from('prompt_variables')
+          .update({ name, type, required, default_value })
+          .eq('id', id);
+
+        if (updateError) {
+          throw new Error(`Failed to update variable ${name} (ID: ${id}): ${updateError.message}`);
+        }
+      }
+    }
+  }
+
+  public async createPromptWithDraftVersion(options: CreatePromptWithDraftVersionOptions) {
+    const { name, projectId } = options;
+
+    // Generate a slug from the name
+    const slug = name
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+
+    // Create a new prompt
+    const { data: promptData, error: promptError } = await this.supabase
+      .from('prompts')
+      .insert({
+        name,
+        project_id: projectId,
+        slug,
+      })
+      .select('id, uuid')
+      .single();
+
+    if (promptError || !promptData) {
+      throw new Error('Failed to create prompt: ' + promptError?.message);
+    }
+
+    const newPromptId = promptData.id;
+    const newPromptUuid = promptData.uuid;
+
+    // Create a new draft version
+    const { data: versionData, error: versionError } = await this.supabase
+      .from('prompt_versions')
+      .insert({
+        prompt_id: newPromptId,
+        content: '',
+        config: DEFAULT_OPENROUTER_CONFIG as any,
+        status: 'DRAFT',
+        version: '0.0.1',
+      })
+      .select('id, uuid')
+      .single();
+
+    if (versionError || !versionData) {
+      // If we failed to create a version, delete the prompt to avoid orphans
+      await this.supabase.from('prompts').delete().eq('id', newPromptId);
+      throw new Error('Failed to create prompt version: ' + versionError?.message);
+    }
+
+    return {
+      promptUuid: newPromptUuid,
+      versionUuid: versionData.uuid,
+    };
+  }
+
+  public async createDraftVersion(options: CreateDraftVersionOptions) {
+    const { promptId, latestVersion, customVersion, versionType = 'patch' } = options;
+
+    // First, get ALL versions for this prompt to find existing versions
+    const { data: allVersions, error: versionsError } = await this.supabase
+      .from('prompt_versions')
+      .select('version')
+      .eq('prompt_id', promptId);
+
+    if (versionsError) {
+      throw new Error('Failed to fetch versions: ' + versionsError.message);
+    }
+
+    // Determine the new version number
+    let newVersion: string;
+
+    if (customVersion) {
+      // If a custom version is provided, use it but verify it doesn't already exist
+      const versionExists = allVersions?.some((v) => v.version === customVersion);
+      if (versionExists) {
+        throw new Error(`Version ${customVersion} already exists for this prompt`);
+      }
+
+      // Validate semantic versioning pattern
+      if (!SEMVER_PATTERN.test(customVersion)) {
+        throw new Error('Version must follow semantic versioning (e.g., 1.0.0)');
+      }
+
+      newVersion = customVersion;
+    } else {
+      // Find the highest version number
+      let highestVersion = latestVersion;
+      if (allVersions && allVersions.length > 0) {
+        highestVersion = allVersions.reduce((highest, current) => {
+          return compareSemanticVersions(current.version, highest) > 0 ? current.version : highest;
+        }, latestVersion);
+      }
+
+      // Calculate new version number based on the highest version
+      newVersion = incrementVersion(highestVersion, versionType);
+    }
+
+    // Get latest version to copy content
+    const { data: latestVersionData, error: latestVersionError } = await this.supabase
+      .from('prompt_versions')
+      .select('content, config, prompt_variables(*)')
+      .eq('prompt_id', promptId)
+      .eq('version', latestVersion)
+      .single();
+
+    if (latestVersionError || !latestVersionData) {
+      throw new Error('Failed to find latest version: ' + latestVersionError?.message);
+    }
+
+    console.log(
+      'will create new draft version with content and config of',
+      latestVersionData.content,
+      latestVersionData.config,
+    );
+
+    // Create new draft version
+    const { data: newVersionData, error: newVersionError } = await this.supabase
+      .from('prompt_versions')
+      .insert({
+        prompt_id: promptId,
+        content: latestVersionData.content,
+        config: latestVersionData.config,
+        status: 'DRAFT',
+        version: newVersion,
+      })
+      .select('id, uuid')
+      .single();
+
+    if (newVersionError || !newVersionData) {
+      throw new Error('Failed to create new version: ' + newVersionError?.message);
+    }
+
+    // Copy variables from the latest version
+    if (latestVersionData.prompt_variables && latestVersionData.prompt_variables.length > 0) {
+      const variablesToInsert = latestVersionData.prompt_variables.map((variable) => ({
+        ...variable,
+        prompt_version_id: newVersionData.id,
+      }));
+
+      const { error: variablesError } = await this.supabase
+        .from('prompt_variables')
+        .insert(variablesToInsert);
+
+      if (variablesError) {
+        throw new Error('Failed to copy prompt variables: ' + variablesError.message);
+      }
+    }
+
+    return { versionUuid: newVersionData.uuid };
   }
 
   public async executePrompt(options: ExecutePromptOptions) {

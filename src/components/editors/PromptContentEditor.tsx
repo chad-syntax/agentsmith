@@ -17,6 +17,7 @@ export type PromptVariable = {
   name: string;
   type: Database['public']['Enums']['variable_type'];
   required: boolean;
+  default_value: string | null;
 };
 
 type PromptContentEditorProps = {
@@ -40,6 +41,7 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
 
   const [templateError, setTemplateError] = useState<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const detectedVariablesRef = useRef<PromptVariable[]>([]);
 
   // Effect to detect variables when content changes
   useEffect(() => {
@@ -48,10 +50,11 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
     timeoutRef.current = setTimeout(() => {
-      const { variables: detectedVariables, error } =
-        extractTemplateVariables(content);
+      const { variables: detectedVariables, error } = extractTemplateVariables(content);
 
-      if (!error) {
+      detectedVariablesRef.current = detectedVariables;
+
+      if (!error && detectedVariablesRef.current !== detectedVariables) {
         onVariablesChange(detectedVariables);
       }
 
@@ -65,7 +68,7 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
         className={cn(
           'rounded-md border bg-background',
           templateError && 'border-destructive',
-          readOnly && 'opacity-70'
+          readOnly && 'opacity-70',
         )}
       >
         <Editor

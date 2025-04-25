@@ -23,6 +23,9 @@ export const routes = {
     account: `/studio/account`,
     resetPassword: `/studio/reset-password`,
     joinOrganization: (organizationInviteCode: string) => `/join/${organizationInviteCode}`,
+    events: (projectUuid: string) => `/studio/project/${projectUuid}/events`,
+    eventDetail: (projectUuid: string, eventUuid: string) =>
+      `/studio/project/${projectUuid}/events/${eventUuid}`,
   },
   auth: {
     signIn: '/sign-in',

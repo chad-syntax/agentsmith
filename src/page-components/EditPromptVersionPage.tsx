@@ -69,6 +69,8 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
 
     setIsSaving(true);
 
+    console.log('saving variables', variables);
+
     try {
       await updatePromptVersion({
         promptVersionUuid: currentPromptVersion.uuid,
@@ -80,6 +82,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
           name: v.name,
           type: v.type as Database['public']['Enums']['variable_type'],
           required: v.required,
+          default_value: v.default_value,
         })),
       });
 

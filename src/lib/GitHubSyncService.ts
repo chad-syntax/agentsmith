@@ -8,7 +8,14 @@ import { GetProjectDataResult } from './ProjectsService';
 
 export type FileToSync = {
   path: string;
-  content: string;
+  oldContent: string | null;
+  newContent: string | null;
+};
+
+type PullRequestDetail = {
+  number: number;
+  title: string;
+  htmlUrl: string;
 };
 
 type GitHubSyncServiceConstructorOptions = {
@@ -21,7 +28,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
   }
 
   // gets triggered by "sync" button press
-  async syncRepository(projectUuid: string) {
+  async syncRepositoryFromAgentsmith(projectUuid: string) {
     console.log('begin repository sync for project', projectUuid);
 
     // fetch the project that is connected to the project repository
@@ -47,6 +54,12 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
 
     const [owner, repo] = projectRepository.repository_full_name.split('/');
 
+    await this.services.events.createSyncStartEvent({
+      organizationId: project.organization_id,
+      projectId: project.id,
+      source: 'agentsmith',
+    });
+
     // check repository for any pending pull requests that are agentsmith pull requests
     const pullRequests = await octokit.request('GET /repos/{owner}/{repo}/pulls', {
       owner,
@@ -58,7 +71,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
     if (pullRequests.data.length > 0) {
       console.log('pending pull requests found, running this.syncPRFiles');
       const pullRequest = pullRequests.data[0];
-      await this.syncPRFiles(
+      const { changesMade, ...syncResult } = await this.syncBranchFiles(
         octokit,
         owner,
         repo,
@@ -66,6 +79,23 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         projectRepository,
         pullRequest.head.ref,
       );
+
+      const pullRequestDetail: PullRequestDetail = {
+        number: pullRequest.number,
+        title: pullRequest.title,
+        htmlUrl: pullRequest.html_url,
+      };
+
+      await this.services.events.createSyncCompleteEvent({
+        organizationId: project.organization_id,
+        projectId: project.id,
+        source: 'agentsmith',
+        details: {
+          changesMade,
+          pullRequest: pullRequestDetail,
+          syncResult,
+        },
+      });
     } else {
       console.log('no pull requests found, creating new PR...');
 
@@ -91,7 +121,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       });
 
       // 4. Sync files to the new branch
-      const wereChangesMade = await this.syncPRFiles(
+      const { changesMade: wereChangesMade, ...syncResult } = await this.syncBranchFiles(
         octokit,
         owner,
         repo,
@@ -136,6 +166,23 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
           issue_number: newPR.number,
           labels: ['agentsmith'],
         });
+
+        const pullRequestDetail: PullRequestDetail = {
+          number: newPR.number,
+          title: newPR.title,
+          htmlUrl: newPR.html_url,
+        };
+
+        await this.services.events.createSyncCompleteEvent({
+          organizationId: project.organization_id,
+          projectId: project.id,
+          source: 'agentsmith',
+          details: {
+            changesMade: true,
+            pullRequest: pullRequestDetail,
+            syncResult,
+          },
+        });
       } else {
         // No changes were made, so no PR is needed. We might want to delete the unused branch.
         console.log('No file changes detected. Skipping Pull Request creation.');
@@ -150,25 +197,58 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         } catch (deleteError) {
           console.error(`Failed to delete unused branch ${branchName}:`, deleteError);
         }
+
+        await this.services.events.createSyncCompleteEvent({
+          organizationId: project.organization_id,
+          projectId: project.id,
+          source: 'agentsmith',
+          details: {
+            changesMade: false,
+          },
+        });
       }
     }
+
+    console.log('repository sync complete');
   }
 
   // Helper method to sync files to a branch with or without an existing PR
-  private async syncPRFiles(
+  private async syncBranchFiles(
     octokit: Octokit & Api,
     owner: string,
     repo: string,
     project: NonNullable<GetProjectDataResult>,
     projectRepository: NonNullable<GetProjectRepositoryResult>,
     branchName: string,
-  ): Promise<boolean> {
+  ): Promise<{
+    changesMade: boolean;
+    promptsCreated: FileToSync[];
+    promptsUpdated: FileToSync[];
+    promptsArchived: FileToSync[];
+    promptVersionsCreated: FileToSync[];
+    promptVersionsUpdated: FileToSync[];
+    promptVersionsArchived: FileToSync[];
+    promptVariablesCreated: FileToSync[];
+    promptVariablesUpdated: FileToSync[];
+    promptVariablesArchived: FileToSync[];
+  }> {
     const promptsData = await this.services.prompts.getAllPromptsData(project.id);
 
     // Check if all prompts and prompt versions exist in the repository
     const missingFiles: FileToSync[] = [];
     const updateNeededFiles: FileToSync[] = [];
     let changesMade = false; // Flag to track if changes were committed
+
+    // Specific tracking arrays
+    const promptsCreated: FileToSync[] = [];
+    const promptsUpdated: FileToSync[] = [];
+    const promptsArchived: FileToSync[] = [];
+    const promptVersionsCreated: FileToSync[] = [];
+    const promptVersionsUpdated: FileToSync[] = [];
+    const promptVersionsArchived: FileToSync[] = [];
+    const promptVariablesCreated: FileToSync[] = [];
+    const promptVariablesUpdated: FileToSync[] = [];
+    const promptVariablesArchived: FileToSync[] = [];
 
     // Retrieve the current state of the agentsmith folder
     let repoFiles;
@@ -212,10 +292,13 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
 
       // Check if prompt.json exists
       if (!fileMap.has(promptJsonPath)) {
-        missingFiles.push({
+        const fileData: FileToSync = {
           path: promptJsonPath,
-          content: promptJsonContent,
-        });
+          oldContent: null,
+          newContent: promptJsonContent,
+        };
+        missingFiles.push(fileData);
+        promptsCreated.push(fileData);
       } else {
         // Check if prompt.json needs update by comparing content
         try {
@@ -234,10 +317,13 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
           ) {
             const existingContent = Buffer.from(fileContent.data.content, 'base64').toString();
             if (existingContent !== promptJsonContent) {
-              updateNeededFiles.push({
+              const fileData: FileToSync = {
                 path: promptJsonPath,
-                content: promptJsonContent,
-              });
+                oldContent: existingContent,
+                newContent: promptJsonContent,
+              };
+              updateNeededFiles.push(fileData);
+              promptsUpdated.push(fileData);
             }
           }
         } catch (error) {
@@ -269,10 +355,13 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
 
         // Check if version.json exists
         if (!fileMap.has(versionJsonPath)) {
-          missingFiles.push({
+          const fileData: FileToSync = {
             path: versionJsonPath,
-            content: versionJsonContent,
-          });
+            oldContent: null,
+            newContent: versionJsonContent,
+          };
+          missingFiles.push(fileData);
+          promptVersionsCreated.push(fileData);
         } else {
           // Check if version.json needs update
           try {
@@ -291,10 +380,13 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
             ) {
               const existingContent = Buffer.from(fileContent.data.content, 'base64').toString();
               if (existingContent !== versionJsonContent) {
-                updateNeededFiles.push({
+                const fileData: FileToSync = {
                   path: versionJsonPath,
-                  content: versionJsonContent,
-                });
+                  oldContent: existingContent,
+                  newContent: versionJsonContent,
+                };
+                updateNeededFiles.push(fileData);
+                promptVersionsUpdated.push(fileData);
               }
             }
           } catch (error) {
@@ -305,10 +397,13 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         // Check if variables.json exists
         if (variablesJsonContent) {
           if (!fileMap.has(variablesJsonPath)) {
-            missingFiles.push({
+            const fileData: FileToSync = {
               path: variablesJsonPath,
-              content: variablesJsonContent,
-            });
+              oldContent: null,
+              newContent: variablesJsonContent,
+            };
+            missingFiles.push(fileData);
+            promptVariablesCreated.push(fileData);
           } else {
             // Check if variables.json needs update
             try {
@@ -330,10 +425,13 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
               ) {
                 const existingContent = Buffer.from(fileContent.data.content, 'base64').toString();
                 if (existingContent !== variablesJsonContent) {
-                  updateNeededFiles.push({
+                  const fileData: FileToSync = {
                     path: variablesJsonPath,
-                    content: variablesJsonContent,
-                  });
+                    oldContent: existingContent,
+                    newContent: variablesJsonContent,
+                  };
+                  updateNeededFiles.push(fileData);
+                  promptVariablesUpdated.push(fileData);
                 }
               }
             } catch (error) {
@@ -360,7 +458,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
             repo,
             path: file.path,
             message: `Add ${file.path}`,
-            content: Buffer.from(file.content).toString('base64'),
+            content: Buffer.from(file.newContent!).toString('base64'),
             branch: branchName,
           });
         } catch (error) {
@@ -391,7 +489,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
               repo,
               path: file.path,
               message: `Update ${file.path}`,
-              content: Buffer.from(file.content).toString('base64'),
+              content: Buffer.from(file.newContent!).toString('base64'),
               sha: currentFile.data.sha,
               branch: branchName,
             });
@@ -404,6 +502,17 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       console.log('All prompt files are up to date, no changes needed');
     }
 
-    return changesMade;
+    return {
+      changesMade,
+      promptsCreated,
+      promptsUpdated,
+      promptsArchived,
+      promptVersionsCreated,
+      promptVersionsUpdated,
+      promptVersionsArchived,
+      promptVariablesCreated,
+      promptVariablesUpdated,
+      promptVariablesArchived,
+    };
   }
 }

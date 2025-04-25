@@ -10,8 +10,8 @@ describe('extractTemplateVariables', () => {
     const { variables, error } = extractTemplateVariables(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual([
-      { name: 'name', type: 'STRING', required: true },
-      { name: 'weather', type: 'STRING', required: true },
+      { name: 'name', type: 'STRING', required: true, default_value: null },
+      { name: 'weather', type: 'STRING', required: true, default_value: null },
     ]);
   });
 
@@ -29,8 +29,8 @@ describe('extractTemplateVariables', () => {
     const { variables, error } = extractTemplateVariables(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual([
-      { name: 'hungry', type: 'STRING', required: true },
-      { name: 'tired', type: 'STRING', required: true },
+      { name: 'hungry', type: 'STRING', required: true, default_value: null },
+      { name: 'tired', type: 'STRING', required: true, default_value: null },
     ]);
   });
 
@@ -43,8 +43,8 @@ describe('extractTemplateVariables', () => {
     const { variables, error } = extractTemplateVariables(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual([
-      { name: 'user', type: 'JSON', required: true },
-      { name: 'settings', type: 'JSON', required: true },
+      { name: 'user', type: 'JSON', required: true, default_value: null },
+      { name: 'settings', type: 'JSON', required: true, default_value: null },
     ]);
   });
 
@@ -64,8 +64,8 @@ describe('extractTemplateVariables', () => {
     const { variables, error } = extractTemplateVariables(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual([
-      { name: 'items', type: 'JSON', required: true },
-      { name: 'users', type: 'JSON', required: true },
+      { name: 'items', type: 'JSON', required: true, default_value: null },
+      { name: 'users', type: 'JSON', required: true, default_value: null },
     ]);
   });
 
@@ -83,8 +83,8 @@ describe('extractTemplateVariables', () => {
     const { variables, error } = extractTemplateVariables(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual([
-      { name: 'user', type: 'JSON', required: true },
-      { name: 'settings', type: 'JSON', required: true },
+      { name: 'user', type: 'JSON', required: true, default_value: null },
+      { name: 'settings', type: 'JSON', required: true, default_value: null },
     ]);
   });
 
@@ -116,7 +116,9 @@ describe('extractTemplateVariables', () => {
 
     const { variables, error } = extractTemplateVariables(template);
     expect(error).toBeUndefined();
-    expect(variables).toEqual([{ name: 'user', type: 'JSON', required: true }]);
+    expect(variables).toEqual([
+      { name: 'user', type: 'JSON', required: true, default_value: null },
+    ]);
   });
 
   it('should handle whitespace in variable names', () => {
@@ -128,8 +130,8 @@ describe('extractTemplateVariables', () => {
     const { variables, error } = extractTemplateVariables(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual([
-      { name: 'spacedName', type: 'STRING', required: true },
-      { name: 'spaced', type: 'JSON', required: true },
+      { name: 'spacedName', type: 'STRING', required: true, default_value: null },
+      { name: 'spaced', type: 'JSON', required: true, default_value: null },
     ]);
   });
 
@@ -143,9 +145,9 @@ describe('extractTemplateVariables', () => {
     const { variables, error } = extractTemplateVariables(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual([
-      { name: 'foo', type: 'STRING', required: true },
-      { name: 'bar', type: 'STRING', required: true },
-      { name: 'baz', type: 'STRING', required: true },
+      { name: 'foo', type: 'STRING', required: true, default_value: null },
+      { name: 'bar', type: 'STRING', required: true, default_value: null },
+      { name: 'baz', type: 'STRING', required: true, default_value: null },
     ]);
   });
 });

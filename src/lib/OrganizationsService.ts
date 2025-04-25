@@ -6,11 +6,21 @@ import { AgentsmithServicesDirectory } from './AgentsmithServices';
 import { genAlphaNumeric } from '@/utils/gen-alpha-numeric';
 import { ORGANIZATION_KEYS } from '@/app/constants';
 
-type GetOrCreateOpenrouterCodeVerifierResult = {
-  success: boolean;
-  codeVerifier?: string;
-  error?: string;
-};
+// type GetOrCreateOpenrouterCodeVerifierResult = {
+//   success: boolean;
+//   codeVerifier?: string;
+//   error?: string;
+// };
+
+type GetOrCreateOpenrouterCodeVerifierResult =
+  | {
+      success: true;
+      codeVerifier: string;
+    }
+  | {
+      success: false;
+      error: string;
+    };
 
 export class OrganizationsService extends AgentsmithSupabaseService {
   public services!: AgentsmithServicesDirectory;

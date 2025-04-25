@@ -1,15 +1,55 @@
-import { IconPrompt, IconList, IconUser, IconPencil } from '@tabler/icons-react';
+import { IconPrompt, IconList, IconUser, IconPencil, IconActivity } from '@tabler/icons-react';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { H1, H3, P } from '@/components/typography';
 import { GetProjectDataResult } from '@/lib/ProjectsService';
+import { ElementType } from 'react';
 
 export type ProjectPageProps = {
   projectData: NonNullable<GetProjectDataResult>;
 };
 
+type ProjectLink = {
+  href: string;
+  icon: ElementType;
+  iconClassName: string;
+  title: string;
+  description: string;
+};
+
 export const ProjectPage = (props: ProjectPageProps) => {
   const { projectData } = props;
+
+  const projectLinks: ProjectLink[] = [
+    {
+      href: routes.studio.prompts(projectData.uuid),
+      icon: IconPrompt,
+      iconClassName: 'text-blue-500',
+      title: 'Prompts',
+      description: 'Manage your prompt library',
+    },
+    {
+      href: routes.studio.logs(projectData.uuid),
+      icon: IconList,
+      iconClassName: 'text-orange-500',
+      title: 'Logs',
+      description: 'View prompt execution logs',
+    },
+    {
+      href: routes.studio.events(projectData.uuid),
+      icon: IconActivity,
+      iconClassName: 'text-purple-500',
+      title: 'Events',
+      description: 'View project events and sync history',
+    },
+    {
+      href: routes.studio.account,
+      icon: IconUser,
+      iconClassName: 'text-green-500',
+      title: 'Account',
+      description: 'Manage your account settings',
+    },
+  ];
 
   return (
     <div className="p-6">
@@ -23,50 +63,26 @@ export const ProjectPage = (props: ProjectPageProps) => {
       <main>
         {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl">
-            <Link
-              href={routes.studio.prompts(projectData.uuid)}
-              className="aspect-square bg-background rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
-            >
-              <div className="flex items-center justify-center flex-1">
-                <IconPrompt className="w-10 h-10 text-blue-500" />
-              </div>
-              <div className="mt-3">
-                <H3 className="text-center">Prompts</H3>
-                <P className="text-xs text-muted-foreground text-center mt-0.5">
-                  Manage your prompt library
-                </P>
-              </div>
-            </Link>
-
-            <Link
-              href={routes.studio.logs(projectData.uuid)}
-              className="aspect-square bg-background rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
-            >
-              <div className="flex items-center justify-center flex-1">
-                <IconList className="w-10 h-10 text-orange-500" />
-              </div>
-              <div className="mt-3">
-                <H3 className="text-center">Logs</H3>
-                <P className="text-xs text-muted-foreground text-center mt-0.5">
-                  View prompt execution logs
-                </P>
-              </div>
-            </Link>
-
-            <Link
-              href={routes.studio.account}
-              className="aspect-square bg-background rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
-            >
-              <div className="flex items-center justify-center flex-1">
-                <IconUser className="w-10 h-10 text-green-500" />
-              </div>
-              <div className="mt-3">
-                <H3 className="text-center">Account</H3>
-                <P className="text-xs text-muted-foreground text-center mt-0.5">
-                  Manage your account settings
-                </P>
-              </div>
-            </Link>
+            {projectLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="aspect-square bg-background rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
+                >
+                  <div className="flex items-center justify-center flex-1">
+                    <Icon className={`w-10 h-10 ${link.iconClassName}`} />
+                  </div>
+                  <div className="mt-3">
+                    <H3 className="text-center">{link.title}</H3>
+                    <P className="text-xs text-muted-foreground text-center mt-0.5">
+                      {link.description}
+                    </P>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         }
       </main>

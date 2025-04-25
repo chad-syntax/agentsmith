@@ -9,6 +9,73 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      agentsmith_events: {
+        Row: {
+          created_at: string
+          created_by: number | null
+          description: string
+          details: Json
+          id: number
+          name: string
+          organization_id: number
+          project_id: number | null
+          severity: Database["public"]["Enums"]["agentsmith_event_severity"]
+          type: Database["public"]["Enums"]["agentsmith_event_type"]
+          updated_at: string
+          uuid: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: number | null
+          description: string
+          details?: Json
+          id?: number
+          name: string
+          organization_id: number
+          project_id?: number | null
+          severity?: Database["public"]["Enums"]["agentsmith_event_severity"]
+          type?: Database["public"]["Enums"]["agentsmith_event_type"]
+          updated_at?: string
+          uuid?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: number | null
+          description?: string
+          details?: Json
+          id?: number
+          name?: string
+          organization_id?: number
+          project_id?: number | null
+          severity?: Database["public"]["Enums"]["agentsmith_event_severity"]
+          type?: Database["public"]["Enums"]["agentsmith_event_type"]
+          updated_at?: string
+          uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agentsmith_events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "agentsmith_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agentsmith_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agentsmith_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agentsmith_users: {
         Row: {
           auth_user_id: string
@@ -288,6 +355,7 @@ export type Database = {
           github_app_installation_id: number
           id: number
           organization_id: number
+          pr_workflow: boolean
           project_id: number | null
           repository_default_branch: string
           repository_full_name: string
@@ -301,6 +369,7 @@ export type Database = {
           github_app_installation_id: number
           id?: number
           organization_id: number
+          pr_workflow?: boolean
           project_id?: number | null
           repository_default_branch: string
           repository_full_name: string
@@ -314,6 +383,7 @@ export type Database = {
           github_app_installation_id?: number
           id?: number
           organization_id?: number
+          pr_workflow?: boolean
           project_id?: number | null
           repository_default_branch?: string
           repository_full_name?: string
@@ -393,6 +463,7 @@ export type Database = {
       prompt_variables: {
         Row: {
           created_at: string
+          default_value: string | null
           id: number
           name: string
           prompt_version_id: number | null
@@ -403,6 +474,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_value?: string | null
           id?: number
           name: string
           prompt_version_id?: number | null
@@ -413,6 +485,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_value?: string | null
           id?: number
           name?: string
           prompt_version_id?: number | null
@@ -611,6 +684,12 @@ export type Database = {
       }
     }
     Enums: {
+      agentsmith_event_severity: "DEBUG" | "INFO" | "WARN" | "ERROR"
+      agentsmith_event_type:
+        | "SYNC_START"
+        | "SYNC_COMPLETE"
+        | "SYNC_ERROR"
+        | "ALERT"
       github_app_installation_status:
         | "PENDING"
         | "ACTIVE"

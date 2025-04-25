@@ -58,16 +58,14 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const missingVariables = agentsmith.services.prompts.getMissingVariables(
-    variables,
-    body.variables,
-  );
+  const { missingRequiredVariables, variablesWithDefaults } =
+    agentsmith.services.prompts.compileVariables(variables, body.variables);
 
-  if (missingVariables.length > 0) {
+  if (missingRequiredVariables.length > 0) {
     return NextResponse.json(
       {
         error: 'Missing required variables',
-        missingVariables,
+        missingRequiredVariables,
       },
       { status: 400 },
     );
@@ -75,7 +73,7 @@ export async function POST(
 
   const compiledPrompt = agentsmith.services.prompts.compilePrompt(
     promptVersion.content,
-    body.variables,
+    variablesWithDefaults,
   );
 
   return NextResponse.json({ compiledPrompt }, { status: 200 });
