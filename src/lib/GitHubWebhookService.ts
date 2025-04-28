@@ -51,13 +51,11 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
     });
 
     app.webhooks.on('push', async ({ payload }) => {
-      await this.handlePush(payload);
-      // try {
-      //   // Do something else
-      //   console.log('github webhook: push', payload);
-      // } catch (e) {
-      //   console.error(`push handler failed with error: ${(<Error>e).message}`);
-      // }
+      try {
+        await this.handlePush(payload);
+      } catch (e) {
+        console.error(`push handler failed with error: ${(<Error>e).message}`);
+      }
     });
   }
 
@@ -194,12 +192,75 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
   }
 
   private async handlePush(payload: EmitterWebhookEvent<'push'>['payload']) {
-    console.log('github webhook: push', payload);
+    try {
+      console.log('github webhook: push event received');
 
-    // whenever a push is made, we need to sync the prompts that are in the repo to the agentsmith database
+      // Skip if there are no commits (shouldn't happen, but checking anyway)
+      if (!payload.commits || payload.commits.length === 0) {
+        console.log('Push event has no commits, skipping sync.');
+        return;
+      }
 
-    // if the push was made to a feature branch, we need to make sure the prompts are in "DRAFT" status, even if the JSON says it's "PUBLISHED"
+      // Ignore pushes made by our bot to prevent sync loops
+      const pusher = payload.pusher;
+      const isAgentsmithBot = pusher.name.includes('agentsmith') && pusher.name.includes('[bot]');
+      if (isAgentsmithBot) {
+        console.log('Push event from agentsmith bot, ignoring to prevent sync loops.');
+        return;
+      }
 
-    // if its to the main branch we just use whatever is in the JSON file, this is just to protect against accidental publishes
+      // Check if any commit message contains [skip sync]
+      const shouldSkipSync = payload.commits.some((commit) =>
+        commit.message.toLowerCase().includes('[skip sync]'),
+      );
+
+      if (shouldSkipSync) {
+        console.log('Push contains [skip sync] in commit message, skipping sync operation.');
+        return;
+      }
+
+      const installationId = payload.installation?.id;
+      if (!installationId) {
+        console.warn('Push event missing installation ID, cannot sync.');
+        return;
+      }
+
+      const repositoryId = payload.repository.id;
+      const pushedBranchRef = payload.ref; // e.g., "refs/heads/main"
+
+      // Query for project using proper join syntax
+      const { data: projectRepo, error: repoError } = await this.supabase
+        .from('project_repositories')
+        .select('project_id, github_app_installations!inner(installation_id)')
+        .eq('repository_id', repositoryId)
+        .eq('github_app_installations.installation_id', installationId)
+        .single();
+
+      if (repoError) {
+        console.error('Error fetching project repository for push event:', repoError);
+        return;
+      }
+
+      if (!projectRepo || !projectRepo.project_id) {
+        console.log(
+          `No project found linked to repository ID ${repositoryId} and installation ID ${installationId}. Ignoring push.`,
+        );
+        return;
+      }
+
+      console.log(
+        `Push event detected for project ${projectRepo.project_id}, repository ${repositoryId}, ref ${pushedBranchRef}. Initiating sync from repository.`,
+      );
+
+      await this.services.githubSync.syncAgentsmithFromRepository(
+        projectRepo.project_id,
+        pushedBranchRef,
+      );
+
+      console.log(`Sync from repository completed for project ${projectRepo.project_id}`);
+    } catch (e) {
+      const error = e instanceof Error ? e.message : String(e);
+      console.error(`push handler failed with error: ${error}`);
+    }
   }
 }

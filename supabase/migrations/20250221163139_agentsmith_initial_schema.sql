@@ -1042,12 +1042,27 @@ grant anon to github_webhook;
 grant usage on schema public to github_webhook;
 
 grant select on table public.github_app_installations to github_webhook;
-
 grant update on table public.github_app_installations to github_webhook;
 
 grant select on table public.project_repositories to github_webhook;
-
 grant update on table public.project_repositories to github_webhook;
+
+grant select on table public.projects to github_webhook;
+
+grant select on table public.prompts to github_webhook;
+grant insert on table public.prompts to github_webhook;
+grant update on table public.prompts to github_webhook;
+
+grant select on table public.prompt_versions to github_webhook;
+grant insert on table public.prompt_versions to github_webhook;
+grant update on table public.prompt_versions to github_webhook;
+
+grant select on table public.prompt_variables to github_webhook;
+grant insert on table public.prompt_variables to github_webhook;
+grant update on table public.prompt_variables to github_webhook;
+grant delete on table public.prompt_variables to github_webhook;
+
+grant insert on table public.agentsmith_events to github_webhook;
 
 create policy "Allow github_webhook select access on github_app_installations"
 on public.github_app_installations
@@ -1055,7 +1070,6 @@ as permissive
 for select
 to github_webhook
 using (true);
-
 
 create policy "Allow github_webhook update access on github_app_installations"
 on public.github_app_installations
@@ -1065,7 +1079,6 @@ to github_webhook
 using (true)
 with check (true);
 
-
 create policy "Allow github_webhook select access on project_repositories"
 on public.project_repositories
 as permissive
@@ -1073,13 +1086,99 @@ for select
 to github_webhook
 using (true);
 
-
 create policy "Allow github_webhook update access on project_repositories"
 on public.project_repositories
 as permissive
 for update
 to github_webhook
 using (true)
+with check (true);
+
+create policy "Allow github_webhook select access on projects"
+on public.projects
+as permissive
+for select
+to github_webhook
+using (true);
+
+create policy "Allow github_webhook select access on prompts"
+on public.prompts
+as permissive
+for select
+to github_webhook
+using (true);
+
+create policy "Allow github_webhook insert access on prompts"
+on public.prompts
+as permissive
+for insert
+to github_webhook
+with check (true);
+
+create policy "Allow github_webhook update access on prompts"
+on public.prompts
+as permissive
+for update
+to github_webhook
+using (true)
+with check (true);
+
+create policy "Allow github_webhook select access on prompt_versions"
+on public.prompt_versions
+as permissive
+for select
+to github_webhook
+using (true);
+
+create policy "Allow github_webhook insert access on prompt_versions"
+on public.prompt_versions
+as permissive
+for insert
+to github_webhook
+with check (true);
+
+create policy "Allow github_webhook update access on prompt_versions"
+on public.prompt_versions
+as permissive
+for update
+to github_webhook
+using (true)
+with check (true);
+
+create policy "Allow github_webhook select access on prompt_variables"
+on public.prompt_variables
+as permissive
+for select
+to github_webhook
+using (true);
+
+create policy "Allow github_webhook insert access on prompt_variables"
+on public.prompt_variables
+as permissive
+for insert
+to github_webhook
+with check (true);
+
+create policy "Allow github_webhook update access on prompt_variables"
+on public.prompt_variables
+as permissive
+for update
+to github_webhook
+using (true)
+with check (true);
+
+create policy "Allow github_webhook delete access on prompt_variables"
+on public.prompt_variables
+as permissive
+for delete
+to github_webhook
+using (true);
+
+create policy "Allow github_webhook insert access on agentsmith_events"
+on public.agentsmith_events
+as permissive
+for insert
+to github_webhook
 with check (true);
 
 -- Insert into auth.users

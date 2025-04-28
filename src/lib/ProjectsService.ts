@@ -15,7 +15,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .eq('uuid', projectUuid)
       .maybeSingle();
 
-    if (error || !project) {
+    if (error) {
       console.error('Error fetching project by uuid:', error);
       return null;
     }
@@ -30,7 +30,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .eq('id', projectId)
       .maybeSingle();
 
-    if (error || !project) {
+    if (error) {
       console.error('Error fetching project by id:', error);
       return null;
     }
