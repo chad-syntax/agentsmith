@@ -8,7 +8,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
     super({ ...options, serviceName: 'projects' });
   }
 
-  async getProjectData(projectUuid: string) {
+  async getProjectDataByUuid(projectUuid: string) {
     const { data: project, error } = await this.supabase
       .from('projects')
       .select('*')
@@ -16,7 +16,22 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error || !project) {
-      console.error('Error fetching project:', error);
+      console.error('Error fetching project by uuid:', error);
+      return null;
+    }
+
+    return project;
+  }
+
+  async getProjectDataById(projectId: number) {
+    const { data: project, error } = await this.supabase
+      .from('projects')
+      .select('*')
+      .eq('id', projectId)
+      .maybeSingle();
+
+    if (error || !project) {
+      console.error('Error fetching project by id:', error);
       return null;
     }
 
@@ -25,5 +40,5 @@ export class ProjectsService extends AgentsmithSupabaseService {
 }
 
 export type GetProjectDataResult = Awaited<
-  ReturnType<typeof ProjectsService.prototype.getProjectData>
+  ReturnType<typeof ProjectsService.prototype.getProjectDataByUuid>
 >;

@@ -1182,3 +1182,5 @@ create trigger trigger_updated_at_agentsmith_events
 before update on agentsmith_events
 for each row
 execute function set_updated_at();
+
+alter publication supabase_realtime add table agentsmith_events;

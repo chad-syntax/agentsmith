@@ -16,7 +16,7 @@ export default async function Events(props: EventsPageRouteProps) {
   const supabase = await createClient();
   const agentsmith = new AgentsmithServices({ supabase });
 
-  const project = await agentsmith.services.projects.getProjectData(projectUuid);
+  const project = await agentsmith.services.projects.getProjectDataByUuid(projectUuid);
 
   if (!project) {
     console.warn(`Project not found for UUID: ${projectUuid}. Redirecting.`);

@@ -165,7 +165,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
   }
 
   async connectProjectRepository(options: ConnectProjectRepositoryOptions) {
-    const { projectId, projectUuid, projectRepositoryId, agentsmithFolder } = options;
+    const { projectId, projectRepositoryId, agentsmithFolder } = options;
     const { data, error } = await this.supabase
       .from('project_repositories')
       .update({
@@ -183,7 +183,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       throw new Error('Failed to connect project to repository');
     }
 
-    await this.services.githubSync.syncRepositoryFromAgentsmith(projectUuid);
+    await this.services.githubSync.syncRepositoryFromAgentsmith(projectId);
 
     return data;
   }

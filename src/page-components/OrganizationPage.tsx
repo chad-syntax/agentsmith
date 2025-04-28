@@ -12,8 +12,9 @@ import { ApiKeyReveal } from '@/components/ApiKeyReveal';
 import { GetOrganizationDataResult } from '@/lib/OrganizationsService';
 import { Database } from '@/app/__generated__/supabase.types';
 import { installGithubApp, syncProject } from '@/app/actions/github';
-import { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubService';
+import { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubAppService';
 import { ConnectProjectModal } from '@/components/ConnectProjectModal';
+import { SyncProjectButton } from '@/components/SyncProjectButton';
 
 type OrganizationPageProps = {
   organization: NonNullable<GetOrganizationDataResult>;
@@ -160,19 +161,17 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
                     </a>
                   </Button>
                   {projectRepository.projects ? (
-                    <div className="text-xs">
+                    <div className="text-xs flex items-center justify-center gap-2">
                       Connected to{' '}
                       <Button variant="link" asChild className="text-xs p-0">
                         <Link href={routes.studio.project(projectRepository.projects.uuid)}>
                           {projectRepository.projects.name}
                         </Link>
                       </Button>
-                      <Button
-                        className="text-xs ml-4"
-                        onClick={() => syncProject(projectRepository.projects!.uuid)}
-                      >
-                        Sync
-                      </Button>
+                      <SyncProjectButton
+                        className="ml-2"
+                        projectUuid={projectRepository.projects!.uuid}
+                      />
                     </div>
                   ) : (
                     <Button

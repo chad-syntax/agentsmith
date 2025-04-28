@@ -17,7 +17,7 @@ export default async function ProjectEdit(props: ProjectEditPageProps) {
 
   const agentsmith = new AgentsmithServices({ supabase });
 
-  const projectData = await agentsmith.services.projects.getProjectData(projectUuid);
+  const projectData = await agentsmith.services.projects.getProjectDataByUuid(projectUuid);
 
   if (!projectData) {
     redirect(routes.studio.home);

@@ -14,13 +14,10 @@ export default async function Logs(props: LogsProps) {
   const agentsmith = new AgentsmithServices({ supabase });
 
   // Get the first project
-  const project =
-    await agentsmith.services.projects.getProjectData(projectUuid);
+  const project = await agentsmith.services.projects.getProjectDataByUuid(projectUuid);
 
   // If no project exists, pass empty logs array
-  const logs = project
-    ? await agentsmith.services.llmLogs.getLogsByProjectId(project.id)
-    : [];
+  const logs = project ? await agentsmith.services.llmLogs.getLogsByProjectId(project.id) : [];
 
   return <LogsPage project={project} logs={logs} />;
 }

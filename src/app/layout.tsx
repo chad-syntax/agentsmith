@@ -3,6 +3,7 @@ import { Roboto_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Footer } from '@/components/Footer';
+import { Toaster } from '@/components/ui/sonner';
 // import { PostHogProvider } from './providers/posthog';
 
 const defaultUrl =
@@ -50,6 +51,7 @@ export default function RootLayout(props: RootLayoutProps) {
               <Footer />
             </div>
           </main>
+          <Toaster expand visibleToasts={9} />
         </ThemeProvider>
       </body>
       {/* </PostHogProvider> */}

@@ -15,17 +15,14 @@ export default async function PromptLibrary(props: PromptLibraryProps) {
   const agentsmith = new AgentsmithServices({ supabase });
 
   // Get project first to use the ID for getting prompts
-  const project =
-    await agentsmith.services.projects.getProjectData(projectUuid);
+  const project = await agentsmith.services.projects.getProjectDataByUuid(projectUuid);
 
   if (!project) {
     return notFound();
   }
 
   // Fetch prompts for the project
-  const prompts = await agentsmith.services.prompts.getPromptsByProjectId(
-    project.id
-  );
+  const prompts = await agentsmith.services.prompts.getPromptsByProjectId(project.id);
 
   return <PromptsPage prompts={prompts} projectId={project.id} />;
 }

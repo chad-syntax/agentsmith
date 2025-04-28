@@ -446,12 +446,6 @@ export class PromptsService extends AgentsmithSupabaseService {
       throw new Error('Failed to find latest version: ' + latestVersionError?.message);
     }
 
-    console.log(
-      'will create new draft version with content and config of',
-      latestVersionData.content,
-      latestVersionData.config,
-    );
-
     // Create new draft version
     const { data: newVersionData, error: newVersionError } = await this.supabase
       .from('prompt_versions')

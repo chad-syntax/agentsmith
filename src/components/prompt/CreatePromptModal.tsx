@@ -47,9 +47,7 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
       });
 
       // Redirect to the edit page for the new draft version
-      router.push(
-        routes.studio.editPromptVersion(selectedProjectUuid, versionUuid)
-      );
+      router.push(routes.studio.editPromptVersion(selectedProjectUuid, versionUuid));
     } catch (error) {
       console.error('Error creating prompt:', error);
       alert('Failed to create prompt. Please try again.');
@@ -63,8 +61,7 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
         <DialogHeader>
           <DialogTitle>Create New Prompt</DialogTitle>
           <DialogDescription>
-            Enter a name for your new prompt. You can edit its content after
-            creation.
+            Enter a name for your new prompt. You can edit its content after creation.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -81,12 +78,7 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              type="button"
-              onClick={onClose}
-              disabled={isCreating}
-            >
+            <Button variant="outline" type="button" onClick={onClose} disabled={isCreating}>
               Cancel
             </Button>
             <Button type="submit" disabled={isCreating}>

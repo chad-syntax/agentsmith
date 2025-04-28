@@ -1,10 +1,16 @@
 'use client';
 
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useMemo, useState, useEffect } from 'react';
 import { ORGANIZATION_KEYS } from '@/app/constants';
 import { redirect, useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
 import type { GetUserOrganizationDataResult } from '@/lib/UsersService';
+import { useAuth } from './auth';
+import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
+import { Database } from '@/app/__generated__/supabase.types';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 type Organization = GetUserOrganizationDataResult['organization_users'][number]['organizations'];
 type Project = Organization['projects'][number];
@@ -47,6 +53,8 @@ export const AppProvider = (props: AppProviderProps) => {
   } = props;
 
   const router = useRouter();
+  const { agentsmithUser } = useAuth();
+  const supabase = createClient();
 
   const [selectedOrganizationUuid, _setSelectedOrganizationUuid] = useState<string>(
     initialSelectedOrganizationUuid,
@@ -81,6 +89,106 @@ export const AppProvider = (props: AppProviderProps) => {
   );
 
   const [isOrganizationAdmin, setIsOrganizationAdmin] = useState(initialIsOrganizationAdmin);
+
+  useEffect(() => {
+    if (!agentsmithUser) {
+      return;
+    }
+
+    const channelId = `agentsmith-events-user-${agentsmithUser.id}`;
+
+    const channel = supabase
+      .channel(channelId)
+      .on<Database['public']['Tables']['agentsmith_events']['Row']>(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'agentsmith_events',
+          filter: `created_by=eq.${agentsmithUser.id}`,
+        },
+        (payload) => {
+          const record = payload.new;
+
+          switch (record.type) {
+            case 'SYNC_START':
+              const syncStartedToastId = toast('Sync Started', {
+                description: `Sync started for project ${selectedProject?.name ?? '...'}`,
+                action: (
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="link"
+                    className="ml-auto"
+                    onClick={() => {
+                      toast.dismiss(syncStartedToastId);
+                    }}
+                  >
+                    <Link
+                      href={routes.studio.eventDetail(selectedProject?.uuid ?? '', record.uuid)}
+                    >
+                      Details
+                    </Link>
+                  </Button>
+                ),
+              });
+              break;
+            case 'SYNC_COMPLETE':
+              const syncCompletedToastId = toast.success('Sync Completed', {
+                description: `Sync finished successfully for project ${selectedProject?.name ?? '...'}`,
+                action: (
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="link"
+                    className="ml-auto"
+                    onClick={() => {
+                      toast.dismiss(syncCompletedToastId);
+                    }}
+                  >
+                    <Link
+                      href={routes.studio.eventDetail(selectedProject?.uuid ?? '', record.uuid)}
+                    >
+                      Details
+                    </Link>
+                  </Button>
+                ),
+              });
+              break;
+            case 'SYNC_ERROR':
+              const syncErrorToastId = toast.error('Sync Failed', {
+                description: `Sync failed for project ${selectedProject?.name ?? '...'}. Check logs for details.`,
+                duration: 10000,
+                action: (
+                  <Button
+                    asChild
+                    variant="destructive"
+                    size="sm"
+                    className="ml-auto"
+                    onClick={() => {
+                      toast.dismiss(syncErrorToastId);
+                    }}
+                  >
+                    <Link
+                      href={routes.studio.eventDetail(selectedProject?.uuid ?? '', record.uuid)}
+                    >
+                      View
+                    </Link>
+                  </Button>
+                ),
+              });
+              break;
+            default:
+              break;
+          }
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, agentsmithUser?.id, selectedProject?.name]);
 
   const setSelectedOrganizationUuid = (uuid: string) => {
     _setSelectedOrganizationUuid(uuid);

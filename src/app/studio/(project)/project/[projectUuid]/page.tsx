@@ -23,7 +23,7 @@ export default async function Project(props: ProjectPageProps) {
     redirect(routes.auth.signIn);
   }
 
-  const projectData = await agentsmith.services.projects.getProjectData(projectUuid);
+  const projectData = await agentsmith.services.projects.getProjectDataByUuid(projectUuid);
 
   if (!projectData) {
     redirect(routes.error('Project not found'));

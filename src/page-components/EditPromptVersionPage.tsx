@@ -19,6 +19,9 @@ import { H1 } from '@/components/typography';
 import type { CompletionConfig } from '@/lib/openrouter';
 import { JsonEditor } from '@/components/editors/JsonEditor';
 import { GetPromptVersionByUuidResult } from '@/lib/PromptsService';
+import { syncProject } from '@/app/actions/github';
+import { toast } from 'sonner';
+import { SyncProjectButton } from '@/components/SyncProjectButton';
 
 type EditPromptVersionPageProps = {
   promptVersion: NonNullable<GetPromptVersionByUuidResult>;
@@ -58,6 +61,21 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     setVariables(newVariables);
   };
 
+  const createSyncToast = () => {
+    const toastId = toast('Prompt has been updated', {
+      description: 'Would you like to sync your project?',
+      duration: 6000,
+      action: (
+        <SyncProjectButton
+          projectUuid={selectedProjectUuid}
+          onSyncComplete={() => {
+            toast.dismiss(toastId);
+          }}
+        />
+      ),
+    });
+  };
+
   const handleSave = async (
     status: Database['public']['Enums']['prompt_status'],
     shouldRedirect = true,
@@ -68,8 +86,6 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     }
 
     setIsSaving(true);
-
-    console.log('saving variables', variables);
 
     try {
       await updatePromptVersion({
@@ -85,6 +101,8 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
           default_value: v.default_value,
         })),
       });
+
+      createSyncToast();
 
       if (shouldRedirect) {
         router.push(
@@ -128,6 +146,8 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         latestVersion: currentPromptVersion.version,
         versionType: 'patch',
       });
+
+      createSyncToast();
 
       router.push(routes.studio.editPromptVersion(selectedProjectUuid, versionUuid));
     } catch (error) {

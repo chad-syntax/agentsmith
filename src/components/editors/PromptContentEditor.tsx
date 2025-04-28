@@ -29,6 +29,25 @@ type PromptContentEditorProps = {
   className?: string;
 };
 
+const isVariableDiff = (currentVars: PromptVariable[], newVars: PromptVariable[]): boolean => {
+  if (currentVars.length !== newVars.length) return true;
+
+  for (let i = 0; i < currentVars.length; i++) {
+    const currentVar = currentVars[i];
+    const newVar = newVars[i];
+    if (
+      currentVar.name !== newVar.name ||
+      currentVar.type !== newVar.type ||
+      currentVar.required !== newVar.required ||
+      currentVar.default_value !== newVar.default_value
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+};
+
 export const PromptContentEditor = (props: PromptContentEditorProps) => {
   const {
     content,
@@ -52,15 +71,16 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
     timeoutRef.current = setTimeout(() => {
       const { variables: detectedVariables, error } = extractTemplateVariables(content);
 
-      detectedVariablesRef.current = detectedVariables;
+      const isDiff = isVariableDiff(detectedVariablesRef.current, detectedVariables);
 
-      if (!error && detectedVariablesRef.current !== detectedVariables) {
+      if (!error && isDiff) {
         onVariablesChange(detectedVariables);
+        detectedVariablesRef.current = detectedVariables;
       }
 
       setTemplateError(error?.message ?? null);
     }, 250);
-  }, [content, onVariablesChange]);
+  }, [content]);
 
   return (
     <div className={cn('space-y-2', className)}>

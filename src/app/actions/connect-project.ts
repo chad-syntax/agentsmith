@@ -18,7 +18,7 @@ export async function connectProject(options: ConnectProjectOptions) {
   const supabase = await createClient();
   const agentsmith = new AgentsmithServices({ supabase });
 
-  const project = await agentsmith.services.projects.getProjectData(projectUuid);
+  const project = await agentsmith.services.projects.getProjectDataByUuid(projectUuid);
 
   if (!project) {
     throw new Error('Project not found, cannot connect project to repository');
