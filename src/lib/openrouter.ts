@@ -243,6 +243,9 @@ export type OpenrouterRequestBody = {
   // See "Provider Routing" section: openrouter.ai/docs/provider-routing
   provider?: ProviderPreferencesSchema;
   plugins?: OpenrouterPlugin[];
+  usage?: {
+    include: true;
+  };
 };
 
 export type CompletionConfig = Omit<OpenrouterRequestBody, 'messages' | 'prompt'>;

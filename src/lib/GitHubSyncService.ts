@@ -2,21 +2,47 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { AgentsmithSupabaseService } from './AgentsmithSupabaseService';
 import { Database } from '@/app/__generated__/supabase.types';
 import { Octokit } from '@octokit/core';
-import { Api } from '@octokit/plugin-rest-endpoint-methods/dist-types/types';
-import { GetProjectRepositoryResult } from './GitHubAppService';
-import { GetProjectDataResult } from './ProjectsService';
-import { components } from '@octokit/openapi-types'; // Import necessary types
-import { GetAllPromptsDataResult } from './PromptsService';
-import { compareSemanticVersions } from '@/utils/versioning';
+import type {
+  GetProjectRepositoryByInstallationIdResult,
+  GetProjectRepositoryByProjectIdResult,
+} from './ProjectsService';
+import { GitHubSyncInstance, SyncChange } from './sync/GitHubSyncInstance';
 
-export type FileToSync = {
-  path: string;
-  oldContent: string | null;
-  newContent: string | null;
+const AGENTSMITH_PR_LABEL = 'agentsmith-sync';
+
+// Result structure for the main sync operation (Revised V2 - Union Type)
+type BaseSyncResult = {
+  message: string;
+  syncChanges?: SyncChange[];
 };
 
-type PromptData = GetAllPromptsDataResult[number];
-type PromptVersionData = PromptData['prompt_versions'][number];
+type SyncSuccessResult = BaseSyncResult & {
+  status: 'success';
+  changesMade: true;
+  pullRequest?: {
+    number: number;
+    url: string;
+    branchName: string;
+  }; // PR might not be created even on success (e.g., repo -> agentsmith sync)
+};
+
+type SyncErrorResult = BaseSyncResult & {
+  status: 'error';
+  changesMade: boolean; // Could be true if error occurred after some changes
+  error: Error;
+};
+
+type SyncNoChangesResult = BaseSyncResult & {
+  status: 'no_changes';
+  changesMade: false;
+};
+
+type SyncInProgressResult = BaseSyncResult & {
+  status: 'sync_in_progress';
+  changesMade: false;
+};
+
+type SyncResult = SyncSuccessResult | SyncErrorResult | SyncNoChangesResult | SyncInProgressResult;
 
 type PullRequestDetail = {
   number: number;
@@ -24,904 +50,448 @@ type PullRequestDetail = {
   htmlUrl: string;
 };
 
-// Define a type for the sync result structure returned by syncBranchFiles
-type SyncResult = {
-  promptsCreated: FileToSync[];
-  promptsUpdated: FileToSync[];
-  promptsArchived: FileToSync[];
-  promptVersionsCreated: FileToSync[];
-  promptVersionsUpdated: FileToSync[];
-  promptVersionsArchived: FileToSync[];
-  promptVariablesCreated: FileToSync[];
-  promptVariablesUpdated: FileToSync[];
-  promptVariablesArchived: FileToSync[];
+type FindExistingAgentsmithPrOptions = {
+  octokit: Octokit;
+  owner: string;
+  repo: string;
+  branchRef: string | null;
 };
 
-type SyncBranchFilesResult = SyncResult & {
-  changesMade: boolean;
+type DeleteBranchOptions = {
+  octokit: Octokit;
+  owner: string;
+  repo: string;
+  branchName: string;
 };
-
-type FileMap = Map<string, components['schemas']['git-tree']['tree'][number]>;
 
 type GitHubSyncServiceConstructorOptions = {
   supabase: SupabaseClient<Database>;
 };
 
-type FindExistingAgentsmithPrOptions = {
-  octokit: Octokit & Api;
-  owner: string;
-  repo: string;
+type SyncOptionsFromAgentsmith = {
+  projectRepository: NonNullable<GetProjectRepositoryByProjectIdResult>;
+  source: 'agentsmith';
 };
 
-type CreateBranchOptions = {
-  octokit: Octokit & Api;
-  owner: string;
-  repo: string;
-  newBranchName: string;
-  baseBranchName: string;
+type SyncOptionsFromRepo = {
+  projectRepository: NonNullable<GetProjectRepositoryByInstallationIdResult>;
+  source: 'repo';
+  branchRef: string;
 };
 
-type CreatePullRequestOptions = {
-  octokit: Octokit & Api;
-  owner: string;
-  repo: string;
-  headBranch: string;
-  baseBranch: string;
-};
-
-type ApplyAgentsmithLabelOptions = {
-  octokit: Octokit & Api;
-  owner: string;
-  repo: string;
-  issueNumber: number;
-};
-
-type DeleteBranchOptions = {
-  octokit: Octokit & Api;
-  owner: string;
-  repo: string;
-  branchName: string;
-};
-
-type SyncBranchFilesOptions = {
-  octokit: Octokit & Api;
-  owner: string;
-  repo: string;
-  project: NonNullable<GetProjectDataResult>;
-  projectRepository: NonNullable<GetProjectRepositoryResult>;
-  branchName: string;
-};
-
-type GetRepositoryFileMapOptions = {
-  octokit: Octokit & Api;
-  owner: string;
-  repo: string;
-  treeSha: string;
-  agentsmithFolder: string;
-};
-
-type GetFileContentOptions = {
-  octokit: Octokit & Api;
-  owner: string;
-  repo: string;
-  path: string;
-  ref: string;
-};
-
-type DetermineChangesBaseOptions = {
-  octokit: Octokit & Api;
-  owner: string;
-  repo: string;
-  branchName: string;
-  fileMap: FileMap;
-};
-
-type DeterminePromptChangesOptions = DetermineChangesBaseOptions & {
-  prompt: PromptData;
-  promptBasePath: string;
-};
-
-type DeterminePromptVersionChangesOptions = DetermineChangesBaseOptions & {
-  version: PromptVersionData;
-  versionBasePath: string;
-};
-
-type DeterminePromptVariableChangesOptions = DetermineChangesBaseOptions & {
-  version: PromptVersionData;
-  versionBasePath: string;
-};
-
-type CommitFilesOptions = {
-  octokit: Octokit & Api;
-  owner: string;
-  repo: string;
-  branchName: string;
-};
-
-type CommitFileChangesOptions = CommitFilesOptions & {
-  filesToCommit: FileToSync[];
-};
+type SyncOptions = SyncOptionsFromAgentsmith | SyncOptionsFromRepo;
 
 export class GitHubSyncService extends AgentsmithSupabaseService {
   constructor(options: GitHubSyncServiceConstructorOptions) {
     super({ ...options, serviceName: 'githubSync' });
   }
 
-  async syncAgentsmithFromRepository(projectId: number, branchRef: string): Promise<void> {
-    console.log('begin sync from repository to agentsmith for project', projectId);
+  public async sync(options: SyncOptions): Promise<SyncResult> {
+    const { projectRepository, source } = options;
 
-    const project = await this.services.projects.getProjectDataById(projectId);
-    if (!project) throw new Error('Project not found');
+    if (!projectRepository.project_id) {
+      throw new Error('project_repository must be connected to a project to sync');
+    }
 
-    const projectRepository = await this.services.githubApp.getProjectRepository(project.id);
-    if (!projectRepository) throw new Error('Project is not connected to a GitHub repository');
+    if (!projectRepository.github_app_installations.installation_id) {
+      throw new Error('project_repository must be connected to a GitHub App installation to sync');
+    }
 
-    const installationId = projectRepository.github_app_installations.installation_id;
-    if (!installationId) throw new Error('Installation ID not found, cannot sync from repository');
+    const isLocked = projectRepository.sync_status === 'SYNCING';
 
-    // Get branch name from ref (refs/heads/main -> main)
-    const branchName = branchRef.replace('refs/heads/', '');
+    if (isLocked) {
+      return {
+        message: 'Sync already in progress',
+        status: 'sync_in_progress',
+        changesMade: false,
+      };
+    }
 
-    // Check if this is the default branch to determine status behavior
-    const isDefaultBranch = branchName === projectRepository.repository_default_branch;
+    const octokit = await this.services.githubApp.app.getInstallationOctokit(
+      projectRepository.github_app_installations.installation_id,
+    );
 
-    const octokit = await this.services.githubApp.app.getInstallationOctokit(installationId);
     const [owner, repo] = projectRepository.repository_full_name.split('/');
 
-    await this.services.events.createSyncStartEvent({
-      organizationId: project.organization_id,
-      projectId: project.id,
-      source: 'repo',
-    });
+    let lockAcquired = false;
+    let pullRequestDetail: PullRequestDetail | null = null;
+    let branchRef: string | null = source === 'repo' ? options.branchRef : null;
+    let createdNewBranch = false;
 
-    try {
-      // Get the prompt files structure from the GitHub repository
-      const agentsmithFolder = projectRepository.agentsmith_folder;
-      const promptsPath = `${agentsmithFolder}/prompts`;
-
-      // Check if the prompts directory exists in the repository
-      const fileMap = await this.getRepositoryFileMap({
-        octokit,
-        owner,
-        repo,
-        treeSha: branchName,
-        agentsmithFolder,
-      });
-
-      // Generate a map of files in the prompts directory
-      const promptFiles = Array.from(fileMap.entries())
-        .filter(([path]) => path.startsWith(promptsPath))
-        .map(([path, file]) => ({ path, file }));
-
-      if (promptFiles.length === 0) {
-        console.log(`No prompt files found in ${promptsPath} directory. Nothing to sync.`);
-
-        await this.services.events.createSyncCompleteEvent({
-          organizationId: project.organization_id,
-          projectId: project.id,
-          source: 'repo',
-          details: { changesMade: false },
-        });
-
-        return;
-      }
-
-      // Find all prompt.json files to identify all prompts
-      const promptJsonFiles = promptFiles.filter(({ path }) => path.endsWith('/prompt.json'));
-
-      // Handle each prompt
-      let changesMade = false;
-      const syncResult: SyncResult = {
-        promptsCreated: [],
-        promptsUpdated: [],
-        promptsArchived: [],
-        promptVersionsCreated: [],
-        promptVersionsUpdated: [],
-        promptVersionsArchived: [],
-        promptVariablesCreated: [],
-        promptVariablesUpdated: [],
-        promptVariablesArchived: [],
-      };
-
-      for (const { path } of promptJsonFiles) {
-        // Get the prompt.json content
-        const promptContent = await this.getFileContent({
-          octokit,
-          owner,
-          repo,
-          path,
-          ref: branchName,
-        });
-
-        if (!promptContent) {
-          console.warn(`Failed to read content for ${path}. Skipping this prompt.`);
-          continue;
-        }
-
-        try {
-          const promptData = JSON.parse(promptContent);
-
-          const promptSlug = promptData.slug;
-
-          // Check if this prompt already exists in the database
-          const { data: existingPrompt, error: findError } = await this.supabase
-            .from('prompts')
-            .select('id, name, slug')
-            .eq('project_id', projectId)
-            .eq('slug', promptSlug)
-            .single();
-
-          if (findError && findError.code !== 'PGRST116') {
-            // PGRST116 = not found
-            console.error(`Error checking if prompt ${promptSlug} exists:`, findError);
-            continue;
-          }
-
-          // Create or update prompt
-          if (!existingPrompt) {
-            // Create new prompt
-            const { data: newPrompt, error: createError } = await this.supabase
-              .from('prompts')
-              .insert({
-                project_id: projectId,
-                name: promptData.name,
-                slug: promptSlug,
-              })
-              .select('id')
-              .single();
-
-            if (createError) {
-              console.error(`Failed to create prompt ${promptSlug}:`, createError);
-              continue;
-            }
-
-            changesMade = true;
-            syncResult.promptsCreated.push({ path, oldContent: null, newContent: promptContent });
-
-            // Handle prompt versions for this new prompt
-            if (newPrompt && promptData.versions) {
-              await this.syncPromptVersionsFromRepo({
-                promptId: newPrompt.id,
-                versions: promptData.versions,
-                promptBasePath: path.replace('/prompt.json', ''),
-                octokit,
-                owner,
-                repo,
-                branchName,
-                fileMap,
-                isDefaultBranch,
-                syncResult,
-              });
-            }
-          } else {
-            // Update existing prompt if needed
-            if (existingPrompt && promptData.name && existingPrompt.name !== promptData.name) {
-              const { error: updateError } = await this.supabase
-                .from('prompts')
-                .update({
-                  name: promptData.name,
-                })
-                .eq('id', existingPrompt.id);
-
-              if (updateError) {
-                console.error(`Failed to update prompt ${promptSlug}:`, updateError);
-                continue;
-              }
-
-              changesMade = true;
-              syncResult.promptsUpdated.push({
-                path,
-                oldContent: JSON.stringify(existingPrompt, null, 2),
-                newContent: promptContent,
-              });
-            }
-
-            // Handle prompt versions for this existing prompt
-            if (promptData.versions) {
-              const versionSyncResult = await this.syncPromptVersionsFromRepo({
-                promptId: existingPrompt.id,
-                versions: promptData.versions,
-                promptBasePath: path.replace('/prompt.json', ''),
-                octokit,
-                owner,
-                repo,
-                branchName,
-                fileMap,
-                isDefaultBranch,
-                syncResult,
-              });
-
-              if (versionSyncResult) {
-                changesMade = changesMade || versionSyncResult;
-              }
-            }
-          }
-        } catch (parseError) {
-          console.error(`Failed to parse JSON for ${path}:`, parseError);
-          continue;
-        }
-      }
-
-      // Call sync complete event with results
-      await this.services.events.createSyncCompleteEvent({
-        organizationId: project.organization_id,
-        projectId: project.id,
-        source: 'repo',
-        details: { changesMade, syncResult },
-      });
-
-      console.log('repository to agentsmith sync complete');
-    } catch (error) {
-      console.error('Error during sync from repository to agentsmith:', error);
-
-      // Send failure event
-      await this.services.events.createSyncCompleteEvent({
-        organizationId: project.organization_id,
-        projectId: project.id,
-        source: 'repo',
-        details: { changesMade: false, error: (error as Error).message },
-      });
-
-      throw error;
-    }
-  }
-
-  private async syncPromptVersionsFromRepo(options: {
-    promptId: number;
-    versions: { version: string; status: string }[];
-    promptBasePath: string;
-    octokit: Octokit & Api;
-    owner: string;
-    repo: string;
-    branchName: string;
-    fileMap: FileMap;
-    isDefaultBranch: boolean;
-    syncResult: SyncResult;
-  }): Promise<boolean> {
-    const {
-      promptId,
-      versions,
-      promptBasePath,
+    const existingPr = await this.findExistingAgentsmithPr({
       octokit,
       owner,
       repo,
-      branchName,
-      fileMap,
-      isDefaultBranch,
-      syncResult,
-    } = options;
-
-    let changesMade = false;
-
-    // Get existing versions for this prompt
-    const { data: existingVersions, error: versionsError } = await this.supabase
-      .from('prompt_versions')
-      .select('id, version, status, content, config')
-      .eq('prompt_id', promptId);
-
-    if (versionsError) {
-      console.error(`Error fetching existing versions for prompt ${promptId}:`, versionsError);
-      return false;
-    }
-
-    // Ensure we have a valid array of versions
-    const validExistingVersions = existingVersions || [];
-
-    // Create a map of existing versions for quick lookup
-    const existingVersionsMap = new Map(validExistingVersions.map((v) => [v.version, v]));
-
-    // Process each version in the repository
-    for (const versionInfo of versions) {
-      const versionBasePath = `${promptBasePath}/${versionInfo.version}`;
-      const versionFilePath = `${versionBasePath}/version.json`;
-
-      // Skip versions that don't have a version.json file
-      if (!fileMap.has(versionFilePath)) {
-        console.log(`Version file not found at ${versionFilePath}, skipping`);
-        continue;
-      }
-
-      // Get version file content
-      const versionContent = await this.getFileContent({
-        octokit,
-        owner,
-        repo,
-        path: versionFilePath,
-        ref: branchName,
-      });
-
-      if (!versionContent) {
-        console.warn(`Failed to read content for ${versionFilePath}. Skipping this version.`);
-        continue;
-      }
-
-      try {
-        const versionData = JSON.parse(versionContent);
-
-        const existingVersion = existingVersionsMap.get(versionInfo.version);
-
-        // Handle variables first so we can associate them with the version
-        const variablesFilePath = `${versionBasePath}/variables.json`;
-        let promptVariables: any[] = [];
-
-        if (fileMap.has(variablesFilePath)) {
-          const variablesContent = await this.getFileContent({
-            octokit,
-            owner,
-            repo,
-            path: variablesFilePath,
-            ref: branchName,
-          });
-
-          if (variablesContent) {
-            try {
-              promptVariables = JSON.parse(variablesContent);
-            } catch (parseError) {
-              console.error(`Failed to parse variables JSON for ${variablesFilePath}:`, parseError);
-            }
-          }
-        }
-
-        if (!existingVersion) {
-          let status = versionData.status;
-
-          if (!isDefaultBranch && status === 'PUBLISHED') {
-            console.log(
-              `New Prompt Version ${versionInfo.version} marked as PUBLISHED in non-default branch. Setting to DRAFT instead.`,
-            );
-            status = 'DRAFT';
-          }
-
-          // Create new version
-          const { data: newVersion, error: createError } = await this.supabase
-            .from('prompt_versions')
-            .insert({
-              prompt_id: promptId,
-              version: versionInfo.version,
-              status,
-              content: versionData.content,
-              config: versionData.config || {},
-            })
-            .select('id')
-            .single();
-
-          if (createError) {
-            console.error(`Failed to create version ${versionInfo.version}:`, createError);
-            continue;
-          }
-
-          changesMade = true;
-          syncResult.promptVersionsCreated.push({
-            path: versionFilePath,
-            oldContent: null,
-            newContent: versionContent,
-          });
-
-          // Create variables for this version if any
-          if (newVersion && promptVariables.length > 0) {
-            const promptVariablesToInsert = promptVariables.map((variable) => ({
-              prompt_version_id: newVersion.id,
-              name: variable.name,
-              type: variable.type,
-              required: variable.required,
-              default_value: variable.default_value,
-            }));
-
-            const { error: variablesError } = await this.supabase
-              .from('prompt_variables')
-              .insert(promptVariablesToInsert);
-
-            if (variablesError) {
-              console.error(
-                `Failed to create variables for version ${versionInfo.version}:`,
-                variablesError,
-              );
-            } else {
-              syncResult.promptVariablesCreated.push({
-                path: variablesFilePath,
-                oldContent: null,
-                newContent: JSON.stringify(promptVariables, null, 2),
-              });
-            }
-          }
-        } else {
-          // Update existing version if needed
-          const needsUpdate =
-            existingVersion &&
-            (existingVersion.content !== versionData.content ||
-              JSON.stringify(existingVersion.config) !== JSON.stringify(versionData.config || {}));
-
-          if (needsUpdate) {
-            const { error: updateError } = await this.supabase
-              .from('prompt_versions')
-              .update({
-                content: versionData.content,
-                config: versionData.config || {},
-              })
-              .eq('id', existingVersion.id);
-
-            if (updateError) {
-              console.error(`Failed to update version ${versionInfo.version}:`, updateError);
-              continue;
-            }
-
-            changesMade = true;
-            syncResult.promptVersionsUpdated.push({
-              path: versionFilePath,
-              oldContent: JSON.stringify(existingVersion, null, 2),
-              newContent: versionContent,
-            });
-          }
-
-          // Handle variables for existing version
-          if (promptVariables.length > 0 && existingVersion) {
-            // Get existing variables
-            const { data: existingVariables, error: varError } = await this.supabase
-              .from('prompt_variables')
-              .select('id, name, type, required, default_value')
-              .eq('prompt_version_id', existingVersion.id);
-
-            if (varError) {
-              console.error(
-                `Failed to fetch variables for version ${versionInfo.version}:`,
-                varError,
-              );
-              continue;
-            }
-
-            // Ensure we have a valid array
-            const validExistingVariables = existingVariables || [];
-
-            // Compare and update variables
-            const existingVarMap = new Map(validExistingVariables.map((v) => [v.name, v]));
-
-            // Variables to create, update, or delete
-            const variablesToCreate: any[] = [];
-            const variablesToUpdate: any[] = [];
-            const variableIdsToKeep: number[] = [];
-
-            for (const variable of promptVariables) {
-              const existingVar = existingVarMap.get(variable.name);
-
-              if (!existingVar) {
-                // New variable
-                variablesToCreate.push({
-                  prompt_version_id: existingVersion.id,
-                  name: variable.name,
-                  type: variable.type,
-                  required: variable.required,
-                  default_value: variable.default_value,
-                });
-              } else if (existingVar.id) {
-                // Existing variable that might need update
-                const needsVarUpdate =
-                  existingVar.type !== variable.type ||
-                  existingVar.required !== variable.required ||
-                  existingVar.default_value !== variable.default_value;
-
-                if (needsVarUpdate) {
-                  variablesToUpdate.push({
-                    id: existingVar.id,
-                    type: variable.type,
-                    required: variable.required,
-                    default_value: variable.default_value,
-                  });
-                }
-
-                variableIdsToKeep.push(existingVar.id);
-              }
-            }
-
-            // Determine variables to delete (those in DB but not in repo)
-            const variableIdsToDelete = validExistingVariables
-              .filter((v) => v.id && !variableIdsToKeep.includes(v.id))
-              .map((v) => v.id)
-              .filter((id): id is number => id !== undefined);
-
-            // Execute variable changes
-            if (variablesToCreate.length > 0) {
-              const { error: createVarError } = await this.supabase
-                .from('prompt_variables')
-                .insert(variablesToCreate);
-
-              if (createVarError) {
-                console.error(
-                  `Failed to create variables for version ${versionInfo.version}:`,
-                  createVarError,
-                );
-              } else {
-                changesMade = true;
-                syncResult.promptVariablesCreated.push({
-                  path: variablesFilePath,
-                  oldContent: JSON.stringify(validExistingVariables, null, 2),
-                  newContent: JSON.stringify(promptVariables, null, 2),
-                });
-              }
-            }
-
-            for (const variable of variablesToUpdate) {
-              const { error: updateVarError } = await this.supabase
-                .from('prompt_variables')
-                .update({
-                  type: variable.type,
-                  required: variable.required,
-                  default_value: variable.default_value,
-                })
-                .eq('id', variable.id);
-
-              if (updateVarError) {
-                console.error(`Failed to update variable id ${variable.id}:`, updateVarError);
-              } else {
-                changesMade = true;
-                syncResult.promptVariablesUpdated.push({
-                  path: `${variablesFilePath}#${variable.id}`,
-                  oldContent: JSON.stringify(existingVarMap.get(variable.name), null, 2),
-                  newContent: JSON.stringify(variable, null, 2),
-                });
-              }
-            }
-
-            if (variableIdsToDelete.length > 0) {
-              const { error: deleteVarError } = await this.supabase
-                .from('prompt_variables')
-                .delete()
-                .in('id', variableIdsToDelete);
-
-              if (deleteVarError) {
-                console.error(`Failed to delete variables:`, deleteVarError);
-              } else {
-                changesMade = true;
-                for (const id of variableIdsToDelete) {
-                  const deletedVar = validExistingVariables.find((v) => v.id === id);
-                  syncResult.promptVariablesArchived.push({
-                    path: `${variablesFilePath}#${id}`,
-                    oldContent: JSON.stringify(deletedVar, null, 2),
-                    newContent: null,
-                  });
-                }
-              }
-            }
-          }
-        }
-      } catch (parseError) {
-        console.error(`Failed to parse JSON for ${versionFilePath}:`, parseError);
-        continue;
-      }
-    }
-
-    // Handle versions that exist in DB but not in repo - mark as ARCHIVED
-    const repoVersions = new Set(versions.map((v) => v.version));
-    const versionsToArchive = validExistingVersions.filter((v) => !repoVersions.has(v.version));
-
-    for (const version of versionsToArchive) {
-      // Only archive if not already archived
-      if (version && version.status !== 'ARCHIVED') {
-        const { error: archiveError } = await this.supabase
-          .from('prompt_versions')
-          .update({ status: 'ARCHIVED' })
-          .eq('id', version.id);
-
-        if (archiveError) {
-          console.error(`Failed to archive version ${version.version}:`, archiveError);
-        } else {
-          changesMade = true;
-          syncResult.promptVersionsArchived.push({
-            path: `${promptBasePath}/${version.version}/version.json`,
-            oldContent: JSON.stringify(version, null, 2),
-            newContent: null,
-          });
-        }
-      }
-    }
-
-    return changesMade;
-  }
-
-  async syncRepositoryFromAgentsmith(projectId: number): Promise<void> {
-    console.log('begin repository sync for project', projectId);
-
-    const project = await this.services.projects.getProjectDataById(projectId);
-    if (!project) throw new Error('Project not found');
-
-    const projectRepository = await this.services.githubApp.getProjectRepository(project.id);
-    if (!projectRepository) throw new Error('Project is not connected to a GitHub repository');
-
-    const installationId = projectRepository.github_app_installations.installation_id;
-    if (!installationId) throw new Error('Installation ID not found, cannot sync repository');
-
-    const octokit = await this.services.githubApp.app.getInstallationOctokit(installationId);
-    const [owner, repo] = projectRepository.repository_full_name.split('/');
-
-    await this.services.events.createSyncStartEvent({
-      organizationId: project.organization_id,
-      projectId: project.id,
-      source: 'agentsmith',
+      branchRef,
     });
 
-    const existingPr = await this.findExistingAgentsmithPr({ octokit, owner, repo });
-
     if (existingPr) {
-      console.log(
-        `Existing PR #${existingPr.number} found, syncing files to branch ${existingPr.head.ref}`,
-      );
-      const { changesMade, ...syncResult } = await this.syncBranchFiles({
-        octokit,
-        owner,
-        repo,
-        project,
-        projectRepository,
-        branchName: existingPr.head.ref, // Sync to the existing PR's branch
-      });
-
-      const pullRequestDetail: PullRequestDetail = {
+      pullRequestDetail = {
         number: existingPr.number,
         title: existingPr.title,
         htmlUrl: existingPr.html_url,
       };
 
-      await this.services.events.createSyncCompleteEvent({
-        organizationId: project.organization_id,
-        projectId: project.id,
-        source: 'agentsmith',
-        details: { changesMade, pullRequest: pullRequestDetail, syncResult },
-      });
-
-      return;
-    }
-
-    console.log('No existing agentsmith PR found, creating a new one...');
-    const branchName = `agentsmith-sync-${Date.now()}`;
-
-    await this.createBranch({
-      octokit,
-      owner,
-      repo,
-      newBranchName: branchName,
-      baseBranchName: projectRepository.repository_default_branch,
-    });
-
-    const { changesMade, ...syncResult } = await this.syncBranchFiles({
-      octokit,
-      owner,
-      repo,
-      project,
-      projectRepository,
-      branchName,
-    });
-
-    if (changesMade) {
-      console.log('Changes detected, creating Pull Request...');
-      const newPR = await this.createPullRequest({
+      branchRef = existingPr.head.ref;
+      createdNewBranch = false;
+    } else if (source === 'agentsmith') {
+      const newBranchName = `agentsmith-sync-${Date.now()}`;
+      await this.createBranch({
         octokit,
         owner,
         repo,
-        headBranch: branchName,
         baseBranch: projectRepository.repository_default_branch,
-      });
-      await this.applyAgentsmithLabel({ octokit, owner, repo, issueNumber: newPR.number });
-
-      const pullRequestDetail: PullRequestDetail = {
-        number: newPR.number,
-        title: newPR.title,
-        htmlUrl: newPR.html_url,
-      };
-
-      await this.services.events.createSyncCompleteEvent({
-        organizationId: project.organization_id,
-        projectId: project.id,
-        source: 'agentsmith',
-        details: { changesMade: true, pullRequest: pullRequestDetail, syncResult },
+        newBranchName,
       });
 
-      return;
+      branchRef = newBranchName;
+      createdNewBranch = true;
     }
 
-    console.log('No file changes detected. Skipping Pull Request creation and deleting branch.');
-    await this.deleteBranch({ octokit, owner, repo, branchName });
+    if (!branchRef) {
+      throw new Error('branchRef could not be determined for sync');
+    }
 
-    await this.services.events.createSyncCompleteEvent({
-      organizationId: project.organization_id,
-      projectId: project.id,
-      source: 'agentsmith',
-      details: { changesMade: false },
+    const githubSyncInstance = new GitHubSyncInstance({
+      supabase: this.supabase,
+      octokit,
+      owner,
+      repo,
+      branchRef,
+      defaultBranch: projectRepository.repository_default_branch,
+      agentsmithFolder: projectRepository.agentsmith_folder,
+      projectId: projectRepository.project_id,
     });
 
-    console.log('repository sync complete');
+    githubSyncInstance.services = this.services;
+
+    try {
+      await this.services.events.createSyncStartEvent({
+        organizationId: projectRepository.organization_id,
+        projectId: projectRepository.project_id,
+        source,
+      });
+
+      await this.services.projects.lockProjectRepository(projectRepository.id);
+
+      lockAcquired = true;
+
+      const syncChanges = await githubSyncInstance.executeSync();
+
+      const changesMade = syncChanges.length > 0;
+
+      if (changesMade) {
+        // create PR if createdNewBranch is true and source is agentsmith
+        if (createdNewBranch) {
+          const body = `This PR is automatically created by the Agentsmith GitHub Sync service. It is used to sync the project ${projectRepository.projects?.name ?? 'Unknown Project'} from Agentsmith.`;
+          const pr = await this.createPullRequest({
+            octokit,
+            owner,
+            repo,
+            headBranch: branchRef,
+            baseBranch: projectRepository.repository_default_branch,
+            title: `Agentsmith Sync: ${projectRepository.projects?.name ?? 'Unknown Project'}`,
+            body,
+          });
+
+          pullRequestDetail = {
+            number: pr.number,
+            title: pr.title,
+            htmlUrl: pr.html_url,
+          };
+        }
+
+        await this.services.events.createSyncCompleteEvent({
+          organizationId: projectRepository.organization_id,
+          projectId: projectRepository.project_id,
+          source,
+          details: {
+            changesMade,
+            pullRequestDetail,
+            syncChanges,
+          },
+        });
+
+        return {
+          message: 'Sync complete',
+          status: 'success',
+          changesMade,
+          syncChanges,
+        };
+      }
+
+      if (!changesMade && createdNewBranch) {
+        await this.deleteBranch({
+          octokit,
+          owner,
+          repo,
+          branchName: branchRef,
+        });
+      }
+
+      await this.services.events.createSyncCompleteEvent({
+        organizationId: projectRepository.organization_id,
+        projectId: projectRepository.project_id,
+        source,
+        details: {
+          changesMade,
+          pullRequestDetail,
+          syncChanges,
+        },
+      });
+
+      return {
+        message: 'No changes made',
+        status: 'no_changes',
+        changesMade,
+      };
+    } catch (error) {
+      console.error('Error syncing project repository:', error);
+
+      await this.services.events.createSyncErrorEvent({
+        organizationId: projectRepository.organization_id,
+        projectId: projectRepository.project_id,
+        source,
+        details: {
+          pullRequestDetail,
+          error: (error as Error).message,
+        },
+      });
+
+      if (createdNewBranch) {
+        await this.deleteBranch({
+          octokit,
+          owner,
+          repo,
+          branchName: branchRef,
+        });
+      }
+
+      return {
+        message: 'Error syncing project repository',
+        status: 'error',
+        changesMade: false,
+        error: error as Error,
+      };
+    } finally {
+      if (lockAcquired) {
+        await this.services.projects.unlockProjectRepository(projectRepository.id);
+      }
+    }
   }
 
   private async findExistingAgentsmithPr(options: FindExistingAgentsmithPrOptions) {
-    const { octokit, owner, repo } = options;
+    const { octokit, owner, repo, branchRef } = options;
+
+    // If we have a branchRef, we can try to fetch the pull request from the branchRef
+    if (branchRef) {
+      try {
+        const { data: pullRequests } = await octokit.request('GET /repos/{owner}/{repo}/pulls', {
+          owner,
+          repo,
+          state: 'open',
+          head: `${owner}:${branchRef}`,
+        });
+
+        if (pullRequests.length > 0) {
+          return pullRequests[0];
+        }
+      } catch (error) {
+        console.error('Error fetching existing pull requests:', { owner, repo, error });
+      }
+    }
+
+    // If we don't have a branchRef, we can try to fetch all open pull requests and filter them by the AGENTSMITH_PR_LABEL
     try {
       const { data: pullRequests } = await octokit.request('GET /repos/{owner}/{repo}/pulls', {
         owner,
         repo,
         state: 'open',
-        labels: 'agentsmith',
       });
-      if (pullRequests.length > 1) {
+
+      const agentsmithPrs = pullRequests.filter((pr) =>
+        pr.labels.some((label: { name: string }) => label.name === AGENTSMITH_PR_LABEL),
+      );
+
+      if (agentsmithPrs.length > 1) {
         console.warn(
-          `Found ${pullRequests.length} open pull requests with the 'agentsmith' label for ${owner}/${repo}. Using the first one found: #${pullRequests[0].number}.`,
+          `Found ${agentsmithPrs.length} open pull requests with the '${AGENTSMITH_PR_LABEL}' label for ${owner}/${repo}. Using the first one found: #${agentsmithPrs[0].number}.`,
         );
       }
-      return pullRequests.length > 0 ? pullRequests[0] : null;
+      if (agentsmithPrs.length > 0) {
+        return agentsmithPrs[0];
+      }
+      return null;
     } catch (error) {
-      console.error('Error fetching existing pull requests:', error);
+      console.error('Error fetching existing pull requests:', { owner, repo, error });
       return null;
     }
   }
 
-  private async createBranch(options: CreateBranchOptions): Promise<void> {
-    const { octokit, owner, repo, newBranchName, baseBranchName } = options;
-    const { data: refData } = await octokit.request(
-      'GET /repos/{owner}/{repo}/git/ref/heads/{branch}',
-      {
-        owner,
-        repo,
-        branch: baseBranchName,
-      },
-    );
-    const sha = refData.object.sha;
-
-    await octokit.request('POST /repos/{owner}/{repo}/git/refs', {
-      owner,
-      repo,
-      ref: `refs/heads/${newBranchName}`,
-      sha,
-    });
-    console.log(`Created branch: ${newBranchName}`);
-  }
-
-  private async createPullRequest(options: CreatePullRequestOptions) {
-    const { octokit, owner, repo, headBranch, baseBranch } = options;
-    const { data: newPR } = await octokit.request('POST /repos/{owner}/{repo}/pulls', {
-      owner,
-      repo,
-      title: 'Agentsmith Sync',
-      body: 'Syncing prompts and variables from Agentsmith',
-      head: headBranch,
-      base: baseBranch,
-    });
-    console.log(`Created Pull Request #${newPR.number}`);
-    return newPR;
-  }
-
-  private async applyAgentsmithLabel(options: ApplyAgentsmithLabelOptions): Promise<void> {
-    const { octokit, owner, repo, issueNumber } = options;
-    const labelName = 'agentsmith';
+  private async createBranch(options: {
+    octokit: Octokit;
+    owner: string;
+    repo: string;
+    baseBranch: string;
+    newBranchName: string;
+  }): Promise<void> {
+    const { octokit, owner, repo, baseBranch, newBranchName } = options;
     try {
-      await octokit.request('GET /repos/{owner}/{repo}/labels/{name}', {
-        owner,
-        repo,
-        name: labelName,
-      });
-    } catch (error: any) {
-      if (error.status === 404) {
-        console.log(`Label "${labelName}" not found, creating it...`);
-        await octokit.request('POST /repos/{owner}/{repo}/labels', {
+      const { data: baseBranchData } = await octokit.request(
+        'GET /repos/{owner}/{repo}/branches/{branch}',
+        {
           owner,
           repo,
-          name: labelName,
-          color: '0E8A16',
-          description: 'PRs created by Agentsmith',
+          branch: baseBranch,
+        },
+      );
+      const baseSha = baseBranchData.commit.sha;
+
+      await octokit.request('POST /repos/{owner}/{repo}/git/refs', {
+        owner,
+        repo,
+        ref: `refs/heads/${newBranchName}`,
+        sha: baseSha,
+      });
+      console.log(`Branch ${newBranchName} created successfully from ${baseBranch}`);
+    } catch (error: any) {
+      console.error(`Failed to create branch ${newBranchName}:`, { owner, repo, error });
+      if (error.status === 422) {
+        console.warn(`Branch ${newBranchName} might already exist.`, { owner, repo });
+      }
+      throw error;
+    }
+  }
+
+  private async createPullRequest(options: {
+    octokit: Octokit;
+    owner: string;
+    repo: string;
+    headBranch: string;
+    baseBranch: string;
+    title: string;
+    body: string;
+  }) {
+    const { octokit, owner, repo, headBranch, baseBranch, title, body } = options;
+    try {
+      const { data: pr } = await octokit.request('POST /repos/{owner}/{repo}/pulls', {
+        owner,
+        repo,
+        head: headBranch,
+        base: baseBranch,
+        title,
+        body,
+        maintainer_can_modify: true,
+        draft: false,
+      });
+      console.log(`Pull request #${pr.number} created successfully.`);
+
+      await this.applyAgentsmithLabel({
+        octokit,
+        owner,
+        repo,
+        prNumber: pr.number,
+      });
+      return pr;
+    } catch (error: any) {
+      console.error('Failed to create pull request:', {
+        owner,
+        repo,
+        headBranch,
+        baseBranch,
+        error,
+      });
+      if (error.status === 422 && error.message?.includes('No commits between')) {
+        console.warn('Pull request creation failed likely because there are no changes yet.', {
+          owner,
+          repo,
+          headBranch,
+          baseBranch,
         });
-        console.log(`Label "${labelName}" created.`);
+        throw new Error(
+          `Cannot create PR for ${headBranch}: No changes found compared to ${baseBranch}. Commit changes first.`,
+        );
+      } else if (error.status === 422 && error.message?.includes('A pull request already exists')) {
+        console.warn('Pull request creation failed because it already exists.', {
+          owner,
+          repo,
+          headBranch,
+          baseBranch,
+        });
+        throw error;
+      }
+      throw error;
+    }
+  }
+
+  private async applyAgentsmithLabel(options: {
+    octokit: Octokit;
+    owner: string;
+    repo: string;
+    prNumber: number;
+  }): Promise<void> {
+    const { octokit, owner, repo, prNumber } = options;
+    const labelColor = '000000'; // Default color (black)
+
+    const applyLabel = async () => {
+      await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/labels', {
+        owner,
+        repo,
+        issue_number: prNumber,
+        labels: [AGENTSMITH_PR_LABEL],
+      });
+      console.log(`Label '${AGENTSMITH_PR_LABEL}' applied successfully to PR #${prNumber}.`);
+    };
+
+    try {
+      await applyLabel();
+    } catch (error: any) {
+      // Check if the error is because the label doesn't exist (typically 404 on the issue/PR when label is unknown?)
+      // Or sometimes the error might be on the label itself during validation. Let's check for 404.
+      if (error.status === 404) {
+        console.warn(
+          `Label '${AGENTSMITH_PR_LABEL}' not found for PR #${prNumber}. Attempting to create it.`,
+        );
+        try {
+          // Attempt to create the label
+          await octokit.request('POST /repos/{owner}/{repo}/labels', {
+            owner,
+            repo,
+            name: AGENTSMITH_PR_LABEL,
+            color: labelColor,
+            description: 'PRs created by Agentsmith sync',
+          });
+          console.log(`Label '${AGENTSMITH_PR_LABEL}' created successfully.`);
+          // Retry applying the label
+          await applyLabel();
+        } catch (createError: any) {
+          console.error(
+            `Failed to create label '${AGENTSMITH_PR_LABEL}' or apply it after creation:`,
+            {
+              owner,
+              repo,
+              prNumber,
+              createError,
+            },
+          );
+          // Don't fail sync if label creation/application fails after retry
+        }
       } else {
-        console.error(`Error checking label "${labelName}":`, error);
-        throw error; // Re-throw other errors
+        // Log other errors encountered when initially applying the label
+        console.error(`Failed to apply label '${AGENTSMITH_PR_LABEL}' to PR #${prNumber}:`, {
+          owner,
+          repo,
+          prNumber,
+          error,
+        });
+        // Don't fail sync for other label application errors either
       }
     }
-
-    await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/labels', {
-      owner,
-      repo,
-      issue_number: issueNumber,
-      labels: [labelName],
-    });
-    console.log(`Applied label "${labelName}" to PR #${issueNumber}`);
   }
 
   private async deleteBranch(options: DeleteBranchOptions): Promise<void> {
     const { octokit, owner, repo, branchName } = options;
+
     try {
       await octokit.request('DELETE /repos/{owner}/{repo}/git/refs/heads/{ref}', {
         owner,
@@ -931,455 +501,6 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       console.log(`Deleted unused branch: ${branchName}`);
     } catch (deleteError) {
       console.error(`Failed to delete unused branch ${branchName}:`, deleteError);
-    }
-  }
-
-  private async syncBranchFiles(options: SyncBranchFilesOptions): Promise<SyncBranchFilesResult> {
-    const { octokit, owner, repo, project, projectRepository, branchName } = options;
-    const promptsData = await this.services.prompts.getAllPromptsData(project.id);
-    const fileMap = await this.getRepositoryFileMap({
-      octokit,
-      owner,
-      repo,
-      treeSha: branchName,
-      agentsmithFolder: projectRepository.agentsmith_folder,
-    });
-
-    const allChangedFiles: FileToSync[] = [];
-
-    const syncResult: SyncResult = {
-      promptsCreated: [],
-      promptsUpdated: [],
-      promptsArchived: [],
-      promptVersionsCreated: [],
-      promptVersionsUpdated: [],
-      promptVersionsArchived: [],
-      promptVariablesCreated: [],
-      promptVariablesUpdated: [],
-      promptVariablesArchived: [],
-    };
-
-    for (const prompt of promptsData) {
-      const promptBasePath = `${projectRepository.agentsmith_folder}/prompts/${prompt.slug}`;
-
-      const promptChanges = await this.determinePromptChanges({
-        octokit,
-        owner,
-        repo,
-        branchName,
-        fileMap,
-        prompt,
-        promptBasePath,
-      });
-
-      allChangedFiles.push(...promptChanges);
-
-      promptChanges.forEach((file) => {
-        if (file.oldContent === null) syncResult.promptsCreated.push(file);
-        else if (file.newContent !== null) syncResult.promptsUpdated.push(file);
-        else syncResult.promptsArchived.push(file);
-      });
-
-      for (const version of prompt.prompt_versions || []) {
-        const versionBasePath = `${promptBasePath}/${version.version}`;
-
-        const versionChanges = await this.determinePromptVersionChanges({
-          octokit,
-          owner,
-          repo,
-          branchName,
-          fileMap,
-          version,
-          versionBasePath,
-        });
-        allChangedFiles.push(...versionChanges);
-        versionChanges.forEach((file) => {
-          if (file.oldContent === null) syncResult.promptVersionsCreated.push(file);
-          else if (file.newContent !== null) syncResult.promptVersionsUpdated.push(file);
-          else syncResult.promptVersionsArchived.push(file);
-        });
-
-        const variableChanges = await this.determinePromptVariableChanges({
-          octokit,
-          owner,
-          repo,
-          branchName,
-          fileMap,
-          version,
-          versionBasePath,
-        });
-        allChangedFiles.push(...variableChanges);
-        variableChanges.forEach((file) => {
-          if (file.oldContent === null) syncResult.promptVariablesCreated.push(file);
-          else if (file.newContent !== null) syncResult.promptVariablesUpdated.push(file);
-          else syncResult.promptVariablesArchived.push(file);
-        });
-      }
-    }
-
-    const changesMade = allChangedFiles.length > 0;
-
-    if (changesMade) {
-      console.log(`Sync detected ${allChangedFiles.length} file changes.`);
-      await this.commitFileChanges({
-        octokit,
-        owner,
-        repo,
-        branchName,
-        filesToCommit: allChangedFiles,
-      });
-    } else {
-      console.log('All prompt files are up to date, no changes needed in the branch.');
-    }
-
-    return { changesMade, ...syncResult };
-  }
-
-  private async getRepositoryFileMap(options: GetRepositoryFileMapOptions): Promise<FileMap> {
-    const { octokit, owner, repo, treeSha, agentsmithFolder } = options;
-
-    console.log(
-      `Getting repository file map for ${agentsmithFolder} in branch ${treeSha} for repo ${owner}/${repo}`,
-    );
-
-    const fileMap = new Map<string, components['schemas']['git-tree']['tree'][number]>();
-    try {
-      // First check if the agentsmith folder exists
-      const { data } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
-        owner,
-        repo,
-        path: '', // this assumes the agentsmith folder is at the root of the repository
-        ref: treeSha,
-      });
-
-      const repoRootContents = data as components['schemas']['content-directory'];
-
-      const targetAgentsmithFolder = repoRootContents.find(
-        (item) => item.name === agentsmithFolder,
-      );
-
-      if (
-        !targetAgentsmithFolder ||
-        targetAgentsmithFolder.type !== 'dir' ||
-        !targetAgentsmithFolder.sha
-      ) {
-        console.log(`Could not find ${agentsmithFolder} in the repository. No files found.`);
-        return fileMap;
-      }
-
-      const { data: treeData } = await octokit.request(
-        'GET /repos/{owner}/{repo}/git/trees/{tree_sha}',
-        {
-          owner,
-          repo,
-          tree_sha: targetAgentsmithFolder.sha,
-          recursive: '1',
-        },
-      );
-
-      treeData.tree.forEach((file) => {
-        if (file.path && file.type === 'blob') {
-          // The paths returned are relative to the subfolder, so we need to prepend the agentsmith folder path
-          fileMap.set(`${agentsmithFolder}/${file.path}`, file);
-        }
-      });
-
-      return fileMap;
-    } catch (error: any) {
-      if (error.status === 404) {
-        console.log(
-          `Folder "${agentsmithFolder}" not found in branch "${treeSha}". Assuming empty repository state for sync.`,
-        );
-        return fileMap;
-      }
-      console.error(`Failed to fetch repository file structure for ${agentsmithFolder}:`, error);
-      throw error;
-    }
-  }
-
-  private async getFileContent(options: GetFileContentOptions): Promise<string | null> {
-    const { octokit, owner, repo, path, ref } = options;
-    try {
-      const { data } = await octokit.request('GET /repos/{owner}/{repo}/contents/{path}', {
-        owner,
-        repo,
-        path,
-        ref,
-      });
-
-      if (!Array.isArray(data) && data.type === 'file' && data.content) {
-        return Buffer.from(data.content, 'base64').toString('utf-8');
-      }
-      console.warn(
-        `Could not get file content for ${path} at ref ${ref}. Response type was not 'file' or content was missing.`,
-      );
-      return null;
-    } catch (error: any) {
-      if (error.status === 404) {
-        return null;
-      }
-      console.error(`Failed to fetch content for ${path} at ref ${ref}:`, error);
-      return null;
-    }
-  }
-
-  private async determinePromptChanges(
-    options: DeterminePromptChangesOptions,
-  ): Promise<FileToSync[]> {
-    const { octokit, owner, repo, branchName, fileMap, prompt, promptBasePath } = options;
-
-    const changedFiles: FileToSync[] = [];
-    const filePath = `${promptBasePath}/prompt.json`;
-    const { id, project_id, prompt_versions, ...promptRest } = prompt;
-    const expectedJsonData = {
-      ...promptRest,
-      versions: (prompt_versions || [])
-        .map((v) => ({ version: v.version, status: v.status }))
-        .sort((a, b) => compareSemanticVersions(b.version, a.version))
-        .reverse(),
-    };
-    const expectedContent = JSON.stringify(expectedJsonData, null, 2);
-
-    if (!fileMap.has(filePath)) {
-      changedFiles.push({ path: filePath, oldContent: null, newContent: expectedContent });
-    } else {
-      const existingContent = await this.getFileContent({
-        octokit,
-        owner,
-        repo,
-        path: filePath,
-        ref: branchName,
-      });
-
-      if (existingContent !== expectedContent) {
-        changedFiles.push({
-          path: filePath,
-          oldContent: existingContent,
-          newContent: expectedContent,
-        });
-      }
-    }
-
-    return changedFiles;
-  }
-
-  private async determinePromptVersionChanges(
-    options: DeterminePromptVersionChangesOptions,
-  ): Promise<FileToSync[]> {
-    const { octokit, owner, repo, branchName, fileMap, version, versionBasePath } = options;
-
-    const changedFiles: FileToSync[] = [];
-    const filePath = `${versionBasePath}/version.json`;
-    const { id, prompt_id, prompt_variables, ...versionRest } = version;
-    const expectedJsonData = versionRest;
-
-    if (version.status === 'ARCHIVED') {
-      if (fileMap.has(filePath)) {
-        const existingContent = await this.getFileContent({
-          octokit,
-          owner,
-          repo,
-          path: filePath,
-          ref: branchName,
-        });
-
-        if (existingContent !== null) {
-          changedFiles.push({ path: filePath, oldContent: existingContent, newContent: null });
-        }
-      }
-
-      return changedFiles;
-    }
-
-    const expectedContent = JSON.stringify(expectedJsonData, null, 2);
-
-    if (!fileMap.has(filePath)) {
-      changedFiles.push({ path: filePath, oldContent: null, newContent: expectedContent });
-    } else {
-      const existingContent = await this.getFileContent({
-        octokit,
-        owner,
-        repo,
-        path: filePath,
-        ref: branchName,
-      });
-      if (existingContent !== expectedContent) {
-        changedFiles.push({
-          path: filePath,
-          oldContent: existingContent,
-          newContent: expectedContent,
-        });
-      }
-    }
-    return changedFiles;
-  }
-
-  private async determinePromptVariableChanges(
-    options: DeterminePromptVariableChangesOptions,
-  ): Promise<FileToSync[]> {
-    const { octokit, owner, repo, branchName, fileMap, version, versionBasePath } = options;
-    const changedFiles: FileToSync[] = [];
-    const filePath = `${versionBasePath}/variables.json`;
-
-    const fileExists = fileMap.has(filePath);
-
-    if (version.status === 'ARCHIVED') {
-      if (fileExists) {
-        const existingContent = await this.getFileContent({
-          octokit,
-          owner,
-          repo,
-          path: filePath,
-          ref: branchName,
-        });
-
-        if (existingContent !== null) {
-          changedFiles.push({ path: filePath, oldContent: existingContent, newContent: null });
-        }
-      }
-
-      return changedFiles;
-    }
-
-    let expectedContent: string | null = null;
-    if (version.prompt_variables && version.prompt_variables.length > 0) {
-      const variablesJsonData = version.prompt_variables.map((variable) => {
-        const { id, prompt_version_id, ...rest } = variable;
-        return rest;
-      });
-      expectedContent = JSON.stringify(variablesJsonData, null, 2);
-    }
-
-    if (!fileExists && expectedContent !== null) {
-      changedFiles.push({ path: filePath, oldContent: null, newContent: expectedContent });
-    } else if (fileExists) {
-      const existingContent = await this.getFileContent({
-        octokit,
-        owner,
-        repo,
-        path: filePath,
-        ref: branchName,
-      });
-      if (existingContent !== expectedContent) {
-        changedFiles.push({
-          path: filePath,
-          oldContent: existingContent,
-          newContent: expectedContent,
-        });
-      }
-    }
-    return changedFiles;
-  }
-
-  private async commitFileChanges(options: CommitFileChangesOptions): Promise<void> {
-    const { octokit, owner, repo, branchName, filesToCommit } = options;
-
-    for (const file of filesToCommit) {
-      const isCreate = file.oldContent === null && file.newContent !== null;
-      const isUpdate = file.oldContent !== null && file.newContent !== null;
-      const isDelete = file.oldContent !== null && file.newContent === null;
-      const isInvalid = file.oldContent === null && file.newContent === null;
-
-      if (isInvalid) {
-        console.warn(
-          `Invalid state for file change commit (both old and new content are null): ${file.path}. Skipping.`,
-        );
-        continue;
-      }
-
-      try {
-        let sha: string | undefined = undefined;
-        if (isUpdate || isDelete) {
-          try {
-            const { data: currentFile } = await octokit.request(
-              'GET /repos/{owner}/{repo}/contents/{path}',
-              {
-                owner,
-                repo,
-                path: file.path,
-                ref: branchName,
-              },
-            );
-            if (Array.isArray(currentFile) || currentFile.type !== 'file' || !currentFile.sha) {
-              console.error(
-                `Could not get valid SHA for file ${file.path} needed for update/delete. Skipping change.`,
-              );
-              continue;
-            }
-            sha = currentFile.sha;
-          } catch (getError: any) {
-            if (getError.status === 404) {
-              if (isDelete) {
-                console.warn(
-                  `Attempted to delete ${file.path}, but it was not found (perhaps already deleted?). Skipping.`,
-                );
-                continue;
-              } else {
-                console.error(
-                  `Attempted to update ${file.path}, but it was not found. Skipping. Error:`,
-                  getError,
-                );
-                continue;
-              }
-            } else {
-              throw getError;
-            }
-          }
-        }
-
-        if (isCreate) {
-          console.log(`Creating file: ${file.path}`);
-          await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
-            owner,
-            repo,
-            path: file.path,
-            message: `[Agentsmith Sync] CREATE - ${file.path}`,
-            content: Buffer.from(file.newContent!).toString('base64'),
-            branch: branchName,
-          });
-        } else if (isUpdate) {
-          console.log(`Updating file: ${file.path}`);
-          if (!sha) {
-            console.error(`Missing SHA for update operation on ${file.path}. Skipping.`);
-            continue;
-          }
-          await octokit.request('PUT /repos/{owner}/{repo}/contents/{path}', {
-            owner,
-            repo,
-            path: file.path,
-            message: `[Agentsmith Sync] UPDATE - ${file.path}`,
-            content: Buffer.from(file.newContent!).toString('base64'),
-            sha: sha, // Must have SHA for update
-            branch: branchName,
-          });
-        } else if (isDelete) {
-          console.log(`Deleting file: ${file.path}`);
-          if (!sha) {
-            console.error(`Missing SHA for delete operation on ${file.path}. Skipping.`);
-            continue;
-          }
-          await octokit.request('DELETE /repos/{owner}/{repo}/contents/{path}', {
-            owner,
-            repo,
-            path: file.path,
-            message: `[Agentsmith Sync] DELETE - ${file.path}`,
-            sha: sha, // Must have SHA for delete
-            branch: branchName,
-          });
-        }
-      } catch (commitError: any) {
-        if (commitError.status === 409) {
-          console.error(
-            `Conflict error (409) during commit for ${file.path}. Branch may have been updated externally or SHA mismatch. Aborting change for this file. Error:`,
-            commitError,
-          );
-        } else {
-          console.error(
-            `Failed to commit change for file ${file.path} in branch ${branchName}:`,
-            commitError,
-          );
-        }
-      }
     }
   }
 }

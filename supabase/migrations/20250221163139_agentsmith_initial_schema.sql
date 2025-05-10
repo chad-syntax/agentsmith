@@ -1,4 +1,3 @@
-
 -- Enable the "pgtap" extension
 create extension pgtap with schema extensions;
 
@@ -26,6 +25,8 @@ create type agentsmith_event_type as enum (
     'SYNC_ERROR',
     'ALERT'
 );
+
+create type sync_status_type as enum ('IDLE', 'SYNCING');
 
 -- Functions
 create or replace function set_updated_at()
@@ -473,6 +474,7 @@ create table prompts (
     project_id bigint references projects(id) not null,
     name text not null,
     slug text not null,
+    last_sync_git_sha text null,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
     unique(project_id, slug)
@@ -533,6 +535,9 @@ create table prompt_versions (
     content text not null,
     version text not null check (version ~ E'^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$'),
     status prompt_status not null,
+    last_sync_git_sha text,
+    last_sync_variables_sha text,
+    last_sync_content_sha text,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now()
 );
@@ -996,6 +1001,8 @@ create table project_repositories (
     repository_id bigint not null,
     repository_name text not null,
     repository_full_name text not null,
+    sync_status sync_status_type not null default 'IDLE',
+    sync_started_at timestamptz,
     created_at timestamptz not null default now(),
     updated_at timestamptz not null default now(),
     unique(github_app_installation_id, project_id, repository_id)
@@ -1005,6 +1012,7 @@ create index on project_repositories(project_id);
 create index on project_repositories(organization_id);
 create index on project_repositories(github_app_installation_id);
 create index on project_repositories(repository_id);
+create index on project_repositories(sync_status);
 create index on project_repositories(created_at);
 
 alter table project_repositories enable row level security;

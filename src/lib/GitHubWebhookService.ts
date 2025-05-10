@@ -35,7 +35,7 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
     app.webhooks.on('pull_request.opened', async ({ payload }) => {
       try {
         // Do something
-        console.log('github webhook: pull request opened', payload);
+        console.log('github webhook: pull request opened');
       } catch (e) {
         console.error(`pull_request.opened handler failed with error: ${(<Error>e).message}`);
       }
@@ -201,6 +201,17 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         return;
       }
 
+      // TODO: we should also check if the push was a result of a agentsmith PR being merged, and if so, we should not sync
+      // we assume the repo is already synced from the PR being pushed to and we don't need to sync again
+      // const isAgentsmithPr = payload.commits.some((commit) =>
+      //   commit.message.toLowerCase().includes('agentsmith'),
+      // );
+
+      // if (isAgentsmithPr) {
+      //   console.log('Push event from agentsmith PR, skipping sync.');
+      //   return;
+      // }
+
       // Ignore pushes made by our bot to prevent sync loops
       const pusher = payload.pusher;
       const isAgentsmithBot = pusher.name.includes('agentsmith') && pusher.name.includes('[bot]');
@@ -228,18 +239,10 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
       const repositoryId = payload.repository.id;
       const pushedBranchRef = payload.ref; // e.g., "refs/heads/main"
 
-      // Query for project using proper join syntax
-      const { data: projectRepo, error: repoError } = await this.supabase
-        .from('project_repositories')
-        .select('project_id, github_app_installations!inner(installation_id)')
-        .eq('repository_id', repositoryId)
-        .eq('github_app_installations.installation_id', installationId)
-        .single();
-
-      if (repoError) {
-        console.error('Error fetching project repository for push event:', repoError);
-        return;
-      }
+      const projectRepo = await this.services.projects.getProjectRepositoryByInstallationId({
+        repositoryId,
+        installationId,
+      });
 
       if (!projectRepo || !projectRepo.project_id) {
         console.log(
@@ -252,10 +255,11 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         `Push event detected for project ${projectRepo.project_id}, repository ${repositoryId}, ref ${pushedBranchRef}. Initiating sync from repository.`,
       );
 
-      await this.services.githubSync.syncAgentsmithFromRepository(
-        projectRepo.project_id,
-        pushedBranchRef,
-      );
+      await this.services.githubSync.sync({
+        projectRepository: projectRepo,
+        source: 'repo',
+        branchRef: pushedBranchRef,
+      });
 
       console.log(`Sync from repository completed for project ${projectRepo.project_id}`);
     } catch (e) {

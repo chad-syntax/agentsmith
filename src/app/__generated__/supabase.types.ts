@@ -361,6 +361,8 @@ export type Database = {
           repository_full_name: string
           repository_id: number
           repository_name: string
+          sync_started_at: string | null
+          sync_status: Database["public"]["Enums"]["sync_status_type"]
           updated_at: string
         }
         Insert: {
@@ -375,6 +377,8 @@ export type Database = {
           repository_full_name: string
           repository_id: number
           repository_name: string
+          sync_started_at?: string | null
+          sync_status?: Database["public"]["Enums"]["sync_status_type"]
           updated_at?: string
         }
         Update: {
@@ -389,6 +393,8 @@ export type Database = {
           repository_full_name?: string
           repository_id?: number
           repository_name?: string
+          sync_started_at?: string | null
+          sync_status?: Database["public"]["Enums"]["sync_status_type"]
           updated_at?: string
         }
         Relationships: [
@@ -510,6 +516,9 @@ export type Database = {
           content: string
           created_at: string
           id: number
+          last_sync_content_sha: string | null
+          last_sync_git_sha: string | null
+          last_sync_variables_sha: string | null
           prompt_id: number
           status: Database["public"]["Enums"]["prompt_status"]
           updated_at: string
@@ -521,6 +530,9 @@ export type Database = {
           content: string
           created_at?: string
           id?: number
+          last_sync_content_sha?: string | null
+          last_sync_git_sha?: string | null
+          last_sync_variables_sha?: string | null
           prompt_id: number
           status: Database["public"]["Enums"]["prompt_status"]
           updated_at?: string
@@ -532,6 +544,9 @@ export type Database = {
           content?: string
           created_at?: string
           id?: number
+          last_sync_content_sha?: string | null
+          last_sync_git_sha?: string | null
+          last_sync_variables_sha?: string | null
           prompt_id?: number
           status?: Database["public"]["Enums"]["prompt_status"]
           updated_at?: string
@@ -552,6 +567,7 @@ export type Database = {
         Row: {
           created_at: string
           id: number
+          last_sync_git_sha: string | null
           name: string
           project_id: number
           slug: string
@@ -561,6 +577,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: number
+          last_sync_git_sha?: string | null
           name: string
           project_id: number
           slug: string
@@ -570,6 +587,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: number
+          last_sync_git_sha?: string | null
           name?: string
           project_id?: number
           slug?: string
@@ -698,6 +716,7 @@ export type Database = {
       organization_tier: "FREE" | "PRO" | "ENTERPRISE"
       organization_user_role: "ADMIN" | "MEMBER"
       prompt_status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
+      sync_status_type: "IDLE" | "SYNCING"
       variable_type: "STRING" | "NUMBER" | "BOOLEAN" | "JSON"
     }
     CompositeTypes: {

@@ -45,13 +45,20 @@ export class EventsService extends AgentsmithSupabaseService {
 
     const description = EventsService.getDescription('SYNC_START', sourceInput);
 
+    const source = sourceInput === 'agentsmith' ? 'agentsmith' : 'repo';
+    const destination = sourceInput === 'agentsmith' ? 'repo' : 'agentsmith';
+
     const { data, error } = await this.supabase.from('agentsmith_events').insert({
       organization_id: organizationId,
       project_id: projectId,
       type: 'SYNC_START' as const,
       name: 'Sync Started',
       description,
-      details,
+      details: {
+        ...details,
+        source,
+        destination,
+      },
     });
 
     if (error) {
@@ -63,9 +70,12 @@ export class EventsService extends AgentsmithSupabaseService {
   }
 
   async createSyncCompleteEvent(options: SyncEventOptions) {
-    const { organizationId, projectId, source, details } = options;
+    const { organizationId, projectId, source: sourceInput, details } = options;
 
-    let description = EventsService.getDescription('SYNC_COMPLETE', source);
+    const source = sourceInput === 'agentsmith' ? 'agentsmith' : 'repo';
+    const destination = sourceInput === 'agentsmith' ? 'repo' : 'agentsmith';
+
+    let description = EventsService.getDescription('SYNC_COMPLETE', sourceInput);
     let name = 'Sync Completed';
 
     if (details?.changesMade === false) {
@@ -79,7 +89,11 @@ export class EventsService extends AgentsmithSupabaseService {
       type: 'SYNC_COMPLETE' as const,
       name,
       description,
-      details,
+      details: {
+        ...details,
+        source,
+        destination,
+      },
     });
 
     if (error) {

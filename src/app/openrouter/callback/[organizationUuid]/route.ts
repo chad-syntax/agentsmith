@@ -91,7 +91,7 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
       organizationUuid,
       key: ORGANIZATION_KEYS.OPENROUTER_API_KEY,
       value: openrouterResponse.key,
-      description: 'OpenRouter API Key',
+      description: `OpenRouter API Key for ${organizationUuid}`,
     });
 
     if (!success) {

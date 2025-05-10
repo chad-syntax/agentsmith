@@ -8,8 +8,8 @@ import { VaultService } from './VaultService';
 import { ProjectsService } from './ProjectsService';
 import { GitHubAppService } from './GitHubAppService';
 import { GitHubWebhookService } from './GitHubWebhookService';
-import { GitHubSyncService } from './GitHubSyncService';
 import { EventsService } from './EventsService';
+import { GitHubSyncService } from './GitHubSyncService';
 
 export type AgentsmithServicesDirectory = {
   users: UsersService;

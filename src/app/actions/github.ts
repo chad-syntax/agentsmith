@@ -33,5 +33,16 @@ export const syncProject = async (projectUuid: string) => {
     throw new Error(`Project with uuid ${projectUuid} not found, cannot sync project`);
   }
 
-  await agentsmith.services.githubSync.syncRepositoryFromAgentsmith(project.id);
+  const projectRepository = await agentsmith.services.projects.getProjectRepositoryByProjectId(
+    project.id,
+  );
+
+  if (!projectRepository) {
+    throw new Error(`Project repository for project ${project.id} not found, cannot sync project`);
+  }
+
+  await agentsmith.services.githubSync.sync({
+    projectRepository,
+    source: 'agentsmith',
+  });
 };

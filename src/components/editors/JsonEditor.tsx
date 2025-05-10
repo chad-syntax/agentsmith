@@ -21,18 +21,9 @@ type JsonEditorProps<T> = {
 };
 
 export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
-  const {
-    value,
-    onChange,
-    minHeight = '100px',
-    placeholder = '{}',
-    label,
-    className,
-  } = props;
+  const { value, onChange, minHeight = '100px', placeholder = '{}', label, className } = props;
 
-  const [jsonText, setJsonText] = useState<string>(
-    JSON.stringify(value, null, 2)
-  );
+  const [jsonText, setJsonText] = useState<string>(JSON.stringify(value, null, 2));
   const [jsonError, setJsonError] = useState<string | null>(null);
 
   const handleJsonChange = (text: string) => {
@@ -49,12 +40,7 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
   return (
     <div className={cn('space-y-2', className)}>
       {label && <Label>{label}</Label>}
-      <div
-        className={cn(
-          'rounded-md border bg-background',
-          jsonError && 'border-destructive'
-        )}
-      >
+      <div className={cn('rounded-md border bg-background', jsonError && 'border-destructive')}>
         <Editor
           value={jsonText}
           onValueChange={handleJsonChange}

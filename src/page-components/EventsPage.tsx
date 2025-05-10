@@ -18,7 +18,7 @@ export const EventsPage = (props: EventsPageProps) => {
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'MMM d, yyyy h:mm a');
+    return format(new Date(dateString), 'MMM d, yyyy h:mm:ss.SSS a');
   };
 
   if (!project) {

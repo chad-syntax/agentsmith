@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { IconArrowLeft } from '@tabler/icons-react';
+import { IconArrowLeft, IconExternalLink } from '@tabler/icons-react';
 import { routes } from '@/utils/routes';
 import { H1, H2, P } from '@/components/typography';
 import { Button } from '@/components/ui/button';
 import { GetEventByUuidResult } from '@/lib/EventsService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database } from '@/app/__generated__/supabase.types';
+import ReactDiffViewer from 'react-diff-viewer-continued-react19';
 
 type EventDetailPageProps = {
   event: NonNullable<GetEventByUuidResult>;
@@ -21,7 +22,7 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'MMM d, yyyy h:mm a');
+    return format(new Date(dateString), 'MMM d, yyyy h:mm:ss.SSS a');
   };
 
   const severityColor = (severity: Database['public']['Enums']['agentsmith_event_severity']) => {
@@ -51,9 +52,11 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
     );
   }
 
+  const eventDetails = event.details as any; // TODO: harden type
+
   return (
     <div className="p-6">
-      <div className="mb-6 flex items-center">
+      <div className="mb-2 flex items-center">
         <Button
           variant="link"
           asChild
@@ -64,8 +67,8 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
             Back to Events
           </Link>
         </Button>
-        <H1>Event Details</H1>
       </div>
+      <H1 className="mb-6">Event Details</H1>
 
       <div className="space-y-6">
         <Card className="shadow-sm">
@@ -106,9 +109,53 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
                 <P className="text-sm text-muted-foreground">Description</P>
                 <P className="font-medium">{event.description}</P>
               </div>
+              {eventDetails?.pullRequestDetail?.htmlUrl && (
+                <div className="text-blue-500">
+                  <P className="text-sm text-muted-foreground">Pull Request</P>
+                  <P>
+                    <a
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      href={eventDetails.pullRequestDetail.htmlUrl}
+                      className="flex items-center hover:underline"
+                    >
+                      View Pull Request (#{eventDetails.pullRequestDetail.number})
+                      <IconExternalLink className="w-4 h-4 ml-2" />
+                    </a>
+                  </P>
+                </div>
+              )}
+              {eventDetails?.source && eventDetails?.destination && (
+                <div>
+                  <P className="text-sm text-muted-foreground">Source → Destination</P>
+                  <P>
+                    {eventDetails.source} → {eventDetails.destination}
+                  </P>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
+
+        <H2>Changes</H2>
+        {(eventDetails?.syncChanges ?? []).map((syncChange: any) => (
+          <Card key={`${syncChange.oldSha}-${syncChange.newSha}`}>
+            <CardHeader>
+              <CardTitle>
+                {syncChange.type} {syncChange.promptSlug}
+                {syncChange.promptVersion ? `@${syncChange.promptVersion}` : ''}
+                &nbsp;
+                <span className="text-accent">{syncChange.entity}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ReactDiffViewer
+                oldValue={syncChange.oldContent ?? ''}
+                newValue={syncChange.newContent ?? ''}
+              />
+            </CardContent>
+          </Card>
+        ))}
 
         <Card className="shadow-sm">
           <CardHeader>

@@ -138,11 +138,7 @@ export const extractTemplateVariables = (
  */
 export const validateTemplate = (content: string): { isValid: boolean; error?: string } => {
   try {
-    // Configure nunjucks to throw errors
-    const env = new nunjucks.Environment(null, { throwOnUndefined: true });
-
-    // Try to parse the template
-    env.renderString(content, {});
+    transform(nunjucks.parser.parse(content));
 
     return { isValid: true };
   } catch (error) {

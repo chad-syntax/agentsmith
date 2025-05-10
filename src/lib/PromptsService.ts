@@ -62,6 +62,58 @@ type ExecutePromptOptions = {
   variables: Record<string, string | number | boolean>;
 };
 
+type CreatePromptOptions = {
+  projectId: number;
+  slug: string;
+  name: string;
+  sha: string;
+};
+
+type UpdatePromptOptions = {
+  promptUuid: string;
+  projectId: number;
+  name: string;
+  sha: string;
+};
+
+type CreateVersionOptions = {
+  projectId: number;
+  promptSlug: string;
+  uuid: string;
+  version: string;
+  status: Database['public']['Enums']['prompt_status'];
+  config: CompletionConfig;
+  content: string;
+  versionSha: string;
+  contentSha: string;
+  variablesSha: string | null;
+};
+
+type UpdatePromptVersionSinglularOptions = {
+  promptVersionUuid: string;
+  config: CompletionConfig;
+  status: Database['public']['Enums']['prompt_status'];
+  sha: string;
+};
+
+type CreatePromptVariablesOptions = {
+  promptVersionUuid: string;
+  variables: PromptVariableInput[];
+};
+
+type UpdatePromptVariablesOptions = {
+  promptSlug: string;
+  promptVersion: string;
+  variables: PromptVariableInput[];
+  sha: string;
+};
+
+type UpdatePromptVersionContentOptions = {
+  promptVersionUuid: string;
+  content: string;
+  contentSha: string;
+};
+
 export class PromptsService extends AgentsmithSupabaseService {
   public services!: AgentsmithServicesDirectory;
 
@@ -92,7 +144,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error fetching prompt:', error);
+      console.error('Error fetching prompt by uuid:', error);
       return null;
     }
 
@@ -229,44 +281,300 @@ export class PromptsService extends AgentsmithSupabaseService {
     return data;
   }
 
-  public async updatePromptVersion(options: UpdatePromptVersionOptions) {
-    const { promptVersionUuid, content, config, status, variables: incomingVariables } = options;
+  public async createPrompt(options: CreatePromptOptions) {
+    const { projectId, slug, name, sha } = options;
+
+    const { data, error } = await this.supabase
+      .from('prompts')
+      .insert({
+        project_id: projectId,
+        slug,
+        name,
+        sha,
+      })
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error creating prompt:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  public async updatePrompt(options: UpdatePromptOptions) {
+    const { promptUuid, projectId, name, sha } = options;
+
+    const { data, error } = await this.supabase
+      .from('prompts')
+      .update({ name, last_sync_git_sha: sha })
+      .eq('uuid', promptUuid)
+      .eq('project_id', projectId)
+      .single();
+
+    if (error) {
+      console.error('Error updating prompt:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  public async createPromptVersion(options: CreateVersionOptions) {
+    const {
+      promptSlug,
+      uuid,
+      version,
+      status,
+      config,
+      content,
+      versionSha,
+      contentSha,
+      variablesSha,
+      projectId,
+    } = options;
+
+    const { data: promptData, error: getPromptError } = await this.supabase
+      .from('prompts')
+      .select('id')
+      .eq('slug', promptSlug)
+      .eq('project_id', projectId)
+      .single();
+
+    if (getPromptError || !promptData) {
+      console.error('Error fetching prompt to create version:', getPromptError);
+      return null;
+    }
+
+    const promptId = promptData.id;
+
+    const { data, error } = await this.supabase
+      .from('prompt_versions')
+      .insert({
+        prompt_id: promptId,
+        uuid,
+        version,
+        status,
+        config: config as any,
+        last_sync_git_sha: versionSha,
+        last_sync_content_sha: contentSha,
+        last_sync_variables_sha: variablesSha,
+        content,
+      })
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error('Error creating version:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  public async updatePromptVersionSinglular(options: UpdatePromptVersionSinglularOptions) {
+    const { promptVersionUuid, config, status, sha } = options;
+
+    const { data: versionData, error: versionError } = await this.supabase
+      .from('prompt_versions')
+      .update({
+        config: config as any,
+        status,
+        last_sync_git_sha: sha,
+      })
+      .eq('uuid', promptVersionUuid)
+      .select('*')
+      .maybeSingle();
+
+    if (versionError) {
+      console.error('Error updating prompt version:', versionError);
+      return null;
+    }
+
+    return versionData;
+  }
+
+  public async createPromptVariables(options: CreatePromptVariablesOptions) {
+    const { promptVersionUuid, variables } = options;
+
+    const { data: promptVersionData, error: getPromptVersionError } = await this.supabase
+      .from('prompt_versions')
+      .select('id')
+      .eq('uuid', promptVersionUuid)
+      .maybeSingle();
+
+    if (getPromptVersionError) {
+      console.error('Error fetching prompt version to create variables:', getPromptVersionError);
+      return null;
+    }
+
+    if (!promptVersionData) {
+      console.error(`Prompt version with uuid ${promptVersionUuid} not found to create variables`);
+      return null;
+    }
+
+    const promptVersionId = promptVersionData.id;
+
+    const { data: createdVariables, error: createError } = await this.supabase
+      .from('prompt_variables')
+      .insert(
+        variables.map((v) => ({
+          ...v,
+          prompt_version_id: promptVersionId,
+        })),
+      )
+      .select('*');
+
+    if (createError) {
+      console.error('Error creating prompt variables:', createError);
+      return null;
+    }
+
+    return createdVariables;
+  }
+
+  public async updatePromptVariables(options: UpdatePromptVariablesOptions) {
+    const { promptSlug, promptVersion, variables, sha } = options;
+
+    const { data: promptData, error: getPromptError } = await this.supabase
+      .from('prompt_variables')
+      .select('*, prompt_version!inner(version), prompt!inner(slug)')
+      .eq('prompt_version.version', promptVersion)
+      .eq('prompt.slug', promptSlug);
+
+    if (getPromptError || !promptData) {
+      console.error('Error fetching prompt variables:', getPromptError);
+      return null;
+    }
+
+    const mungedVariables = promptData.map((v) => ({
+      ...v,
+      ...variables.find((v2) => v2.name === v.name),
+    }));
+
+    const { data: updatedVariables, error: updateError } = await this.supabase
+      .from('prompt_variables')
+      .upsert(mungedVariables)
+      .select('*');
+
+    if (updateError) {
+      console.error('Error updating prompt variables:', updateError);
+      return null;
+    }
+
+    return updatedVariables;
+  }
+
+  public async updatePromptVersionContent(options: UpdatePromptVersionContentOptions) {
+    const { promptVersionUuid, content, contentSha } = options;
 
     const { data: versionData, error: getVersionError } = await this.supabase
       .from('prompt_versions')
       .select('id')
       .eq('uuid', promptVersionUuid)
-      .single();
+      .maybeSingle();
 
-    if (getVersionError || !versionData) {
+    if (getVersionError) {
       throw new Error('Failed to find prompt version: ' + getVersionError?.message);
+    }
+
+    if (!versionData) {
+      throw new Error(`Prompt version with uuid ${promptVersionUuid} not found`);
     }
 
     const promptVersionId = versionData.id;
 
-    const { error: versionError } = await this.supabase
+    const { error: updateError } = await this.supabase
       .from('prompt_versions')
-      .update({
-        content,
-        config: config as any,
-        status,
-      })
+      .update({ content, last_sync_content_sha: contentSha })
+      .eq('id', promptVersionId);
+
+    if (updateError) {
+      throw new Error('Failed to update prompt version content: ' + updateError.message);
+    }
+  }
+
+  public async updatePromptSha(options: { promptUuid: string; sha: string | null }) {
+    const { promptUuid, sha } = options;
+    const { error } = await this.supabase
+      .from('prompts')
+      .update({ last_sync_git_sha: sha })
+      .eq('uuid', promptUuid);
+
+    if (error) {
+      throw new Error(`Failed to update prompt SHA for ${promptUuid}: ${error.message}`);
+    }
+  }
+
+  public async updatePromptVersionSha(options: { promptVersionUuid: string; sha: string | null }) {
+    const { promptVersionUuid, sha } = options;
+    const { error } = await this.supabase
+      .from('prompt_versions')
+      .update({ last_sync_git_sha: sha })
       .eq('uuid', promptVersionUuid);
 
-    if (versionError) {
-      throw new Error('Failed to update prompt version: ' + versionError.message);
+    if (error) {
+      throw new Error(
+        `Failed to update prompt version SHA for ${promptVersionUuid}: ${error.message}`,
+      );
+    }
+  }
+
+  public async updatePromptVersionVariablesSha(options: {
+    promptVersionUuid: string;
+    sha: string | null;
+  }) {
+    const { promptVersionUuid, sha } = options;
+    const { error } = await this.supabase
+      .from('prompt_versions')
+      .update({ last_sync_variables_sha: sha })
+      .eq('uuid', promptVersionUuid);
+
+    if (error) {
+      throw new Error(
+        `Failed to update prompt version variables SHA for ${promptVersionUuid}: ${error.message}`,
+      );
+    }
+  }
+
+  public async updatePromptVersionContentSha(options: {
+    promptVersionUuid: string;
+    sha: string | null;
+  }) {
+    const { promptVersionUuid, sha } = options;
+    const { error } = await this.supabase
+      .from('prompt_versions')
+      .update({ last_sync_content_sha: sha })
+      .eq('uuid', promptVersionUuid);
+
+    if (error) {
+      throw new Error(
+        `Failed to update prompt version content SHA for ${promptVersionUuid}: ${error.message}`,
+      );
+    }
+  }
+
+  public async updatePromptVersion(options: UpdatePromptVersionOptions) {
+    const { promptVersionUuid, content, config, status, variables: incomingVariables } = options;
+
+    const { data: versionData, error: getVersionError } = await this.supabase
+      .from('prompt_versions')
+      .select('*, prompt_variables(*)')
+      .eq('uuid', promptVersionUuid)
+      .single();
+
+    if (getVersionError) {
+      throw new Error('Failed to find prompt version: ' + getVersionError?.message);
     }
 
-    // 1. Fetch current variables with full details
-    const { data: currentVariablesData, error: getVariablesError } = await this.supabase
-      .from('prompt_variables')
-      .select('id, name, type, required, default_value')
-      .eq('prompt_version_id', promptVersionId);
-
-    if (getVariablesError) {
-      throw new Error('Failed to fetch current variables: ' + getVariablesError.message);
+    if (!versionData) {
+      throw new Error(`Prompt version with uuid ${promptVersionUuid} not found`);
     }
-    const currentVariables: PromptVariableExisting[] = currentVariablesData || [];
+
+    const promptVersionId = versionData.id;
+
+    const currentVariables: PromptVariableExisting[] = versionData.prompt_variables || [];
 
     // 2. Prepare map for efficient comparison
     const currentVariablesMap = new Map(currentVariables.map((v) => [v.name, v]));
@@ -337,6 +645,43 @@ export class PromptsService extends AgentsmithSupabaseService {
           throw new Error(`Failed to update variable ${name} (ID: ${id}): ${updateError.message}`);
         }
       }
+    }
+
+    const updatePayload: Database['public']['Tables']['prompt_versions']['Update'] = {
+      content,
+      config: config as any,
+      status,
+    };
+
+    // if we had any changes to the config or status, we need to reset the git sha
+    if (
+      JSON.stringify(config) !== JSON.stringify(versionData.config) ||
+      status !== versionData.status
+    ) {
+      updatePayload.last_sync_git_sha = null;
+    }
+
+    // if we had any changes to the content, we need to reset the content sha
+    if (content !== versionData.content) {
+      updatePayload.last_sync_content_sha = null;
+    }
+
+    // if we had any changes to the variables, we need to reset the variables sha
+    if (
+      variablesToAdd.length > 0 ||
+      variablesToUpdate.length > 0 ||
+      variableIdsToDelete.length > 0
+    ) {
+      updatePayload.last_sync_variables_sha = null;
+    }
+
+    const { error: versionError } = await this.supabase
+      .from('prompt_versions')
+      .update(updatePayload)
+      .eq('uuid', promptVersionUuid);
+
+    if (versionError) {
+      throw new Error('Failed to update prompt version: ' + versionError.message);
     }
   }
 
@@ -465,10 +810,12 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     // Copy variables from the latest version
     if (latestVersionData.prompt_variables && latestVersionData.prompt_variables.length > 0) {
-      const variablesToInsert = latestVersionData.prompt_variables.map((variable) => ({
-        ...variable,
-        prompt_version_id: newVersionData.id,
-      }));
+      const variablesToInsert = latestVersionData.prompt_variables.map(
+        ({ id, uuid, ...variable }) => ({
+          ...variable,
+          prompt_version_id: newVersionData.id,
+        }),
+      );
 
       const { error: variablesError } = await this.supabase
         .from('prompt_variables')
@@ -505,6 +852,9 @@ export class PromptsService extends AgentsmithSupabaseService {
             .slice(0, MAX_OPENROUTER_MODELS)
             .map((m) => m.id)
         : ((targetVersion.config as CompletionConfig)?.models ?? [DEFAULT_OPENROUTER_MODEL]),
+      usage: {
+        include: true,
+      },
     };
 
     const logEntry = await this.services.llmLogs.createLogEntry({
@@ -561,6 +911,21 @@ export class PromptsService extends AgentsmithSupabaseService {
 
       throw new Error('Error calling OpenRouter API');
     }
+  }
+
+  public async getPromptByProjectIdAndSlug(projectId: number, slug: string) {
+    const { data, error } = await this.supabase
+      .from('prompts')
+      .select('*') // Select all columns, or specify if only certain ones are needed (e.g., uuid)
+      .eq('project_id', projectId)
+      .eq('slug', slug)
+      .single(); // Assuming slug is unique per project
+
+    if (error) {
+      console.error(`Error fetching prompt by project ID ${projectId} and slug ${slug}:`, error);
+      return null;
+    }
+    return data;
   }
 }
 
