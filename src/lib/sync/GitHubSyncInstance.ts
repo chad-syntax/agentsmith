@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import { Octokit } from '@octokit/core';
 import { AgentsmithSupabaseService } from '../AgentsmithSupabaseService';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -9,6 +7,7 @@ import {
   versionJsonFilePath,
   variablesJsonFilePath,
   contentJ2FilePath,
+  globalsJsonFilePath,
 } from './repo-paths';
 import { AgentsmithState, RepoState, RepoPrompt, RepoVersion } from './sync-states';
 import { compareStates } from './compare-states';
@@ -46,6 +45,10 @@ import {
   RepoDeleteVersionAction,
   isRepoDeleteContentAction,
   RepoDeleteContentAction,
+  isRepoUpdateGlobalsAction,
+  isRepoCreateGlobalsAction,
+  RepoCreateGlobalsAction,
+  RepoUpdateGlobalsAction,
 } from './sync-actions';
 import {
   generatePromptJsonContent,
@@ -64,17 +67,27 @@ type SyncChangeTarget = 'agentsmith' | 'repo';
 type SyncChangeType = 'create' | 'update' | 'delete';
 type SyncChangeEntity = 'prompt' | 'version' | 'variables' | 'content';
 
-export type SyncChange = {
-  target: SyncChangeTarget;
-  type: SyncChangeType;
-  entity: SyncChangeEntity;
-  promptSlug: string;
-  promptVersion: string | null;
-  oldContent: string | null;
-  newContent: string | null;
-  oldSha: string | null;
-  newSha: string | null;
-};
+export type SyncChange =
+  | {
+      target: SyncChangeTarget;
+      type: SyncChangeType;
+      entity: SyncChangeEntity;
+      promptSlug: string;
+      promptVersion: string | null;
+      oldContent: string | null;
+      newContent: string | null;
+      oldSha: string | null;
+      newSha: string | null;
+    }
+  | {
+      target: 'repo';
+      type: SyncChangeType;
+      entity: 'globals';
+      oldContent: string | null;
+      newContent: string | null;
+      oldSha: string | null;
+      newSha: string | null;
+    };
 
 type HardenedGitTreeEntry = {
   [P in keyof components['schemas']['git-tree']['tree'][number]]-?: NonNullable<
@@ -136,14 +149,22 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
   }
 
   public async getAgentsmithState(): Promise<AgentsmithState> {
-    const promptsData = await this.services.prompts.getAllPromptsData(this.projectId);
+    const [promptsData, projectGlobals] = await Promise.all([
+      this.services.prompts.getAllPromptsData(this.projectId),
+      this.services.projects.getProjectGlobalsByProjectId(this.projectId),
+    ]);
 
     if (!promptsData) {
       throw new Error(`Failed to fetch prompts for project ${this.projectId}`);
     }
 
+    if (!projectGlobals) {
+      throw new Error(`No project globals found for project ${this.projectId}`);
+    }
+
     return {
       prompts: promptsData,
+      globals: projectGlobals,
     };
   }
 
@@ -154,6 +175,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       console.log('Agentsmith folder contents not found, returning empty repo state');
       return {
         prompts: [],
+        globals: null,
       };
     }
 
@@ -172,6 +194,10 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       const promptFiles = folderContentsWithAgentsmithFolder.filter((file) =>
         file.path.endsWith('/prompt.json'),
       );
+
+      const globalsFile =
+        folderContentsWithAgentsmithFolder.find((file) => file.path.endsWith('/globals.json')) ??
+        null;
 
       const repoPrompts: RepoPrompt[] = [];
 
@@ -241,8 +267,16 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         });
       }
 
+      const globals = globalsFile
+        ? {
+            sha: globalsFile.sha,
+            lastModified: globalsFile.lastModified,
+          }
+        : null;
+
       return {
         prompts: repoPrompts,
+        globals,
       };
     } catch (error) {
       console.error('Error fetching repo state:', error);
@@ -262,24 +296,25 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
 
     const actions = compareStates({ agentsmithState, repoState });
 
-    const reportDir = `reports/${Date.now()}`;
+    // for debugging purposes
+    // const reportDir = `reports/${Date.now()}`;
 
-    await fs.promises.mkdir(reportDir, { recursive: true });
+    // await fs.promises.mkdir(reportDir, { recursive: true });
 
-    await fs.promises.writeFile(
-      path.join(reportDir, 'agentsmith-state.json'),
-      JSON.stringify(agentsmithState, null, 2),
-    );
+    // await fs.promises.writeFile(
+    //   path.join(reportDir, 'agentsmith-state.json'),
+    //   JSON.stringify(agentsmithState, null, 2),
+    // );
 
-    await fs.promises.writeFile(
-      path.join(reportDir, 'repo-state.json'),
-      JSON.stringify(repoState, null, 2),
-    );
+    // await fs.promises.writeFile(
+    //   path.join(reportDir, 'repo-state.json'),
+    //   JSON.stringify(repoState, null, 2),
+    // );
 
-    await fs.promises.writeFile(
-      path.join(reportDir, 'actions.json'),
-      JSON.stringify(actions, null, 2),
-    );
+    // await fs.promises.writeFile(
+    //   path.join(reportDir, 'actions.json'),
+    //   JSON.stringify(actions, null, 2),
+    // );
 
     const numRepoActions = actions.filter((action) => action.target === 'repo').length;
     const numAgentsmithActions = actions.filter((action) => action.target === 'agentsmith').length;
@@ -290,10 +325,11 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
 
     const syncChanges = await this.executeActions(actions);
 
-    await fs.promises.writeFile(
-      path.join(reportDir, 'sync-changes.json'),
-      JSON.stringify(syncChanges, null, 2),
-    );
+    // for debugging purposes
+    // await fs.promises.writeFile(
+    //   path.join(reportDir, 'sync-changes.json'),
+    //   JSON.stringify(syncChanges, null, 2),
+    // );
 
     return syncChanges;
   }
@@ -355,7 +391,8 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         (item.path.endsWith('/prompt.json') ||
           item.path.endsWith('/version.json') ||
           item.path.endsWith('/variables.json') ||
-          item.path.endsWith('/content.j2')),
+          item.path.endsWith('/content.j2') ||
+          item.path.endsWith('globals.json')),
     );
 
     // Assert that the filtered files match this hardened type
@@ -423,6 +460,12 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
 
     for (const action of actions) {
       switch (true) {
+        case isRepoCreateGlobalsAction(action):
+          syncChangePromises.push(this._performRepoCreateGlobalsAction(action));
+          break;
+        case isRepoUpdateGlobalsAction(action):
+          syncChangePromises.push(this._performRepoUpdateGlobalsAction(action));
+          break;
         case isAgentsmithCreatePromptAction(action):
           syncChangePromises.push(this._performAgentsmithCreatePromptAction(action));
           break;
@@ -481,6 +524,73 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     console.log(`fired ${syncChangePromises.length} promises`);
 
     return (await Promise.all(syncChangePromises)).flat();
+  }
+
+  private async _performRepoCreateGlobalsAction(
+    action: RepoCreateGlobalsAction,
+  ): Promise<SyncChange[]> {
+    const { globals } = action;
+
+    const filePath = globalsJsonFilePath({
+      agentsmithFolder: this.agentsmithFolder,
+    });
+
+    const result = await this._createRepoFile({
+      path: filePath,
+      content: JSON.stringify(globals.content, null, 2),
+      message: `create globals.json`,
+    });
+
+    await this.services.projects.updateProjectGlobalsSha(this.projectId, result.sha);
+
+    return [
+      {
+        target: 'repo',
+        type: 'create',
+        entity: 'globals',
+        oldContent: null,
+        newContent: JSON.stringify(globals.content, null, 2),
+        oldSha: null,
+        newSha: result.sha,
+      },
+    ];
+  }
+
+  private async _performRepoUpdateGlobalsAction(
+    action: RepoUpdateGlobalsAction,
+  ): Promise<SyncChange[]> {
+    const { globals } = action;
+
+    const filePath = globalsJsonFilePath({
+      agentsmithFolder: this.agentsmithFolder,
+    });
+
+    const file = await this._getRepoFileContentString(filePath);
+
+    if (!file) {
+      throw new Error(`Failed to get file content for ${filePath} at ref ${this.branchRef}`);
+    }
+
+    const result = await this._updateRepoFile({
+      path: filePath,
+      content: JSON.stringify(globals.content, null, 2),
+      message: `update globals.json`,
+      sha: file.sha,
+    });
+
+    await this.services.projects.updateProjectGlobalsSha(this.projectId, result.sha);
+
+    return [
+      {
+        target: 'repo',
+        type: 'update',
+        entity: 'globals',
+        oldContent: file.content,
+        newContent: JSON.stringify(globals.content, null, 2),
+        oldSha: file.sha,
+        newSha: result.sha,
+      },
+    ];
   }
 
   private async _performAgentsmithCreatePromptAction(

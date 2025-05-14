@@ -26,6 +26,7 @@ export const routes = {
     events: (projectUuid: string) => `/studio/project/${projectUuid}/events`,
     eventDetail: (projectUuid: string, eventUuid: string) =>
       `/studio/project/${projectUuid}/events/${eventUuid}`,
+    projectGlobals: (projectUuid: string) => `/studio/project/${projectUuid}/globals`,
   },
   auth: {
     signIn: '/sign-in',

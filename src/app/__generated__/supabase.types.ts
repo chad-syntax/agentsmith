@@ -143,28 +143,31 @@ export type Database = {
           content: Json
           created_at: string
           id: number
-          project_id: number | null
+          last_sync_git_sha: string | null
+          project_id: number
           updated_at: string
         }
         Insert: {
           content: Json
           created_at?: string
           id?: number
-          project_id?: number | null
+          last_sync_git_sha?: string | null
+          project_id: number
           updated_at?: string
         }
         Update: {
           content?: Json
           created_at?: string
           id?: number
-          project_id?: number | null
+          last_sync_git_sha?: string | null
+          project_id?: number
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "global_contexts_project_id_fkey"
             columns: ["project_id"]
-            isOneToOne: false
+            isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },

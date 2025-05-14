@@ -19,9 +19,7 @@ import { H1 } from '@/components/typography';
 import type { CompletionConfig } from '@/lib/openrouter';
 import { JsonEditor } from '@/components/editors/JsonEditor';
 import { GetPromptVersionByUuidResult } from '@/lib/PromptsService';
-import { syncProject } from '@/app/actions/github';
-import { toast } from 'sonner';
-import { SyncProjectButton } from '@/components/SyncProjectButton';
+import { showSyncToast } from '@/components/show-sync-toast';
 
 type EditPromptVersionPageProps = {
   promptVersion: NonNullable<GetPromptVersionByUuidResult>;
@@ -50,6 +48,8 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const { selectedProjectUuid } = useApp();
 
+  const globalContext = currentPromptVersion.prompts.projects.global_contexts?.content ?? {};
+
   const hasChanges =
     content !== initialContent || JSON.stringify(variables) !== JSON.stringify(initialVariables);
 
@@ -59,21 +59,6 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
 
   const handleVariablesChange = (newVariables: PromptVariable[]) => {
     setVariables(newVariables);
-  };
-
-  const createSyncToast = () => {
-    const toastId = toast('Prompt has been updated', {
-      description: 'Would you like to sync your project?',
-      duration: 6000,
-      action: (
-        <SyncProjectButton
-          projectUuid={selectedProjectUuid}
-          onSyncComplete={() => {
-            toast.dismiss(toastId);
-          }}
-        />
-      ),
-    });
   };
 
   const handleSave = async (
@@ -102,7 +87,9 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         })),
       });
 
-      createSyncToast();
+      showSyncToast({
+        title: 'Prompt has been updated',
+      });
 
       if (shouldRedirect) {
         router.push(
@@ -147,7 +134,9 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         versionType: 'patch',
       });
 
-      createSyncToast();
+      showSyncToast({
+        title: 'Prompt has been updated',
+      });
 
       router.push(routes.studio.editPromptVersion(selectedProjectUuid, versionUuid));
     } catch (error) {
@@ -284,7 +273,11 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         </div>
       </div>
 
-      <VariablesSidebar variables={variables} onVariablesChange={handleVariablesChange} />
+      <VariablesSidebar
+        globalContext={globalContext}
+        variables={variables}
+        onVariablesChange={handleVariablesChange}
+      />
 
       <PromptTestModal
         isOpen={isTestModalOpen}

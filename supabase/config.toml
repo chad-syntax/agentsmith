@@ -51,8 +51,7 @@ sql_paths = [
   "./seeds/agentsmith_users.sql",
   "./seeds/organizations.sql",
   "./seeds/projects.sql",
-  "./seeds/prompts.sql",
-  "./seeds/global_contexts.sql"
+  "./seeds/prompts.sql"
 ]
 
 [realtime]

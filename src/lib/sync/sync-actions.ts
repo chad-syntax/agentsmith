@@ -1,5 +1,5 @@
-import { Database } from '@/app/__generated__/supabase.types';
 import { GetAllPromptsDataResult } from '../PromptsService';
+import { GetProjectGlobalsByProjectIdResult } from '../ProjectsService';
 
 export type AgentsmithCreatePromptAction = {
   target: 'agentsmith';
@@ -173,6 +173,20 @@ export type RepoDeleteContentAction = {
   promptVersionUuid: string;
 };
 
+export type RepoCreateGlobalsAction = {
+  target: 'repo';
+  type: 'create';
+  entity: 'globals';
+  globals: NonNullable<GetProjectGlobalsByProjectIdResult>;
+};
+
+export type RepoUpdateGlobalsAction = {
+  target: 'repo';
+  type: 'update';
+  entity: 'globals';
+  globals: NonNullable<GetProjectGlobalsByProjectIdResult>;
+};
+
 export type SyncAction =
   | AgentsmithCreatePromptAction
   | AgentsmithUpdatePromptAction
@@ -192,7 +206,9 @@ export type SyncAction =
   | RepoCreateVariablesAction
   | RepoUpdateVariablesAction
   | RepoDeleteVariablesAction
-  | RepoDeleteContentAction;
+  | RepoDeleteContentAction
+  | RepoCreateGlobalsAction
+  | RepoUpdateGlobalsAction;
 
 export const isAgentsmithCreatePromptAction = (
   action: SyncAction,
@@ -290,4 +306,16 @@ export const isRepoDeleteContentAction = (
   action: SyncAction,
 ): action is RepoDeleteContentAction => {
   return action.target === 'repo' && action.entity === 'content' && action.type === 'delete';
+};
+
+export const isRepoCreateGlobalsAction = (
+  action: SyncAction,
+): action is RepoCreateGlobalsAction => {
+  return action.target === 'repo' && action.entity === 'globals' && action.type === 'create';
+};
+
+export const isRepoUpdateGlobalsAction = (
+  action: SyncAction,
+): action is RepoUpdateGlobalsAction => {
+  return action.target === 'repo' && action.entity === 'globals' && action.type === 'update';
 };

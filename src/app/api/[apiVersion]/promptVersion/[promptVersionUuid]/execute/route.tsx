@@ -53,6 +53,7 @@ export async function POST(
   }
 
   const variables = promptVersion.prompt_variables || [];
+  const globalContext = promptVersion.prompts.projects.global_contexts?.content ?? {};
 
   let body: RequestBody;
   try {
@@ -62,9 +63,7 @@ export async function POST(
   }
 
   const { missingRequiredVariables, variablesWithDefaults } =
-    agentsmith.services.prompts.compileVariables(variables, body.variables);
-
-  console.log('variablesWithDefaults', variablesWithDefaults);
+    agentsmith.services.prompts.validateVariables(variables, body.variables);
 
   if (missingRequiredVariables.length > 0) {
     return NextResponse.json(
@@ -72,6 +71,20 @@ export async function POST(
         error: 'Missing required variables',
         missingRequiredVariables,
       },
+      { status: 400 },
+    );
+  }
+
+  console.log('promptVersion.content', promptVersion.content);
+
+  const { missingGlobalContext } = agentsmith.services.prompts.validateGlobalContext(
+    promptVersion.content,
+    globalContext as Record<string, any>,
+  );
+
+  if (missingGlobalContext.length > 0) {
+    return NextResponse.json(
+      { error: 'Missing required global context variables', missingGlobalContext },
       { status: 400 },
     );
   }
@@ -100,6 +113,7 @@ export async function POST(
       },
       targetVersion: promptVersion,
       variables: variablesWithDefaults,
+      globalContext: globalContext as Record<string, any>,
     });
 
     return NextResponse.json(response, { status: 200 });

@@ -71,11 +71,13 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
     timeoutRef.current = setTimeout(() => {
       const { variables: detectedVariables, error } = extractTemplateVariables(content);
 
-      const isDiff = isVariableDiff(detectedVariablesRef.current, detectedVariables);
+      const detectedVariablesWithoutGlobal = detectedVariables.filter((v) => v.name !== 'global');
+
+      const isDiff = isVariableDiff(detectedVariablesRef.current, detectedVariablesWithoutGlobal);
 
       if (!error && isDiff) {
-        onVariablesChange(detectedVariables);
-        detectedVariablesRef.current = detectedVariables;
+        onVariablesChange(detectedVariablesWithoutGlobal);
+        detectedVariablesRef.current = detectedVariablesWithoutGlobal;
       }
 
       setTemplateError(error?.message ?? null);

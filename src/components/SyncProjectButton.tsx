@@ -5,21 +5,23 @@ import { Button } from './ui/button';
 import { syncProject } from '@/app/actions/github';
 import { IconRefresh } from '@tabler/icons-react';
 import { cn } from '@/utils/shadcn';
+import { useApp } from '@/app/providers/app';
 
 type SyncProjectButtonProps = {
-  projectUuid: string;
   className?: string;
   onSyncComplete?: () => void;
 };
 
 export const SyncProjectButton = (props: SyncProjectButtonProps) => {
-  const { projectUuid, onSyncComplete, className } = props;
+  const { onSyncComplete, className } = props;
+
+  const { selectedProjectUuid } = useApp();
 
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
     setLoading(true);
-    await syncProject(projectUuid);
+    await syncProject(selectedProjectUuid);
     setLoading(false);
 
     if (onSyncComplete) {

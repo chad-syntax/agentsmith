@@ -6,6 +6,7 @@ import {
   AgentsmithUpdatePromptAction,
   AgentsmithUpdateVariablesAction,
   AgentsmithUpdateVersionAction,
+  RepoCreateGlobalsAction,
   RepoCreatePromptAction,
   RepoCreateVariablesAction,
   RepoCreateVersionAction,
@@ -13,6 +14,7 @@ import {
   RepoDeleteVariablesAction,
   RepoDeleteVersionAction,
   RepoUpdateContentAction,
+  RepoUpdateGlobalsAction,
   RepoUpdatePromptAction,
   RepoUpdateVariablesAction,
   RepoUpdateVersionAction,
@@ -41,6 +43,34 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
   );
 
   const repoPromptsMap = new Map<string, RepoPrompt>(repoState.prompts.map((p) => [p.slug, p]));
+
+  // if globals do not exist in repo, create in repo
+  if (!repoState.globals) {
+    const createGlobalsAction: RepoCreateGlobalsAction = {
+      type: 'create',
+      target: 'repo',
+      entity: 'globals',
+      globals: agentsmithState.globals,
+    };
+
+    actionPlan.push(createGlobalsAction);
+  }
+
+  // if globals exist in repo, but have a different sha, and are newer than the agentsmith globals, update in repo
+  if (
+    repoState.globals &&
+    repoState.globals.sha !== agentsmithState.globals.last_sync_git_sha &&
+    repoState.globals.lastModified < agentsmithState.globals.updated_at
+  ) {
+    const updateGlobalsAction: RepoUpdateGlobalsAction = {
+      type: 'update',
+      target: 'repo',
+      entity: 'globals',
+      globals: agentsmithState.globals,
+    };
+
+    actionPlan.push(updateGlobalsAction);
+  }
 
   // loop through each prompt in agentsmith state
   for (const agentsmithPrompt of agentsmithState.prompts) {
@@ -300,7 +330,10 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
         targetAgentsmithVersion?.prompt_variables.reduce(
           (acc, v) => (v.updated_at > acc ? v.updated_at : acc),
           targetAgentsmithVersion?.prompt_variables?.[0]?.updated_at ?? new Date(0).toISOString(),
-        ) ?? new Date(0).toISOString();
+        ) ??
+        // we go by the version updated_at in the case that agentsmith has no variables, but repo does
+        targetAgentsmithVersion?.updated_at ??
+        new Date(0).toISOString();
 
       // if version exists in agentsmith and repo, and repo has variables, but has a different variables sha, and is newer than the agentsmith version, issue variables update
       if (

@@ -1,4 +1,11 @@
-import { IconPrompt, IconList, IconUser, IconPencil, IconActivity } from '@tabler/icons-react';
+import {
+  IconPrompt,
+  IconList,
+  IconUser,
+  IconPencil,
+  IconActivity,
+  IconSettings,
+} from '@tabler/icons-react';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { H1, H3, P } from '@/components/typography';
@@ -48,6 +55,13 @@ export const ProjectPage = (props: ProjectPageProps) => {
       iconClassName: 'text-green-500',
       title: 'Account',
       description: 'Manage your account settings',
+    },
+    {
+      href: routes.studio.projectGlobals(projectData.uuid),
+      icon: IconSettings,
+      iconClassName: 'text-red-500',
+      title: 'Globals',
+      description: 'Manage project globals',
     },
   ];
 

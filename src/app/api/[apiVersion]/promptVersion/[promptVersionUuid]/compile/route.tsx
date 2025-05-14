@@ -50,6 +50,7 @@ export async function POST(
   }
 
   const variables = promptVersion.prompt_variables || [];
+  const globalContext = promptVersion.prompts.projects.global_contexts?.content ?? {};
 
   let body: RequestBody;
   try {
@@ -59,7 +60,7 @@ export async function POST(
   }
 
   const { missingRequiredVariables, variablesWithDefaults } =
-    agentsmith.services.prompts.compileVariables(variables, body.variables);
+    agentsmith.services.prompts.validateVariables(variables, body.variables);
 
   if (missingRequiredVariables.length > 0) {
     return NextResponse.json(
@@ -71,10 +72,10 @@ export async function POST(
     );
   }
 
-  const compiledPrompt = agentsmith.services.prompts.compilePrompt(
-    promptVersion.content,
-    variablesWithDefaults,
-  );
+  const compiledPrompt = agentsmith.services.prompts.compilePrompt(promptVersion.content, {
+    ...variablesWithDefaults,
+    global: globalContext as Record<string, any>,
+  });
 
   return NextResponse.json({ compiledPrompt }, { status: 200 });
 }

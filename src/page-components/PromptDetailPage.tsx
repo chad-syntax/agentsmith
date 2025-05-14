@@ -160,7 +160,11 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         </div>
       </div>
 
-      <VariablesSidebar variables={latestVersion.prompt_variables} readOnly />
+      <VariablesSidebar
+        globalContext={prompt.projects.global_contexts?.content ?? {}}
+        variables={latestVersion.prompt_variables}
+        readOnly
+      />
 
       <PromptTestModal
         isOpen={isTestModalOpen}

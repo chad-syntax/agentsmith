@@ -9,11 +9,13 @@ type ParsedVariable = {
   type: Database['public']['Enums']['variable_type'];
   required: boolean;
   default_value: string | null;
+  children?: ParsedVariable[];
 };
 
 /**
  * Walks through the Nunjucks AST and extracts all Symbol nodes
  * @param content Template string to parse
+ * @param ignoreGlobals Whether to ignore global variables
  * @returns Array of extracted variable names with detected types
  */
 export const extractTemplateVariables = (
@@ -24,106 +26,225 @@ export const extractTemplateVariables = (
     // @ts-ignore - parser exists but is not in type definitions
     const ast = transform(nunjucks.parser.parse(content));
 
-    // Map to track variables and their detected types
-    const variableMap = new Map<string, Database['public']['Enums']['variable_type']>();
-
-    // Set to track local variable names (like loop variables) that shouldn't be extracted
+    // Use a map to store ParsedVariable objects, allowing for nested structures
+    const variableMap = new Map<string, ParsedVariable>();
     const localVariables = new Set<string>();
 
-    // Recursive function to walk the AST
-    const walkAst = (node: any) => {
-      // Handle For loops - mark the collection variable as JSON and track the loop variable name
-      if (node && node.typename === 'For') {
-        if (node.arr && node.arr.typename === 'Symbol') {
-          variableMap.set(node.arr.value, 'JSON');
+    const getOrCreateVarByPath = (
+      path: string[],
+      finalTypeHint: 'STRING' | 'JSON' = 'STRING',
+    ): ParsedVariable | null => {
+      if (path.length === 0) return null;
+
+      let currentLevelChildrenList: ParsedVariable[] | undefined = Array.from(variableMap.values());
+      let currentParentMap = variableMap;
+      let currentVar: ParsedVariable | undefined;
+
+      for (let i = 0; i < path.length; i++) {
+        const partName = path[i];
+        const isLastPart = i === path.length - 1;
+
+        if (i === 0) {
+          // Top-level variable
+          currentVar = currentParentMap.get(partName);
+          if (!currentVar) {
+            currentVar = {
+              name: partName,
+              type: isLastPart ? finalTypeHint : 'JSON',
+              required: true,
+              default_value: null,
+            };
+            currentParentMap.set(partName, currentVar);
+          }
+        } else {
+          // Must have a currentVar from the previous iteration which is the parent
+          if (!currentVar) return null; // Should not happen if logic is correct
+          if (currentVar.type !== 'JSON') currentVar.type = 'JSON'; // Upgrade parent to JSON
+          if (!currentVar.children) currentVar.children = [];
+
+          let childVar = currentVar.children.find((c) => c.name === partName);
+          if (!childVar) {
+            childVar = {
+              name: partName,
+              type: isLastPart ? finalTypeHint : 'JSON',
+              required: true,
+              default_value: null,
+            };
+            currentVar.children.push(childVar);
+          }
+          currentVar = childVar;
         }
 
-        // Add the loop variable to localVariables to exclude it from extracted variables
-        if (node.name && node.name.typename === 'Symbol') {
-          localVariables.add(node.name.value);
+        // Ensure type is correctly JSON if it's not the last part, or if it was already JSON
+        if (!isLastPart && currentVar.type !== 'JSON') {
+          currentVar.type = 'JSON';
         }
-
-        // Continue walking all parts of the For node
-        if (node.arr) walkAst(node.arr);
-        if (node.body) walkAst(node.body);
-        if (node.else_) walkAst(node.else_);
-        return;
+        if (!currentVar.children && !isLastPart) {
+          currentVar.children = [];
+        }
       }
+      return currentVar || null;
+    };
 
-      // Handle LookupVal nodes (e.g., foo.bar) - mark the base variable as JSON
-      if (node && node.typename === 'LookupVal') {
-        if (node.target && node.target.typename === 'Symbol') {
-          // Only add if not a local variable
-          if (!localVariables.has(node.target.value)) {
-            variableMap.set(node.target.value, 'JSON');
+    const walkAst = (
+      node: any,
+      currentActualCollection?: ParsedVariable,
+      loopItemName?: string,
+    ) => {
+      if (!node) return;
+
+      // console.log('Walking node:', node.typename, node.value || node.name?.value || '', 'LoopItemName:', loopItemName, 'CurrentColl:', currentActualCollection?.name);
+
+      if (node.typename === 'Symbol') {
+        const varName = node.value;
+        if (!localVariables.has(varName)) {
+          // If inside a loop and this symbol is the loop item itself (e.g. {{ item }}), it doesn't create a new var.
+          if (!(loopItemName && varName === loopItemName)) {
+            getOrCreateVarByPath([varName], 'STRING');
           }
         }
-        // Continue walking both target and val parts
-        if (node.target) walkAst(node.target);
-        if (node.val) walkAst(node.val);
         return;
       }
 
-      // Handle Filter nodes - ignore filter names but process their arguments
-      if (node && node.typename === 'Filter') {
-        if (node.args) walkAst(node.args);
-        if (node.target) walkAst(node.target);
-        return;
-      }
-
-      // Handle normal Symbol nodes - only add if not a local variable and not already marked as JSON
-      if (node && node.typename === 'Symbol') {
-        // Skip local variables like loop variables
-        if (!localVariables.has(node.value)) {
-          // Only set to STRING if not already set to JSON
-          if (!variableMap.has(node.value)) {
-            variableMap.set(node.value, 'STRING');
+      if (node.typename === 'LookupVal') {
+        const path: string[] = [];
+        let currentNode = node;
+        while (currentNode && currentNode.typename === 'LookupVal') {
+          if (currentNode.val && currentNode.val.typename === 'Literal') {
+            path.unshift(currentNode.val.value);
+          } else {
+            if (currentNode.val) walkAst(currentNode.val, currentActualCollection, loopItemName);
+            walkAst(currentNode.target, currentActualCollection, loopItemName);
+            return;
           }
+          currentNode = currentNode.target;
         }
-      }
-
-      // Handle arrays (like children)
-      if (Array.isArray(node)) {
-        node.forEach(walkAst);
-        return;
-      }
-
-      // Handle objects - walk through all properties that could be nodes or arrays of nodes
-      if (node && typeof node === 'object') {
-        // Process common properties that might contain nodes
-        ['children', 'body', 'cond', 'else_', 'target', 'val', 'arr', 'args'].forEach((prop) => {
-          if (node[prop]) {
-            walkAst(node[prop]);
-          }
-        });
-
-        // Check for any other object properties that might be nodes
-        Object.keys(node).forEach((key) => {
-          const value = node[key];
+        if (currentNode && currentNode.typename === 'Symbol') {
+          // Do not add to path if it's a local variable (e.g. loop var) unless it's the start of the path.
           if (
-            value &&
-            typeof value === 'object' &&
-            !['children', 'body', 'cond', 'else_', 'target', 'val', 'arr', 'args'].includes(key) &&
-            !key.startsWith('_') // Skip internal properties
+            !localVariables.has(currentNode.value) ||
+            (loopItemName && currentNode.value === loopItemName)
           ) {
-            walkAst(value);
+            path.unshift(currentNode.value);
           }
-        });
+        }
+
+        if (path.length > 0) {
+          // Check if this LookupVal is an access on the current loop item e.g. item.property
+          if (
+            currentActualCollection &&
+            loopItemName &&
+            path[0] === loopItemName &&
+            path.length > 1
+          ) {
+            const propertyPathOnItem = path.slice(1); // e.g., ['property'] or ['obj', 'prop']
+            let parentInCollection = currentActualCollection; // This is the actual collection variable like 'items'
+
+            if (!parentInCollection.children) parentInCollection.children = [];
+
+            for (let i = 0; i < propertyPathOnItem.length; i++) {
+              const partName = propertyPathOnItem[i];
+              const isLast = i === propertyPathOnItem.length - 1;
+
+              if (!parentInCollection.children) parentInCollection.children = [];
+              let child = parentInCollection.children.find((c) => c.name === partName);
+              if (!child) {
+                child = {
+                  name: partName,
+                  type: isLast ? 'STRING' : 'JSON',
+                  required: true,
+                  default_value: null,
+                  children: isLast ? undefined : [],
+                };
+                if (!parentInCollection.children) parentInCollection.children = [];
+                parentInCollection.children.push(child);
+              }
+              if (!isLast && child.type !== 'JSON') {
+                child.type = 'JSON';
+                if (!child.children) child.children = []; // Ensure children array for newly promoted JSON
+              }
+              parentInCollection = child;
+            }
+          } else if (!(loopItemName && path.length === 1 && path[0] === loopItemName)) {
+            // Regular path, not on a loop item, or it IS the loop item itself (e.g. {{item}})
+            // which shouldn't be processed by getOrCreateVarByPath if it's a local loop item.
+            // Filter out paths that are just the loop variable itself if loopItemName is active.
+            if (!localVariables.has(path[0])) {
+              // Only process if base is not a known local variable
+              getOrCreateVarByPath(path, 'STRING');
+            }
+          }
+        }
+        return;
+      }
+
+      if (node.typename === 'For') {
+        let collectionVarForLoop: ParsedVariable | null = null;
+        let collectionPath: string[] = [];
+
+        if (node.arr) {
+          if (node.arr.typename === 'Symbol') {
+            collectionPath = [node.arr.value];
+          } else if (node.arr.typename === 'LookupVal') {
+            let currentArrNode = node.arr;
+            while (currentArrNode && currentArrNode.typename === 'LookupVal') {
+              if (currentArrNode.val && currentArrNode.val.typename === 'Literal') {
+                collectionPath.unshift(currentArrNode.val.value);
+              } else {
+                collectionPath = [];
+                break;
+              } // Invalid path for collection
+              currentArrNode = currentArrNode.target;
+            }
+            if (
+              collectionPath.length > 0 &&
+              currentArrNode &&
+              currentArrNode.typename === 'Symbol'
+            ) {
+              collectionPath.unshift(currentArrNode.value);
+            } else if (!(currentArrNode && currentArrNode.typename === 'Symbol')) {
+              collectionPath = []; // Incomplete or non-symbol base for collection path
+            }
+          }
+
+          if (collectionPath.length > 0 && !localVariables.has(collectionPath[0])) {
+            collectionVarForLoop = getOrCreateVarByPath(collectionPath, 'JSON');
+          } else if (collectionPath.length === 0 && node.arr) {
+            // Collection is a complex expression, not a direct symbol or lookupval
+            walkAst(node.arr, currentActualCollection, loopItemName);
+          }
+        }
+
+        const currentLoopItemName = node.name?.value;
+        if (currentLoopItemName) {
+          localVariables.add(currentLoopItemName);
+          // When walking the body, properties of currentLoopItemName should be added to collectionVarForLoop
+          if (node.body) walkAst(node.body, collectionVarForLoop || undefined, currentLoopItemName);
+          localVariables.delete(currentLoopItemName);
+        }
+        if (node.else_) walkAst(node.else_, currentActualCollection, loopItemName); // Else block uses outer context
+        return;
+      }
+
+      // Generic traversal for other node types
+      if (Array.isArray(node)) {
+        node.forEach((child) => walkAst(child, currentActualCollection, loopItemName));
+      } else if (typeof node === 'object') {
+        for (const key in node) {
+          if (Object.prototype.hasOwnProperty.call(node, key) && !key.startsWith('_')) {
+            if (typeof node[key] === 'object' && node[key] !== null) {
+              walkAst(node[key], currentActualCollection, loopItemName);
+            }
+          }
+        }
       }
     };
 
-    // Start walking from the root
     walkAst(ast);
 
-    // Convert to array of ParsedVariable objects
-    const variables = Array.from(variableMap.entries()).map(([name, type]) => ({
-      name,
-      type,
-      required: true, // Default to required
-      default_value: null,
-    }));
+    const extractedVariables = Array.from(variableMap.values());
 
-    return { variables };
+    return { variables: extractedVariables };
   } catch (error) {
     return {
       variables: [],

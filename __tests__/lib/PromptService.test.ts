@@ -35,7 +35,7 @@ describe('PromptsService - compileVariables', () => {
       },
     ];
     const variablesToCheck = { var1: 'hello', var2: 123 };
-    const { missingRequiredVariables, variablesWithDefaults } = promptsService.compileVariables(
+    const { missingRequiredVariables, variablesWithDefaults } = promptsService.validateVariables(
       variables,
       variablesToCheck,
     );
@@ -81,7 +81,7 @@ describe('PromptsService - compileVariables', () => {
       },
     ];
     const variablesToCheck = { var1: 'hello' }; // Missing var2
-    const { missingRequiredVariables, variablesWithDefaults } = promptsService.compileVariables(
+    const { missingRequiredVariables, variablesWithDefaults } = promptsService.validateVariables(
       variables,
       variablesToCheck,
     );
@@ -128,7 +128,7 @@ describe('PromptsService - compileVariables', () => {
       },
     ];
     const variablesToCheck = { var1: 'test' }; // Missing var2 and var3
-    const { missingRequiredVariables, variablesWithDefaults } = promptsService.compileVariables(
+    const { missingRequiredVariables, variablesWithDefaults } = promptsService.validateVariables(
       variables,
       variablesToCheck,
     );
@@ -163,7 +163,7 @@ describe('PromptsService - compileVariables', () => {
       },
     ];
     const variablesToCheck = { var1: 'override1', var2: 200 };
-    const { missingRequiredVariables, variablesWithDefaults } = promptsService.compileVariables(
+    const { missingRequiredVariables, variablesWithDefaults } = promptsService.validateVariables(
       variables,
       variablesToCheck,
     );
@@ -231,7 +231,7 @@ describe('PromptsService - compileVariables', () => {
       }, // No default, not provided
     ];
     const variablesToCheck = { req2: 999, opt2: 'overriddenOpt2' };
-    const { missingRequiredVariables, variablesWithDefaults } = promptsService.compileVariables(
+    const { missingRequiredVariables, variablesWithDefaults } = promptsService.validateVariables(
       variables,
       variablesToCheck,
     );
@@ -249,7 +249,7 @@ describe('PromptsService - compileVariables', () => {
   it('should return empty results for empty inputs', () => {
     const variables: PromptVariable[] = [];
     const variablesToCheck = {};
-    const { missingRequiredVariables, variablesWithDefaults } = promptsService.compileVariables(
+    const { missingRequiredVariables, variablesWithDefaults } = promptsService.validateVariables(
       variables,
       variablesToCheck,
     );
@@ -284,7 +284,7 @@ describe('PromptsService - compileVariables', () => {
       },
     ];
     const variablesToCheck = { opt1: 'b' };
-    const { missingRequiredVariables, variablesWithDefaults } = promptsService.compileVariables(
+    const { missingRequiredVariables, variablesWithDefaults } = promptsService.validateVariables(
       variables,
       variablesToCheck,
     );
@@ -319,7 +319,7 @@ describe('PromptsService - compileVariables', () => {
       },
     ];
     const variablesToCheck = {};
-    const { missingRequiredVariables, variablesWithDefaults } = promptsService.compileVariables(
+    const { missingRequiredVariables, variablesWithDefaults } = promptsService.validateVariables(
       variables,
       variablesToCheck,
     );

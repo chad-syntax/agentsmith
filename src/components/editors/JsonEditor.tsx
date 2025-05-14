@@ -13,15 +13,24 @@ import './json-editor.css';
 
 type JsonEditorProps<T> = {
   value: T;
-  onChange: (value: T) => void;
+  onChange?: (value: T) => void;
   minHeight?: string;
   placeholder?: string;
   label?: string;
   className?: string;
+  readOnly?: boolean;
 };
 
 export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
-  const { value, onChange, minHeight = '100px', placeholder = '{}', label, className } = props;
+  const {
+    value,
+    onChange,
+    minHeight = '100px',
+    placeholder = '{}',
+    label,
+    className,
+    readOnly = false,
+  } = props;
 
   const [jsonText, setJsonText] = useState<string>(JSON.stringify(value, null, 2));
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -30,7 +39,7 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
     setJsonText(text);
     try {
       const parsed = JSON.parse(text);
-      onChange(parsed);
+      onChange?.(parsed);
       setJsonError(null);
     } catch (e) {
       setJsonError('Invalid JSON');
@@ -40,11 +49,18 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
   return (
     <div className={cn('space-y-2', className)}>
       {label && <Label>{label}</Label>}
-      <div className={cn('rounded-md border bg-background', jsonError && 'border-destructive')}>
+      <div
+        className={cn(
+          'rounded-md border bg-background',
+          jsonError && 'border-destructive',
+          readOnly && 'opacity-70',
+        )}
+      >
         <Editor
           value={jsonText}
-          onValueChange={handleJsonChange}
-          highlight={(code) => highlight(code, languages.json, 'json')}
+          onValueChange={readOnly ? () => {} : handleJsonChange}
+          highlight={(code) => highlight(code ?? '{}', languages.json, 'json')}
+          disabled={readOnly}
           padding={16}
           placeholder={placeholder}
           style={{

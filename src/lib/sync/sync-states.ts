@@ -1,7 +1,9 @@
 import { GetAllPromptsDataResult } from '../PromptsService';
+import { GetProjectGlobalsByProjectIdResult } from '../ProjectsService';
 
 export type AgentsmithState = {
   prompts: GetAllPromptsDataResult;
+  globals: NonNullable<GetProjectGlobalsByProjectIdResult>;
 };
 
 export type RepoVersion = {
@@ -21,6 +23,12 @@ export type RepoPrompt = {
   lastModified: string;
 };
 
+export type RepoGlobals = {
+  sha: string;
+  lastModified: string;
+};
+
 export type RepoState = {
   prompts: RepoPrompt[];
+  globals: RepoGlobals | null;
 };

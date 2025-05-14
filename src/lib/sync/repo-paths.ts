@@ -18,3 +18,6 @@ export const contentJ2FilePath = (options: {
   promptSlug: string;
   version: string;
 }) => `${options.agentsmithFolder}/prompts/${options.promptSlug}/${options.version}/content.j2`;
+
+export const globalsJsonFilePath = (options: { agentsmithFolder: string }) =>
+  `${options.agentsmithFolder}/globals.json`;

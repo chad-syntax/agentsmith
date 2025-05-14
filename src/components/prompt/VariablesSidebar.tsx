@@ -9,18 +9,31 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/shadcn';
+import { JsonEditor } from '../editors/JsonEditor';
+import { Label } from '@radix-ui/react-label';
+import Link from 'next/link';
+import { routes } from '@/utils/routes';
+import { useApp } from '@/app/providers/app';
 
 type VariablesSidebarProps = {
   variables: PromptVariable[];
   onVariablesChange?: (variables: PromptVariable[]) => void;
   readOnly?: boolean;
   defaultOpen?: boolean;
+  globalContext: any;
 };
 
 export const VariablesSidebar = (props: VariablesSidebarProps) => {
-  const { variables, onVariablesChange, readOnly = false, defaultOpen = true } = props;
+  const {
+    variables,
+    onVariablesChange,
+    readOnly = false,
+    defaultOpen = true,
+    globalContext,
+  } = props;
 
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const { selectedProjectUuid } = useApp();
 
   return (
     <Collapsible
@@ -40,6 +53,16 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
       </div>
 
       <CollapsibleContent className="p-4">
+        <div className="mb-4">
+          <Label className="mb-2 ml-2">Global Context</Label>
+          <JsonEditor readOnly value={globalContext} />
+          <Link
+            className="text-sm text-primary ml-2 hover:underline"
+            href={routes.studio.projectGlobals(selectedProjectUuid)}
+          >
+            Edit Globals
+          </Link>
+        </div>
         <VariablesEditor
           variables={variables}
           onVariablesChange={onVariablesChange}

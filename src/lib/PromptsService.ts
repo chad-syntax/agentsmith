@@ -16,6 +16,7 @@ import {
 import { routes } from '@/utils/routes';
 import { ORGANIZATION_KEYS, SEMVER_PATTERN } from '@/app/constants';
 import { compareSemanticVersions, incrementVersion } from '@/utils/versioning';
+import { extractTemplateVariables } from '@/utils/template-utils';
 
 type PromptVariable = Database['public']['Tables']['prompt_variables']['Row'];
 
@@ -23,6 +24,10 @@ type PromptVariableBase = Omit<
   Database['public']['Tables']['prompt_variables']['Row'],
   'created_at' | 'prompt_version_id' | 'uuid' | 'updated_at'
 >;
+
+const uniqueValues = {
+  'now()': () => new Date().toISOString(),
+};
 
 type PromptVariableInput = Omit<PromptVariableBase, 'id'> & { id?: number };
 
@@ -60,6 +65,7 @@ type ExecutePromptOptions = {
   config: CompletionConfig;
   targetVersion: NonNullable<GetPromptVersionByUuidResult>;
   variables: Record<string, string | number | boolean>;
+  globalContext: Record<string, any>;
 };
 
 type CreatePromptOptions = {
@@ -121,10 +127,45 @@ export class PromptsService extends AgentsmithSupabaseService {
     super({ ...options, serviceName: 'prompts' });
   }
 
+  private static processUniqueValues(
+    variables: Record<string, any> & { global: Record<string, any> },
+  ) {
+    const processValue = (value: any): any => {
+      if (value in uniqueValues) {
+        return uniqueValues[value as keyof typeof uniqueValues]();
+      }
+      if (Array.isArray(value)) {
+        return value.map(processValue);
+      }
+      if (typeof value === 'object' && value !== null) {
+        const newObj: Record<string, any> = {};
+        for (const k in value) {
+          if (Object.prototype.hasOwnProperty.call(value, k)) {
+            newObj[k] = processValue(value[k]);
+          }
+        }
+        return newObj;
+      }
+      return value;
+    };
+
+    const processedVariables = Object.entries(variables).reduce(
+      (acc, [key, value]) => {
+        acc[key] = processValue(value);
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
+
+    return processedVariables;
+  }
+
   public async getPromptVersionByUuid(promptVersionUuid: string) {
     const { data, error } = await this.supabase
       .from('prompt_versions')
-      .select('*, prompt_variables(*), prompts(*, projects(id, uuid, organizations(id, uuid)))')
+      .select(
+        '*, prompt_variables(*), prompts(*, projects(id, uuid, global_contexts(content), organizations(id, uuid)))',
+      )
       .eq('uuid', promptVersionUuid)
       .single();
 
@@ -139,7 +180,7 @@ export class PromptsService extends AgentsmithSupabaseService {
   async getPromptByUuid(promptUuid: string) {
     const { data, error } = await this.supabase
       .from('prompts')
-      .select('*, projects(id, organizations(uuid))')
+      .select('*, projects(id, organizations(uuid), global_contexts(content))')
       .eq('uuid', promptUuid)
       .single();
 
@@ -165,7 +206,7 @@ export class PromptsService extends AgentsmithSupabaseService {
     return data;
   }
 
-  public compileVariables = (
+  public validateVariables = (
     variables: PromptVariable[],
     variablesToCheck: Record<string, string | number | boolean>,
   ): {
@@ -189,12 +230,48 @@ export class PromptsService extends AgentsmithSupabaseService {
     return { missingRequiredVariables, variablesWithDefaults };
   };
 
+  public validateGlobalContext = (
+    content: string,
+    globalContext: Record<string, any>,
+  ): { missingGlobalContext: string[] } => {
+    const { variables, error } = extractTemplateVariables(content);
+
+    if (error) {
+      throw new Error('Error validating global context: ' + error.message);
+    }
+
+    const missingGlobalContext: string[] = [];
+    const globalSpecVar = variables.find((v) => v.name === 'global');
+
+    if (globalSpecVar && globalSpecVar.children && globalSpecVar.children.length > 0) {
+      for (const expectedVar of globalSpecVar.children) {
+        const keyName = expectedVar.name;
+        const fullKeyPath = `global.${keyName}`;
+
+        if (!(keyName in globalContext)) {
+          missingGlobalContext.push(fullKeyPath);
+        } else {
+          const value = globalContext[keyName];
+          if (value === null || value === undefined || String(value).trim() === '') {
+            missingGlobalContext.push(fullKeyPath);
+          }
+        }
+      }
+    }
+    // If globalSpecVar is not found or has no children, it means the template
+    // doesn't expect any specific global variables, so no missingGlobalContext from globalContext content.
+
+    return { missingGlobalContext };
+  };
+
   public compilePrompt = (
     promptContent: string,
-    variables: Record<string, string | number | boolean>,
-  ) => {
+    variables: Record<string, any> & { global: Record<string, any> },
+  ): string => {
+    const processedVariables = PromptsService.processUniqueValues(variables);
+
     nunjucks.configure({ autoescape: false });
-    return nunjucks.renderString(promptContent, variables);
+    return nunjucks.renderString(promptContent, processedVariables);
   };
 
   /**
@@ -439,7 +516,7 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     const { data: promptData, error: getPromptError } = await this.supabase
       .from('prompt_variables')
-      .select('*, prompt_version!inner(version), prompt!inner(slug)')
+      .select('*, prompt_versions!inner(version), prompts!inner(slug)')
       .eq('prompt_version.version', promptVersion)
       .eq('prompt.slug', promptSlug);
 
@@ -830,9 +907,14 @@ export class PromptsService extends AgentsmithSupabaseService {
   }
 
   public async executePrompt(options: ExecutePromptOptions) {
-    const { prompt, config, targetVersion, variables } = options;
+    const { prompt, config, targetVersion, variables, globalContext } = options;
 
-    const compiledPrompt = this.compilePrompt(targetVersion.content, variables);
+    const variablesAndContext = {
+      ...variables,
+      global: globalContext,
+    };
+
+    const compiledPrompt = this.compilePrompt(targetVersion.content, variablesAndContext);
 
     const freeModelsOnlyEnabled = process.env.FREE_MODELS_ONLY === 'true';
 
@@ -860,7 +942,7 @@ export class PromptsService extends AgentsmithSupabaseService {
     const logEntry = await this.services.llmLogs.createLogEntry({
       projectId: prompt.projects.id,
       promptVersionId: targetVersion.id,
-      variables,
+      variables: variablesAndContext,
       rawInput,
     });
 

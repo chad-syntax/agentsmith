@@ -100,6 +100,79 @@ export class ProjectsService extends AgentsmithSupabaseService {
       throw new Error('Error unlocking project repository');
     }
   }
+
+  async getProjectGlobalsByUuid(projectUuid: string) {
+    const { data: globals, error } = await this.supabase
+      .from('global_contexts')
+      .select('*, projects!inner(uuid)')
+      .eq('projects.uuid', projectUuid)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching project globals:', error);
+      return null;
+    }
+
+    return globals;
+  }
+
+  async getProjectGlobalsByProjectId(projectId: number) {
+    const { data: globals, error } = await this.supabase
+      .from('global_contexts')
+      .select('*')
+      .eq('project_id', projectId)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error fetching project globals:', error);
+      return null;
+    }
+
+    return globals;
+  }
+
+  async updateProjectGlobals(projectUuid: string, globals: any) {
+    const { data: project, error: projectError } = await this.supabase
+      .from('projects')
+      .select('id')
+      .eq('uuid', projectUuid)
+      .maybeSingle();
+
+    if (projectError) {
+      console.error('Failed to get project for globals update:', projectError);
+      throw new Error('Failed to get project for globals update');
+    }
+
+    if (!project) {
+      console.error('Project not found for globals update');
+      throw new Error('Project not found for globals update');
+    }
+
+    const { error } = await this.supabase
+      .from('global_contexts')
+      .update({
+        content: globals,
+        last_sync_git_sha: null,
+      })
+      .eq('project_id', project.id);
+
+    if (error) {
+      console.error('Error updating project globals:', error);
+      throw new Error('Error updating project globals');
+    }
+  }
+
+  async updateProjectGlobalsSha(projectId: number, sha: string) {
+    const { error } = await this.supabase
+      .from('global_contexts')
+      .update({ last_sync_git_sha: sha })
+      .eq('project_id', projectId);
+
+    if (error) {
+      console.error('Error updating project globals sha:', error);
+      throw new Error('Error updating project globals sha');
+    }
+  }
 }
 
 export type GetProjectDataResult = Awaited<
@@ -112,4 +185,12 @@ export type GetProjectRepositoryByInstallationIdResult = Awaited<
 
 export type GetProjectRepositoryByProjectIdResult = Awaited<
   ReturnType<typeof ProjectsService.prototype.getProjectRepositoryByProjectId>
+>;
+
+export type GetProjectGlobalsResult = Awaited<
+  ReturnType<typeof ProjectsService.prototype.getProjectGlobalsByUuid>
+>;
+
+export type GetProjectGlobalsByProjectIdResult = Awaited<
+  ReturnType<typeof ProjectsService.prototype.getProjectGlobalsByProjectId>
 >;
