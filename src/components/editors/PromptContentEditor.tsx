@@ -8,28 +8,20 @@ import 'prismjs/components/prism-django';
 import 'prismjs/themes/prism.css';
 import { AlertCircle } from 'lucide-react';
 import { extractTemplateVariables } from '@/utils/template-utils';
-import { Database } from '@/app/__generated__/supabase.types';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/utils/shadcn';
-
-export type PromptVariable = {
-  id?: number;
-  name: string;
-  type: Database['public']['Enums']['variable_type'];
-  required: boolean;
-  default_value: string | null;
-};
+import { ParsedVariable } from '@/utils/template-utils';
 
 type PromptContentEditorProps = {
   content: string;
   onContentChange: (content: string) => void;
-  onVariablesChange?: (variables: PromptVariable[]) => void;
+  onVariablesChange?: (variables: ParsedVariable[]) => void;
   readOnly?: boolean;
   minHeight?: string;
   className?: string;
 };
 
-const isVariableDiff = (currentVars: PromptVariable[], newVars: PromptVariable[]): boolean => {
+const isVariableDiff = (currentVars: ParsedVariable[], newVars: ParsedVariable[]): boolean => {
   if (currentVars.length !== newVars.length) return true;
 
   for (let i = 0; i < currentVars.length; i++) {
@@ -39,7 +31,10 @@ const isVariableDiff = (currentVars: PromptVariable[], newVars: PromptVariable[]
       currentVar.name !== newVar.name ||
       currentVar.type !== newVar.type ||
       currentVar.required !== newVar.required ||
-      currentVar.default_value !== newVar.default_value
+      currentVar.default_value !== newVar.default_value ||
+      // TODO make this recursive
+      currentVar.children?.length !== newVar.children?.length ||
+      currentVar.children?.some((child, index) => child.name !== newVar.children?.[index]?.name)
     ) {
       return true;
     }
@@ -60,7 +55,7 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
 
   const [templateError, setTemplateError] = useState<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const detectedVariablesRef = useRef<PromptVariable[]>([]);
+  const detectedVariablesRef = useRef<ParsedVariable[]>([]);
 
   // Effect to detect variables when content changes
   useEffect(() => {
@@ -71,13 +66,11 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
     timeoutRef.current = setTimeout(() => {
       const { variables: detectedVariables, error } = extractTemplateVariables(content);
 
-      const detectedVariablesWithoutGlobal = detectedVariables.filter((v) => v.name !== 'global');
-
-      const isDiff = isVariableDiff(detectedVariablesRef.current, detectedVariablesWithoutGlobal);
+      const isDiff = isVariableDiff(detectedVariablesRef.current, detectedVariables);
 
       if (!error && isDiff) {
-        onVariablesChange(detectedVariablesWithoutGlobal);
-        detectedVariablesRef.current = detectedVariablesWithoutGlobal;
+        onVariablesChange(detectedVariables);
+        detectedVariablesRef.current = detectedVariables;
       }
 
       setTemplateError(error?.message ?? null);

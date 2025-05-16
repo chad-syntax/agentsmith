@@ -1,16 +1,14 @@
 'use client';
 
 import { updateProjectGlobals } from '@/app/actions/globals';
+import { useApp } from '@/app/providers/app';
 import { JsonEditor } from '@/components/editors/JsonEditor';
-import { showSyncToast } from '@/components/show-sync-toast';
-import { SyncProjectButton } from '@/components/SyncProjectButton';
 import { H1 } from '@/components/typography';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { GetProjectGlobalsResult } from '@/lib/ProjectsService';
 import { AlertCircle } from 'lucide-react';
 import { useState } from 'react';
-import { toast } from 'sonner';
 
 type ProjectGlobalsPageProps = {
   projectUuid: string;
@@ -19,6 +17,8 @@ type ProjectGlobalsPageProps = {
 
 export const ProjectGlobalsPage = (props: ProjectGlobalsPageProps) => {
   const { projectUuid, projectGlobals } = props;
+
+  const { showSyncToast } = useApp();
 
   const [globals, setGlobals] = useState<any>(projectGlobals?.content ?? {});
   const [isSaving, setIsSaving] = useState(false);

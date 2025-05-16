@@ -103,6 +103,9 @@ export class UsersService extends AgentsmithSupabaseService {
           organizations (
             uuid,
             name, 
+            github_app_installations(
+              status
+            ),
             organization_keys (
               id,
               key

@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { PromptVariable } from '@/components/editors/PromptContentEditor';
 import { useApp } from '@/app/providers/app';
 import { NonStreamingChoice } from '@/lib/openrouter';
 import { connectOpenrouter } from '@/app/actions/openrouter';
@@ -15,39 +14,33 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { ParsedVariable } from '@/utils/template-utils';
 
 type PromptTestModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  variables: PromptVariable[];
+  variables: ParsedVariable[];
   promptVersionUuid: string;
 };
 
 export const PromptTestModal = (props: PromptTestModalProps) => {
   const { isOpen, onClose, variables, promptVersionUuid } = props;
 
-  const [testVariables, setTestVariables] = useState<Record<string, string>>(
-    {}
-  );
+  const [testVariables, setTestVariables] = useState<Record<string, string>>({});
   const [isRunning, setIsRunning] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [fullResult, setFullResult] = useState<any | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
   const [showRawOutput, setShowRawOutput] = useState(false);
 
-  const {
-    selectedOrganizationUuid,
-    hasOpenRouterKey,
-    isOrganizationAdmin,
-    selectedProjectUuid,
-  } = useApp();
+  const { selectedOrganizationUuid, hasOpenRouterKey, isOrganizationAdmin, selectedProjectUuid } =
+    useApp();
 
   const handleTestPrompt = async () => {
     setIsRunning(true);
@@ -56,37 +49,39 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
     setTestError(null);
 
     try {
-      const response = await fetch(
-        routes.api.v1.executePromptVersion(promptVersionUuid),
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            variables: testVariables,
-          }),
-        }
-      );
+      const response = await fetch(routes.api.v1.executePromptVersion(promptVersionUuid), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          variables: testVariables,
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
+
+        if (errorData.missingGlobalContext) {
+          setTestError(
+            `Missing global context variables: ${errorData.missingGlobalContext.join(', ')}`,
+          );
+          return;
+        }
+
         throw new Error(errorData.error || 'Failed to run prompt');
       }
 
       const data = await response.json();
 
       const result =
-        (data.completion.choices[0] as NonStreamingChoice).message.content ||
-        'No response content';
+        (data.completion.choices[0] as NonStreamingChoice).message.content || 'No response content';
 
       setTestResult(result);
       setFullResult(data);
     } catch (error) {
       console.error('Error testing prompt:', error);
-      setTestError(
-        error instanceof Error ? error.message : 'Unknown error occurred'
-      );
+      setTestError(error instanceof Error ? error.message : 'Unknown error occurred');
     } finally {
       setIsRunning(false);
     }
@@ -151,9 +146,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
                 <div key={variable.id || variable.name} className="space-y-2">
                   <Label>
                     {variable.name}
-                    {variable.required && (
-                      <span className="text-destructive">*</span>
-                    )}
+                    {variable.required && <span className="text-destructive">*</span>}
                   </Label>
                   <Input
                     type={variable.type === 'NUMBER' ? 'number' : 'text'}
@@ -202,10 +195,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
                       <span>View detailed logs and information</span>
                       <Button variant="link" asChild className="p-0">
                         <Link
-                          href={routes.studio.logDetail(
-                            selectedProjectUuid,
-                            fullResult.logUuid
-                          )}
+                          href={routes.studio.logDetail(selectedProjectUuid, fullResult.logUuid)}
                           target="_blank"
                         >
                           View Log →
@@ -232,11 +222,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
                     onClick={() => setShowRawOutput(!showRawOutput)}
                     className="flex items-center gap-1 h-auto p-0 mb-2"
                   >
-                    {showRawOutput ? (
-                      <IconChevronDown size={16} />
-                    ) : (
-                      <IconChevronRight size={16} />
-                    )}
+                    {showRawOutput ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
                     <span className="text-sm font-medium">Raw Output</span>
                   </Button>
 

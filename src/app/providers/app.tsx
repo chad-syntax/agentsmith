@@ -11,9 +11,15 @@ import { toast } from 'sonner';
 import { Database } from '@/app/__generated__/supabase.types';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { SyncProjectButton } from '@/components/SyncProjectButton';
 
 type Organization = GetUserOrganizationDataResult['organization_users'][number]['organizations'];
 type Project = Organization['projects'][number];
+
+type ShowSyncToastOptions = {
+  title: string;
+  description?: string;
+};
 
 type AppContextType = {
   selectedOrganizationUuid: string;
@@ -24,6 +30,7 @@ type AppContextType = {
   selectedProject: Project;
   hasOpenRouterKey: boolean;
   isOrganizationAdmin: boolean;
+  showSyncToast: (options: ShowSyncToastOptions) => void;
 };
 
 const AppContext = createContext<AppContextType>({
@@ -35,6 +42,7 @@ const AppContext = createContext<AppContextType>({
   selectedProject: {} as Project,
   hasOpenRouterKey: false,
   isOrganizationAdmin: false,
+  showSyncToast: () => {},
 });
 
 type AppProviderProps = {
@@ -225,6 +233,29 @@ export const AppProvider = (props: AppProviderProps) => {
     router.push(routes.studio.project(uuid));
   };
 
+  const showSyncToast = (options: ShowSyncToastOptions) => {
+    const { title, description } = options;
+
+    const isGithubAppInstalled = selectedOrganization?.github_app_installations.some(
+      (installation) => installation.status === 'ACTIVE',
+    );
+
+    if (isGithubAppInstalled) {
+      const toastId = toast(title, {
+        description: description ?? 'Would you like to sync your project?',
+        duration: 6000,
+        action: (
+          <SyncProjectButton
+            projectUuid={selectedProjectUuid}
+            onSyncComplete={() => {
+              toast.dismiss(toastId);
+            }}
+          />
+        ),
+      });
+    }
+  };
+
   const value = useMemo(
     () => ({
       selectedOrganizationUuid,
@@ -235,6 +266,7 @@ export const AppProvider = (props: AppProviderProps) => {
       selectedProject,
       hasOpenRouterKey,
       isOrganizationAdmin,
+      showSyncToast,
     }),
     [
       selectedOrganizationUuid,
@@ -243,6 +275,7 @@ export const AppProvider = (props: AppProviderProps) => {
       selectedProject,
       hasOpenRouterKey,
       isOrganizationAdmin,
+      showSyncToast,
     ],
   );
 

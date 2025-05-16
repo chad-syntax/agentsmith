@@ -8,7 +8,7 @@ import { Database } from '@/app/__generated__/supabase.types';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/app/providers/app';
 import { updatePromptVersion, createDraftVersion } from '@/app/actions/prompts';
-import { PromptContentEditor, PromptVariable } from '@/components/editors/PromptContentEditor';
+import { PromptContentEditor } from '@/components/editors/PromptContentEditor';
 import { VariablesSidebar } from '@/components/prompt/VariablesSidebar';
 import { PromptTestModal } from '@/components/prompt/PromptTestModal';
 import { PublishUpdateConfirmModal } from '@/components/prompt/PublishUpdateConfirmModal';
@@ -19,7 +19,8 @@ import { H1 } from '@/components/typography';
 import type { CompletionConfig } from '@/lib/openrouter';
 import { JsonEditor } from '@/components/editors/JsonEditor';
 import { GetPromptVersionByUuidResult } from '@/lib/PromptsService';
-import { showSyncToast } from '@/components/show-sync-toast';
+import { findMissingGlobalContext, ParsedVariable } from '@/utils/template-utils';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 type EditPromptVersionPageProps = {
   promptVersion: NonNullable<GetPromptVersionByUuidResult>;
@@ -34,9 +35,9 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
 
   const router = useRouter();
   const [initialContent] = useState(initialPromptVersion.content);
-  const [initialVariables] = useState<PromptVariable[]>(initialPromptVersion.prompt_variables);
+  const [initialVariables] = useState<ParsedVariable[]>(initialPromptVersion.prompt_variables);
 
-  const [variables, setVariables] = useState<PromptVariable[]>(
+  const [variables, setVariables] = useState<ParsedVariable[]>(
     currentPromptVersion.prompt_variables,
   );
   const [content, setContent] = useState(currentPromptVersion.content);
@@ -46,7 +47,8 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   const [isSettingDraft, setIsSettingDraft] = useState(false);
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
-  const { selectedProjectUuid } = useApp();
+  const [missingGlobals, setMissingGlobals] = useState<string[]>([]);
+  const { selectedProjectUuid, showSyncToast } = useApp();
 
   const globalContext = currentPromptVersion.prompts.projects.global_contexts?.content ?? {};
 
@@ -57,8 +59,17 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     setContent(newContent);
   };
 
-  const handleVariablesChange = (newVariables: PromptVariable[]) => {
-    setVariables(newVariables);
+  const handleVariablesChange = (newVariables: ParsedVariable[]) => {
+    const nonGlobalVariables = newVariables.filter((v) => v.name !== 'global');
+    const globalVariable = newVariables.find((v) => v.name === 'global');
+
+    if (globalVariable) {
+      const missingGlobalContext = findMissingGlobalContext({ globalVariable, globalContext });
+
+      setMissingGlobals(missingGlobalContext);
+    }
+
+    setVariables(nonGlobalVariables);
   };
 
   const handleSave = async (
@@ -262,6 +273,14 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
 
             <div>
               <Label className="pb-2">Content</Label>
+              {missingGlobals.length > 0 && (
+                <Alert className="mb-4" variant="destructive">
+                  <AlertTitle>Missing Global Context</AlertTitle>
+                  <AlertDescription>
+                    The following global context variables are missing: {missingGlobals.join(', ')}
+                  </AlertDescription>
+                </Alert>
+              )}
               <PromptContentEditor
                 content={content}
                 onContentChange={handleContentChange}

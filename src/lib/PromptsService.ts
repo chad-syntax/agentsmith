@@ -16,7 +16,7 @@ import {
 import { routes } from '@/utils/routes';
 import { ORGANIZATION_KEYS, SEMVER_PATTERN } from '@/app/constants';
 import { compareSemanticVersions, incrementVersion } from '@/utils/versioning';
-import { extractTemplateVariables } from '@/utils/template-utils';
+import { extractTemplateVariables, findMissingGlobalContext } from '@/utils/template-utils';
 
 type PromptVariable = Database['public']['Tables']['prompt_variables']['Row'];
 
@@ -240,26 +240,13 @@ export class PromptsService extends AgentsmithSupabaseService {
       throw new Error('Error validating global context: ' + error.message);
     }
 
-    const missingGlobalContext: string[] = [];
-    const globalSpecVar = variables.find((v) => v.name === 'global');
+    const globalVariable = variables.find((v) => v.name === 'global');
 
-    if (globalSpecVar && globalSpecVar.children && globalSpecVar.children.length > 0) {
-      for (const expectedVar of globalSpecVar.children) {
-        const keyName = expectedVar.name;
-        const fullKeyPath = `global.${keyName}`;
-
-        if (!(keyName in globalContext)) {
-          missingGlobalContext.push(fullKeyPath);
-        } else {
-          const value = globalContext[keyName];
-          if (value === null || value === undefined || String(value).trim() === '') {
-            missingGlobalContext.push(fullKeyPath);
-          }
-        }
-      }
+    if (!globalVariable) {
+      return { missingGlobalContext: [] };
     }
-    // If globalSpecVar is not found or has no children, it means the template
-    // doesn't expect any specific global variables, so no missingGlobalContext from globalContext content.
+
+    const missingGlobalContext = findMissingGlobalContext({ globalVariable, globalContext });
 
     return { missingGlobalContext };
   };
