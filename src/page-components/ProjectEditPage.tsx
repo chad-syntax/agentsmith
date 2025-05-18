@@ -13,9 +13,7 @@ import { H1 } from '@/components/typography';
 
 type ProjectEditPageProps = {
   projectData: Database['public']['Tables']['projects']['Row'];
-  githubAppInstallation:
-    | Database['public']['Tables']['github_app_installations']['Row']
-    | null;
+  githubAppInstallation: Database['public']['Tables']['github_app_installations']['Row'] | null;
 };
 
 export const ProjectEditPage = (props: ProjectEditPageProps) => {
@@ -54,7 +52,7 @@ export const ProjectEditPage = (props: ProjectEditPageProps) => {
       setError(
         typeof e === 'object' && e !== null && 'message' in e
           ? (e.message as string)
-          : 'An error occurred while saving'
+          : 'An error occurred while saving',
       );
     } finally {
       setIsSaving(false);
@@ -66,11 +64,7 @@ export const ProjectEditPage = (props: ProjectEditPageProps) => {
       <H1 className="mb-8">Edit Project</H1>
 
       <div className="max-w-lg">
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-md mb-6">
-            {error}
-          </div>
-        )}
+        {error && <div className="bg-red-50 text-red-600 p-4 rounded-md mb-6">{error}</div>}
 
         <div className="mb-6">
           <Label htmlFor="projectName">Project Name</Label>
@@ -85,9 +79,7 @@ export const ProjectEditPage = (props: ProjectEditPageProps) => {
 
         {!githubAppInstallation && (
           <div>
-            <Label htmlFor="githubAppInstallation">
-              GitHub App Installation
-            </Label>
+            <Label htmlFor="githubAppInstallation">GitHub App Installation</Label>
             <Button>Connect GitHub Repository</Button>
           </div>
         )}

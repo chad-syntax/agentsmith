@@ -3,9 +3,9 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { syncProject } from '@/app/actions/github';
-import { IconRefresh } from '@tabler/icons-react';
+import { RefreshCcw } from 'lucide-react';
 import { cn } from '@/utils/shadcn';
-import { useApp } from '@/app/providers/app';
+import { useApp } from '@/providers/app';
 import { toast } from 'sonner';
 
 type SyncProjectButtonProps = {
@@ -46,7 +46,7 @@ export const SyncProjectButton = (props: SyncProjectButtonProps) => {
       onClick={handleClick}
       disabled={loading}
     >
-      {loading ? <IconRefresh className="animate-spin" size={16} /> : 'Sync'}
+      {loading ? <RefreshCcw className="animate-spin" size={16} /> : 'Sync'}
     </Button>
   );
 };

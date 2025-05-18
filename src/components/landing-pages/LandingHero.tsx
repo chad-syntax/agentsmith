@@ -1,14 +1,8 @@
-import {
-  IconPencilBolt,
-  IconTerminal2,
-  IconExchange,
-  IconRocket,
-  IconCode,
-} from '@tabler/icons-react';
+import { Pencil, TerminalSquare, ArrowLeftRight, Rocket, Code } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { usePostHog } from 'posthog-js/react';
 import Link from 'next/link';
-import { HeroHeader } from '../HeroHeader';
+import { HeroHeader } from '../hero-header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/shadcn';
@@ -74,7 +68,7 @@ export const LandingHero = (props: LandingHeroProps) => {
               <div
                 className={cn(
                   'absolute left-1/2 -translate-x-1/2 bottom-0 translate-y-[calc(100%+16px)] z-10 transition-opacity duration-300',
-                  alphaClubClicked ? 'opacity-100' : 'opacity-0'
+                  alphaClubClicked ? 'opacity-100' : 'opacity-0',
                 )}
               >
                 <Badge variant="outline" className="bg-background shadow-md">
@@ -88,33 +82,33 @@ export const LandingHero = (props: LandingHeroProps) => {
         <div className="space-y-4 md:mt-12 md:ml-16 text-2xl">
           <div className="flex items-start gap-3">
             <span className="mt-1">
-              <IconPencilBolt className="text-primary" />
+              <Pencil className="text-primary" />
             </span>
             <span>Best-in-class Prompt Authoring</span>
           </div>
           <div className="flex items-start gap-3">
             <span className="mt-1">
-              <IconTerminal2 className="text-primary" />
+              <TerminalSquare className="text-primary" />
             </span>
             <span>Tight Developer Integration</span>
           </div>
           <div className="flex items-start gap-3">
             <span className="mt-1">
-              <IconExchange className="text-primary" />
+              <ArrowLeftRight className="text-primary" />
             </span>
             <span>Swap LLMs with a Click</span>
           </div>
           {!withOpenSource ? (
             <div className="flex items-start gap-3">
               <span className="mt-1">
-                <IconRocket className="text-primary" />
+                <Rocket className="text-primary" />
               </span>
               <span>Ship with Rock-Solid Confidence</span>
             </div>
           ) : (
             <div className="flex items-start gap-3">
               <span className="mt-1">
-                <IconCode className="text-primary" />
+                <Code className="text-primary" />
               </span>
               <span>Open Source on GitHub</span>
             </div>

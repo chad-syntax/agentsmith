@@ -1,4 +1,4 @@
-import { useApp } from '@/app/providers/app';
+import { useApp } from '@/providers/app';
 import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 import {
   Select,
@@ -26,7 +26,7 @@ export const OrganizationSelector = (props: OrganizationSelectorProps) => {
 
   const organizations =
     userOrganizationData?.organization_users?.flatMap((orgUser: any) =>
-      orgUser.organizations ? [orgUser.organizations] : []
+      orgUser.organizations ? [orgUser.organizations] : [],
     ) || [];
 
   return (

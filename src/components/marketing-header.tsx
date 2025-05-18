@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ThemeSwitcher } from './theme-switcher';
-import { IconBell, IconMail } from '@tabler/icons-react';
+import { Bell, Mail } from 'lucide-react';
 import { Container } from './layout/container';
 import { H3 } from './typography';
 import { Button } from './ui/button';
@@ -29,20 +29,15 @@ export const Header = () => {
             <ThemeSwitcher />
             <Separator orientation="vertical" className="h-6" />
             <nav className="flex items-center gap-2">
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                onClick={handleJoinWaitlistClick}
-              >
+              <Button asChild size="sm" variant="outline" onClick={handleJoinWaitlistClick}>
                 <a href="#brevo-email-subscribe">
-                  <IconBell className="mr-2 h-4 w-4" />
+                  <Bell className="mr-2 h-4 w-4" />
                   Join Waitlist
                 </a>
               </Button>
               <Button asChild size="sm" variant="outline">
                 <a href="mailto:team@agentsmith.app">
-                  <IconMail className="mr-2 h-4 w-4" />
+                  <Mail className="mr-2 h-4 w-4" />
                   Contact Us
                 </a>
               </Button>

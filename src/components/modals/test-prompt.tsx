@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useApp } from '@/app/providers/app';
+import { useApp } from '@/providers/app';
 import { NonStreamingChoice } from '@/lib/openrouter';
 import { connectOpenrouter } from '@/app/actions/openrouter';
 import { routes } from '@/utils/routes';
-import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -222,7 +222,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
                     onClick={() => setShowRawOutput(!showRawOutput)}
                     className="flex items-center gap-1 h-auto p-0 mb-2"
                   >
-                    {showRawOutput ? <IconChevronDown size={16} /> : <IconChevronRight size={16} />}
+                    {showRawOutput ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                     <span className="text-sm font-medium">Raw Output</span>
                   </Button>
 

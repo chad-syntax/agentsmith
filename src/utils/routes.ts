@@ -9,6 +9,7 @@ export const routes = {
   studio: {
     home: '/studio',
     organization: (organizationUuid: string) => `/studio/organization/${organizationUuid}`,
+    settings: (organizationUuid: string) => `/studio/organization/${organizationUuid}/settings`,
     editOrganization: (organizationUuid: string) => `/studio/organization/${organizationUuid}/edit`,
     project: (projectUuid: string) => `/studio/project/${projectUuid}`,
     editProject: (projectUuid: string) => `/studio/project/${projectUuid}/edit`,

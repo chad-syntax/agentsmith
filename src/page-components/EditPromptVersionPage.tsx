@@ -3,21 +3,21 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { IconPlayerPlay } from '@tabler/icons-react';
+import { Play } from 'lucide-react';
 import { Database } from '@/app/__generated__/supabase.types';
 import { routes } from '@/utils/routes';
-import { useApp } from '@/app/providers/app';
+import { useApp } from '@/providers/app';
 import { updatePromptVersion, createDraftVersion } from '@/app/actions/prompts';
-import { PromptContentEditor } from '@/components/editors/PromptContentEditor';
-import { VariablesSidebar } from '@/components/prompt/VariablesSidebar';
-import { PromptTestModal } from '@/components/prompt/PromptTestModal';
-import { PublishUpdateConfirmModal } from '@/components/prompt/PublishUpdateConfirmModal';
+import { PromptContentEditor } from '@/components/editors/prompt-editor';
+import { VariablesSidebar } from '@/components/variables-sidebar';
+import { PromptTestModal } from '@/components/modals/test-prompt';
+import { PublishUpdateConfirmModal } from '@/components/modals/publish-update-confirm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { H1 } from '@/components/typography';
 import type { CompletionConfig } from '@/lib/openrouter';
-import { JsonEditor } from '@/components/editors/JsonEditor';
+import { JsonEditor } from '@/components/editors/json-editor';
 import { GetPromptVersionByUuidResult } from '@/lib/PromptsService';
 import { findMissingGlobalContext, ParsedVariable } from '@/utils/template-utils';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -200,7 +200,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
                 onClick={handleTest}
                 className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
               >
-                <IconPlayerPlay size={16} />
+                <Play size={16} />
                 Test Prompt
               </Button>
 

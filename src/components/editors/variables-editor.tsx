@@ -1,7 +1,7 @@
 'use client';
 
-import { IconTrash } from '@tabler/icons-react';
-import { PromptVariable } from '@/components/editors/PromptContentEditor';
+import { Trash } from 'lucide-react';
+import { ParsedVariable } from '@/utils/template-utils';
 import { Database } from '@/app/__generated__/supabase.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,8 +18,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/utils/shadcn';
 
 type VariablesEditorProps = {
-  variables: PromptVariable[];
-  onVariablesChange?: (variables: PromptVariable[]) => void;
+  variables: ParsedVariable[];
+  onVariablesChange?: (variables: ParsedVariable[]) => void;
   readOnly?: boolean;
   className?: string;
 };
@@ -32,7 +32,7 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
     onVariablesChange(variables.filter((_, i) => i !== index));
   };
 
-  const updateVariable = (index: number, field: keyof PromptVariable, value: string | boolean) => {
+  const updateVariable = (index: number, field: keyof ParsedVariable, value: string | boolean) => {
     if (readOnly || !onVariablesChange) return;
     const newVariables = [...variables];
     newVariables[index] = {
@@ -61,7 +61,7 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
                   onClick={() => removeVariable(index)}
                   className="text-muted-foreground hover:text-destructive"
                 >
-                  <IconTrash className="h-4 w-4 text-red-700" />
+                  <Trash className="h-4 w-4 text-red-700" />
                 </Button>
               )}
             </div>

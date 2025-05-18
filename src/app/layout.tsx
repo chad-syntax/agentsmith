@@ -2,7 +2,6 @@ import './globals.css';
 import { Roboto_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { GoogleAnalytics } from '@next/third-parties/google';
-import { Footer } from '@/components/Footer';
 import { Toaster } from '@/components/ui/sonner';
 // import { PostHogProvider } from './providers/posthog';
 
@@ -45,12 +44,7 @@ export default function RootLayout(props: RootLayoutProps) {
           enableSystem
           disableTransitionOnChange
         >
-          <main className="min-h-screen flex flex-col items-center">
-            <div className="flex-1 w-full flex flex-col gap-20 items-center">
-              <div className="flex flex-col gap-20 w-full">{children}</div>
-              <Footer />
-            </div>
-          </main>
+          {children}
           <Toaster expand visibleToasts={9} />
         </ThemeProvider>
       </body>

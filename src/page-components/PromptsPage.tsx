@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import { routes } from '@/utils/routes';
-import { useApp } from '@/app/providers/app';
-import { CreatePromptModal } from '@/components/prompt/CreatePromptModal';
+import { useApp } from '@/providers/app';
+import { CreatePromptModal } from '@/components/modals/create-prompt';
 import { compareSemanticVersions } from '@/utils/versioning';
 import { Button } from '@/components/ui/button';
 import { H1, H2, H3, P } from '@/components/typography';
@@ -25,30 +25,26 @@ export const PromptsPage = (props: PromptsPageProps) => {
       <div className="flex justify-between items-center mb-6">
         <H1>Prompts Library</H1>
         <div className="space-x-4">
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            Create New Prompt
-          </Button>
+          <Button onClick={() => setIsCreateModalOpen(true)}>Create New Prompt</Button>
         </div>
       </div>
 
       {prompts.length === 0 ? (
         <div className="text-center py-12">
           <P className="text-muted-foreground mb-4">No prompts found</P>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            Create Your First Prompt
-          </Button>
+          <Button onClick={() => setIsCreateModalOpen(true)}>Create Your First Prompt</Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {prompts.map((prompt) => {
             // First, get all published versions
             const publishedVersions = prompt.prompt_versions.filter(
-              (v) => v.status === 'PUBLISHED'
+              (v) => v.status === 'PUBLISHED',
             );
 
             // Sort published versions by semantic version (newest first)
-            const sortedPublishedVersions = [...publishedVersions].sort(
-              (a, b) => compareSemanticVersions(b.version, a.version)
+            const sortedPublishedVersions = [...publishedVersions].sort((a, b) =>
+              compareSemanticVersions(b.version, a.version),
             );
 
             // If there are no published versions, get the latest draft
@@ -57,13 +53,11 @@ export const PromptsPage = (props: PromptsPageProps) => {
               latestVersion = sortedPublishedVersions[0];
             } else {
               // Get all draft versions
-              const draftVersions = prompt.prompt_versions.filter(
-                (v) => v.status === 'DRAFT'
-              );
+              const draftVersions = prompt.prompt_versions.filter((v) => v.status === 'DRAFT');
 
               // Sort draft versions by semantic version (newest first)
               const sortedDraftVersions = [...draftVersions].sort((a, b) =>
-                compareSemanticVersions(b.version, a.version)
+                compareSemanticVersions(b.version, a.version),
               );
 
               latestVersion = sortedDraftVersions[0];
@@ -81,32 +75,20 @@ export const PromptsPage = (props: PromptsPageProps) => {
                 <div className="flex justify-between items-start mb-4">
                   <H2>{prompt.name}</H2>
                   <Button variant="link" asChild className="p-0">
-                    <Link
-                      href={routes.studio.promptDetail(
-                        selectedProjectUuid,
-                        prompt.uuid
-                      )}
-                    >
+                    <Link href={routes.studio.promptDetail(selectedProjectUuid, prompt.uuid)}>
                       View Details
                     </Link>
                   </Button>
                 </div>
                 <div className="mb-4">
-                  <P className="text-muted-foreground line-clamp-3">
-                    {latestVersion?.content}
-                  </P>
+                  <P className="text-muted-foreground line-clamp-3">{latestVersion?.content}</P>
                 </div>
                 {requiredVariables.length > 0 && (
                   <div className="mb-4">
-                    <H3 className="text-muted-foreground mb-2">
-                      Required Variables:
-                    </H3>
+                    <H3 className="text-muted-foreground mb-2">Required Variables:</H3>
                     <div className="flex flex-wrap gap-2">
                       {requiredVariables.map((variable) => (
-                        <span
-                          key={variable.id}
-                          className="px-2 py-1 bg-muted rounded-md text-xs"
-                        >
+                        <span key={variable.id} className="px-2 py-1 bg-muted rounded-md text-xs">
                           {variable.name}
                         </span>
                       ))}

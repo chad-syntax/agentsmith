@@ -12,9 +12,9 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useApp } from '@/app/providers/app';
+import { useApp } from '@/providers/app';
 import { connectProject } from '@/app/actions/connect-project';
-import { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubService';
+import type { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubAppService';
 import { useEffect } from 'react';
 
 const formSchema = z.object({

@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { Database } from '@/app/__generated__/supabase.types';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { SyncProjectButton } from '@/components/SyncProjectButton';
+import { SyncProjectButton } from '@/components/sync-project-button';
 
 type Organization = GetUserOrganizationDataResult['organization_users'][number]['organizations'];
 type Project = Organization['projects'][number];
@@ -28,6 +28,7 @@ type AppContextType = {
   setSelectedProjectUuid: (uuid: string) => void;
   selectedOrganization: Organization;
   selectedProject: Project;
+  userOrganizationData: GetUserOrganizationDataResult;
   hasOpenRouterKey: boolean;
   isOrganizationAdmin: boolean;
   showSyncToast: (options: ShowSyncToastOptions) => void;
@@ -40,6 +41,7 @@ const AppContext = createContext<AppContextType>({
   setSelectedProjectUuid: () => {},
   selectedOrganization: {} as Organization,
   selectedProject: {} as Project,
+  userOrganizationData: {} as GetUserOrganizationDataResult,
   hasOpenRouterKey: false,
   isOrganizationAdmin: false,
   showSyncToast: () => {},
@@ -264,6 +266,7 @@ export const AppProvider = (props: AppProviderProps) => {
       setSelectedProjectUuid,
       selectedOrganization,
       selectedProject,
+      userOrganizationData,
       hasOpenRouterKey,
       isOrganizationAdmin,
       showSyncToast,
@@ -273,6 +276,7 @@ export const AppProvider = (props: AppProviderProps) => {
       selectedProjectUuid,
       selectedOrganization,
       selectedProject,
+      userOrganizationData,
       hasOpenRouterKey,
       isOrganizationAdmin,
       showSyncToast,

@@ -2,22 +2,20 @@
 
 import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { PromptVariable } from '@/components/editors/PromptContentEditor';
-import { VariablesEditor } from '@/components/prompt/VariablesEditor';
+import { VariablesEditor } from '@/components/editors/variables-editor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/shadcn';
-import { JsonEditor } from '../editors/JsonEditor';
+import { JsonEditor } from './editors/json-editor';
 import { Label } from '@radix-ui/react-label';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
-import { useApp } from '@/app/providers/app';
+import { useApp } from '@/providers/app';
+import { ParsedVariable } from '@/utils/template-utils';
 
 type VariablesSidebarProps = {
-  variables: PromptVariable[];
-  onVariablesChange?: (variables: PromptVariable[]) => void;
+  variables: ParsedVariable[];
+  onVariablesChange?: (variables: ParsedVariable[]) => void;
   readOnly?: boolean;
   defaultOpen?: boolean;
   globalContext: any;

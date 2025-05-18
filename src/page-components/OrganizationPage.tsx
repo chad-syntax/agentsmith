@@ -1,36 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import { IconClipboard, IconNotebook, IconPencil, IconPlus } from '@tabler/icons-react';
-import { useApp } from '@/app/providers/app';
+import { Clipboard, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
-import { connectOpenrouter } from '@/app/actions/openrouter';
 import { Button } from '@/components/ui/button';
 import { H1, H2, P } from '@/components/typography';
-import { ApiKeyReveal } from '@/components/ApiKeyReveal';
 import { GetOrganizationDataResult } from '@/lib/OrganizationsService';
-import { Database } from '@/app/__generated__/supabase.types';
-import { installGithubApp, syncProject } from '@/app/actions/github';
-import { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubAppService';
-import { ConnectProjectModal } from '@/components/ConnectProjectModal';
-import { SyncProjectButton } from '@/components/SyncProjectButton';
 
 type OrganizationPageProps = {
   organization: NonNullable<GetOrganizationDataResult>;
-  githubAppInstallation: Database['public']['Tables']['github_app_installations']['Row'] | null;
-  projectRepositories: GetProjectRepositoriesForOrganizationResult;
 };
 
 export const OrganizationPage = (props: OrganizationPageProps) => {
-  const { organization, githubAppInstallation, projectRepositories } = props;
-
-  const { hasOpenRouterKey, isOrganizationAdmin } = useApp();
+  const { organization } = props;
 
   const [isCodeCopied, setIsCodeCopied] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
-  const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(false);
-  const [targetRepositoryId, setTargetRepositoryId] = useState<number | undefined>(undefined);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(organization.invite_code);
@@ -51,7 +37,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
         <H1>{organization.name}</H1>
         <Button variant="ghost" size="icon" asChild>
           <Link href={routes.studio.editOrganization(organization.uuid)}>
-            <IconPencil className="h-4 w-4" />
+            <Pencil className="h-4 w-4" />
           </Link>
         </Button>
       </div>
@@ -63,7 +49,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
           onClick={handleCopyCode}
           className={isCodeCopied ? 'text-green-500' : 'text-blue-500'}
         >
-          <IconClipboard className="h-4 w-4" />
+          <Clipboard className="h-4 w-4" />
         </Button>
       </div>
       <Button
@@ -101,146 +87,6 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
             <P className="text-muted-foreground italic">No users found</P>
           )}
         </div>
-      </div>
-      <div>
-        <H2 className="mb-4">GitHub App Installation</H2>
-        <P className="pb-4">
-          {githubAppInstallation
-            ? '✅ This organization has a GitHub App installation'
-            : '❌ This organization does not have a GitHub App installation'}
-        </P>
-        {!isOrganizationAdmin ? (
-          <P>
-            You must be an admin to connect to GitHub. Please ask your organization admin to connect
-            to GitHub.
-          </P>
-        ) : githubAppInstallation && !githubAppInstallation?.installation_id ? (
-          <P>
-            App installation process not completed, please uninstall and reinstall the GitHub App.
-          </P>
-        ) : githubAppInstallation?.installation_id ? (
-          <Button variant="link" asChild className="text-xs p-0">
-            <a
-              href={routes.github.installation(githubAppInstallation.installation_id)}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              View your GitHub App Installation Settings
-            </a>
-          </Button>
-        ) : (
-          <Button onClick={() => installGithubApp(organization.uuid)}>Install GitHub App</Button>
-        )}
-      </div>
-      {githubAppInstallation?.installation_id && (
-        <div>
-          <H2 className="mb-4">GitHub App Installation Repositories</H2>
-          {projectRepositories.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              <ConnectProjectModal
-                open={connectProjectModalOpen}
-                onOpenChange={(open) => {
-                  setConnectProjectModalOpen(open);
-                  if (!open) {
-                    setTargetRepositoryId(undefined);
-                  }
-                }}
-                projectRepositories={projectRepositories}
-                defaultRepositoryId={targetRepositoryId}
-              />
-              {projectRepositories.map((projectRepository) => (
-                <div key={projectRepository.id} className="flex items-center gap-2">
-                  <IconNotebook />
-                  <Button variant="link" asChild className="text-xs p-0">
-                    <a
-                      href={routes.github.repository(projectRepository.repository_full_name)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {projectRepository.repository_full_name}
-                    </a>
-                  </Button>
-                  {projectRepository.projects ? (
-                    <div className="text-xs flex items-center justify-center gap-2">
-                      Connected to{' '}
-                      <Button variant="link" asChild className="text-xs p-0">
-                        <Link href={routes.studio.project(projectRepository.projects.uuid)}>
-                          {projectRepository.projects.name}
-                        </Link>
-                      </Button>
-                      <SyncProjectButton
-                        className="ml-2"
-                        projectUuid={projectRepository.projects!.uuid}
-                      />
-                    </div>
-                  ) : (
-                    <Button
-                      className="text-xs text-accent hover:text-accent"
-                      variant="outline"
-                      onClick={() => {
-                        setTargetRepositoryId(projectRepository.id);
-                        setConnectProjectModalOpen(true);
-                      }}
-                    >
-                      <IconPlus className="h-4 w-4" />
-                      Connect to Project
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div>
-              <P className="text-muted-foreground italic">
-                No repositories accessible, please check your GitHub App installation permissions.
-              </P>
-              <Button variant="link" asChild className="text-xs p-0">
-                <a
-                  href={routes.github.installation(githubAppInstallation.installation_id)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View your GitHub App Installation Settings
-                </a>
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
-      <div>
-        <H2 className="mb-4">Openrouter Account</H2>
-        <P className="pb-4">
-          {hasOpenRouterKey
-            ? '✅ This organization has an Openrouter key'
-            : '❌ This organization does not have an Openrouter key'}
-        </P>
-        {!isOrganizationAdmin ? (
-          <P>
-            You must be an admin to connect to Openrouter. Please ask your organization admin to
-            connect to Openrouter.
-          </P>
-        ) : hasOpenRouterKey ? (
-          <Button variant="link" asChild className="text-xs p-0">
-            <a href={routes.openrouter.settingsKeys} target="_blank" rel="noopener noreferrer">
-              View your keys in Openrouter
-            </a>
-          </Button>
-        ) : (
-          <Button onClick={() => connectOpenrouter(organization.uuid)}>Connect Openrouter</Button>
-        )}
-      </div>
-      <div>
-        <H2 className="mb-4">API Key</H2>
-        <P className="pb-4">
-          Use this API key to authenticate requests to the Agentsmith API from your applications.
-        </P>
-        <div className="mb-4">
-          <ApiKeyReveal organizationUuid={organization.uuid} keyName="SDK_API_KEY" />
-        </div>
-        <P className="text-sm text-muted-foreground">
-          This API key grants access to run prompts and other operations as your organization. Keep
-          it secure and never expose it in client-side code.
-        </P>
       </div>
     </div>
   );

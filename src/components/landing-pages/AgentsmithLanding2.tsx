@@ -2,9 +2,9 @@
 
 import { LandingHero } from './LandingHero';
 import { LandingFeatures } from './LandingFeatures';
-import { BrevoEmailSubscribe } from '../BrevoEmailSubscribe/BrevoEmailSubscribe';
+import { BrevoEmailSubscribe } from '../brevo-email-subscribe/brevo-email-subscribe';
 import { NotPubliclyAvailable } from './NotPubliclyAvailable';
-import { LandingWrapper } from '../LandingWrapper';
+import { LandingWrapper } from '../landing-wrapper';
 
 export const AgentsmithLanding2 = () => {
   return (

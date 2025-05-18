@@ -2,22 +2,15 @@
 
 import { useEffect } from 'react';
 import Script from 'next/script';
-import './BrevoEmailSubscribe.css';
+import './brevo-email-subscribe.css';
 import { usePostHog } from 'posthog-js/react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { cn } from '@/utils/shadcn';
 
 declare global {
   interface Window {
@@ -98,9 +91,7 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
       <div id="success-message" className="mb-4 hidden">
         <Alert>
           <CheckCircle2 className="h-4 w-4" />
-          <AlertDescription>
-            Your subscription has been successful.
-          </AlertDescription>
+          <AlertDescription>Your subscription has been successful.</AlertDescription>
         </Alert>
       </div>
 
@@ -113,9 +104,7 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
           onSubmit={handleSubmit}
         >
           <CardHeader>
-            <CardTitle className="text-3xl text-left">
-              Be the first in the door
-            </CardTitle>
+            <CardTitle className="text-3xl text-left">Be the first in the door</CardTitle>
             <p className="text-muted-foreground text-left mt-2">
               Early subscribers will get access first!
             </p>
@@ -138,20 +127,16 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
 
             <div className="flex items-center space-x-2">
               <Checkbox id="OPT_IN" name="OPT_IN" value="1" />
-              <Label
-                htmlFor="OPT_IN"
-                className="text-sm leading-none text-muted-foreground"
-              >
-                I agree to receive your newsletters and accept the data privacy
-                statement.
+              <Label htmlFor="OPT_IN" className="text-sm leading-none text-muted-foreground">
+                I agree to receive your newsletters and accept the data privacy statement.
               </Label>
             </div>
 
             <div className="text-sm text-muted-foreground">
               <p>
-                We use Brevo as our marketing platform. By submitting this form
-                you agree that the personal data you provided will be
-                transferred to Brevo for processing in accordance with{' '}
+                We use Brevo as our marketing platform. By submitting this form you agree that the
+                personal data you provided will be transferred to Brevo for processing in accordance
+                with{' '}
                 <a
                   href="https://www.brevo.com/en/legal/privacypolicy/"
                   target="_blank"
@@ -165,7 +150,7 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
 
             <div
               className="cf-turnstile g-recaptcha"
-              data-sitekey="0x4AAAAAAA6nXdnTQZQH1MiE"
+              data-sitekey={process.env.NEXT_PUBLIC_CF_TURNSTILE_SITE_KEY}
               id="sib-captcha"
               data-callback="handleCaptchaResponse"
               data-language="en"
@@ -179,24 +164,13 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
             </Button>
           </CardFooter>
 
-          <input
-            type="text"
-            name="email_address_check"
-            defaultValue=""
-            className="input--hidden"
-          />
+          <input type="text" name="email_address_check" defaultValue="" className="input--hidden" />
           <input type="hidden" name="locale" defaultValue="en" />
         </form>
       </Card>
 
-      <Script
-        src="https://sibforms.com/forms/end-form/build/main.js"
-        strategy="lazyOnload"
-      />
-      <Script
-        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
-        strategy="lazyOnload"
-      />
+      <Script src="https://sibforms.com/forms/end-form/build/main.js" strategy="lazyOnload" />
+      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="lazyOnload" />
       <Script
         dangerouslySetInnerHTML={{
           __html: `

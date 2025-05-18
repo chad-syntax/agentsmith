@@ -19,20 +19,13 @@ export const StudioPage = (props: StudioPageProps) => {
         ) : (
           <div className="flex flex-col gap-6">
             {userOrganizationData.organization_users.map((orgUser) => (
-              <div
-                key={orgUser.organizations.uuid}
-                className="border rounded-md p-4 bg-background"
-              >
+              <div key={orgUser.organizations.uuid} className="border rounded-md p-4 bg-background">
                 <Button
                   variant="link"
                   asChild
                   className="text-xl font-semibold text-primary hover:underline p-0"
                 >
-                  <a
-                    href={routes.studio.organization(
-                      orgUser.organizations.uuid
-                    )}
-                  >
+                  <a href={routes.studio.organization(orgUser.organizations.uuid)}>
                     {orgUser.organizations.name}
                   </a>
                 </Button>
@@ -49,9 +42,7 @@ export const StudioPage = (props: StudioPageProps) => {
                             asChild
                             className="text-primary hover:underline p-0"
                           >
-                            <a href={routes.studio.project(project.uuid)}>
-                              {project.name}
-                            </a>
+                            <a href={routes.studio.project(project.uuid)}>{project.name}</a>
                           </Button>
                         </li>
                       ))}

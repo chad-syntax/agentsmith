@@ -1,8 +1,8 @@
 'use client';
 
 import { updateProjectGlobals } from '@/app/actions/globals';
-import { useApp } from '@/app/providers/app';
-import { JsonEditor } from '@/components/editors/JsonEditor';
+import { useApp } from '@/providers/app';
+import { JsonEditor } from '@/components/editors/json-editor';
 import { H1 } from '@/components/typography';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';

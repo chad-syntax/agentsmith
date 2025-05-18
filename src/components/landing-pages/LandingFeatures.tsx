@@ -1,9 +1,4 @@
-import {
-  IconAppWindow,
-  IconSdk,
-  IconPlugConnected,
-  IconBrandGithub,
-} from '@tabler/icons-react';
+import { AppWindow, Code2, Plug, Github } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/utils/shadcn';
 
@@ -19,11 +14,7 @@ export const LandingFeatures = (props: LandingFeaturesProps) => {
       <Card className="border-primary/20">
         <CardContent className="p-6 text-center">
           <div className="flex items-center justify-center mb-2">
-            <IconAppWindow
-              size={128}
-              strokeWidth={1.2}
-              className="text-primary"
-            />
+            <AppWindow size={128} strokeWidth={1.2} className="text-primary" />
           </div>
           <p className="text-muted-foreground">
             Web Studio UI for collaboration, configuration, and sharing
@@ -34,7 +25,7 @@ export const LandingFeatures = (props: LandingFeaturesProps) => {
       <Card className="border-primary/20">
         <CardContent className="p-6 text-center">
           <div className="flex items-center justify-center mb-2">
-            <IconSdk size={128} strokeWidth={1.2} className="text-primary" />
+            <Code2 size={128} strokeWidth={1.2} className="text-primary" />
           </div>
           <p className="text-muted-foreground">
             Unified API, generated types, expert docs, helpful error hints.
@@ -45,11 +36,7 @@ export const LandingFeatures = (props: LandingFeaturesProps) => {
       <Card className="border-primary/20">
         <CardContent className="p-6 text-center">
           <div className="flex items-center justify-center mb-2">
-            <IconPlugConnected
-              size={128}
-              strokeWidth={1.2}
-              className="text-primary"
-            />
+            <Plug size={128} strokeWidth={1.2} className="text-primary" />
           </div>
           <p className="text-muted-foreground">
             Connect your OpenRouter account to pick any LLM and pay as you go
@@ -60,15 +47,11 @@ export const LandingFeatures = (props: LandingFeaturesProps) => {
       <Card className="border-primary/20">
         <CardContent className="p-6 text-center">
           <div className="flex items-center justify-center mb-2">
-            <IconBrandGithub
-              size={128}
-              strokeWidth={1.2}
-              className="text-primary"
-            />
+            <Github size={128} strokeWidth={1.2} className="text-primary" />
           </div>
           <p className="text-muted-foreground">
-            {withOpenSource ? 'Open Source, ' : ''}GitHub integration,
-            rollbacks, ab testing, and logging.
+            {withOpenSource ? 'Open Source, ' : ''}GitHub integration, rollbacks, ab testing, and
+            logging.
           </p>
         </CardContent>
       </Card>

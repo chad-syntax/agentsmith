@@ -24,9 +24,7 @@ export const LogsPage = (props: LogsPageProps) => {
       <div className="p-6">
         <H1 className="mb-4">Logs</H1>
         <div className="bg-background rounded-lg shadow-sm p-6 text-center">
-          <P className="text-muted-foreground">
-            No projects found. Create a project first.
-          </P>
+          <P className="text-muted-foreground">No projects found. Create a project first.</P>
         </div>
       </div>
     );
@@ -42,9 +40,7 @@ export const LogsPage = (props: LogsPageProps) => {
 
       {logs.length === 0 ? (
         <div className="bg-background rounded-lg shadow-sm p-6 text-center">
-          <P className="text-muted-foreground">
-            No logs found for this project.
-          </P>
+          <P className="text-muted-foreground">No logs found for this project.</P>
         </div>
       ) : (
         <div className="bg-background rounded-lg shadow-sm overflow-hidden">
@@ -70,8 +66,7 @@ export const LogsPage = (props: LogsPageProps) => {
                 // Calculate duration if both start and end time exist
                 const duration = log.end_time
                   ? (
-                      (new Date(log.end_time).getTime() -
-                        new Date(log.start_time).getTime()) /
+                      (new Date(log.end_time).getTime() - new Date(log.start_time).getTime()) /
                       1000
                     ).toFixed(2) + 's'
                   : 'In progress';
@@ -100,9 +95,7 @@ export const LogsPage = (props: LogsPageProps) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <Button variant="link" asChild className="p-0">
-                        <Link
-                          href={routes.studio.logDetail(project.uuid, log.uuid)}
-                        >
+                        <Link href={routes.studio.logDetail(project.uuid, log.uuid)}>
                           View Details
                         </Link>
                       </Button>

@@ -2,15 +2,15 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { IconChevronRight, IconPlayerPlay } from '@tabler/icons-react';
+import { ChevronRight, Play } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
-import { useApp } from '@/app/providers/app';
-import { PromptContentEditor } from '@/components/editors/PromptContentEditor';
-import { VariablesSidebar } from '@/components/prompt/VariablesSidebar';
-import { PromptTestModal } from '@/components/prompt/PromptTestModal';
+import { useApp } from '@/providers/app';
+import { PromptContentEditor } from '@/components/editors/prompt-editor';
+import { VariablesSidebar } from '@/components/variables-sidebar';
+import { PromptTestModal } from '@/components/modals/test-prompt';
 import { createDraftVersion } from '@/app/actions/prompts';
-import { CreateVersionModal } from '@/components/prompt/CreateVersionModal';
+import { CreateVersionModal } from '@/components/modals/create-version';
 import { compareSemanticVersions } from '@/utils/versioning';
 import { Button } from '@/components/ui/button';
 import { H1 } from '@/components/typography';
@@ -97,7 +97,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
                 onClick={() => setIsTestModalOpen(true)}
                 className="bg-green-500 hover:bg-green-600 flex items-center gap-2"
               >
-                <IconPlayerPlay size={16} />
+                <Play size={16} />
                 Test Run
               </Button>
               <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion}>
@@ -115,7 +115,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
                   className="w-full px-4 py-3 flex justify-between items-center hover:bg-muted"
                 >
                   <div className="flex items-center gap-2">
-                    <IconChevronRight
+                    <ChevronRight
                       className={`w-5 h-5 transition-transform ${
                         expandedVersions[version.id] ? 'transform rotate-90' : ''
                       }`}

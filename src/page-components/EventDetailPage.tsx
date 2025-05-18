@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { format } from 'date-fns';
-import { IconArrowLeft, IconExternalLink } from '@tabler/icons-react';
+import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { routes } from '@/utils/routes';
 import { H1, H2, P } from '@/components/typography';
 import { Button } from '@/components/ui/button';
@@ -63,7 +63,7 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
           className="mr-4 text-primary hover:text-primary/90 flex items-center p-0"
         >
           <Link href={routes.studio.events(projectUuid)}>
-            <IconArrowLeft className="w-4 h-4 mr-1" />
+            <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Events
           </Link>
         </Button>
@@ -120,7 +120,7 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
                       className="flex items-center hover:underline"
                     >
                       View Pull Request (#{eventDetails.pullRequestDetail.number})
-                      <IconExternalLink className="w-4 h-4 ml-2" />
+                      <ExternalLink className="w-4 h-4 ml-2" />
                     </a>
                   </P>
                 </div>

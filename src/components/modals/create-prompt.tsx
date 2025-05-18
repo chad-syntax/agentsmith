@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { createPromptWithDraftVersion } from '@/app/actions/prompts';
 import { useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
-import { useApp } from '@/app/providers/app';
+import { useApp } from '@/providers/app';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

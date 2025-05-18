@@ -1,8 +1,5 @@
-import { SignInPage } from '@/page-components/SignInPage';
-import { Message } from '@/components/form-message';
+import { AuthPage } from '@/page-components/AuthPage';
 
-export default async function Login(props: { searchParams: Promise<Message> }) {
-  const searchParams = await props.searchParams;
-
-  return <SignInPage searchParams={searchParams} />;
+export default function SignIn() {
+  return <AuthPage />;
 }

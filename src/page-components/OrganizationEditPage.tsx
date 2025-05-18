@@ -52,7 +52,7 @@ export const OrganizationEditPage = (props: OrganizationEditPageProps) => {
       setError(
         typeof e === 'object' && e !== null && 'message' in e
           ? (e.message as string)
-          : 'An error occurred while saving'
+          : 'An error occurred while saving',
       );
     } finally {
       setIsSaving(false);
@@ -64,11 +64,7 @@ export const OrganizationEditPage = (props: OrganizationEditPageProps) => {
       <H1 className="mb-8">Edit Organization</H1>
 
       <div className="max-w-lg">
-        {error && (
-          <div className="bg-red-50 text-red-600 p-4 rounded-md mb-6">
-            {error}
-          </div>
-        )}
+        {error && <div className="bg-red-50 text-red-600 p-4 rounded-md mb-6">{error}</div>}
 
         <div className="mb-6">
           <Label htmlFor="orgName">Organization Name</Label>
@@ -87,9 +83,7 @@ export const OrganizationEditPage = (props: OrganizationEditPageProps) => {
           </Button>
 
           <Button variant="outline" asChild>
-            <Link href={routes.studio.organization(organizationData.uuid)}>
-              Cancel
-            </Link>
+            <Link href={routes.studio.organization(organizationData.uuid)}>Cancel</Link>
           </Button>
         </div>
       </div>

@@ -2,12 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  IconEye,
-  IconEyeOff,
-  IconClipboard,
-  IconCheck,
-} from '@tabler/icons-react';
+import { Eye, EyeOff, Clipboard, Check } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { P } from '@/components/typography';
 
@@ -48,11 +43,7 @@ export const ApiKeyReveal = (props: ApiKeyRevealProps) => {
         throw new Error(error.message);
       }
 
-      if (
-        !data ||
-        !data.organization_keys ||
-        data.organization_keys.length === 0
-      ) {
+      if (!data || !data.organization_keys || data.organization_keys.length === 0) {
         throw new Error('API key not found');
       }
 
@@ -63,7 +54,7 @@ export const ApiKeyReveal = (props: ApiKeyRevealProps) => {
         'get_organization_vault_secret',
         {
           arg_vault_secret_id: vaultSecretId,
-        }
+        },
       );
 
       if (secretError) {
@@ -78,9 +69,7 @@ export const ApiKeyReveal = (props: ApiKeyRevealProps) => {
       setIsRevealed(true);
     } catch (error) {
       console.error('Error fetching API key:', error);
-      setError(
-        error instanceof Error ? error.message : 'Failed to fetch API key'
-      );
+      setError(error instanceof Error ? error.message : 'Failed to fetch API key');
     } finally {
       setIsLoading(false);
     }
@@ -121,9 +110,9 @@ export const ApiKeyReveal = (props: ApiKeyRevealProps) => {
                   {isLoading ? (
                     <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
                   ) : isRevealed ? (
-                    <IconEyeOff className="h-4 w-4" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <IconEye className="h-4 w-4" />
+                    <Eye className="h-4 w-4" />
                   )}
                 </Button>
                 {apiKey && (
@@ -133,11 +122,7 @@ export const ApiKeyReveal = (props: ApiKeyRevealProps) => {
                     onClick={copyToClipboard}
                     className={isCopied ? 'text-green-500' : ''}
                   >
-                    {isCopied ? (
-                      <IconCheck className="h-4 w-4" />
-                    ) : (
-                      <IconClipboard className="h-4 w-4" />
-                    )}
+                    {isCopied ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
                   </Button>
                 )}
               </div>

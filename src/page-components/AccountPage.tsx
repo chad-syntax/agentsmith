@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '@/app/providers/auth';
+import { useAuth } from '@/providers/auth';
 import { signOutAction } from '@/app/actions/auth';
 import { routes } from '@/utils/routes';
 import { Button } from '@/components/ui/button';
@@ -11,9 +11,7 @@ export const AccountPage = () => {
   const { user, agentsmithUser } = useAuth();
 
   if (!agentsmithUser) {
-    return (
-      <div>No agentsmith user found, please sign out and sign in again.</div>
-    );
+    return <div>No agentsmith user found, please sign out and sign in again.</div>;
   }
 
   return (

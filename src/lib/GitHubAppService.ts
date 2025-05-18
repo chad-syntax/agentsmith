@@ -173,6 +173,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
         agentsmith_folder: agentsmithFolder,
       })
       .eq('id', projectRepositoryId)
+      .select('*, projects(name), github_app_installations(installation_id)')
       .single();
 
     if (error) {
@@ -183,7 +184,10 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       throw new Error('Failed to connect project to repository');
     }
 
-    await this.services.githubSync.syncRepositoryFromAgentsmith(projectId);
+    this.services.githubSync.sync({
+      projectRepository: data,
+      source: 'agentsmith',
+    });
 
     return data;
   }
