@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '&/supabase/server';
-import { DashboardSidebar } from '@/components/dashboard-sidebar';
+import { DesktopStudioMenu } from '@/components/studio-menu';
 import { AuthProvider } from '@/providers/auth';
 import { AppProvider } from '@/providers/app';
 import { routes } from '@/utils/routes';
@@ -42,8 +42,8 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
         >
           <StudioHeader />
           <div className="md:flex h-[calc(100vh-58px)]">
-            <DashboardSidebar />
-            <main className="flex-1 overflow-auto">{children}</main>
+            <DesktopStudioMenu />
+            <main className="pl-0 md:pl-12 flex-1 overflow-auto">{children}</main>
           </div>
         </AppProvider>
       </AuthProvider>

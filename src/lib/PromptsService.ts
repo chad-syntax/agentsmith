@@ -16,7 +16,12 @@ import {
 import { routes } from '@/utils/routes';
 import { ORGANIZATION_KEYS, SEMVER_PATTERN } from '@/app/constants';
 import { compareSemanticVersions, incrementVersion } from '@/utils/versioning';
-import { extractTemplateVariables, findMissingGlobalContext } from '@/utils/template-utils';
+import {
+  compilePrompt,
+  extractTemplateVariables,
+  findMissingGlobalContext,
+  processUniqueValues,
+} from '@/utils/template-utils';
 
 type PromptVariable = Database['public']['Tables']['prompt_variables']['Row'];
 
@@ -24,10 +29,6 @@ type PromptVariableBase = Omit<
   Database['public']['Tables']['prompt_variables']['Row'],
   'created_at' | 'prompt_version_id' | 'uuid' | 'updated_at'
 >;
-
-const uniqueValues = {
-  'now()': () => new Date().toISOString(),
-};
 
 type PromptVariableInput = Omit<PromptVariableBase, 'id'> & { id?: number };
 
@@ -127,39 +128,6 @@ export class PromptsService extends AgentsmithSupabaseService {
     super({ ...options, serviceName: 'prompts' });
   }
 
-  private static processUniqueValues(
-    variables: Record<string, any> & { global: Record<string, any> },
-  ) {
-    const processValue = (value: any): any => {
-      if (value in uniqueValues) {
-        return uniqueValues[value as keyof typeof uniqueValues]();
-      }
-      if (Array.isArray(value)) {
-        return value.map(processValue);
-      }
-      if (typeof value === 'object' && value !== null) {
-        const newObj: Record<string, any> = {};
-        for (const k in value) {
-          if (Object.prototype.hasOwnProperty.call(value, k)) {
-            newObj[k] = processValue(value[k]);
-          }
-        }
-        return newObj;
-      }
-      return value;
-    };
-
-    const processedVariables = Object.entries(variables).reduce(
-      (acc, [key, value]) => {
-        acc[key] = processValue(value);
-        return acc;
-      },
-      {} as Record<string, any>,
-    );
-
-    return processedVariables;
-  }
-
   public async getPromptVersionByUuid(promptVersionUuid: string) {
     const { data, error } = await this.supabase
       .from('prompt_versions')
@@ -205,61 +173,6 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     return data;
   }
-
-  public validateVariables = (
-    variables: PromptVariable[],
-    variablesToCheck: Record<string, string | number | boolean>,
-  ): {
-    missingRequiredVariables: PromptVariable[];
-    variablesWithDefaults: Record<string, string | number | boolean>;
-  } => {
-    const missingRequiredVariables = variables
-      .filter((v) => v.required)
-      .filter((v) => !(v.name in variablesToCheck));
-
-    const defaultValues = variables.reduce(
-      (acc, v) => (v.default_value ? { ...acc, [v.name]: v.default_value } : acc),
-      {},
-    );
-
-    const variablesWithDefaults = {
-      ...defaultValues,
-      ...variablesToCheck,
-    };
-
-    return { missingRequiredVariables, variablesWithDefaults };
-  };
-
-  public validateGlobalContext = (
-    content: string,
-    globalContext: Record<string, any>,
-  ): { missingGlobalContext: string[] } => {
-    const { variables, error } = extractTemplateVariables(content);
-
-    if (error) {
-      throw new Error('Error validating global context: ' + error.message);
-    }
-
-    const globalVariable = variables.find((v) => v.name === 'global');
-
-    if (!globalVariable) {
-      return { missingGlobalContext: [] };
-    }
-
-    const missingGlobalContext = findMissingGlobalContext({ globalVariable, globalContext });
-
-    return { missingGlobalContext };
-  };
-
-  public compilePrompt = (
-    promptContent: string,
-    variables: Record<string, any> & { global: Record<string, any> },
-  ): string => {
-    const processedVariables = PromptsService.processUniqueValues(variables);
-
-    nunjucks.configure({ autoescape: false });
-    return nunjucks.renderString(promptContent, processedVariables);
-  };
 
   /**
    * Fetch prompt versions for a specific prompt
@@ -901,7 +814,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       global: globalContext,
     };
 
-    const compiledPrompt = this.compilePrompt(targetVersion.content, variablesAndContext);
+    const compiledPrompt = compilePrompt(targetVersion.content, variablesAndContext);
 
     const freeModelsOnlyEnabled = process.env.FREE_MODELS_ONLY === 'true';
 

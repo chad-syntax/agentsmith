@@ -3,7 +3,7 @@
 import { createClient } from '&/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { Database } from '../__generated__/supabase.types';
+import { Database } from '@/app/__generated__/supabase.types';
 
 export type AgentsmithUser = Database['public']['Tables']['agentsmith_users']['Row'];
 

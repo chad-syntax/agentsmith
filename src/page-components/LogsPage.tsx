@@ -90,7 +90,7 @@ export const LogsPage = (props: LogsPageProps) => {
                         {status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {duration}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

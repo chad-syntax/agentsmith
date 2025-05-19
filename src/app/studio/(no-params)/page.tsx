@@ -18,5 +18,12 @@ export default async function WebStudioHome() {
   // get the user's organization data, and redirect to the project page if only one organization and only one project exists
   const userOrganizationData = await agentsmith.services.users.getUserOrganizationData();
 
-  return <StudioPage userOrganizationData={userOrganizationData} />;
+  const onboardingChecklist = await agentsmith.services.users.getOnboardingChecklist();
+
+  return (
+    <StudioPage
+      userOrganizationData={userOrganizationData}
+      onboardingChecklist={onboardingChecklist}
+    />
+  );
 }

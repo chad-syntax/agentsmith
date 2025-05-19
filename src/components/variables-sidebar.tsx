@@ -4,14 +4,16 @@ import { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { VariablesEditor } from '@/components/editors/variables-editor';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/shadcn';
-import { JsonEditor } from './editors/json-editor';
-import { Label } from '@radix-ui/react-label';
-import Link from 'next/link';
-import { routes } from '@/utils/routes';
-import { useApp } from '@/providers/app';
 import { ParsedVariable } from '@/utils/template-utils';
+import { GlobalsList } from '@/components/project/GlobalsList';
 
 type VariablesSidebarProps = {
   variables: ParsedVariable[];
@@ -31,7 +33,6 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
   } = props;
 
   const [isOpen, setIsOpen] = useState(defaultOpen);
-  const { selectedProjectUuid } = useApp();
 
   return (
     <Collapsible
@@ -39,7 +40,7 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
       onOpenChange={setIsOpen}
       className={cn('border-l bg-muted/50 transition-all duration-300', isOpen ? 'w-80' : 'w-12')}
     >
-      <div className="p-4 border-b flex items-center justify-between">
+      <div className="py-4 px-2 border-b flex items-center justify-between">
         <div className="flex items-center">
           <CollapsibleTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -50,16 +51,16 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
         </div>
       </div>
 
-      <CollapsibleContent className="p-4">
-        <div className="mb-4">
-          <Label className="mb-2 ml-2">Global Context</Label>
-          <JsonEditor readOnly value={globalContext} />
-          <Link
-            className="text-sm text-primary ml-2 hover:underline"
-            href={routes.studio.projectGlobals(selectedProjectUuid)}
-          >
-            Edit Globals
-          </Link>
+      <CollapsibleContent className="p-4.5">
+        <div>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="globals">
+              <AccordionTrigger className="cursor-pointer">Globals</AccordionTrigger>
+              <AccordionContent>
+                <GlobalsList globalContext={globalContext} />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
         <VariablesEditor
           variables={variables}

@@ -1,41 +1,68 @@
 'use client';
 
-import Link from 'next/link';
+import { useApp } from '@/providers/app';
 import { useAuth } from '@/providers/auth';
-import { signOutAction } from '@/app/actions/auth';
+import { H1, H3 } from '@/components/typography';
+import { SignOutButton } from '@/components/sign-out-button';
+import { GithubIcon } from '@/components/icons/github';
+import { Mail } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 import { routes } from '@/utils/routes';
-import { Button } from '@/components/ui/button';
-import { H1, H2 } from '@/components/typography';
 
 export const AccountPage = () => {
-  const { user, agentsmithUser } = useAuth();
+  const { user } = useAuth();
+  const { userOrganizationData } = useApp();
 
-  if (!agentsmithUser) {
-    return <div>No agentsmith user found, please sign out and sign in again.</div>;
+  if (!user) {
+    return <div>No user found, please sign out and sign in again.</div>;
   }
 
+  const githubUsername = user.user_metadata?.preferred_username || user.user_metadata?.user_name;
+  const githubProfileUrl = githubUsername ? `https://github.com/${githubUsername}` : null;
+
   return (
-    <div className="flex-1 w-full flex flex-col gap-12 p-4">
-      <H1>Account</H1>
-      <div className="flex flex-row gap-2 items-start">
-        <Button onClick={signOutAction} variant="outline">
-          Sign Out
-        </Button>
-        <Button variant="destructive" asChild>
-          <Link href={routes.studio.resetPassword}>Reset Password</Link>
-        </Button>
+    <div className="flex-1 w-full flex flex-col gap-8 p-4">
+      <div className="flex flex-row gap-8 items-center justify-start">
+        <H1>Account</H1>
+        <SignOutButton />
       </div>
       <div className="flex flex-col gap-2 items-start">
-        <H2 className="mb-4">Your auth user details</H2>
-        <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
-          {JSON.stringify(user, null, 2)}
-        </pre>
+        <H3>Details</H3>
+        <Badge variant="outline" className="text-md [&>svg]:size-5">
+          <Mail />
+          {user.email}
+        </Badge>
+        {githubProfileUrl && (
+          <a
+            href={githubProfileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-row items-center gap-2 hover:underline"
+          >
+            <Badge variant="outline" className="text-md [&>svg]:size-5">
+              <GithubIcon />
+              <span>@{githubUsername}</span>
+            </Badge>
+          </a>
+        )}
       </div>
-      <div className="flex flex-col gap-2 items-start">
-        <H2 className="mb-4">Your agentsmith user details</H2>
-        <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
-          {JSON.stringify(agentsmithUser, null, 2)}
-        </pre>
+      <div className="flex flex-col gap-4 items-start">
+        <H3>Organization Memberships</H3>
+        <div className="flex flex-col gap-2 items-start">
+          {userOrganizationData?.organization_users.map((orgUser) => (
+            <div key={orgUser.organizations.uuid}>
+              <Badge variant="outline">{orgUser.role}</Badge>
+              <span className="mx-2">•</span>
+              <Link
+                href={routes.studio.organization(orgUser.organizations.uuid)}
+                className="hover:underline"
+              >
+                {orgUser.organizations.name}
+              </Link>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

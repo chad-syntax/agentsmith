@@ -4,6 +4,7 @@ import { createJwtClient, exchangeApiKeyForJwt } from '@/lib/supabase/server-api
 import { NextResponse } from 'next/server';
 import { CompletionConfig } from '@/lib/openrouter';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
+import { validateGlobalContext, validateVariables } from '@/utils/template-utils';
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
@@ -62,8 +63,10 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const { missingRequiredVariables, variablesWithDefaults } =
-    agentsmith.services.prompts.validateVariables(variables, body.variables);
+  const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
+    variables,
+    body.variables,
+  );
 
   if (missingRequiredVariables.length > 0) {
     return NextResponse.json(
@@ -75,9 +78,7 @@ export async function POST(
     );
   }
 
-  console.log('promptVersion.content', promptVersion.content);
-
-  const { missingGlobalContext } = agentsmith.services.prompts.validateGlobalContext(
+  const { missingGlobalContext } = validateGlobalContext(
     promptVersion.content,
     globalContext as Record<string, any>,
   );

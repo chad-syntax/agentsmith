@@ -130,7 +130,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[1024px]">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Test Prompt</DialogTitle>
           <DialogDescription>
@@ -148,16 +148,18 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
                     {variable.name}
                     {variable.required && <span className="text-destructive">*</span>}
                   </Label>
-                  <Input
-                    type={variable.type === 'NUMBER' ? 'number' : 'text'}
-                    value={testVariables[variable.name] || ''}
-                    onChange={(e) => {
-                      setTestVariables({
-                        ...testVariables,
-                        [variable.name]: e.target.value,
-                      });
-                    }}
-                  />
+                  <div className="px-1">
+                    <Input
+                      type={variable.type === 'NUMBER' ? 'number' : 'text'}
+                      value={testVariables[variable.name] || ''}
+                      onChange={(e) => {
+                        setTestVariables({
+                          ...testVariables,
+                          [variable.name]: e.target.value,
+                        });
+                      }}
+                    />
+                  </div>
                 </div>
               ))}
 

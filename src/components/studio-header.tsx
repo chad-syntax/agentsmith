@@ -21,6 +21,7 @@ import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { ThemeSwitcher } from './theme-switcher';
 import { CurrentUserAvatar } from './current-user-avatar';
+import { MobileStudioMenu } from './studio-menu';
 
 export const StudioHeader = () => {
   const {
@@ -51,14 +52,15 @@ export const StudioHeader = () => {
     activeItem.slug !== 'account';
 
   return (
-    <header className="w-full p-3 border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="w-full py-2 pl-4.5 pr-3 border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <h2 className="text-2xl font-bold">A</h2>
+          <h2 className="hidden md:block text-2xl font-bold">A</h2>
+          <MobileStudioMenu />
           <Breadcrumb>
             <BreadcrumbList>
               {organizations.length > 1 ? (
-                <BreadcrumbItem>
+                <BreadcrumbItem className="hidden md:list-item">
                   <DropdownMenu>
                     <DropdownMenuTrigger className="cursor-pointer flex items-center gap-1">
                       {selectedOrganization?.name}
@@ -78,7 +80,7 @@ export const StudioHeader = () => {
                   </DropdownMenu>
                 </BreadcrumbItem>
               ) : (
-                <BreadcrumbItem>
+                <BreadcrumbItem className="hidden md:list-item">
                   <BreadcrumbLink href={routes.studio.organization(selectedOrganizationUuid)}>
                     {selectedOrganization?.name}
                   </BreadcrumbLink>
@@ -86,11 +88,11 @@ export const StudioHeader = () => {
               )}
               {showMiddleBreadcrumb && (
                 <>
-                  <BreadcrumbSeparator>
+                  <BreadcrumbSeparator className="hidden md:list-item">
                     <Slash />
                   </BreadcrumbSeparator>
                   {selectedOrganization?.projects.length > 1 ? (
-                    <BreadcrumbItem>
+                    <BreadcrumbItem className="hidden md:list-item">
                       <DropdownMenu>
                         <DropdownMenuTrigger className="cursor-pointer flex items-center gap-1">
                           {selectedProject?.name}
@@ -110,7 +112,7 @@ export const StudioHeader = () => {
                       </DropdownMenu>
                     </BreadcrumbItem>
                   ) : (
-                    <BreadcrumbItem>
+                    <BreadcrumbItem className="hidden md:list-item">
                       <BreadcrumbLink href={routes.studio.project(selectedProjectUuid)}>
                         {selectedProject?.name}
                       </BreadcrumbLink>
@@ -120,7 +122,7 @@ export const StudioHeader = () => {
               )}
               {activeItem.slug !== 'organization' && (
                 <>
-                  <BreadcrumbSeparator>
+                  <BreadcrumbSeparator className="hidden md:list-item">
                     <Slash />
                   </BreadcrumbSeparator>
                   <BreadcrumbItem>

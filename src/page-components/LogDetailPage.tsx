@@ -5,6 +5,7 @@ import { routes } from '@/utils/routes';
 import { H1, H2, P } from '@/components/typography';
 import { Button } from '@/components/ui/button';
 import { GetLogByUuidResult } from '@/lib/LLMLogsService';
+import { JsonEditor } from '@/components/editors/json-editor';
 
 type LogDetailPageProps = {
   log: NonNullable<GetLogByUuidResult>;
@@ -32,7 +33,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
   if (!log) {
     return (
       <div className="p-6">
-        <div className="mb-6 flex items-center">
+        <div className="mb-2 flex items-center">
           <Button
             variant="link"
             asChild
@@ -43,8 +44,8 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
               Back to Logs
             </Link>
           </Button>
-          <H1>Log Details</H1>
         </div>
+        <H1 className="mb-6">Log Details</H1>
         <div className="bg-card p-6 rounded-lg shadow-sm text-center">
           <P className="text-muted-foreground">Log not found.</P>
         </div>
@@ -54,7 +55,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
 
   return (
     <div className="p-6">
-      <div className="mb-6 flex items-center">
+      <div className="mb-2 flex items-center">
         <Button
           variant="link"
           asChild
@@ -65,8 +66,9 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
             Back to Logs
           </Link>
         </Button>
-        <H1>Log Details</H1>
       </div>
+
+      <H1 className="mb-6">Log Details</H1>
 
       <div className="space-y-6">
         <div className="bg-card p-6 rounded-lg shadow-sm">
@@ -113,24 +115,18 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
 
         <div className="bg-card p-6 rounded-lg shadow-sm">
           <H2 className="mb-4">Variables</H2>
-          <pre className="bg-muted p-4 rounded-md overflow-auto text-sm">
-            {JSON.stringify(log.prompt_variables, null, 2)}
-          </pre>
+          <JsonEditor readOnly value={log.prompt_variables as any} />
         </div>
 
         <div className="bg-card p-6 rounded-lg shadow-sm">
           <H2 className="mb-4">Raw Input</H2>
-          <pre className="bg-muted p-4 rounded-md overflow-auto text-sm">
-            {JSON.stringify(log.raw_input, null, 2)}
-          </pre>
+          <JsonEditor readOnly value={log.raw_input as any} />
         </div>
 
         {log.raw_output && (
           <div className="bg-card p-6 rounded-lg shadow-sm">
             <H2 className="mb-4">Raw Output</H2>
-            <pre className="bg-muted p-4 rounded-md overflow-auto text-sm">
-              {JSON.stringify(log.raw_output, null, 2)}
-            </pre>
+            <JsonEditor readOnly value={log.raw_output as any} />
           </div>
         )}
       </div>

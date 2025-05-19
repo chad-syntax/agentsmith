@@ -16,6 +16,7 @@ export default async function Settings(props: SettingsProps) {
 
   const organization =
     await agentsmith.services.organizations.getOrganizationData(organizationUuid);
+
   if (!organization) {
     return notFound();
   }

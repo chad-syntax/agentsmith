@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Play } from 'lucide-react';
+import { Play, ClipboardCopy } from 'lucide-react';
 import { Database } from '@/app/__generated__/supabase.types';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
@@ -13,6 +13,7 @@ import { VariablesSidebar } from '@/components/variables-sidebar';
 import { PromptTestModal } from '@/components/modals/test-prompt';
 import { PublishUpdateConfirmModal } from '@/components/modals/publish-update-confirm';
 import { Button } from '@/components/ui/button';
+import { CompileToClipboardModal } from '@/components/modals/compile-to-clipboard';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { H1 } from '@/components/typography';
@@ -48,6 +49,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const [missingGlobals, setMissingGlobals] = useState<string[]>([]);
+  const [isCompileModalOpen, setIsCompileModalOpen] = useState(false);
   const { selectedProjectUuid, showSyncToast } = useApp();
 
   const globalContext = currentPromptVersion.prompts.projects.global_contexts?.content ?? {};
@@ -195,52 +197,60 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
             >
               ← Back to Prompt
             </Link>
-            <div className="space-x-4">
-              <Button
-                onClick={handleTest}
-                className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
-              >
-                <Play size={16} />
-                Test Prompt
-              </Button>
+          </div>
+          <div className="flex gap-2 mb-4">
+            <Button
+              onClick={() => setIsCompileModalOpen(true)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <ClipboardCopy size={16} />
+              Compile to Clipboard
+            </Button>
+            <Button
+              onClick={handleTest}
+              className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
+            >
+              <Play size={16} />
+              Test Prompt
+            </Button>
 
-              {isDraft && (
-                <>
-                  <Button
-                    onClick={() => handleSave('DRAFT', false)}
-                    disabled={isSaving}
-                    variant="secondary"
-                  >
-                    {isSaving ? 'Saving...' : 'Save'}
-                  </Button>
-                  <Button onClick={() => handleSave('PUBLISHED')} disabled={isSaving}>
-                    {isSaving ? 'Publishing...' : 'Publish'}
-                  </Button>
-                </>
-              )}
+            {isDraft && (
+              <>
+                <Button
+                  onClick={() => handleSave('DRAFT', false)}
+                  disabled={isSaving}
+                  variant="secondary"
+                >
+                  {isSaving ? 'Saving...' : 'Save'}
+                </Button>
+                <Button onClick={() => handleSave('PUBLISHED')} disabled={isSaving}>
+                  {isSaving ? 'Publishing...' : 'Publish'}
+                </Button>
+              </>
+            )}
 
-              {isPublished && (
-                <>
-                  <Button
-                    onClick={() => handleSave('PUBLISHED')}
-                    disabled={isSaving}
-                    className="bg-amber-500 hover:bg-amber-600"
-                  >
-                    {isSaving ? 'Updating...' : 'Update Published Version'}
-                  </Button>
-                  <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion || isSaving}>
-                    {isCreatingVersion ? 'Creating...' : 'Create New Version'}
-                  </Button>
-                  <Button
-                    onClick={handleSetToDraft}
-                    disabled={isSaving || isSettingDraft}
-                    variant="secondary"
-                  >
-                    {isSettingDraft ? 'Setting to Draft...' : 'Set to Draft'}
-                  </Button>
-                </>
-              )}
-            </div>
+            {isPublished && (
+              <>
+                <Button
+                  onClick={() => handleSave('PUBLISHED')}
+                  disabled={isSaving}
+                  className="bg-amber-500 hover:bg-amber-600"
+                >
+                  {isSaving ? 'Updating...' : 'Update Published Version'}
+                </Button>
+                <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion || isSaving}>
+                  {isCreatingVersion ? 'Creating...' : 'Create New Version'}
+                </Button>
+                <Button
+                  onClick={handleSetToDraft}
+                  disabled={isSaving || isSettingDraft}
+                  variant="secondary"
+                >
+                  {isSettingDraft ? 'Setting to Draft...' : 'Set to Draft'}
+                </Button>
+              </>
+            )}
           </div>
 
           <H1 className="mb-6">{currentPromptVersion.prompts.name}</H1>
@@ -310,6 +320,20 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         onClose={() => setIsPublishConfirmOpen(false)}
         onConfirm={handlePublishAndTest}
         isUpdating={isSaving}
+      />
+
+      <CompileToClipboardModal
+        isOpen={isCompileModalOpen}
+        onClose={() => setIsCompileModalOpen(false)}
+        variables={variables}
+        promptContent={content}
+        globalContext={
+          typeof currentPromptVersion.prompts.projects.global_contexts?.content === 'object' &&
+          currentPromptVersion.prompts.projects.global_contexts?.content !== null &&
+          !Array.isArray(currentPromptVersion.prompts.projects.global_contexts?.content)
+            ? currentPromptVersion.prompts.projects.global_contexts.content
+            : {}
+        }
       />
     </div>
   );

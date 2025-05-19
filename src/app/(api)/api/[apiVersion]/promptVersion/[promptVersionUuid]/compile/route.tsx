@@ -2,6 +2,7 @@ import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
 import { createJwtClient } from '@/lib/supabase/server-api-key';
 import { exchangeApiKeyForJwt } from '@/lib/supabase/server-api-key';
+import { compilePrompt, validateGlobalContext, validateVariables } from '@/utils/template-utils';
 import { NextResponse } from 'next/server';
 
 type RequestBody = {
@@ -59,8 +60,10 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const { missingRequiredVariables, variablesWithDefaults } =
-    agentsmith.services.prompts.validateVariables(variables, body.variables);
+  const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
+    variables,
+    body.variables,
+  );
 
   if (missingRequiredVariables.length > 0) {
     return NextResponse.json(
@@ -72,7 +75,19 @@ export async function POST(
     );
   }
 
-  const compiledPrompt = agentsmith.services.prompts.compilePrompt(promptVersion.content, {
+  const { missingGlobalContext } = validateGlobalContext(
+    promptVersion.content,
+    globalContext as Record<string, any>,
+  );
+
+  if (missingGlobalContext.length > 0) {
+    return NextResponse.json(
+      { error: 'Missing required global context variables', missingGlobalContext },
+      { status: 400 },
+    );
+  }
+
+  const compiledPrompt = compilePrompt(promptVersion.content, {
     ...variablesWithDefaults,
     global: globalContext as Record<string, any>,
   });

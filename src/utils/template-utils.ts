@@ -276,3 +276,104 @@ export const findMissingGlobalContext = (options: FindMissingGlobalContextOption
 
   return missingGlobalContext;
 };
+
+const uniqueValues = {
+  'now()': () => new Date().toISOString(),
+};
+
+/**
+ * Processes variables by replacing special unique value placeholders with their actual values.
+ * This is used to handle dynamic values like timestamps (now()), UUIDs, etc. in prompt variables.
+ * The function recursively processes nested objects and arrays to ensure all unique values
+ * are properly replaced throughout the variable structure.
+ *
+ * @param variables - Object containing variables to process, including a 'global' property
+ * @returns Processed variables with unique values replaced
+ */
+export const processUniqueValues = (
+  variables: Record<string, any> & { global: Record<string, any> },
+) => {
+  const processValue = (value: any): any => {
+    if (value in uniqueValues) {
+      return uniqueValues[value as keyof typeof uniqueValues]();
+    }
+    if (Array.isArray(value)) {
+      return value.map(processValue);
+    }
+    if (typeof value === 'object' && value !== null) {
+      const newObj: Record<string, any> = {};
+      for (const k in value) {
+        if (Object.prototype.hasOwnProperty.call(value, k)) {
+          newObj[k] = processValue(value[k]);
+        }
+      }
+      return newObj;
+    }
+    return value;
+  };
+
+  const processedVariables = Object.entries(variables).reduce(
+    (acc, [key, value]) => {
+      acc[key] = processValue(value);
+      return acc;
+    },
+    {} as Record<string, any>,
+  );
+
+  return processedVariables;
+};
+
+export const validateGlobalContext = (
+  content: string,
+  globalContext: Record<string, any>,
+): { missingGlobalContext: string[] } => {
+  const { variables, error } = extractTemplateVariables(content);
+
+  if (error) {
+    throw new Error('Error validating global context: ' + error.message);
+  }
+
+  const globalVariable = variables.find((v) => v.name === 'global');
+
+  if (!globalVariable) {
+    return { missingGlobalContext: [] };
+  }
+
+  const missingGlobalContext = findMissingGlobalContext({ globalVariable, globalContext });
+
+  return { missingGlobalContext };
+};
+
+export const compilePrompt = (
+  promptContent: string,
+  variables: Record<string, any> & { global: Record<string, any> },
+): string => {
+  const processedVariables = processUniqueValues(variables);
+
+  nunjucks.configure({ autoescape: false });
+  return nunjucks.renderString(promptContent, processedVariables);
+};
+
+export const validateVariables = (
+  variables: ParsedVariable[],
+  variablesToCheck: Record<string, string | number | boolean>,
+): {
+  missingRequiredVariables: ParsedVariable[];
+  variablesWithDefaults: Record<string, string | number | boolean>;
+} => {
+  const missingRequiredVariables = variables
+    .filter((v) => v.required)
+    .filter((v) => !(v.name in variablesToCheck));
+
+  const defaultValues = variables.reduce(
+    (acc, v) => (v.default_value ? { ...acc, [v.name]: v.default_value } : acc),
+    {},
+  );
+
+  const variablesWithDefaults = {
+    ...defaultValues,
+    ...variablesToCheck,
+  };
+
+  return { missingRequiredVariables, variablesWithDefaults };
+};

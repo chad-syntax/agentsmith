@@ -1,98 +1,112 @@
-import { TerminalSquare, List, User, Pencil, Activity, Settings } from 'lucide-react';
+import { Pencil, AlertCircle, CheckCircle, Info } from 'lucide-react';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
-import { H1, H3, P } from '@/components/typography';
+import { H1, H3 } from '@/components/typography';
 import { GetProjectDataResult } from '@/lib/ProjectsService';
 import { ElementType } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { GlobalsList } from '@/components/project/GlobalsList';
+
+export type SyncStatusAlertProps = {
+  events: NonNullable<GetProjectDataResult>['agentsmith_events'];
+};
+
+const SyncStatusAlert = (props: SyncStatusAlertProps) => {
+  const { events } = props;
+
+  if (!events || events.length === 0) {
+    return null;
+  }
+
+  const latestEvent = events[0];
+  let alertVariant: 'default' | 'destructive' = 'default';
+  let alertTitle = 'Sync Status';
+  let alertDescription = '';
+  let IconComponent: ElementType = Info;
+
+  if (latestEvent.type === 'SYNC_COMPLETE') {
+    alertDescription = `Last successful sync on ${new Date(latestEvent.created_at).toLocaleString()}`;
+    IconComponent = CheckCircle;
+  } else if (latestEvent.type === 'SYNC_ERROR') {
+    alertVariant = 'destructive';
+    alertDescription = `Last sync failed on ${new Date(latestEvent.created_at).toLocaleString()}`;
+    IconComponent = AlertCircle;
+  } else if (latestEvent.type === 'SYNC_START') {
+    alertDescription = `Sync started on ${new Date(latestEvent.created_at).toLocaleString()}`;
+    IconComponent = Info;
+  } else {
+    // Not a relevant event type to display an alert for
+    return null;
+  }
+
+  return (
+    <Alert variant={alertVariant} className="mb-4">
+      <IconComponent className="h-4 w-4" />
+      <AlertTitle>{alertTitle}</AlertTitle>
+      <AlertDescription>{alertDescription}</AlertDescription>
+    </Alert>
+  );
+};
 
 export type ProjectPageProps = {
   projectData: NonNullable<GetProjectDataResult>;
 };
 
-type ProjectLink = {
-  href: string;
-  icon: ElementType;
-  iconClassName: string;
-  title: string;
-  description: string;
-};
-
 export const ProjectPage = (props: ProjectPageProps) => {
   const { projectData } = props;
-
-  const projectLinks: ProjectLink[] = [
-    {
-      href: routes.studio.prompts(projectData.uuid),
-      icon: TerminalSquare,
-      iconClassName: 'text-blue-500',
-      title: 'Prompts',
-      description: 'Manage your prompt library',
-    },
-    {
-      href: routes.studio.logs(projectData.uuid),
-      icon: List,
-      iconClassName: 'text-orange-500',
-      title: 'Logs',
-      description: 'View prompt execution logs',
-    },
-    {
-      href: routes.studio.events(projectData.uuid),
-      icon: Activity,
-      iconClassName: 'text-purple-500',
-      title: 'Events',
-      description: 'View project events and sync history',
-    },
-    {
-      href: routes.studio.account,
-      icon: User,
-      iconClassName: 'text-green-500',
-      title: 'Account',
-      description: 'Manage your account settings',
-    },
-    {
-      href: routes.studio.projectGlobals(projectData.uuid),
-      icon: Settings,
-      iconClassName: 'text-red-500',
-      title: 'Globals',
-      description: 'Manage project globals',
-    },
-  ];
 
   return (
     <div className="p-6">
       <div className="flex gap-2 justify-start items-center mb-8">
-        <H1>Project: {projectData.name}</H1>
+        <H1>{projectData.name}</H1>
         <Link href={routes.studio.editProject(projectData.uuid)}>
           <Pencil className="w-6 h-6 text-muted-foreground" />
         </Link>
       </div>
-
-      <div>
-        {
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl">
-            {projectLinks.map((link) => {
-              const Icon = link.icon;
-              return (
+      {projectData.project_repositories && projectData.project_repositories.length > 0 && (
+        <div className="mb-4 text-muted-foreground">
+          {projectData.name} connected to{' '}
+          <a
+            href={routes.github.repository(
+              projectData.project_repositories[0].repository_full_name,
+            )}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:text-primary"
+          >
+            {projectData.project_repositories[0].repository_full_name}
+          </a>{' '}
+          with default branch{' '}
+          <span className="bg-muted-foreground text-muted px-1.5 py-0.5 rounded-xs font-mono">
+            {projectData.project_repositories[0].repository_default_branch}
+          </span>{' '}
+          using folder{' '}
+          <span className="bg-muted-foreground text-muted px-1.5 py-0.5 rounded-xs font-mono">
+            {projectData.project_repositories[0].agentsmith_folder}
+          </span>
+          .
+        </div>
+      )}
+      <SyncStatusAlert events={projectData.agentsmith_events} />
+      {projectData.prompts && projectData.prompts.length > 0 && (
+        <div className="mt-6">
+          <H3>Prompts</H3>
+          <ul className="list-disc list-inside mt-2">
+            {projectData.prompts.map((prompt) => (
+              <li key={prompt.uuid}>
                 <Link
-                  key={link.href}
-                  href={link.href}
-                  className="aspect-square bg-background rounded-xl shadow-xs hover:shadow-md transition-all hover:-translate-y-1 border p-4 flex flex-col"
+                  href={routes.studio.promptDetail(projectData.uuid, prompt.uuid)}
+                  className="underline hover:text-primary"
                 >
-                  <div className="flex items-center justify-center flex-1">
-                    <Icon className={`w-10 h-10 ${link.iconClassName}`} />
-                  </div>
-                  <div className="mt-3">
-                    <H3 className="text-center">{link.title}</H3>
-                    <P className="text-xs text-muted-foreground text-center mt-0.5">
-                      {link.description}
-                    </P>
-                  </div>
+                  {prompt.name}
                 </Link>
-              );
-            })}
-          </div>
-        }
-      </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <H3 className="mt-6">Global Context</H3>
+      <GlobalsList globalContext={projectData.global_contexts?.content} />
     </div>
   );
 };

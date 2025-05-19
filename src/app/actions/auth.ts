@@ -13,11 +13,7 @@ export const signUpAction = async (formData: FormData) => {
   const origin = (await headers()).get('origin');
 
   if (!email || !password) {
-    return encodedRedirect(
-      'error',
-      routes.auth.signUp,
-      'Email and password are required'
-    );
+    return encodedRedirect('error', routes.auth.signUp, 'Email and password are required');
   }
 
   const { error } = await supabase.auth.signUp({
@@ -35,7 +31,7 @@ export const signUpAction = async (formData: FormData) => {
     return encodedRedirect(
       'success',
       routes.auth.signUp,
-      'Thanks for signing up! Please check your email for a verification link.'
+      'Thanks for signing up! Please check your email for a verification link.',
     );
   }
 };
@@ -64,11 +60,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   const callbackUrl = formData.get('callbackUrl')?.toString();
 
   if (!email) {
-    return encodedRedirect(
-      'error',
-      routes.auth.forgotPassword,
-      'Email is required'
-    );
+    return encodedRedirect('error', routes.auth.forgotPassword, 'Email is required');
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -77,11 +69,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
 
   if (error) {
     console.error(error.message);
-    return encodedRedirect(
-      'error',
-      routes.auth.forgotPassword,
-      'Could not reset password'
-    );
+    return encodedRedirect('error', routes.auth.forgotPassword, 'Could not reset password');
   }
 
   if (callbackUrl) {
@@ -91,7 +79,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   return encodedRedirect(
     'success',
     routes.auth.forgotPassword,
-    'Check your email for a link to reset your password.'
+    'Check your email for a link to reset your password.',
   );
 };
 
@@ -105,16 +93,12 @@ export const resetPasswordAction = async (formData: FormData) => {
     encodedRedirect(
       'error',
       routes.studio.resetPassword,
-      'Password and confirm password are required'
+      'Password and confirm password are required',
     );
   }
 
   if (password !== confirmPassword) {
-    encodedRedirect(
-      'error',
-      routes.studio.resetPassword,
-      'Passwords do not match'
-    );
+    encodedRedirect('error', routes.studio.resetPassword, 'Passwords do not match');
   }
 
   const { error } = await supabase.auth.updateUser({
@@ -122,18 +106,8 @@ export const resetPasswordAction = async (formData: FormData) => {
   });
 
   if (error) {
-    encodedRedirect(
-      'error',
-      routes.studio.resetPassword,
-      'Password update failed'
-    );
+    encodedRedirect('error', routes.studio.resetPassword, 'Password update failed');
   }
 
   encodedRedirect('success', routes.studio.resetPassword, 'Password updated');
-};
-
-export const signOutAction = async () => {
-  const supabase = await createClient();
-  await supabase.auth.signOut();
-  return redirect(routes.auth.signIn);
 };

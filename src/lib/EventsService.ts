@@ -114,6 +114,7 @@ export class EventsService extends AgentsmithSupabaseService {
       project_id: projectId,
       type: 'SYNC_ERROR' as const,
       name: 'Sync Error',
+      severity: 'ERROR',
       description,
       details,
     });

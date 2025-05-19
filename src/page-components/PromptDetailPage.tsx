@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { ChevronRight, Play } from 'lucide-react';
+import { ChevronRight, Play, ClipboardCopy, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
@@ -11,6 +11,7 @@ import { VariablesSidebar } from '@/components/variables-sidebar';
 import { PromptTestModal } from '@/components/modals/test-prompt';
 import { createDraftVersion } from '@/app/actions/prompts';
 import { CreateVersionModal } from '@/components/modals/create-version';
+import { CompileToClipboardModal } from '@/components/modals/compile-to-clipboard';
 import { compareSemanticVersions } from '@/utils/versioning';
 import { Button } from '@/components/ui/button';
 import { H1 } from '@/components/typography';
@@ -36,6 +37,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
   });
   const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [isCreatingVersion, setIsCreatingVersion] = useState(false);
+  const [isCompileModalOpen, setIsCompileModalOpen] = useState(false);
 
   const handleVersionToggle = (versionId: number) => {
     setExpandedVersions((prev) => ({
@@ -81,7 +83,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
     <div className="flex h-[calc(100vh-64px)]">
       <div className="flex-1 overflow-auto">
         <div className="p-6">
-          <div className="mb-6">
+          <div className="mb-2">
             <Link
               href={routes.studio.prompts(selectedProjectUuid)}
               className="text-blue-500 hover:text-blue-600"
@@ -89,23 +91,28 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
               ← Back to Prompts
             </Link>
           </div>
-
-          <div className="flex justify-between items-center mb-6">
-            <H1>{prompt.name}</H1>
-            <div className="space-x-4">
-              <Button
-                onClick={() => setIsTestModalOpen(true)}
-                className="bg-green-500 hover:bg-green-600 flex items-center gap-2"
-              >
-                <Play size={16} />
-                Test Run
-              </Button>
-              <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion}>
-                {isCreatingVersion ? 'Creating...' : 'New Version'}
-              </Button>
-            </div>
+          <H1 className="mb-6">{prompt.name}</H1>
+          <div className="flex gap-2 mb-4">
+            <Button
+              onClick={() => setIsTestModalOpen(true)}
+              className="bg-green-500 hover:bg-green-600 flex items-center gap-2"
+            >
+              <Play size={16} />
+              Test Run
+            </Button>
+            <Button
+              onClick={() => setIsCompileModalOpen(true)}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              <ClipboardCopy size={16} />
+              Compile to Clipboard
+            </Button>
+            <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion}>
+              <Plus size={16} />
+              {isCreatingVersion ? 'Creating...' : 'New Version'}
+            </Button>
           </div>
-
           <div className="space-y-4">
             {allVersions.map((version) => (
               <div key={version.id} className="bg-background rounded-lg border">
@@ -178,6 +185,20 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         onClose={() => setIsCreatingVersion(false)}
         onSubmit={handleVersionSubmit}
         currentVersion={highestVersion}
+      />
+
+      <CompileToClipboardModal
+        isOpen={isCompileModalOpen}
+        onClose={() => setIsCompileModalOpen(false)}
+        variables={latestVersion.prompt_variables}
+        promptContent={latestVersion.content}
+        globalContext={
+          typeof prompt.projects.global_contexts?.content === 'object' &&
+          prompt.projects.global_contexts?.content !== null &&
+          !Array.isArray(prompt.projects.global_contexts?.content)
+            ? prompt.projects.global_contexts.content
+            : {}
+        }
       />
     </div>
   );

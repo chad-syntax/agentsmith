@@ -17,8 +17,12 @@ export class ProjectsService extends AgentsmithSupabaseService {
   async getProjectDataByUuid(projectUuid: string) {
     const { data: project, error } = await this.supabase
       .from('projects')
-      .select('*')
+      .select(
+        '*, global_contexts(content), prompts(uuid, name), project_repositories(agentsmith_folder, repository_default_branch, repository_full_name), agentsmith_events!inner(type, created_at)',
+      )
       .eq('uuid', projectUuid)
+      .limit(1, { referencedTable: 'agentsmith_events' })
+      .order('created_at', { referencedTable: 'agentsmith_events', ascending: false })
       .maybeSingle();
 
     if (error) {

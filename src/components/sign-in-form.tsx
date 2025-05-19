@@ -3,12 +3,12 @@
 import { cn } from '@/utils/shadcn';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
 import { GithubIcon } from './icons/github';
 import { Loader2 } from 'lucide-react';
 
-export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) {
+export const SignInForm = ({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) => {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -64,4 +64,4 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
       </Card>
     </div>
   );
-}
+};
