@@ -3,50 +3,8 @@ import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { H1, H3 } from '@/components/typography';
 import { GetProjectDataResult } from '@/lib/ProjectsService';
-import { ElementType } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { GlobalsList } from '@/components/project/GlobalsList';
-
-export type SyncStatusAlertProps = {
-  events: NonNullable<GetProjectDataResult>['agentsmith_events'];
-};
-
-const SyncStatusAlert = (props: SyncStatusAlertProps) => {
-  const { events } = props;
-
-  if (!events || events.length === 0) {
-    return null;
-  }
-
-  const latestEvent = events[0];
-  let alertVariant: 'default' | 'destructive' = 'default';
-  let alertTitle = 'Sync Status';
-  let alertDescription = '';
-  let IconComponent: ElementType = Info;
-
-  if (latestEvent.type === 'SYNC_COMPLETE') {
-    alertDescription = `Last successful sync on ${new Date(latestEvent.created_at).toLocaleString()}`;
-    IconComponent = CheckCircle;
-  } else if (latestEvent.type === 'SYNC_ERROR') {
-    alertVariant = 'destructive';
-    alertDescription = `Last sync failed on ${new Date(latestEvent.created_at).toLocaleString()}`;
-    IconComponent = AlertCircle;
-  } else if (latestEvent.type === 'SYNC_START') {
-    alertDescription = `Sync started on ${new Date(latestEvent.created_at).toLocaleString()}`;
-    IconComponent = Info;
-  } else {
-    // Not a relevant event type to display an alert for
-    return null;
-  }
-
-  return (
-    <Alert variant={alertVariant} className="mb-4">
-      <IconComponent className="h-4 w-4" />
-      <AlertTitle>{alertTitle}</AlertTitle>
-      <AlertDescription>{alertDescription}</AlertDescription>
-    </Alert>
-  );
-};
+import { SyncStatusAlert } from '@/components/sync-status-alert';
 
 export type ProjectPageProps = {
   projectData: NonNullable<GetProjectDataResult>;

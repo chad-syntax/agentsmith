@@ -246,7 +246,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         changesMade,
       };
     } catch (error) {
-      console.error('Error syncing project repository:', error);
+      this.logger.error('Error syncing project repository:', error);
 
       await this.services.events.createSyncErrorEvent({
         organizationId: projectRepository.organization_id,
@@ -297,7 +297,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
           return pullRequests[0];
         }
       } catch (error) {
-        console.error('Error fetching existing pull requests:', { owner, repo, error });
+        this.logger.error('Error fetching existing pull requests:', { owner, repo, error });
       }
     }
 
@@ -314,7 +314,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       );
 
       if (agentsmithPrs.length > 1) {
-        console.warn(
+        this.logger.warn(
           `Found ${agentsmithPrs.length} open pull requests with the '${AGENTSMITH_PR_LABEL}' label for ${owner}/${repo}. Using the first one found: #${agentsmithPrs[0].number}.`,
         );
       }
@@ -323,7 +323,11 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       }
       return null;
     } catch (error) {
-      console.error('Error fetching existing pull requests:', { owner, repo, error });
+      this.logger.error('Error fetching existing pull requests:', {
+        owner,
+        repo,
+        error,
+      });
       return null;
     }
   }
@@ -353,11 +357,18 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         ref: `refs/heads/${newBranchName}`,
         sha: baseSha,
       });
-      console.log(`Branch ${newBranchName} created successfully from ${baseBranch}`);
+      this.logger.info(`Branch ${newBranchName} created successfully from ${baseBranch}`);
     } catch (error: any) {
-      console.error(`Failed to create branch ${newBranchName}:`, { owner, repo, error });
+      this.logger.error(`Failed to create branch ${newBranchName}:`, {
+        owner,
+        repo,
+        error,
+      });
       if (error.status === 422) {
-        console.warn(`Branch ${newBranchName} might already exist.`, { owner, repo });
+        this.logger.warn(`Branch ${newBranchName} might already exist.`, {
+          owner,
+          repo,
+        });
       }
       throw error;
     }
@@ -384,7 +395,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         maintainer_can_modify: true,
         draft: false,
       });
-      console.log(`Pull request #${pr.number} created successfully.`);
+      this.logger.info(`Pull request #${pr.number} created successfully.`);
 
       await this.applyAgentsmithLabel({
         octokit,
@@ -394,7 +405,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       });
       return pr;
     } catch (error: any) {
-      console.error('Failed to create pull request:', {
+      this.logger.error('Failed to create pull request:', {
         owner,
         repo,
         headBranch,
@@ -402,7 +413,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         error,
       });
       if (error.status === 422 && error.message?.includes('No commits between')) {
-        console.warn('Pull request creation failed likely because there are no changes yet.', {
+        this.logger.warn('Pull request creation failed likely because there are no changes yet.', {
           owner,
           repo,
           headBranch,
@@ -412,7 +423,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
           `Cannot create PR for ${headBranch}: No changes found compared to ${baseBranch}. Commit changes first.`,
         );
       } else if (error.status === 422 && error.message?.includes('A pull request already exists')) {
-        console.warn('Pull request creation failed because it already exists.', {
+        this.logger.warn('Pull request creation failed because it already exists.', {
           owner,
           repo,
           headBranch,
@@ -440,7 +451,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         issue_number: prNumber,
         labels: [AGENTSMITH_PR_LABEL],
       });
-      console.log(`Label '${AGENTSMITH_PR_LABEL}' applied successfully to PR #${prNumber}.`);
+      this.logger.info(`Label '${AGENTSMITH_PR_LABEL}' applied successfully to PR #${prNumber}.`);
     };
 
     try {
@@ -449,7 +460,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       // Check if the error is because the label doesn't exist (typically 404 on the issue/PR when label is unknown?)
       // Or sometimes the error might be on the label itself during validation. Let's check for 404.
       if (error.status === 404) {
-        console.warn(
+        this.logger.warn(
           `Label '${AGENTSMITH_PR_LABEL}' not found for PR #${prNumber}. Attempting to create it.`,
         );
         try {
@@ -461,11 +472,11 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
             color: labelColor,
             description: 'PRs created by Agentsmith sync',
           });
-          console.log(`Label '${AGENTSMITH_PR_LABEL}' created successfully.`);
+          this.logger.info(`Label '${AGENTSMITH_PR_LABEL}' created successfully.`);
           // Retry applying the label
           await applyLabel();
         } catch (createError: any) {
-          console.error(
+          this.logger.error(
             `Failed to create label '${AGENTSMITH_PR_LABEL}' or apply it after creation:`,
             {
               owner,
@@ -478,7 +489,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         }
       } else {
         // Log other errors encountered when initially applying the label
-        console.error(`Failed to apply label '${AGENTSMITH_PR_LABEL}' to PR #${prNumber}:`, {
+        this.logger.error(`Failed to apply label '${AGENTSMITH_PR_LABEL}' to PR #${prNumber}:`, {
           owner,
           repo,
           prNumber,
@@ -498,9 +509,9 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         repo,
         ref: branchName,
       });
-      console.log(`Deleted unused branch: ${branchName}`);
+      this.logger.info(`Deleted unused branch: ${branchName}`);
     } catch (deleteError) {
-      console.error(`Failed to delete unused branch ${branchName}:`, deleteError);
+      this.logger.error(`Failed to delete unused branch ${branchName}:`, deleteError);
     }
   }
 }

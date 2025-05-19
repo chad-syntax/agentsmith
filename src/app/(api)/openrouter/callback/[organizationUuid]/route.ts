@@ -11,7 +11,7 @@ type OpenrouterCallbackParams = Promise<{
 export async function GET(request: Request, { params }: { params: OpenrouterCallbackParams }) {
   const supabase = await createClient();
 
-  const agentsmith = new AgentsmithServices({ supabase });
+  const { services, logger } = new AgentsmithServices({ supabase });
 
   try {
     const { searchParams } = new URL(request.url);
@@ -20,14 +20,14 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
     const { organizationUuid } = await params;
 
     if (!code) {
-      console.error('/connect/openrouter: no code found');
+      logger.error('/connect/openrouter: no code found');
       return NextResponse.redirect(
         new URL(routes.error('Failed to connect OpenRouter: No code provided'), request.url),
       );
     }
 
     if (!organizationUuid) {
-      console.error('/connect/openrouter: no organizationUuid found');
+      logger.error('/connect/openrouter: no organizationUuid found');
       return NextResponse.redirect(
         new URL(
           routes.error('Failed to connect OpenRouter: No organization ID provided'),
@@ -36,29 +36,29 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
       );
     }
 
-    const { authUser } = await agentsmith.services.users.getAuthUser();
+    const { authUser } = await services.users.getAuthUser();
 
     if (!authUser) {
-      console.error('/connect/openrouter: no user found');
+      logger.error('/connect/openrouter: no user found');
       return NextResponse.redirect(
         new URL(routes.error('Failed to connect OpenRouter: Not authenticated'), request.url),
       );
     }
 
     // Get the code verifier from the organization's vault
-    const { value: codeVerifier } = await agentsmith.services.vault.getOrganizationKeySecret(
+    const { value: codeVerifier } = await services.vault.getOrganizationKeySecret(
       organizationUuid,
       ORGANIZATION_KEYS.OPENROUTER_CODE_VERIFIER,
     );
 
     if (!codeVerifier) {
-      console.error('/connect/openrouter: no code verifier found');
+      logger.error('/connect/openrouter: no code verifier found');
       return NextResponse.redirect(
         new URL(routes.error('Failed to connect OpenRouter: No code verifier found'), request.url),
       );
     }
 
-    console.log('/connect/openrouter: exchanging code for API key');
+    logger.info('/connect/openrouter: exchanging code for API key');
     const response = await fetch(routes.openrouter.authKeys, {
       method: 'POST',
       headers: {
@@ -72,7 +72,7 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
     });
 
     if (!response.ok) {
-      console.error('/connect/openrouter: error fetching openrouter key', await response.text());
+      logger.error('/connect/openrouter: error fetching openrouter key', await response.text());
       return NextResponse.redirect(
         new URL(routes.error('Failed to connect OpenRouter: API error'), request.url),
       );
@@ -80,14 +80,14 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
 
     const openrouterResponse = await response.json();
     if (!openrouterResponse.key) {
-      console.error('/connect/openrouter: no key in response', openrouterResponse);
+      logger.error('/connect/openrouter: no key in response', openrouterResponse);
       return NextResponse.redirect(
         new URL(routes.error('Failed to connect OpenRouter: No API key in response'), request.url),
       );
     }
 
     // Store the API key in the vault
-    const { success, error: vaultError } = await agentsmith.services.vault.createOrganizationKey({
+    const { success, error: vaultError } = await services.vault.createOrganizationKey({
       organizationUuid,
       key: ORGANIZATION_KEYS.OPENROUTER_API_KEY,
       value: openrouterResponse.key,
@@ -95,18 +95,18 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
     });
 
     if (!success) {
-      console.error('/connect/openrouter: failed to save key to vault', vaultError);
+      logger.error('/connect/openrouter: failed to save key to vault', vaultError);
       return NextResponse.redirect(
         new URL(routes.error('Failed to connect OpenRouter: Could not save API key'), request.url),
       );
     }
 
-    console.log('/connect/openrouter: successfully saved openrouter key');
+    logger.info('/connect/openrouter: successfully saved openrouter key');
     return NextResponse.redirect(
       new URL(routes.studio.organization(organizationUuid), request.url),
     );
   } catch (error) {
-    console.error('/connect/openrouter: unexpected error', error);
+    logger.error('/connect/openrouter: unexpected error', error);
     return NextResponse.redirect(
       new URL(routes.error('Failed to connect OpenRouter: Unexpected error'), request.url),
     );

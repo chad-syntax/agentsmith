@@ -37,7 +37,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error fetching organization id', error);
+      this.logger.error('Error fetching organization id', error);
       return null;
     }
 
@@ -52,7 +52,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error fetching organization data', error);
+      this.logger.error('Error fetching organization data', error);
       return null;
     }
 
@@ -63,7 +63,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     const response = await this.services.vault.getOrganizationKeySecret(organizationUuid, key);
 
     if (response.error) {
-      console.error('Error fetching organization key secret', response.error);
+      this.logger.error('Error fetching organization key secret', response.error);
       return response;
     }
 
@@ -80,7 +80,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     );
 
     if (error) {
-      console.error('Error getting OpenRouter code verifier:', error);
+      this.logger.error('Error getting OpenRouter code verifier:', error);
       return {
         success: false,
         error: `Failed to get OpenRouter code verifier: ${error}`,
@@ -106,7 +106,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     });
 
     if (!success) {
-      console.error('Error creating OpenRouter code verifier:', createError);
+      this.logger.error('Error creating OpenRouter code verifier:', createError);
       return {
         success: false,
         error: `Failed to create OpenRouter code verifier: ${createError}`,

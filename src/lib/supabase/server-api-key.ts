@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/app/__generated__/supabase.types';
 import { sha256Hash } from '@/utils/hash';
 import { createSigner } from 'fast-jwt';
+import { AgentsmithServices } from '../AgentsmithServices';
 
 type CreateSupabaseTokenOptions = {
   userEmail: string;
@@ -63,8 +64,10 @@ export const exchangeApiKeyForJwt = async (apiKey: string) => {
     arg_api_key_hash: apiKeyHash,
   });
 
+  const { logger } = new AgentsmithServices({ supabase: tempClient, initialize: false });
+
   if (error) {
-    console.error('Error getting organization by API key hash', error);
+    logger.error('Error getting organization by API key hash', error);
     throw new Error('Failed to get organization by API key hash');
   }
 

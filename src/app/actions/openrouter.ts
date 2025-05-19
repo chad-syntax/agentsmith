@@ -25,7 +25,7 @@ export const connectOpenrouter = async (organizationUuid: string) => {
   const generatedCodeChallenge = await sha256CodeChallenge(codeVerifierResponse.codeVerifier);
 
   const callbackUrl = encodeURIComponent(
-    `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/openrouter/callback/${organizationUuid}`,
+    `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/openrouter/callback/${organizationUuid}`,
   );
 
   const redirectUrl = `${routes.openrouter.oauthInitiate}?callback_url=${callbackUrl}&code_challenge=${generatedCodeChallenge}&code_challenge_method=S256`;

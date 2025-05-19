@@ -62,7 +62,7 @@ export class EventsService extends AgentsmithSupabaseService {
     });
 
     if (error) {
-      console.error('Error creating sync start event', error);
+      this.logger.error('Error creating sync start event', error);
       throw error;
     }
 
@@ -97,7 +97,7 @@ export class EventsService extends AgentsmithSupabaseService {
     });
 
     if (error) {
-      console.error('Error creating sync complete event', error);
+      this.logger.error('Error creating sync complete event', error);
       throw error;
     }
 
@@ -120,7 +120,7 @@ export class EventsService extends AgentsmithSupabaseService {
     });
 
     if (error) {
-      console.error('Error creating sync error event', error);
+      this.logger.error('Error creating sync error event', error);
       throw error;
     }
 
@@ -141,7 +141,7 @@ export class EventsService extends AgentsmithSupabaseService {
     });
 
     if (error) {
-      console.error('Error creating alert event', error);
+      this.logger.error('Error creating alert event', error);
       throw error;
     }
 
@@ -156,7 +156,7 @@ export class EventsService extends AgentsmithSupabaseService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching events:', error);
+      this.logger.error('Error fetching events:', error);
       return [];
     }
 
@@ -176,7 +176,7 @@ export class EventsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error fetching event:', error);
+      this.logger.error('Error fetching event:', error);
       return null;
     }
 

@@ -103,7 +103,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       await this.getInstallationRepositories(installationId);
     } catch (error: any) {
       // if we get a 404 error, means the installation does not exist
-      console.error('Error fetching installation repositories:', error.status);
+      this.logger.error('Error fetching installation repositories:', error.status);
 
       if (error.status === 404) {
         return {
@@ -121,7 +121,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error fetching installation:', error.message);
+      this.logger.error('Error fetching installation:', error.message);
       throw new Error('Failed to verify installtion, organization not found for installation');
     }
 
@@ -154,7 +154,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error) {
-      console.error(
+      this.logger.error(
         `Failed to fetch github app installation for organization ${organizationId}`,
         error,
       );
@@ -177,7 +177,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error(
+      this.logger.error(
         `Failed to connect project ${projectId} to repository ${projectRepositoryId}`,
         error,
       );
@@ -208,7 +208,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       .eq('organizations.id', organizationId);
 
     if (error) {
-      console.error('Failed to fetch project repositories for organization', error);
+      this.logger.error('Failed to fetch project repositories for organization', error);
       throw error;
     }
 
@@ -239,7 +239,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
     const { error } = await this.supabase.from('project_repositories').insert(repositoriesToInsert);
 
     if (error) {
-      console.error('Failed to create project repositories', error);
+      this.logger.error('Failed to create project repositories', error);
       throw error;
     }
   }
@@ -252,7 +252,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error) {
-      console.error('Failed to fetch project repository', error);
+      this.logger.error('Failed to fetch project repository', error);
       throw error;
     }
 

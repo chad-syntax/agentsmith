@@ -138,7 +138,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error fetching prompt version', error);
+      this.logger.error('Error fetching prompt version', error);
       return null;
     }
 
@@ -153,7 +153,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error fetching prompt by uuid:', error);
+      this.logger.error('Error fetching prompt by uuid:', error);
       return null;
     }
 
@@ -167,7 +167,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .eq('project_id', projectId);
 
     if (error) {
-      console.error('Error fetching prompts:', error);
+      this.logger.error('Error fetching prompts:', error);
       return [];
     }
 
@@ -185,7 +185,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching prompt versions:', error);
+      this.logger.error('Error fetching prompt versions:', error);
       return [];
     }
 
@@ -199,7 +199,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .eq('prompt_id', promptId);
 
     if (error) {
-      console.error('Error fetching prompt versions:', error);
+      this.logger.error('Error fetching prompt versions:', error);
       return null;
     }
 
@@ -237,7 +237,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error fetching prompt version:', error);
+      this.logger.error('Error fetching prompt version:', error);
       return null;
     }
 
@@ -251,7 +251,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .eq('project_id', projectId);
 
     if (error) {
-      console.error('Error fetching prompts:', error);
+      this.logger.error('Error fetching prompts:', error);
       return [];
     }
 
@@ -273,7 +273,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error creating prompt:', error);
+      this.logger.error('Error creating prompt:', error);
       return null;
     }
 
@@ -291,7 +291,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error updating prompt:', error);
+      this.logger.error('Error updating prompt:', error);
       return null;
     }
 
@@ -320,7 +320,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (getPromptError || !promptData) {
-      console.error('Error fetching prompt to create version:', getPromptError);
+      this.logger.error('Error fetching prompt to create version:', getPromptError);
       return null;
     }
 
@@ -343,7 +343,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error creating version:', error);
+      this.logger.error('Error creating version:', error);
       return null;
     }
 
@@ -365,7 +365,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (versionError) {
-      console.error('Error updating prompt version:', versionError);
+      this.logger.error('Error updating prompt version:', versionError);
       return null;
     }
 
@@ -382,12 +382,17 @@ export class PromptsService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (getPromptVersionError) {
-      console.error('Error fetching prompt version to create variables:', getPromptVersionError);
+      this.logger.error(
+        'Error fetching prompt version to create variables:',
+        getPromptVersionError,
+      );
       return null;
     }
 
     if (!promptVersionData) {
-      console.error(`Prompt version with uuid ${promptVersionUuid} not found to create variables`);
+      this.logger.error(
+        `Prompt version with uuid ${promptVersionUuid} not found to create variables`,
+      );
       return null;
     }
 
@@ -404,7 +409,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .select('*');
 
     if (createError) {
-      console.error('Error creating prompt variables:', createError);
+      this.logger.error('Error creating prompt variables:', createError);
       return null;
     }
 
@@ -421,7 +426,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .eq('prompt.slug', promptSlug);
 
     if (getPromptError || !promptData) {
-      console.error('Error fetching prompt variables:', getPromptError);
+      this.logger.error('Error fetching prompt variables:', getPromptError);
       return null;
     }
 
@@ -436,7 +441,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .select('*');
 
     if (updateError) {
-      console.error('Error updating prompt variables:', updateError);
+      this.logger.error('Error updating prompt variables:', updateError);
       return null;
     }
 
@@ -819,7 +824,7 @@ export class PromptsService extends AgentsmithSupabaseService {
     const freeModelsOnlyEnabled = process.env.FREE_MODELS_ONLY === 'true';
 
     if (freeModelsOnlyEnabled) {
-      console.log(
+      this.logger.info(
         'FREE_MODELS_ONLY is enabled, all completions will be made with a random free model',
       );
     }
@@ -885,7 +890,7 @@ export class PromptsService extends AgentsmithSupabaseService {
 
       return { completion, logUuid: logEntry.uuid };
     } catch (error) {
-      console.error(error);
+      this.logger.error(error);
 
       await this.services.llmLogs.updateLogWithCompletion(logEntry.uuid, {
         error: String(error),
@@ -904,7 +909,10 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single(); // Assuming slug is unique per project
 
     if (error) {
-      console.error(`Error fetching prompt by project ID ${projectId} and slug ${slug}:`, error);
+      this.logger.error(
+        `Error fetching prompt by project ID ${projectId} and slug ${slug}:`,
+        error,
+      );
       return null;
     }
     return data;

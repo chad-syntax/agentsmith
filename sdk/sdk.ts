@@ -37,7 +37,7 @@ export class AgentsmithClient {
 
     this.supabase = createSupabaseClient<Database>(
       this.options.supabaseUrl,
-      this.options.supabaseKey
+      this.options.supabaseKey,
     );
   }
 
@@ -49,7 +49,7 @@ export class AgentsmithClient {
         `
         *,
         prompt_versions(*, prompt_variables(*))
-      `
+      `,
       )
       .eq('uuid', promptUuid)
       .limit(1);
@@ -67,8 +67,7 @@ export class AgentsmithClient {
 
     // Sort versions by created_at in descending order
     const sortedVersions = [...versions].sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
     const latestVersion = sortedVersions.length > 0 ? sortedVersions[0] : null;
@@ -89,7 +88,7 @@ export class AgentsmithClient {
   async executePrompt(
     promptUuid: string,
     parameters: Record<string, any>,
-    options: ExecutePromptOptions = {}
+    options: ExecutePromptOptions = {},
   ): Promise<{ content: string }> {
     const { latestVersion, variables } = await this.getPrompt(promptUuid);
 
@@ -98,10 +97,7 @@ export class AgentsmithClient {
       const paramValue = parameters[variable.name];
 
       // Check required variables
-      if (
-        variable.required &&
-        (paramValue === undefined || paramValue === null)
-      ) {
+      if (variable.required && (paramValue === undefined || paramValue === null)) {
         throw new Error(`Missing required variable: ${variable.name}`);
       }
 
@@ -116,28 +112,19 @@ export class AgentsmithClient {
           (expectedType === 'boolean' && actualType !== 'boolean')
         ) {
           throw new Error(
-            `Invalid type for variable ${variable.name}: expected ${expectedType}, got ${actualType}`
+            `Invalid type for variable ${variable.name}: expected ${expectedType}, got ${actualType}`,
           );
         }
 
         // Check for empty strings in required string variables
-        if (
-          expectedType === 'string' &&
-          variable.required &&
-          paramValue === ''
-        ) {
-          throw new Error(
-            `Required string variable ${variable.name} cannot be empty`
-          );
+        if (expectedType === 'string' && variable.required && paramValue === '') {
+          throw new Error(`Required string variable ${variable.name} cannot be empty`);
         }
       }
     }
 
     // Compile the prompt with the parameters
-    const compiledPrompt = nunjucks.renderString(
-      latestVersion.content,
-      parameters
-    );
+    const compiledPrompt = nunjucks.renderString(latestVersion.content, parameters);
 
     // In a real implementation, we would make an API call to execute the prompt
     console.log(`Executing prompt ${promptUuid} with parameters:`, parameters);

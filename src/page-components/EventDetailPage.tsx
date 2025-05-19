@@ -157,16 +157,18 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
           </Card>
         ))}
 
-        <Card className="shadow-sm">
-          <CardHeader>
-            <CardTitle>Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <pre className="bg-muted p-4 rounded-md overflow-auto text-sm">
-              {JSON.stringify(event.details, null, 2)}
-            </pre>
-          </CardContent>
-        </Card>
+        {process.env.VERCEL_ENV !== 'production' && (
+          <Card className="shadow-sm">
+            <CardHeader>
+              <CardTitle>Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <pre className="bg-muted p-4 rounded-md overflow-auto text-sm">
+                {JSON.stringify(event.details, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

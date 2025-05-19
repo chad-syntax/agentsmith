@@ -21,27 +21,25 @@ export const installGithubApp = async (organizationUuid: string) => {
 };
 
 export const syncProject = async (projectUuid: string) => {
-  console.log('calling syncProject action with projectUuid', projectUuid);
-
   const supabase = await createClient();
 
-  const agentsmith = new AgentsmithServices({ supabase });
+  const { services, logger } = new AgentsmithServices({ supabase });
 
-  const project = await agentsmith.services.projects.getProjectDataByUuid(projectUuid);
+  logger.info('calling syncProject action with projectUuid', projectUuid);
+
+  const project = await services.projects.getProjectDataByUuid(projectUuid);
 
   if (!project) {
     throw new Error(`Project with uuid ${projectUuid} not found, cannot sync project`);
   }
 
-  const projectRepository = await agentsmith.services.projects.getProjectRepositoryByProjectId(
-    project.id,
-  );
+  const projectRepository = await services.projects.getProjectRepositoryByProjectId(project.id);
 
   if (!projectRepository) {
     throw new Error(`Project repository for project ${project.id} not found, cannot sync project`);
   }
 
-  await agentsmith.services.githubSync.sync({
+  await services.githubSync.sync({
     projectRepository,
     source: 'agentsmith',
   });

@@ -36,7 +36,7 @@ export class LLMLogsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error creating log entry:', error);
+      this.logger.error('Error creating log entry:', error);
       return null;
     }
 
@@ -55,7 +55,7 @@ export class LLMLogsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      console.error('Error updating log entry:', error);
+      this.logger.error('Error updating log entry:', error);
       return null;
     }
 
@@ -70,7 +70,7 @@ export class LLMLogsService extends AgentsmithSupabaseService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching logs:', error);
+      this.logger.error('Error fetching logs:', error);
       return [];
     }
 
@@ -85,13 +85,13 @@ export class LLMLogsService extends AgentsmithSupabaseService {
         *,
         projects(*),
         prompt_versions(*)
-      `
+      `,
       )
       .eq('uuid', uuid)
       .single();
 
     if (error) {
-      console.error('Error fetching log:', error);
+      this.logger.error('Error fetching log:', error);
       return null;
     }
 
@@ -103,6 +103,4 @@ export type GetLogsByProjectIdResult = Awaited<
   ReturnType<typeof LLMLogsService.prototype.getLogsByProjectId>
 >;
 
-export type GetLogByUuidResult = Awaited<
-  ReturnType<typeof LLMLogsService.prototype.getLogByUuid>
->;
+export type GetLogByUuidResult = Awaited<ReturnType<typeof LLMLogsService.prototype.getLogByUuid>>;

@@ -11,10 +11,10 @@ export async function GET(
 
   const supabase = await createClient();
 
-  const agentsmith = new AgentsmithServices({ supabase });
+  const { services, logger } = new AgentsmithServices({ supabase });
 
   // if the user is not logged in, redirect to the login page
-  const { authUser } = await agentsmith.services.users.getAuthUser();
+  const { authUser } = await services.users.getAuthUser();
 
   if (!authUser) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
@@ -25,7 +25,7 @@ export async function GET(
   });
 
   if (error) {
-    console.error(error);
+    logger.error(error);
     return NextResponse.redirect(new URL(routes.error('Failed to join organization'), request.url));
   }
 

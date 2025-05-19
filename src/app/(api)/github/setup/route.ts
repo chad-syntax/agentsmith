@@ -15,18 +15,16 @@ export const GET = async (request: Request) => {
 
   const supabase = await createClient();
 
-  const agentsmith = new AgentsmithServices({ supabase });
+  const { services, logger } = new AgentsmithServices({ supabase });
 
   try {
-    const { organizationUuid, installationRecordUuid } =
-      agentsmith.services.githubApp.decodeState(state);
+    const { organizationUuid, installationRecordUuid } = services.githubApp.decodeState(state);
 
-    const { isValid, githubAppInstallationRecordId } =
-      await agentsmith.services.githubApp.verifyInstallation({
-        installationRecordUuid,
-        installationId,
-        organizationUuid,
-      });
+    const { isValid, githubAppInstallationRecordId } = await services.githubApp.verifyInstallation({
+      installationRecordUuid,
+      installationId,
+      organizationUuid,
+    });
 
     if (!isValid || !githubAppInstallationRecordId) {
       return NextResponse.redirect(
@@ -34,7 +32,7 @@ export const GET = async (request: Request) => {
       );
     }
 
-    await agentsmith.services.githubApp.createInstallationRepositories({
+    await services.githubApp.createInstallationRepositories({
       githubAppInstallationRecordId,
       organizationUuid,
       installationId,
@@ -44,7 +42,7 @@ export const GET = async (request: Request) => {
       new URL(routes.studio.organization(organizationUuid), request.url),
     );
   } catch (e) {
-    console.error('Failed to create github installation', e);
+    logger.error('Failed to create github installation', e);
     return NextResponse.redirect(
       new URL(
         routes.error(`Failed to create github installation: ${(<Error>e).message}`),

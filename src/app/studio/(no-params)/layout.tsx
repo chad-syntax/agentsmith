@@ -16,18 +16,18 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   const supabase = await createClient();
 
-  const agentsmith = new AgentsmithServices({ supabase });
+  const { services, logger } = new AgentsmithServices({ supabase });
 
-  const { authUser } = await agentsmith.services.users.getAuthUser();
+  const { authUser } = await services.users.getAuthUser();
 
   if (!authUser) {
     redirect(routes.auth.signIn);
   }
 
   try {
-    const agentsmithUser = await agentsmith.services.users.getAgentsmithUser(authUser.id);
+    const agentsmithUser = await services.users.getAgentsmithUser(authUser.id);
 
-    const userOrganizationData = await agentsmith.services.users.getUserOrganizationData();
+    const userOrganizationData = await services.users.getUserOrganizationData();
 
     const firstOrganization = userOrganizationData.organization_users[0].organizations;
 
@@ -49,7 +49,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
       </AuthProvider>
     );
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     redirect(routes.error('Failed to fetch user data'));
   }
 }

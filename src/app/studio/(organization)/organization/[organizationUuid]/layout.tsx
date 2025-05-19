@@ -23,7 +23,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   const supabase = await createClient();
 
-  const agentsmith = new AgentsmithServices({ supabase });
+  const { services, logger } = new AgentsmithServices({ supabase });
 
   let redirectUrl: string | null = null;
   let authUser: User | null = null;
@@ -34,7 +34,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
     | undefined;
 
   try {
-    const userData = await agentsmith.services.users.getAuthUser();
+    const userData = await services.users.getAuthUser();
 
     authUser = userData.authUser;
 
@@ -43,12 +43,11 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
     }
 
     if (authUser) {
-      agentsmithUser = await agentsmith.services.users.getAgentsmithUser(authUser.id);
+      agentsmithUser = await services.users.getAgentsmithUser(authUser.id);
 
-      userOrganizationData = await agentsmith.services.users.getUserOrganizationData();
+      userOrganizationData = await services.users.getUserOrganizationData();
 
-      const organization =
-        await agentsmith.services.organizations.getOrganizationData(organizationUuid);
+      const organization = await services.organizations.getOrganizationData(organizationUuid);
 
       firstOrganizationProject = organization?.projects[0];
 
@@ -57,7 +56,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
       }
     }
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     redirectUrl = routes.error('Failed to fetch user data');
   } finally {
     if (redirectUrl) {

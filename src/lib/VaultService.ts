@@ -54,15 +54,12 @@ export class VaultService extends AgentsmithSupabaseService {
    */
   async getSecret(vaultSecretId: string): Promise<GetSecretResult> {
     try {
-      const { data, error } = await this.supabase.rpc(
-        'get_organization_vault_secret',
-        {
-          arg_vault_secret_id: vaultSecretId,
-        }
-      );
+      const { data, error } = await this.supabase.rpc('get_organization_vault_secret', {
+        arg_vault_secret_id: vaultSecretId,
+      });
 
       if (error) {
-        console.error('Error getting secret from vault:', error);
+        this.logger.error('Error getting secret from vault:', error);
         return {
           data: null,
           error: error.message || 'Failed to get secret from vault',
@@ -71,7 +68,7 @@ export class VaultService extends AgentsmithSupabaseService {
 
       return { data: (data as any)?.value || null };
     } catch (error) {
-      console.error('Unexpected error getting secret from vault:', error);
+      this.logger.error('Unexpected error getting secret from vault:', error);
       return {
         data: null,
         error: error instanceof Error ? error.message : String(error),
@@ -83,23 +80,20 @@ export class VaultService extends AgentsmithSupabaseService {
    * Creates a new organization key
    */
   async createOrganizationKey(
-    options: CreateOrganizationKeyOptions
+    options: CreateOrganizationKeyOptions,
   ): Promise<OrganizationKeyOperationResult> {
     try {
       const { organizationUuid, key, value, description } = options;
 
-      const { data, error } = await this.supabase.rpc(
-        'create_organization_key',
-        {
-          arg_organization_uuid: organizationUuid,
-          arg_key: key,
-          arg_value: value,
-          arg_description: description,
-        }
-      );
+      const { data, error } = await this.supabase.rpc('create_organization_key', {
+        arg_organization_uuid: organizationUuid,
+        arg_key: key,
+        arg_value: value,
+        arg_description: description,
+      });
 
       if (error) {
-        console.error('Error creating organization key:', error);
+        this.logger.error('Error creating organization key:', error);
         return {
           success: false,
           error: error.message || 'Failed to create organization key',
@@ -111,7 +105,7 @@ export class VaultService extends AgentsmithSupabaseService {
         vaultSecretId: (data as any)?.vault_secret_id,
       };
     } catch (error) {
-      console.error('Unexpected error creating organization key:', error);
+      this.logger.error('Unexpected error creating organization key:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -124,19 +118,16 @@ export class VaultService extends AgentsmithSupabaseService {
    */
   async deleteOrganizationKey(
     organizationUuid: string,
-    key: string
+    key: string,
   ): Promise<DeleteOrganizationKeyResult> {
     try {
-      const { data, error } = await this.supabase.rpc(
-        'delete_organization_key',
-        {
-          arg_organization_uuid: organizationUuid,
-          arg_key_name: key,
-        }
-      );
+      const { data, error } = await this.supabase.rpc('delete_organization_key', {
+        arg_organization_uuid: organizationUuid,
+        arg_key_name: key,
+      });
 
       if (error) {
-        console.error('Error deleting organization key:', error);
+        this.logger.error('Error deleting organization key:', error);
         return {
           success: false,
           error: error.message || 'Failed to delete organization key',
@@ -147,7 +138,7 @@ export class VaultService extends AgentsmithSupabaseService {
         success: true,
       };
     } catch (error) {
-      console.error('Unexpected error deleting organization key:', error);
+      this.logger.error('Unexpected error deleting organization key:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -160,7 +151,7 @@ export class VaultService extends AgentsmithSupabaseService {
    * This is a convenience method that deletes a key if it exists and then creates a new one
    */
   async replaceOrganizationKey(
-    options: ReplaceOrganizationKeyOptions
+    options: ReplaceOrganizationKeyOptions,
   ): Promise<OrganizationKeyOperationResult> {
     try {
       const { organizationUuid, key, value, description } = options;
@@ -176,7 +167,7 @@ export class VaultService extends AgentsmithSupabaseService {
         description,
       });
     } catch (error) {
-      console.error('Unexpected error replacing organization key:', error);
+      this.logger.error('Unexpected error replacing organization key:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -189,7 +180,7 @@ export class VaultService extends AgentsmithSupabaseService {
    */
   async getOrganizationKeySecret(
     organizationUuid: string,
-    key: string
+    key: string,
   ): Promise<GetOrganizationKeyResult> {
     try {
       // Find the organization key
@@ -211,19 +202,14 @@ export class VaultService extends AgentsmithSupabaseService {
         };
       }
 
-      if (
-        !data ||
-        !data.organization_keys ||
-        data.organization_keys.length === 0
-      ) {
+      if (!data || !data.organization_keys || data.organization_keys.length === 0) {
         return { value: null };
       }
 
       const vaultSecretId = data.organization_keys[0].vault_secret_id;
 
       // Get the secret from the vault
-      const { data: secretData, error: secretError } =
-        await this.getSecret(vaultSecretId);
+      const { data: secretData, error: secretError } = await this.getSecret(vaultSecretId);
 
       if (secretError) {
         return { value: null, error: secretError };
@@ -231,7 +217,7 @@ export class VaultService extends AgentsmithSupabaseService {
 
       return { value: secretData };
     } catch (error) {
-      console.error('Unexpected error getting organization key:', error);
+      this.logger.error('Unexpected error getting organization key:', error);
       return {
         value: null,
         error: error instanceof Error ? error.message : String(error),

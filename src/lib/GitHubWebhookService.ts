@@ -35,18 +35,18 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
     app.webhooks.on('pull_request.opened', async ({ payload }) => {
       try {
         // Do something
-        console.log('github webhook: pull request opened');
+        this.logger.info('github webhook: pull request opened');
       } catch (e) {
-        console.error(`pull_request.opened handler failed with error: ${(<Error>e).message}`);
+        this.logger.error(`pull_request.opened handler failed with error: ${(<Error>e).message}`);
       }
     });
 
     app.webhooks.on('pull_request.edited', async ({ payload }) => {
       try {
         // Do something else
-        console.log('github webhook: pull request edited', payload);
+        this.logger.info('github webhook: pull request edited', payload);
       } catch (e) {
-        console.error(`pull_request.edited handler failed with error: ${(<Error>e).message}`);
+        this.logger.error(`pull_request.edited handler failed with error: ${(<Error>e).message}`);
       }
     });
 
@@ -54,7 +54,7 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
       try {
         await this.handlePush(payload);
       } catch (e) {
-        console.error(`push handler failed with error: ${(<Error>e).message}`);
+        this.logger.error(`push handler failed with error: ${(<Error>e).message}`);
       }
     });
   }
@@ -69,11 +69,11 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         .eq('installation_id', payload.installation.id);
 
       if (error) {
-        console.error('Failed to update installation status to DELETED:', error);
+        this.logger.error('Failed to update installation status to DELETED:', error);
         throw error;
       }
     } catch (e) {
-      console.error(`installation.deleted handler failed with error: ${(<Error>e).message}`);
+      this.logger.error(`installation.deleted handler failed with error: ${(<Error>e).message}`);
     }
   }
 
@@ -87,10 +87,10 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         .eq('installation_id', payload.installation.id);
 
       if (error) {
-        console.error('Failed to update installation status to SUSPENDED:', error);
+        this.logger.error('Failed to update installation status to SUSPENDED:', error);
       }
     } catch (e) {
-      console.error(`installation.suspended handler failed with error: ${(<Error>e).message}`);
+      this.logger.error(`installation.suspended handler failed with error: ${(<Error>e).message}`);
     }
   }
 
@@ -104,11 +104,11 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         .eq('installation_id', payload.installation.id);
 
       if (error) {
-        console.error('Failed to update installation status to ACTIVE:', error);
+        this.logger.error('Failed to update installation status to ACTIVE:', error);
         throw error;
       }
     } catch (e) {
-      console.error(`installation.unsuspend handler failed with error: ${(<Error>e).message}`);
+      this.logger.error(`installation.unsuspend handler failed with error: ${(<Error>e).message}`);
     }
   }
 
@@ -155,11 +155,11 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
       );
 
       if (error) {
-        console.error('Failed to insert repository records:', error);
+        this.logger.error('Failed to insert repository records:', error);
         throw error;
       }
     } catch (e) {
-      console.error(
+      this.logger.error(
         `installation_repositories.added handler failed with error: ${(<Error>e).message}`,
       );
     }
@@ -181,11 +181,11 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         );
 
       if (error) {
-        console.error('Failed to delete repository records:', error);
+        this.logger.error('Failed to delete repository records:', error);
         throw error;
       }
     } catch (e) {
-      console.error(
+      this.logger.error(
         `installation_repositories.removed handler failed with error: ${(<Error>e).message}`,
       );
     }
@@ -193,11 +193,11 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
 
   private async handlePush(payload: EmitterWebhookEvent<'push'>['payload']) {
     try {
-      console.log('github webhook: push event received');
+      this.logger.info('github webhook: push event received');
 
       // Skip if there are no commits (shouldn't happen, but checking anyway)
       if (!payload.commits || payload.commits.length === 0) {
-        console.log('Push event has no commits, skipping sync.');
+        this.logger.info('Push event has no commits, skipping sync.');
         return;
       }
 
@@ -216,7 +216,7 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
       const pusher = payload.pusher;
       const isAgentsmithBot = pusher.name.includes('agentsmith') && pusher.name.includes('[bot]');
       if (isAgentsmithBot) {
-        console.log('Push event from agentsmith bot, ignoring to prevent sync loops.');
+        this.logger.info('Push event from agentsmith bot, ignoring to prevent sync loops.');
         return;
       }
 
@@ -226,13 +226,13 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
       );
 
       if (shouldSkipSync) {
-        console.log('Push contains [skip sync] in commit message, skipping sync operation.');
+        this.logger.info('Push contains [skip sync] in commit message, skipping sync operation.');
         return;
       }
 
       const installationId = payload.installation?.id;
       if (!installationId) {
-        console.warn('Push event missing installation ID, cannot sync.');
+        this.logger.warn('Push event missing installation ID, cannot sync.');
         return;
       }
 
@@ -245,13 +245,13 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
       });
 
       if (!projectRepo || !projectRepo.project_id) {
-        console.log(
+        this.logger.info(
           `No project found linked to repository ID ${repositoryId} and installation ID ${installationId}. Ignoring push.`,
         );
         return;
       }
 
-      console.log(
+      this.logger.info(
         `Push event detected for project ${projectRepo.project_id}, repository ${repositoryId}, ref ${pushedBranchRef}. Initiating sync from repository.`,
       );
 
@@ -261,10 +261,10 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         branchRef: pushedBranchRef,
       });
 
-      console.log(`Sync from repository completed for project ${projectRepo.project_id}`);
+      this.logger.info(`Sync from repository completed for project ${projectRepo.project_id}`);
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e);
-      console.error(`push handler failed with error: ${error}`);
+      this.logger.error(`push handler failed with error: ${error}`);
     }
   }
 }

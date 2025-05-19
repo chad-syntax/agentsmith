@@ -10,6 +10,8 @@ import { GitHubAppService } from './GitHubAppService';
 import { GitHubWebhookService } from './GitHubWebhookService';
 import { EventsService } from './EventsService';
 import { GitHubSyncService } from './GitHubSyncService';
+import { Logger } from 'pino';
+import { logger } from './logger';
 
 export type AgentsmithServicesDirectory = {
   users: UsersService;
@@ -33,6 +35,7 @@ type AgentsmithServicesConstructorOptions = {
 export class AgentsmithServices {
   public services!: AgentsmithServicesDirectory;
   public initializePromise: Promise<any[]> | null = null;
+  public logger: Logger;
 
   constructor(options: AgentsmithServicesConstructorOptions) {
     const { supabase, initialize = true } = options;
@@ -47,6 +50,8 @@ export class AgentsmithServices {
     const githubApp = new GitHubAppService({ supabase });
     const githubWebhook = new GitHubWebhookService({ supabase });
     const githubSync = new GitHubSyncService({ supabase });
+
+    this.logger = logger.child({ service: 'AgentsmithServicesRoot' });
 
     this.services = {
       users,
@@ -81,7 +86,7 @@ export class AgentsmithServices {
           const result = (service as any).initialize();
           if (result instanceof Promise) {
             result.catch((error) => {
-              console.error(`Failed to initialize service ${service.serviceName}:`, error);
+              this.logger.error(`Failed to initialize service ${service.serviceName}:`, error);
             });
             promises.push(result);
           }

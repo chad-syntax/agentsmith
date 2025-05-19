@@ -32,7 +32,7 @@ export class UsersService extends AgentsmithSupabaseService {
       } = await this.supabase.auth.getUser();
 
       if (!user) {
-        console.warn('No user found, failed to initialize UsersService');
+        this.logger.warn('No user found, failed to initialize UsersService');
         return {
           authUser: null,
           agentsmithUser: null,
@@ -72,12 +72,12 @@ export class UsersService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching user', error);
+      this.logger.error('Error fetching user', error);
       return null;
     }
 
     if (!data) {
-      console.warn('No user found, failed to fetch user', authUserId);
+      this.logger.warn('No user found, failed to fetch user', authUserId);
       return null;
     }
 
@@ -161,7 +161,7 @@ export class UsersService extends AgentsmithSupabaseService {
           .single();
 
         if (error) {
-          console.error('Error fetching organization data', error);
+          this.logger.error('Error fetching organization data', error);
           return null;
         }
 

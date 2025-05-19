@@ -172,7 +172,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     const agentsmithFolderContents = await this.getRepoFolderContents();
 
     if (!agentsmithFolderContents) {
-      console.log('Agentsmith folder contents not found, returning empty repo state');
+      this.logger.info('Agentsmith folder contents not found, returning empty repo state');
       return {
         prompts: [],
         globals: null,
@@ -205,7 +205,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         const promptSlug = promptFile.path.split('/')[2];
 
         if (!promptSlug) {
-          console.warn(`Failed to find slug for prompt file: ${promptFile.path}`);
+          this.logger.warn(`Failed to find slug for prompt file: ${promptFile.path}`);
           continue;
         }
 
@@ -235,14 +235,14 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
           const contentFile = fileMap.get(contentFilePath);
 
           if (!versionFile) {
-            console.warn(
+            this.logger.warn(
               `version file not found for ${promptSlug} v${versionNumber}, cannot add to state, looked for ${versionFilePath}`,
             );
             continue;
           }
 
           if (!contentFile) {
-            console.warn(
+            this.logger.warn(
               `content file not found for ${promptSlug} v${versionNumber}, cannot add to state, looked for ${contentFilePath}`,
             );
             continue;
@@ -279,7 +279,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         globals,
       };
     } catch (error) {
-      console.error('Error fetching repo state:', error);
+      this.logger.error('Error fetching repo state:', error);
       return null;
     }
   }
@@ -319,7 +319,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     const numRepoActions = actions.filter((action) => action.target === 'repo').length;
     const numAgentsmithActions = actions.filter((action) => action.target === 'agentsmith').length;
 
-    console.log(
+    this.logger.info(
       `executing ${actions.length} actions, ${numRepoActions} repo actions, ${numAgentsmithActions} agentsmith actions`,
     );
 
@@ -346,7 +346,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     );
 
     if (!Array.isArray(rootContentsData)) {
-      console.error(
+      this.logger.error(
         `Unexpected response format when fetching root contents for ${this.owner}/${this.repo}/${this.branchRef}. Expected an array.`,
       );
       throw new Error('Failed to fetch repository root contents.');
@@ -357,7 +357,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     );
 
     if (!agentsmithFolderEntry || !agentsmithFolderEntry.sha) {
-      console.warn(
+      this.logger.warn(
         `agentsmithFolder '${this.agentsmithFolder}' not found or is not a directory in ${this.owner}/${this.repo}/${this.branchRef}. Returning null.`,
       );
       return null;
@@ -375,7 +375,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     );
 
     if (!treeData || !Array.isArray(treeData.tree)) {
-      console.warn(
+      this.logger.warn(
         `No tree entries found for agentsmithFolder '${this.agentsmithFolder}' (sha: ${agentsmithFolderEntry.sha}) in ${this.owner}/${this.repo}/${this.branchRef}. Returning empty repo state.`,
       );
       return null;
@@ -423,13 +423,13 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
           // Prefer committer date, fallback to author date
           lastModified = commitInfo.committer?.date || commitInfo.author?.date || dateZero;
           if (!lastModified) {
-            console.warn(
+            this.logger.warn(
               `Commit found for ${fullPath} on ref ${this.branchRef}, but no committer or author date was available.`,
             );
           }
         } else {
           // This case should ideally not happen if a file is listed in the tree for the given ref.
-          console.warn(
+          this.logger.warn(
             `No commit history found for file: ${fullPath} on ref ${this.branchRef}. This may indicate an inconsistency.`,
           );
         }
@@ -440,7 +440,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         };
       } catch (error: any) {
         // Log the error and return the file without lastModified or with it as undefined
-        console.error(
+        this.logger.error(
           `Failed to fetch commit history for ${fullPath} on ref ${this.branchRef}. Error: ${error.message}`,
           error, // Log the full error object for more details
         );
@@ -520,8 +520,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
           );
       }
     }
-
-    console.log(`fired ${syncChangePromises.length} promises`);
 
     return (await Promise.all(syncChangePromises)).flat();
   }
@@ -620,8 +618,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       sha,
     });
 
-    console.log(`created in agentsmith: [prompt] ${slug}:${sha}`);
-
     return [
       {
         target: 'agentsmith',
@@ -661,8 +657,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       name: parsedContent.name,
       sha: newSha,
     });
-
-    console.log(`updated in agentsmith: [prompt] ${slug}:${newSha}`);
 
     return [
       {
@@ -725,7 +719,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     const variablesFile = await this._getRepoFileContentString(variablesFilePath);
 
     if (!variablesFile) {
-      console.warn(
+      this.logger.warn(
         `Failed to get file content for ${variablesFilePath} at ref ${this.branchRef}, assuming no variables`,
       );
     }
@@ -757,8 +751,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       variablesSha,
       contentSha,
     });
-
-    console.log(`created in agentsmith: [version] ${promptSlug}:${version}:${versionSha}`);
 
     syncChanges.push(
       {
@@ -798,10 +790,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         promptVersionUuid: parsedVersionFile.uuid,
         variables,
       });
-
-      console.log(
-        `created in agentsmith: [variables] ${promptSlug}:${version}:${variablesFile.sha}`,
-      );
 
       syncChanges.push({
         target: 'agentsmith',
@@ -851,8 +839,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       status,
       sha: newSha,
     });
-
-    console.log(`updated in agentsmith: [version] ${promptSlug}:${version}:${newSha}`);
 
     return [
       {
@@ -908,8 +894,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       sha: newSha,
     });
 
-    console.log(`updated in agentsmith: [variables] ${promptSlug}:${version}:${newSha}`);
-
     return [
       {
         target: 'agentsmith',
@@ -953,8 +937,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       content: contentFile.content,
       contentSha: newSha,
     });
-
-    console.log(`updated in agentsmith: [content] ${promptSlug}:${version}:${newSha}`);
 
     return [
       {
@@ -1600,10 +1582,9 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         throw new Error(`commit sha was missing from response for ${path}`);
       }
 
-      console.log(`wrote ${path} to ${this.owner}/${this.repo}/${this.branchRef}`);
       return { sha: response.data.content.sha };
     } catch (error: any) {
-      console.error(`Failed to write ${path}: ${error}`);
+      this.logger.error(`Failed to write ${path}: ${error}`);
       throw new Error(`Failed to write ${path}: ${error}`);
     }
   }
@@ -1628,10 +1609,9 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         throw new Error(`commit sha was missing from response for ${path}`);
       }
 
-      console.log(`wrote ${path} to ${this.owner}/${this.repo}/${this.branchRef}`);
       return { sha: response.data.content.sha };
     } catch (error: any) {
-      console.error(`Failed to write ${path}: ${error}`);
+      this.logger.error(`Failed to write ${path}: ${error}`);
       throw new Error(`Failed to write ${path}: ${error}`);
     }
   }
@@ -1640,10 +1620,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     const { path, entity, sha } = options;
 
     const message = `Agentsmith Sync: delete ${entity}`;
-
-    console.log(
-      `Here is where I would delete ${entity} from repo at path ${path} with sha: ${sha}`,
-    );
 
     await this.octokit.request('DELETE /repos/{owner}/{repo}/contents/{path}', {
       owner: this.owner,
@@ -1674,16 +1650,16 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
           sha: data.sha,
         };
       }
-      console.warn(
+      this.logger.warn(
         `Could not get file content for ${path} at ref ${this.branchRef}. Response type was not 'file' or content was missing.`,
       );
       return null;
     } catch (error: any) {
       if (error.status === 404) {
-        console.warn(`File ${path} at ref ${this.branchRef} not found.`);
+        this.logger.warn(`File ${path} at ref ${this.branchRef} not found.`);
         return null;
       }
-      console.error(`Failed to fetch content for ${path} at ref ${this.branchRef}:`, error);
+      this.logger.error(`Failed to fetch content for ${path} at ref ${this.branchRef}:`, error);
       return null;
     }
   }
