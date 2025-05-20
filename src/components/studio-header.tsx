@@ -21,7 +21,7 @@ import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { ThemeSwitcher } from './theme-switcher';
 import { CurrentUserAvatar } from './current-user-avatar';
-import { MobileStudioMenu } from './studio-menu';
+import { MobileStudioSidebar } from './studio-sidebar';
 
 export const StudioHeader = () => {
   const {
@@ -56,7 +56,7 @@ export const StudioHeader = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h2 className="hidden md:block text-2xl font-bold">A</h2>
-          <MobileStudioMenu />
+          <MobileStudioSidebar />
           <Breadcrumb>
             <BreadcrumbList>
               {organizations.length > 1 ? (

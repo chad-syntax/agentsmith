@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Play, ClipboardCopy } from 'lucide-react';
 import { Database } from '@/app/__generated__/supabase.types';
 import { routes } from '@/utils/routes';
@@ -22,6 +22,10 @@ import { JsonEditor } from '@/components/editors/json-editor';
 import { GetPromptVersionByUuidResult } from '@/lib/PromptsService';
 import { findMissingGlobalContext, ParsedVariable } from '@/utils/template-utils';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { EmojiModeButton } from '@/components/emoji-mode-button';
+import { emojiTokenify } from '@/utils/emoji-tokenify';
+import { cn } from '@/utils/shadcn';
+import { STUDIO_FULL_HEIGHT } from '@/app/constants';
 
 type EditPromptVersionPageProps = {
   promptVersion: NonNullable<GetPromptVersionByUuidResult>;
@@ -50,12 +54,32 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
   const [missingGlobals, setMissingGlobals] = useState<string[]>([]);
   const [isCompileModalOpen, setIsCompileModalOpen] = useState(false);
+  const [isEmojiModeEnabled, setIsEmojiModeEnabled] = useState(false);
+  const [tokenBpe, setTokenBpe] = useState<any>(null);
+  const [emojiList, setEmojiList] = useState<string[]>([]);
   const { selectedProjectUuid, showSyncToast } = useApp();
 
   const globalContext = currentPromptVersion.prompts.projects.global_contexts?.content ?? {};
 
   const hasChanges =
     content !== initialContent || JSON.stringify(variables) !== JSON.stringify(initialVariables);
+
+  const editorContent = useMemo(
+    () =>
+      isEmojiModeEnabled && tokenBpe && emojiList.length > 0
+        ? emojiTokenify(content, tokenBpe, emojiList)
+        : content,
+    [isEmojiModeEnabled, tokenBpe, emojiList, content],
+  );
+
+  useEffect(() => {
+    const loadTokenify = async () => {
+      const { default: o200k_base } = await import('@/constants/o200k_base.json');
+      setTokenBpe(o200k_base);
+    };
+
+    loadTokenify();
+  }, [isEmojiModeEnabled]);
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
@@ -184,7 +208,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)]">
+    <div className={cn('flex', STUDIO_FULL_HEIGHT)}>
       <div className="flex-1 overflow-auto">
         <div className="p-6">
           <div className="mb-6 flex justify-between items-center">
@@ -282,7 +306,13 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
             </div>
 
             <div>
-              <Label className="pb-2">Content</Label>
+              <div className="flex items-center gap-2 mb-2">
+                <Label>Content</Label>
+                <EmojiModeButton
+                  onEnabledChange={setIsEmojiModeEnabled}
+                  onEmojiListLoaded={setEmojiList}
+                />
+              </div>
               {missingGlobals.length > 0 && (
                 <Alert className="mb-4" variant="destructive">
                   <AlertTitle>Missing Global Context</AlertTitle>
@@ -292,10 +322,12 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
                 </Alert>
               )}
               <PromptContentEditor
-                content={content}
+                content={editorContent}
+                readOnly={isEmojiModeEnabled}
                 onContentChange={handleContentChange}
                 onVariablesChange={handleVariablesChange}
                 minHeight="500px"
+                className={isEmojiModeEnabled ? 'text-2xl' : ''}
               />
             </div>
           </div>

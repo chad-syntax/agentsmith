@@ -70,13 +70,13 @@ const StudioMenu = () => {
   );
 };
 
-export const DesktopStudioMenu = () => {
+export const DesktopStudioSidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <aside
       className={cn(
-        'hidden md:block border-r bg-background transition-all duration-250 absolute z-50 h-[calc(100vh-58px)]',
+        'hidden md:block border-r bg-background transition-all duration-250 absolute z-50 h-[calc(100vh-49px)]',
         isOpen ? 'w-64' : 'w-12',
       )}
       onMouseEnter={() => setIsOpen(true)}
@@ -87,7 +87,7 @@ export const DesktopStudioMenu = () => {
   );
 };
 
-export const MobileStudioMenu = () => {
+export const MobileStudioSidebar = () => {
   return (
     <Sheet>
       <SheetTrigger asChild>

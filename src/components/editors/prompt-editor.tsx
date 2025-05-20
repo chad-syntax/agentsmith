@@ -78,7 +78,7 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
   }, [content]);
 
   return (
-    <div className={cn('space-y-2', className)}>
+    <div className={cn('space-y-2 text-sm', className)}>
       <div
         className={cn(
           'rounded-md border bg-background',
@@ -94,7 +94,6 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
           disabled={readOnly}
           style={{
             fontFamily: '"Fira code", "Fira Mono", monospace',
-            fontSize: 14,
             minHeight,
           }}
           className="w-full"

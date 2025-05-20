@@ -20,6 +20,8 @@ import {
   GetAllPromptVersionsResult,
   GetLatestPromptVersionResult,
 } from '@/lib/PromptsService';
+import { cn } from '@/utils/shadcn';
+import { STUDIO_FULL_HEIGHT } from '@/app/constants';
 
 type PromptDetailPageProps = {
   prompt: NonNullable<GetPromptByIdResult>;
@@ -80,7 +82,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
   const highestVersion = getHighestVersion();
 
   return (
-    <div className="flex h-[calc(100vh-64px)]">
+    <div className={cn('flex', STUDIO_FULL_HEIGHT)}>
       <div className="flex-1 overflow-auto">
         <div className="p-6">
           <div className="mb-2">
