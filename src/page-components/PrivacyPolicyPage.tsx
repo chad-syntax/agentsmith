@@ -1,11 +1,9 @@
-import { HeroHeader } from '@/components/hero-header';
 import { H1, H2, P, Lead } from '@/components/typography';
 
 export const PrivacyPolicyPage = () => {
   return (
     <div>
       <article className="mx-auto px-4 max-w-[1400px] py-4 md:py-12">
-        <HeroHeader />
         <H1 className="mb-4">Privacy Policy</H1>
         <div className="space-y-4">
           <P>
@@ -388,7 +386,7 @@ export const PrivacyPolicyPage = () => {
                 If you have any questions about this Privacy Policy or our privacy practices, please
                 contact us at:
               </P>
-              <P>Email: privacy@chadsyntax.com</P>
+              <P>Email: privacy@agentsmith.app</P>
             </section>
           </section>
         </div>

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { routes } from '@/utils/routes';
+
 type AuthLayoutProps = {
   children: React.ReactNode;
 };

@@ -21,7 +21,7 @@ import {
   validateGlobalContext,
   compilePrompt,
 } from '@/utils/template-utils'; // Import new utils
-import { useApp } from '@/providers/app'; // For showSyncToast
+import { toast } from 'sonner';
 
 type CompileToClipboardModalProps = {
   isOpen: boolean;
@@ -37,7 +37,6 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { showSyncToast } = useApp();
 
   const handleInputChange = (variableName: string, value: string) => {
     setInputValues((prev) => ({
@@ -90,10 +89,7 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
       const compiledContent = compilePrompt(promptContent, finalVariablesForCompilation);
 
       await navigator.clipboard.writeText(compiledContent);
-      showSyncToast({
-        title: 'Success',
-        description: 'Compiled prompt copied to clipboard!',
-      });
+      toast.success('Compiled prompt copied to clipboard!');
       onClose(); // Close modal on success
     } catch (compileError: any) {
       console.error('Error compiling prompt or copying to clipboard:', compileError);
@@ -131,13 +127,17 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
                     {variable.name}
                     {variable.required && <span className="text-destructive ml-1">*</span>}
                   </Label>
-                  <Input
-                    id={variable.name}
-                    type={variable.type === 'NUMBER' ? 'number' : 'text'}
-                    value={inputValues[variable.name] || ''}
-                    placeholder={variable.default_value ? `Default: ${variable.default_value}` : ''}
-                    onChange={(e) => handleInputChange(variable.name, e.target.value)}
-                  />
+                  <div className="mx-1">
+                    <Input
+                      id={variable.name}
+                      type={variable.type === 'NUMBER' ? 'number' : 'text'}
+                      value={inputValues[variable.name] || ''}
+                      placeholder={
+                        variable.default_value ? `Default: ${variable.default_value}` : ''
+                      }
+                      onChange={(e) => handleInputChange(variable.name, e.target.value)}
+                    />
+                  </div>
                 </div>
               ))}
 
