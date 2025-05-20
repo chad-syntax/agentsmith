@@ -1,5 +1,7 @@
-import { AuthPage } from '@/page-components/AuthPage';
+// import { AuthPage } from '@/page-components/AuthPage';
+import { redirect } from 'next/navigation';
 
 export default function SignUp() {
-  return <AuthPage />;
+  redirect('/');
+  // return <AuthPage />;
 }
