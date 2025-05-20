@@ -35,26 +35,23 @@ export const NotPubliclyAvailable = (props: NotPubliclyAvailableProps) => {
       <H2 className="text-muted-foreground text-center mb-8">
         Agentsmith is not publicly available yet.
       </H2>
-      <H1 className="text-center mb-8">
-        Join the waitlist to be invited to our private beta!
-      </H1>
+      <H1 className="text-center mb-8">Join the waitlist to be invited to our private beta!</H1>
       {withAlphaClub && (
         <div className="flex flex-col items-center justify-center">
           <Button
             onClick={() => handleAlphaClubClick()}
             variant="outline"
-            className="bg-success/15 text-success hover:bg-success/25 hover:text-success border-success"
+            className="h-auto whitespace-pre-wrap bg-success/15 text-success hover:bg-success/25 hover:text-success border-success"
             size="sm"
           >
-            Get 50% off the first year of public launch by joining the Alpha
-            Club!
+            Get 50% off the first year of public launch by joining the Alpha Club!
           </Button>
 
           <Badge
             variant="outline"
             className={cn(
               'mt-4 transition-opacity duration-300',
-              alphaClubClicked ? 'opacity-100' : 'opacity-0'
+              alphaClubClicked ? 'opacity-100' : 'opacity-0',
             )}
           >
             Coming soon!

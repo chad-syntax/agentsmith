@@ -41,7 +41,7 @@ export const LandingHero = (props: LandingHeroProps) => {
       <HeroHeader />
       <div className="flex justify-start items-center md:items-start flex-col lg:flex-row">
         <div className="flex flex-col">
-          <H1 className="max-w-[400px] md:max-w-none text-5xl md:text-8xl font-bold leading-tight mb-10 md:leading-[90px]">
+          <H1 className="max-w-[400px] md:max-w-none text-5xl md:text-8xl lg:text-8xl font-bold mb-10">
             AI AGENT
             <br />
             DEVELOPMENT
@@ -51,7 +51,7 @@ export const LandingHero = (props: LandingHeroProps) => {
           <Button
             onClick={handleWaitlistClicked}
             size="lg"
-            className="bg-gradient-to-r from-[#0198B2] via-[#27AC96] to-[#7DD957] text-white hover:opacity-90 text-2xl md:text-3xl h-auto px-8 py-4 mb-10"
+            className="whitespace-pre-wrap bg-gradient-to-r from-[#0198B2] via-[#27AC96] to-[#7DD957] text-white hover:opacity-90 text-2xl md:text-3xl h-auto px-8 py-4 mb-10"
             asChild
           >
             <Link href="#EMAIL">Secure a spot on the waitlist</Link>
@@ -61,7 +61,7 @@ export const LandingHero = (props: LandingHeroProps) => {
               <Button
                 onClick={handleAlphaClubClick}
                 variant="outline"
-                className="border-2 border-dashed border-teal-500 text-teal-600 hover:bg-teal-50 w-full"
+                className="h-auto whitespace-pre-wrap border-2 border-dashed border-teal-500 text-teal-600 hover:bg-teal-50 w-full"
               >
                 For 50% off your first year after launch, join the Alpha Club!
               </Button>

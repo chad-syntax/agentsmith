@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { ThemeSwitcher } from './theme-switcher';
-import { H1 } from './typography';
-import { Container } from './layout/container';
+import { H2 } from './typography';
 
 type HeroHeaderProps = {
   title?: string;
@@ -9,13 +8,11 @@ type HeroHeaderProps = {
 
 export const HeroHeader = ({ title = 'Agentsmith' }: HeroHeaderProps) => {
   return (
-    <Container>
-      <div className="flex justify-between items-center py-4 md:py-8">
-        <Link href="/">
-          <H1>{title}</H1>
-        </Link>
-        <ThemeSwitcher />
-      </div>
-    </Container>
+    <div className="flex justify-between items-center py-4 md:py-8">
+      <Link href="/">
+        <H2 className="border-none">{title}</H2>
+      </Link>
+      <ThemeSwitcher />
+    </div>
   );
 };
