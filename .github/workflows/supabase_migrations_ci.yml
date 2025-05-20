@@ -1,0 +1,36 @@
+name: Supabase Tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  supabase_tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Overwrite Supabase db version
+        run: |
+          mkdir -p supabase/.temp
+          echo "15.8.1.038" > supabase/.temp/postgres-version
+
+      - name: Start Supabase local development setup
+        run: supabase db start
+
+      - name: Run Tests
+        run: supabase test db
+
+      - name: Verify generated types are checked in
+        run: |
+          supabase gen types typescript --local > types.gen.ts
+          if ! git diff --ignore-space-at-eol --exit-code --quiet types.gen.ts; then
+            echo "Detected uncommitted changes after build. See status below:"
+            git diff
+            exit 1
+          fi
