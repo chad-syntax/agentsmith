@@ -32,9 +32,11 @@ export default function RootLayout(props: RootLayoutProps) {
 
   return (
     <html lang="en" className={robotoMono.className} suppressHydrationWarning>
-      <head>
-        <script src="https://unpkg.com/react-scan/dist/auto.global.js" />
-      </head>
+      {process.env.VERCEL_ENV !== 'production' && (
+        <head>
+          <script src="https://unpkg.com/react-scan/dist/auto.global.js" />
+        </head>
+      )}
       <PostHogProvider>
         <GoogleAnalytics gaId="G-PZG86YG9ZZ" />
         <body className="bg-background text-foreground">
