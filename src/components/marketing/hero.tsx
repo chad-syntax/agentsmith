@@ -1,15 +1,33 @@
+'use client';
+
 import { BrevoEmailSubscribe } from '@/components/brevo-email-subscribe/brevo-email-subscribe';
+import { Button } from '../ui/button';
 
 export const HeroSection = () => {
+  const handleAccessClick = () => {
+    const $button = document.getElementById('join-alpha-club');
+    if ($button) {
+      setTimeout(() => {
+        $button.focus();
+      }, 1);
+    }
+  };
+
   return (
     <section className="md:py-16 bg-background  ">
       <div className="container px-4 md:px-6 relative mx-auto">
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
           <div className="flex flex-col justify-center space-y-4">
             <div className="space-y-2">
-              <div className="inline-block rounded-full bg-primary/10 px-3 py-1 text-sm font-medium text-primary mb-4">
-                Alpha Access Available
-              </div>
+              <Button
+                asChild
+                size="sm"
+                className="rounded-full bg-primary/10 hover:bg-primary/20 text-xs font-medium text-primary mb-4"
+              >
+                <a href="#pricing" onClick={handleAccessClick}>
+                  Alpha Access Available
+                </a>
+              </Button>
               <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-foreground">
                 DEVELOP AGENTS WITH PEACE OF FUCKING MIND
               </h1>
