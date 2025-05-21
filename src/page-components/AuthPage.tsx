@@ -1,6 +1,7 @@
 import { SignInForm } from '@/components/sign-in-form';
 import { H1 } from '@/components/typography';
 import Link from 'next/link';
+import { routes } from '@/utils/routes';
 
 export const AuthPage = () => (
   <div className="container mt-16 md:mt-32 mx-auto flex flex-col items-center">
@@ -14,7 +15,7 @@ export const AuthPage = () => (
           Home
         </Link>
         <span>|</span>
-        <a href="mailto:support@agentsmith.app" className="hover:underline">
+        <a href={routes.emails.support} className="hover:underline">
           Support
         </a>
       </div>

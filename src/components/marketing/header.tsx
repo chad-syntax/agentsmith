@@ -6,21 +6,21 @@ import { Button } from '@/components/ui/button';
 import { routes } from '@/utils/routes';
 
 export const Header = () => {
-  const handleJoinWaitlistClick = () => {
-    const $emailInput = document.getElementById('EMAIL');
-    if ($emailInput) {
+  const handleAccessClick = () => {
+    const $button = document.getElementById('join-alpha-club');
+    if ($button) {
       setTimeout(() => {
-        $emailInput.focus();
+        $button.focus();
       }, 1);
     }
   };
 
   return (
-    <header className="sticky top-0 z-50 mx-2 pt-2 bg-background/95 backdrop-blur-lg supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 mx-2 pt-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="w-full border border-muted-foreground/50 rounded-3xl">
         <div className="container mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center">
-            <Link href="/" className="text-xl font-bold">
+            <Link href={routes.marketing.home} className="text-xl font-bold">
               Agentsmith
             </Link>
           </div>
@@ -55,8 +55,8 @@ export const Header = () => {
             <Button variant="outline" className="hidden md:inline-flex" asChild>
               <Link href={routes.studio.home}>Studio</Link>
             </Button>
-            <Button onClick={handleJoinWaitlistClick} asChild>
-              <a href="#EMAIL">Join Waitlist</a>
+            <Button onClick={handleAccessClick} asChild>
+              <a href="#pricing">Early Access</a>
             </Button>
           </div>
         </div>

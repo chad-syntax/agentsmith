@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Container } from '@/components/layout/container';
+import { routes } from '@/utils/routes';
 
 export const Footer = () => {
   return (
@@ -36,7 +37,7 @@ export const Footer = () => {
             <ul className="space-y-2 text-sm">
               <li>
                 <a
-                  href="https://github.com/chad-syntax/agentsmith"
+                  href={routes.external.github}
                   className="text-foreground/70 hover:text-foreground"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -50,12 +51,18 @@ export const Footer = () => {
             <h4 className="text-sm font-medium text-foreground">Legal</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/privacy-policy" className="text-foreground/70 hover:text-foreground">
+                <Link
+                  href={routes.marketing.privacy}
+                  className="text-foreground/70 hover:text-foreground"
+                >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms-of-service" className="text-foreground/70 hover:text-foreground">
+                <Link
+                  href={routes.marketing.terms}
+                  className="text-foreground/70 hover:text-foreground"
+                >
                   Terms of Service
                 </Link>
               </li>

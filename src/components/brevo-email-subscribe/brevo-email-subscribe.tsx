@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Script from 'next/script';
 // No specific CSS import needed if we are using Tailwind for the new design
 // import './brevo-email-subscribe.css';
@@ -124,7 +124,7 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium whitespace-nowrap sib-hide-loader-icon-parent"
           >
-            <Loader2 className="mr-2 h-4 w-4 animate-spin sib-hide-loader-icon" />
+            {/* <Loader2 className="mr-2 h-4 w-4 animate-spin sib-hide-loader-icon" /> */}
             Join Waitlist
           </Button>
         </div>
@@ -161,14 +161,19 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
         </div>
 
         <div
-          className="cf-turnstile g-recaptcha" // Keep class for Brevo script
+          className="cf-turnstile g-recaptcha m-0" // Keep class for Brevo script
           data-sitekey={process.env.NEXT_PUBLIC_CF_TURNSTILE_SITE_KEY}
           id="sib-captcha" // Keep id for Brevo script
           data-callback="handleCaptchaResponse" // Keep callback for Brevo script
           data-language="en"
         />
 
-        <input type="text" name="email_address_check" defaultValue="" className="input--hidden" />
+        <input
+          type="text"
+          name="email_address_check"
+          defaultValue=""
+          className="input--hidden m-0 h-0 block"
+        />
         <input type="hidden" name="locale" defaultValue="en" />
       </form>
       {/* Brevo's main script and Cloudflare Turnstile script */}

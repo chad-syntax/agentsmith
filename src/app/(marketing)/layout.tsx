@@ -13,7 +13,7 @@ export default function RootLayout(props: RootLayoutProps) {
       <Header />
       <main className="min-h-screen flex flex-col items-center">
         <div className="flex-1 w-full flex flex-col gap-20 items-center">
-          <div className="flex flex-col gap-20 w-full">{children}</div>
+          <div className="flex flex-col gap-28 w-full">{children}</div>
         </div>
       </main>
       <Footer />

@@ -23,8 +23,8 @@ export const StudioPage = (props: StudioPageProps) => {
         </AlertTitle>
         <AlertDescription>
           <P>
-            Making this app as bitchin' as possible is my top priority. Please reach out to me at{' '}
-            <a className="underline" href="mailto:alex@agentsmith.app">
+            Making this app as bitchin' as possible is my top priority. Please reach out to{' '}
+            <a className="underline" href={routes.emails.alex}>
               alex@agentsmith.app
             </a>{' '}
             if you have any questions or feedback.
@@ -34,7 +34,7 @@ export const StudioPage = (props: StudioPageProps) => {
               target="_blank"
               rel="noopener noreferrer"
               className="underline"
-              href="https://github.com/chad-syntax/agentsmith"
+              href={routes.external.github}
             >
               GitHub!
             </a>

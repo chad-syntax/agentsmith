@@ -5,6 +5,7 @@ export const routes = {
     landing2: '/2landing',
     landing3: '/3landing',
     privacy: '/privacy-policy',
+    terms: '/terms-of-service',
   },
   studio: {
     home: '/studio',
@@ -58,4 +59,12 @@ export const routes = {
     settingsKeys: 'https://openrouter.ai/settings/keys',
   },
   error: (message: string) => `/error?message=${encodeURIComponent(message)}`,
+  external: {
+    github: 'https://github.com/chad-syntax/agentsmith',
+  },
+  emails: {
+    enterprise: 'mailto:enterprise@agentsmith.app',
+    support: 'mailto:support@agentsmith.app',
+    alex: 'mailto:alex@agentsmith.app',
+  },
 } as const;

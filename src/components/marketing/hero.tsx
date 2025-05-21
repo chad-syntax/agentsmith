@@ -2,8 +2,7 @@ import { BrevoEmailSubscribe } from '@/components/brevo-email-subscribe/brevo-em
 
 export const HeroSection = () => {
   return (
-    <section className="py-10 md:py-16 bg-background bg-grid-pattern bg-[length:30px_30px] relative">
-      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent opacity-50"></div>
+    <section className="md:py-16 bg-background  ">
       <div className="container px-4 md:px-6 relative mx-auto">
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
           <div className="flex flex-col justify-center space-y-4">
@@ -12,18 +11,18 @@ export const HeroSection = () => {
                 Alpha Access Available
               </div>
               <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-foreground">
-                Develop AI Agents with peace of f*cking mind
+                DEVELOP AGENTS WITH PEACE OF FUCKING MIND
               </h1>
               <div id="join-waitlist" />
               <p className="max-w-[600px] text-muted-foreground md:text-xl pt-2">
-                Build, test, and deploy AI agents with exceptional prompt authoring capabilities for
-                both technical and non-technical users.
+                Author templatized prompts, refine your AI agents, and seamlessly sync everything to
+                your codebase with strict type-safety and deploy with confidence.
               </p>
             </div>
             {/* Replace form with BrevoEmailSubscribe */}
             <BrevoEmailSubscribe form="agentsmithInitialLanding" />
-            <p className="text-sm text-primary font-medium">
-              🎉 Get 50% off your first year after launch. Join the Alpha Club!
+            <p className="text-primary font-medium hover:underline">
+              <a href="#pricing">🎉 Pay now to receive early access. Join the alpha club!</a>
             </p>
           </div>
           <div className="flex justify-center lg:justify-end">
