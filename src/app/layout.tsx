@@ -3,7 +3,7 @@ import { Roboto_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Toaster } from '@/components/ui/sonner';
-// import { PostHogProvider } from './providers/posthog';
+import { PostHogProvider } from '@/providers/posthog';
 
 const defaultUrl =
   process.env.VERCEL_ENV === 'production' && process.env.NEXT_PUBLIC_SITE_URL
@@ -32,23 +32,23 @@ export default function RootLayout(props: RootLayoutProps) {
 
   return (
     <html lang="en" className={robotoMono.className} suppressHydrationWarning>
-      {/* <head>
+      <head>
         <script src="https://unpkg.com/react-scan/dist/auto.global.js" />
-      </head> */}
-      {/* <PostHogProvider> */}
-      <GoogleAnalytics gaId="G-PZG86YG9ZZ" />
-      <body className="bg-background text-foreground">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster expand visibleToasts={9} />
-        </ThemeProvider>
-      </body>
-      {/* </PostHogProvider> */}
+      </head>
+      <PostHogProvider>
+        <GoogleAnalytics gaId="G-PZG86YG9ZZ" />
+        <body className="bg-background text-foreground">
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster expand visibleToasts={9} />
+          </ThemeProvider>
+        </body>
+      </PostHogProvider>
     </html>
   );
 }
