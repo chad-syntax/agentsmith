@@ -1,7 +1,9 @@
+import { HeroSection } from '@/components/marketing/hero';
+
 export const LandingPage = () => {
   return (
     <>
-      <div>landing</div>
+      <HeroSection />
     </>
   );
 };

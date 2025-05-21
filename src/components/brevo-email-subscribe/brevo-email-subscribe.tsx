@@ -2,9 +2,10 @@
 
 import { useEffect } from 'react';
 import Script from 'next/script';
-import './brevo-email-subscribe.css';
+// No specific CSS import needed if we are using Tailwind for the new design
+// import './brevo-email-subscribe.css';
 import { usePostHog } from 'posthog-js/react';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+// import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'; // Card structure will be removed
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,6 +28,9 @@ declare global {
         selectedLists: string;
       };
     };
+    gtag: (...args: any[]) => void; // Added gtag declaration for Google Analytics
+    turnstile: any; // Added turnstile declaration
+    grecaptcha: any; // Added grecaptcha declaration
   }
 }
 
@@ -70,15 +74,17 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
     posthog.capture('brevo_email_subscribe_submitted');
 
     // Google Search-1 campaign conversion tracking
-    window.gtag('event', 'conversion', {
-      send_to: 'AW-16839610676/zqbPCJr38pUaELSi4N0-',
-      value: 1.0,
-      currency: 'USD',
-    });
+    if (window.gtag) {
+      window.gtag('event', 'conversion', {
+        send_to: 'AW-16839610676/zqbPCJr38pUaELSi4N0-',
+        value: 1.0,
+        currency: 'USD',
+      });
+    }
   };
 
   return (
-    <div id="brevo-email-subscribe" className="max-w-[540px] mx-auto">
+    <div id="brevo-email-subscribe-wrapper" className="w-full max-w-md">
       <div id="error-message" className="mb-4 hidden">
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -95,89 +101,90 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
         </Alert>
       </div>
 
-      <Card>
-        <form
-          id="sib-form"
-          method="POST"
-          action={formSubmitUrl}
-          data-type="subscription"
-          onSubmit={handleSubmit}
-        >
-          <CardHeader>
-            <CardTitle className="text-3xl text-left">Be the first in the door</CardTitle>
-            <p className="text-muted-foreground text-left mt-2">
-              Early subscribers will get access first!
-            </p>
-          </CardHeader>
+      <form
+        id="sib-form"
+        method="POST"
+        action={formSubmitUrl}
+        data-type="subscription"
+        onSubmit={handleSubmit}
+        className="space-y-3"
+      >
+        <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <Input
+            type="email"
+            id="EMAIL"
+            name="EMAIL"
+            placeholder="Enter your email"
+            autoComplete="off"
+            required
+            className="w-full bg-background border-border text-foreground placeholder:text-muted-foreground" // Adjusted styling
+          />
+          <Button
+            type="submit"
+            size="lg"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium whitespace-nowrap sib-hide-loader-icon-parent"
+          >
+            <Loader2 className="mr-2 h-4 w-4 animate-spin sib-hide-loader-icon" />
+            Join Waitlist
+          </Button>
+        </div>
 
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="EMAIL" className="sr-only">
-                Email
-              </Label>
-              <Input
-                type="email"
-                id="EMAIL"
-                name="EMAIL"
-                placeholder="Enter your email"
-                autoComplete="off"
-                required
-              />
-            </div>
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="OPT_IN"
+            name="OPT_IN"
+            value="1"
+            className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary" // Adjusted styling
+          />
+          <Label
+            htmlFor="OPT_IN"
+            className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-left text-muted-foreground" // Adjusted styling
+          >
+            I agree to receive newsletters
+          </Label>
+        </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox id="OPT_IN" name="OPT_IN" value="1" />
-              <Label htmlFor="OPT_IN" className="text-sm leading-none text-muted-foreground">
-                I agree to receive your newsletters and accept the data privacy statement.
-              </Label>
-            </div>
+        <div className="text-[10px] text-muted-foreground">
+          <p>
+            By submitting this form you agree that the personal data you provided will be
+            transferred to Brevo for processing in accordance with Brevo's{' '}
+            <a
+              href="https://www.brevo.com/en/legal/privacypolicy/"
+              target="_blank"
+              rel="noopener noreferrer" // Added rel for security
+              className="underline hover:text-primary"
+            >
+              Privacy Policy
+            </a>
+            .
+          </p>
+        </div>
 
-            <div className="text-sm text-muted-foreground">
-              <p>
-                We use Brevo as our marketing platform. By submitting this form you agree that the
-                personal data you provided will be transferred to Brevo for processing in accordance
-                with{' '}
-                <a
-                  href="https://www.brevo.com/en/legal/privacypolicy/"
-                  target="_blank"
-                  className="underline hover:text-primary"
-                >
-                  Brevo's Privacy Policy
-                </a>
-                .
-              </p>
-            </div>
+        <div
+          className="cf-turnstile g-recaptcha" // Keep class for Brevo script
+          data-sitekey={process.env.NEXT_PUBLIC_CF_TURNSTILE_SITE_KEY}
+          id="sib-captcha" // Keep id for Brevo script
+          data-callback="handleCaptchaResponse" // Keep callback for Brevo script
+          data-language="en"
+        />
 
-            <div
-              className="cf-turnstile g-recaptcha"
-              data-sitekey={process.env.NEXT_PUBLIC_CF_TURNSTILE_SITE_KEY}
-              id="sib-captcha"
-              data-callback="handleCaptchaResponse"
-              data-language="en"
-            />
-          </CardContent>
-
-          <CardFooter>
-            <Button type="submit" className="w-full" size="lg">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin sib-hide-loader-icon" />
-              Subscribe
-            </Button>
-          </CardFooter>
-
-          <input type="text" name="email_address_check" defaultValue="" className="input--hidden" />
-          <input type="hidden" name="locale" defaultValue="en" />
-        </form>
-      </Card>
-
+        <input type="text" name="email_address_check" defaultValue="" className="input--hidden" />
+        <input type="hidden" name="locale" defaultValue="en" />
+      </form>
+      {/* Brevo's main script and Cloudflare Turnstile script */}
       <Script src="https://sibforms.com/forms/end-form/build/main.js" strategy="lazyOnload" />
       <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="lazyOnload" />
       <Script
+        id="brevo-captcha-handler" // Added id for clarity
         dangerouslySetInnerHTML={{
           __html: `
           function handleCaptchaResponse() {
             var event = new Event('captchaChange');
             document.getElementById('sib-captcha').dispatchEvent(event);
-            window.grecaptcha = window.turnstile;
+            // Ensure grecaptcha is available for Brevo's script
+            if (window.turnstile) {
+                 window.grecaptcha = window.turnstile;
+            }
           }
         `,
         }}

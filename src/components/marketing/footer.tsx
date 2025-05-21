@@ -4,7 +4,7 @@ import { Container } from '@/components/layout/container';
 export const Footer = () => {
   return (
     <footer className="border-t border-border bg-background">
-      <Container className="px-4 md:px-6 py-12">
+      <Container className="px-4 md:px-6 py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
           <div className="space-y-4">
             <h4 className="text-sm font-medium text-foreground">Agentsmith</h4>
