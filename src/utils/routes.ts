@@ -1,11 +1,10 @@
 export const routes = {
   marketing: {
     home: '/',
-    landing1: '/1landing',
-    landing2: '/2landing',
-    landing3: '/3landing',
     privacy: '/privacy-policy',
     terms: '/terms-of-service',
+    waitlisted: '/waitlisted',
+    checkoutLanding: '/checkout-landing',
   },
   studio: {
     home: '/studio',
@@ -61,10 +60,19 @@ export const routes = {
   error: (message: string) => `/error?message=${encodeURIComponent(message)}`,
   external: {
     github: 'https://github.com/chad-syntax/agentsmith',
+    stripe: {
+      checkout: {
+        proAlphaClub:
+          process.env.VERCEL_ENV === 'production'
+            ? 'https://buy.stripe.com/3cIfZi9Q77BY5lX1126wE00?prefilled_promo_code=ALPHACLUB'
+            : 'https://buy.stripe.com/test_28E3cx3INaPXgYYb3c53O00?prefilled_promo_code=ALPHACLUB',
+      },
+    },
   },
   emails: {
     enterprise: 'mailto:enterprise@agentsmith.app',
     support: 'mailto:support@agentsmith.app',
+    team: 'mailto:team@agentsmith.app',
     alex: 'mailto:alex@agentsmith.app',
   },
 } as const;

@@ -11,22 +11,22 @@ export const Footer = () => {
             <h4 className="text-sm font-medium text-foreground">Agentsmith</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="#benefits" className="text-foreground/70 hover:text-foreground">
+                <Link href="/#benefits" className="text-foreground/70 hover:text-foreground">
                   Product
                 </Link>
               </li>
               <li>
-                <Link href="#how-it-works" className="text-foreground/70 hover:text-foreground">
+                <Link href="/#how-it-works" className="text-foreground/70 hover:text-foreground">
                   How It Works
                 </Link>
               </li>
               <li>
-                <Link href="#pricing" className="text-foreground/70 hover:text-foreground">
+                <Link href="/#pricing" className="text-foreground/70 hover:text-foreground">
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link href="#faq" className="text-foreground/70 hover:text-foreground">
+                <Link href="/#faq" className="text-foreground/70 hover:text-foreground">
                   FAQ
                 </Link>
               </li>

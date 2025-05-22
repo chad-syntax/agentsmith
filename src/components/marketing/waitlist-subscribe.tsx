@@ -1,7 +1,4 @@
-import {
-  BrevoEmailSubscribe,
-  BrevoForms,
-} from '@/components/brevo-email-subscribe/brevo-email-subscribe';
+import { BrevoEmailSubscribe } from '@/components/brevo-email-subscribe/brevo-email-subscribe';
 
 export function WaitlistSubscribeSection() {
   return (
@@ -15,7 +12,10 @@ export function WaitlistSubscribeSection() {
             Be among the first to access Agentsmith and get 50% off your first year.
           </p>
           <div className="max-w-md mx-auto">
-            <BrevoEmailSubscribe form="agentsmithInitialLanding" />
+            <BrevoEmailSubscribe
+              trackingLocation="waitlist-subscribe"
+              form="agentsmithInitialLanding"
+            />
           </div>
         </div>
       </div>

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import Script from 'next/script';
 // No specific CSS import needed if we are using Tailwind for the new design
 // import './brevo-email-subscribe.css';
-import { usePostHog } from 'posthog-js/react';
+
 // import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'; // Card structure will be removed
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { usePostHog } from 'posthog-js/react';
 
 declare global {
   interface Window {
@@ -45,12 +46,13 @@ type BrevoForm = keyof typeof BrevoForms;
 
 type BrevoEmailSubscribeProps = {
   form: BrevoForm;
+  trackingLocation: string;
 };
 
 export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
   const posthog = usePostHog();
 
-  const { form } = props;
+  const { form, trackingLocation } = props;
   const formSubmitUrl = BrevoForms[form];
 
   useEffect(() => {
@@ -71,7 +73,9 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
   }, []);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    posthog.capture('brevo_email_subscribe_submitted');
+    posthog.capture('brevo_email_subscribe_submitted', {
+      trackingLocation,
+    });
 
     // Google Search-1 campaign conversion tracking
     if (window.gtag) {

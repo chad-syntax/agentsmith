@@ -2,10 +2,10 @@
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import { cn } from '@/utils/shadcn';
 import { CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
+import { usePostHog } from 'posthog-js/react';
 
 type PricingCardFeature = {
   text: string;
@@ -69,11 +69,11 @@ const pricingData: PricingCardData[] = [
       { text: 'Priority support', isPrimary: true },
     ],
     buttonText: 'Join Alpha Club',
-    buttonLink: routes.auth.signUp,
+    buttonLink: routes.external.stripe.checkout.proAlphaClub,
     isRecommended: true,
     isDiscounted: true,
     discountedPrice: '$120',
-    highlightText: 'Pay now to receive early access. Join the alpha club!',
+    highlightText: 'Pay now to receive early access. Join the alpha club! (limited to 100 spots)',
     buttonId: 'join-alpha-club',
   },
   {
@@ -99,6 +99,18 @@ type PricingCardProps = {
 
 const PricingCardItem = (props: PricingCardProps) => {
   const { card } = props;
+  const posthog = usePostHog();
+
+  const handleCtaClick = () => {
+    posthog.capture('pricing_card_cta_clicked', {
+      card: card.title,
+      buttonText: card.buttonText,
+      buttonLink: card.buttonLink,
+      price: card.price,
+    });
+    if (card.onClick) card.onClick();
+  };
+
   return (
     <Card className="bg-card border-border rounded-lg overflow-hidden relative">
       <CardHeader>
@@ -151,7 +163,7 @@ const PricingCardItem = (props: PricingCardProps) => {
             className="w-full focus:outline-2 focus:outline-foreground focus:outline-solid"
             asChild
             disabled={card.disabled}
-            onClick={card.onClick}
+            onClick={handleCtaClick}
           >
             <Link href={card.buttonLink}>{card.buttonText}</Link>
           </Button>
@@ -161,7 +173,7 @@ const PricingCardItem = (props: PricingCardProps) => {
             variant={card.buttonVariant}
             className="w-full focus:outline-2 focus:outline-foreground focus:outline-solid"
             disabled={card.disabled}
-            onClick={card.onClick}
+            onClick={handleCtaClick}
           >
             {card.buttonText}
           </Button>
@@ -173,7 +185,7 @@ const PricingCardItem = (props: PricingCardProps) => {
 
 export const PricingCards = () => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
       {pricingData.map((card, index) => (
         <PricingCardItem key={index} card={card} />
       ))}
@@ -183,14 +195,14 @@ export const PricingCards = () => {
 
 export const PricingSection = () => {
   return (
-    <section id="pricing" className="bg-background">
+    <section id="pricing" className="bg-background scroll-mt-40">
       <div className="container px-4 md:px-6 mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">
             Pricing Plans
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Choose the plan that\'s right for you and your team
+            Choose the plan that&apos;s right for you and your team
           </p>
         </div>
 

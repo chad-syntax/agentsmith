@@ -386,7 +386,12 @@ export const PrivacyPolicyPage = () => {
                 If you have any questions about this Privacy Policy or our privacy practices, please
                 contact us at:
               </P>
-              <P>Email: privacy@agentsmith.app</P>
+              <P>
+                Email:{' '}
+                <a href="mailto:privacy@agentsmith.app" className="underline hover:text-gray-600">
+                  privacy@agentsmith.app
+                </a>
+              </P>
             </section>
           </section>
         </div>

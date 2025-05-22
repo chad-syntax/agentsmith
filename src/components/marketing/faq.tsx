@@ -1,44 +1,67 @@
+'use client';
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { usePostHog } from 'posthog-js/react';
 
 const faqData = [
   {
-    value: 'item-1',
-    trigger: 'What is Agentsmith?',
+    value: 'improve-ai-development',
+    trigger: 'How does Agentsmith improve my AI agent development process?',
     content:
-      'Agentsmith is an AI agent development platform that provides exceptional prompt authoring capabilities for both technical and non-technical users. It allows you to build, test, and deploy AI agents with confidence.',
+      'Agentsmith streamlines AI agent development with intuitive prompt authoring for all skill levels, robust testing capabilities, seamless Git integration for version control, and typesafe SDKs (TypeScript & Python). This means you can build, refine, and deploy more reliable AI agents, faster.',
   },
   {
-    value: 'item-2',
-    trigger: 'When will Agentsmith be available?',
+    value: 'user-friendliness',
+    trigger: "Is Agentsmith suitable if I'm not an expert developer?",
     content:
-      "Agentsmith is currently in alpha phase. Join our waitlist to be notified when it\'s available and to get early access.",
+      'Absolutely! Agentsmith is designed with an intuitive interface for prompt engineering, making it accessible for both technical and non-technical users. You can craft and manage sophisticated AI prompts without deep coding knowledge.',
   },
   {
-    value: 'item-3',
-    trigger: 'How does the pricing work?',
+    value: 'integration-workflow',
+    trigger: 'How does Agentsmith fit into my existing development workflow?',
     content:
-      'We offer a Pro plan at $200/year with a 50% discount for the first year during our alpha phase. A free Community plan is available for open-source contributors and hobbyists.',
+      'Agentsmith integrates smoothly with your current setup. You can synchronize prompt versions directly to your Git repository via Pull Requests, ensuring version control and team collaboration. Our typesafe SDKs for TypeScript and Python allow for confident integration into your applications.',
   },
   {
-    value: 'item-4',
-    trigger: 'Is Agentsmith open source?',
+    value: 'model-flexibility',
+    trigger: 'Can I use different AI models or switch providers with Agentsmith?',
     content:
-      'Yes, Agentsmith is open source. You can contribute to the project and view the source code on GitHub.',
+      'Yes, Agentsmith supports provider switching through OpenRouter. This gives you the flexibility to choose the best AI models for your needs and optimize costs without being locked into a single provider.',
   },
   {
-    value: 'item-5',
+    value: 'plans-and-access',
+    trigger: 'What are the available plans and how can I get access?',
+    content:
+      'We offer a Pro plan at $240/year (currently 50% off during our alpha phase) for advanced features and priority support. A free Community plan is also available for open-source contributors and hobbyists. Join our waitlist to be notified about availability and get early access!',
+  },
+  {
+    value: 'open-source-benefits',
+    trigger: 'What are the benefits of Agentsmith being open source?',
+    content:
+      'As an open-source platform, Agentsmith offers transparency in its development, encourages community contributions, and gives you the freedom to view, modify, and even self-host the software. This fosters innovation and ensures the platform evolves with user needs.',
+  },
+  {
+    value: 'support-options',
     trigger: 'How do I get support?',
     content:
-      'Pro users get priority support via email. Community support is available for all users through our GitHub repository.',
+      'Pro plan users receive priority support via email. All users, including those on the Community plan, can access community support through our GitHub repository and participate in discussions.',
   },
 ];
 
 export const FAQSection = () => {
+  const posthog = usePostHog();
+
+  const handleAccordionTriggerClick = (faqItem: (typeof faqData)[number]) => {
+    posthog.capture('faq_accordion_trigger_clicked', {
+      value: faqItem.value,
+    });
+  };
+
   const faqJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
@@ -53,7 +76,7 @@ export const FAQSection = () => {
   };
 
   return (
-    <section id="faq" className="bg-background">
+    <section id="faq" className="bg-background scroll-mt-40">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
@@ -72,7 +95,10 @@ export const FAQSection = () => {
           <Accordion type="single" collapsible className="w-full">
             {faqData.map((faqItem) => (
               <AccordionItem key={faqItem.value} value={faqItem.value} className="border-border">
-                <AccordionTrigger className="text-foreground hover:text-foreground/90">
+                <AccordionTrigger
+                  onClick={() => handleAccordionTriggerClick(faqItem)}
+                  className="text-foreground hover:text-foreground/90 cursor-pointer"
+                >
                   {faqItem.trigger}
                 </AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">

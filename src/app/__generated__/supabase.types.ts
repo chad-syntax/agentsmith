@@ -82,6 +82,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: number
+          studio_access: boolean
           updated_at: string
         }
         Insert: {
@@ -89,6 +90,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: number
+          studio_access?: boolean
           updated_at?: string
         }
         Update: {
@@ -96,6 +98,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: number
+          studio_access?: boolean
           updated_at?: string
         }
         Relationships: []

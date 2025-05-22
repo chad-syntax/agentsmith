@@ -7,7 +7,7 @@ export const TermsOfServicePage = () => {
         <H1 className="mb-4">Terms of Service</H1>
         <div className="space-y-4">
           <P>
-            <strong>Last updated:</strong> July 23, 2024
+            <strong>Last updated:</strong> May 21, 2025
           </P>
           <section aria-label="Introduction">
             <P className="pt-6">
@@ -297,7 +297,12 @@ export const TermsOfServicePage = () => {
             <section aria-label="Contact Information">
               <H2 className="mb-4">14. Contact Information</H2>
               <P>If you have any questions about these Terms, please contact us at:</P>
-              <P>Email: legal@chadsyntax.com</P>
+              <P>
+                Email:{' '}
+                <a href="mailto:legal@chadsyntax.com" className="underline hover:text-gray-600">
+                  legal@chadsyntax.com
+                </a>
+              </P>
             </section>
           </section>
         </div>

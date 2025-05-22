@@ -49,7 +49,7 @@ const benefitsData: BenefitCardProps[] = [
 
 export const BenefitsSection = () => {
   return (
-    <section id="benefits" className="text-foreground">
+    <section id="benefits" className="text-foreground scroll-mt-40">
       <div className="pb-10 container px-4 md:px-6 mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">
