@@ -35,11 +35,6 @@ export const EventsPage = (props: EventsPageProps) => {
   return (
     <div className="p-6">
       <H1 className="mb-4">Events</H1>
-
-      <div className="mb-6">
-        <H2>Project: {project.name}</H2>
-      </div>
-
       {events.length === 0 ? (
         <div className="bg-background rounded-lg shadow-sm p-6 text-center">
           <P className="text-muted-foreground">No events found for this project.</P>

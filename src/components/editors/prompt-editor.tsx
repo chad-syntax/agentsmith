@@ -93,7 +93,6 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
           padding={16}
           disabled={readOnly}
           style={{
-            fontFamily: '"Fira code", "Fira Mono", monospace',
             minHeight,
           }}
           className="w-full"

@@ -222,7 +222,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
               ← Back to Prompt
             </Link>
           </div>
-          <div className="flex gap-2 mb-4">
+          <div className="flex gap-2 mb-4 flex-wrap">
             <Button
               onClick={() => setIsCompileModalOpen(true)}
               variant="outline"

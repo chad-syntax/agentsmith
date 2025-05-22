@@ -17,7 +17,14 @@ export const SyncStatusAlert = (props: SyncStatusAlertProps) => {
   const { selectedProjectUuid } = useApp();
 
   if (!events || events.length === 0) {
-    return null;
+    return (
+      <Alert variant="warning" className="mb-4">
+        <AlertTitle>Sync Status</AlertTitle>
+        <AlertDescription>
+          Project has not been synced yet. Connect a repository to get started!
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   const latestEvent = events[0];

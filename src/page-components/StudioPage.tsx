@@ -16,15 +16,18 @@ export const StudioPage = (props: StudioPageProps) => {
 
   return (
     <div className="p-4">
-      <H1 className="mb-6">Agentsmith Studio</H1>
+      <div className="flex justify-start items-start gap-2">
+        <H1 className="mb-6 relative">Agentsmith Studio</H1>
+        <span className="text-xs tracking-wider font-light">ALPHA</span>
+      </div>
       <Alert>
         <AlertTitle className="text-lg font-semibold">
           👋 Hello, Thank you for trying Agentsmith!
         </AlertTitle>
         <AlertDescription>
           <P>
-            Making this app as bitchin' as possible is my top priority. Please reach out to me at{' '}
-            <a className="underline" href="mailto:alex@agentsmith.app">
+            Making this app as bitchin' as possible is my top priority. Please reach out to{' '}
+            <a className="underline" href={routes.emails.alex}>
               alex@agentsmith.app
             </a>{' '}
             if you have any questions or feedback.
@@ -34,7 +37,7 @@ export const StudioPage = (props: StudioPageProps) => {
               target="_blank"
               rel="noopener noreferrer"
               className="underline"
-              href="https://github.com/chad-syntax/agentsmith"
+              href={routes.external.github}
             >
               GitHub!
             </a>

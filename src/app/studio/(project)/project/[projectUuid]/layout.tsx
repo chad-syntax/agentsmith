@@ -8,7 +8,7 @@ import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 import { StudioHeader } from '@/components/studio-header';
 import { cn } from '@/utils/shadcn';
-import { STUDIO_FULL_HEIGHT } from '@/app/constants';
+import { IS_WAITLIST_REDIRECT_ENABLED, STUDIO_FULL_HEIGHT } from '@/app/constants';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -46,6 +46,10 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   if (!agentsmithUser || !userOrganizationData) {
     redirectUrl = routes.error('Failed to fetch user data');
+  }
+
+  if (!agentsmithUser?.studio_access && IS_WAITLIST_REDIRECT_ENABLED) {
+    redirectUrl = routes.marketing.waitlisted;
   }
 
   if (redirectUrl) {

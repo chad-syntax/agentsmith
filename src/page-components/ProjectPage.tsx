@@ -1,4 +1,4 @@
-import { Pencil, AlertCircle, CheckCircle, Info } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { H1, H3 } from '@/components/typography';

@@ -7,7 +7,7 @@ import { routes } from '@/utils/routes';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { StudioHeader } from '@/components/studio-header';
 import { cn } from '@/utils/shadcn';
-import { STUDIO_FULL_HEIGHT } from '@/app/constants';
+import { IS_WAITLIST_REDIRECT_ENABLED, STUDIO_FULL_HEIGHT } from '@/app/constants';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -26,8 +26,14 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
     redirect(routes.auth.signIn);
   }
 
+  let redirectUrl = null;
+
   try {
     const agentsmithUser = await services.users.getAgentsmithUser(authUser.id);
+
+    if (!agentsmithUser?.studio_access && IS_WAITLIST_REDIRECT_ENABLED) {
+      redirectUrl = routes.marketing.waitlisted;
+    }
 
     const userOrganizationData = await services.users.getUserOrganizationData();
 
@@ -52,6 +58,10 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
     );
   } catch (error) {
     logger.error(error);
-    redirect(routes.error('Failed to fetch user data'));
+    redirectUrl = routes.error('Failed to fetch user data');
+  } finally {
+    if (redirectUrl) {
+      redirect(redirectUrl);
+    }
   }
 }

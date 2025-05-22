@@ -58,7 +58,6 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
           padding={16}
           placeholder={placeholder}
           style={{
-            fontFamily: '"Fira code", "Fira Mono", monospace',
             fontSize: 14,
             minHeight,
           }}
