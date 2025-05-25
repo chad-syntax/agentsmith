@@ -9,6 +9,7 @@ import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 import { StudioHeader } from '@/components/studio-header';
 import { cn } from '@/utils/shadcn';
 import { IS_WAITLIST_REDIRECT_ENABLED, STUDIO_FULL_HEIGHT } from '@/app/constants';
+import { StudioGiveFeedback } from '@/components/studio-give-feedback';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -79,6 +80,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
         <div className={cn('md:flex', STUDIO_FULL_HEIGHT)}>
           <DesktopStudioSidebar />
           <main className="pl-0 md:pl-12 flex-1 overflow-auto">{children}</main>
+          <StudioGiveFeedback />
         </div>
       </AppProvider>
     </AuthProvider>

@@ -26,11 +26,11 @@ export const StudioPage = (props: StudioPageProps) => {
         </AlertTitle>
         <AlertDescription>
           <P>
-            Making this app as bitchin' as possible is my top priority. Please reach out to{' '}
+            Making this app as bitchin' as possible is my top priority. Click the Feedback button at
+            the bottom-right corner at any time, or reach out to{' '}
             <a className="underline" href={routes.emails.alex}>
               alex@agentsmith.app
             </a>{' '}
-            if you have any questions or feedback.
             <br />
             Also make sure to ⭐️ the repo on{' '}
             <a

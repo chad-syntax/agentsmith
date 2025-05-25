@@ -5,6 +5,8 @@ export const routes = {
     terms: '/terms-of-service',
     waitlisted: '/waitlisted',
     checkoutLanding: '/checkout-landing',
+    roadmap: (proposeModal?: boolean) => `/roadmap${proposeModal ? '?proposeModal=true' : ''}`,
+    roadmapItem: (itemSlug: string) => `/roadmap/${itemSlug}`,
   },
   studio: {
     home: '/studio',
@@ -28,6 +30,7 @@ export const routes = {
     eventDetail: (projectUuid: string, eventUuid: string) =>
       `/studio/project/${projectUuid}/events/${eventUuid}`,
     projectGlobals: (projectUuid: string) => `/studio/project/${projectUuid}/globals`,
+    alerts: '/studio/alerts',
   },
   auth: {
     signIn: '/sign-in',
@@ -64,8 +67,8 @@ export const routes = {
       checkout: {
         proAlphaClub:
           process.env.VERCEL_ENV === 'production'
-            ? 'https://buy.stripe.com/3cIfZi9Q77BY5lX1126wE00?prefilled_promo_code=ALPHACLUB'
-            : 'https://buy.stripe.com/test_28E3cx3INaPXgYYb3c53O00?prefilled_promo_code=ALPHACLUB',
+            ? 'https://buy.stripe.com/dRmfZi8M39K68y92566wE01?prefilled_promo_code=ALPHACLUB'
+            : 'https://buy.stripe.com/test_dRm7sN7Z39LTcII4EO53O01?prefilled_promo_code=ALPHACLUB',
       },
     },
   },

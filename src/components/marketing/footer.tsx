@@ -2,72 +2,71 @@ import Link from 'next/link';
 import { Container } from '@/components/layout/container';
 import { routes } from '@/utils/routes';
 
+type FooterLink = {
+  href: string;
+  label: string;
+  external?: boolean;
+};
+
+type FooterColumn = {
+  title: string;
+  links: FooterLink[];
+};
+
+const footerData: FooterColumn[] = [
+  {
+    title: 'Agentsmith',
+    links: [
+      { href: '/#benefits', label: 'Product' },
+      { href: routes.marketing.roadmap(), label: 'Roadmap' },
+      { href: '/#how-it-works', label: 'How It Works' },
+      { href: '/#pricing', label: 'Pricing' },
+      { href: '/#faq', label: 'FAQ' },
+    ],
+  },
+  {
+    title: 'Resources',
+    links: [{ href: routes.external.github, label: 'GitHub', external: true }],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { href: routes.marketing.privacy, label: 'Privacy Policy' },
+      { href: routes.marketing.terms, label: 'Terms of Service' },
+    ],
+  },
+];
+
 export const Footer = () => {
   return (
     <footer className="border-t border-border bg-background">
       <Container className="px-4 md:px-6 py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium text-foreground">Agentsmith</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/#benefits" className="text-foreground/70 hover:text-foreground">
-                  Product
-                </Link>
-              </li>
-              <li>
-                <Link href="/#how-it-works" className="text-foreground/70 hover:text-foreground">
-                  How It Works
-                </Link>
-              </li>
-              <li>
-                <Link href="/#pricing" className="text-foreground/70 hover:text-foreground">
-                  Pricing
-                </Link>
-              </li>
-              <li>
-                <Link href="/#faq" className="text-foreground/70 hover:text-foreground">
-                  FAQ
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium text-foreground">Resources</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <a
-                  href={routes.external.github}
-                  className="text-foreground/70 hover:text-foreground"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  GitHub
-                </a>
-              </li>
-            </ul>
-          </div>
-          <div className="space-y-4">
-            <h4 className="text-sm font-medium text-foreground">Legal</h4>
-            <ul className="space-y-2 text-sm">
-              <li>
-                <Link
-                  href={routes.marketing.privacy}
-                  className="text-foreground/70 hover:text-foreground"
-                >
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href={routes.marketing.terms}
-                  className="text-foreground/70 hover:text-foreground"
-                >
-                  Terms of Service
-                </Link>
-              </li>
-            </ul>
-          </div>
+          {footerData.map((column) => (
+            <div key={column.title} className="space-y-4">
+              <h4 className="text-sm font-medium text-foreground">{column.title}</h4>
+              <ul className="space-y-2 text-sm">
+                {column.links.map((link) => (
+                  <li key={link.label}>
+                    {link.external ? (
+                      <a
+                        href={link.href}
+                        className="text-foreground/70 hover:text-foreground"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link href={link.href} className="text-foreground/70 hover:text-foreground">
+                        {link.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
       </Container>
       <div className="py-8 border-t border-border flex justify-center items-center">

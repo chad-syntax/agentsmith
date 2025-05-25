@@ -41,10 +41,10 @@ const handleJoinWaitlistClick = () => {
 
 const pricingData: PricingCardData[] = [
   {
-    title: 'Free',
+    title: 'Cloud Free',
     price: 'Coming Soon',
     description:
-      "Not available during alpha phase. Join our mailing list to be notified when it\'s ready.",
+      "The hosted AgentSmith app, live and free. Join our mailing list to be notified when it's ready.",
     features: [
       { text: 'Limited prompt creation' },
       { text: 'Basic testing tools' },
@@ -58,9 +58,10 @@ const pricingData: PricingCardData[] = [
   },
   {
     title: 'Pro',
-    price: '$240',
+    price: '$599',
     priceDetail: '/year',
-    description: 'Perfect for individual developers and small teams.',
+    description:
+      'Perfect for individual developers and small teams. Pay now to get immediate Alpha access!',
     features: [
       { text: 'Unlimited prompt creation', isPrimary: true },
       { text: 'Advanced testing tools', isPrimary: true },
@@ -72,24 +73,24 @@ const pricingData: PricingCardData[] = [
     buttonLink: routes.external.stripe.checkout.proAlphaClub,
     isRecommended: true,
     isDiscounted: true,
-    discountedPrice: '$120',
+    discountedPrice: '$299',
     highlightText: 'Pay now to receive early access. Join the alpha club! (limited to 100 spots)',
     buttonId: 'join-alpha-club',
   },
   {
-    title: 'Community',
-    price: 'Free',
-    description: 'For open-source contributors and hobbyists.',
+    title: 'Enterprise',
+    price: 'Custom',
+    description: 'Tailored solutions for large organizations with specific needs.',
     features: [
-      { text: 'Self-hosted option', isPrimary: true },
-      { text: 'Basic prompt tools', isPrimary: true },
-      { text: 'GitHub integration', isPrimary: true },
-      { text: 'Community support', isPrimary: true },
-      { text: 'Open source codebase', isPrimary: true },
+      { text: 'Dedicated support', isPrimary: true },
+      { text: 'Custom integrations', isPrimary: true },
+      { text: 'Single Sign-On (SSO)', isPrimary: true },
+      { text: 'Service Level Agreements (SLA)', isPrimary: true },
+      { text: 'Volume discounts', isPrimary: true },
     ],
-    buttonText: 'View on GitHub',
-    buttonLink: routes.external.github,
-    buttonVariant: 'outline',
+    buttonText: 'Contact Us',
+    buttonLink: `mailto:${routes.emails.enterprise}`,
+    buttonVariant: 'default',
   },
 ];
 
@@ -160,18 +161,26 @@ const PricingCardItem = (props: PricingCardProps) => {
           <Button
             id={card.buttonId}
             variant={card.buttonVariant}
-            className="w-full focus:outline-2 focus:outline-foreground focus:outline-solid"
+            className="w-full focus:outline-0 focus:shadow-[0_0_2px_4px] focus:shadow-primary/15"
             asChild
             disabled={card.disabled}
             onClick={handleCtaClick}
           >
-            <Link href={card.buttonLink}>{card.buttonText}</Link>
+            {card.buttonLink.startsWith('mailto:') ? (
+              <a href={card.buttonLink}>{card.buttonText}</a>
+            ) : card.buttonLink.startsWith('/') ? (
+              <Link href={card.buttonLink}>{card.buttonText}</Link>
+            ) : (
+              <a href={card.buttonLink} target="_blank" rel="noopener noreferrer">
+                {card.buttonText}
+              </a>
+            )}
           </Button>
         ) : (
           <Button
             id={card.buttonId}
             variant={card.buttonVariant}
-            className="w-full focus:outline-2 focus:outline-foreground focus:outline-solid"
+            className="w-full focus:outline-0 focus:shadow-[0_0_2px_4px] focus:shadow-primary/15"
             disabled={card.disabled}
             onClick={handleCtaClick}
           >
@@ -210,10 +219,16 @@ export const PricingSection = () => {
 
         <div className="mt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            Need more information? Contact us at{' '}
-            <a href={routes.emails.enterprise} className="text-primary hover:underline">
-              enterprise@agentsmith.app
+            Looking for a self-hosted option? Check out our{' '}
+            <a
+              href={routes.external.github}
+              className="text-primary hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              free Community Edition on GitHub
             </a>
+            .
           </p>
         </div>
       </div>

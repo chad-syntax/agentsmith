@@ -18,7 +18,7 @@ import { cn } from '@/utils/shadcn';
 import { Separator } from './ui/separator';
 
 const StudioMenu = () => {
-  const { userOrganizationData } = useApp();
+  const { userOrganizationData, unreadAlertsCount } = useApp();
 
   const { navItems } = useNavItems();
 
@@ -27,7 +27,12 @@ const StudioMenu = () => {
   // separate into top group and bottom group
   const groups = dashboardNavItems.reduce<[typeof dashboardNavItems, typeof dashboardNavItems]>(
     (acc, item) => {
-      if (item.slug === 'organization' || item.slug === 'account' || item.slug === 'settings') {
+      if (
+        item.slug === 'organization' ||
+        item.slug === 'account' ||
+        item.slug === 'settings' ||
+        item.slug === 'alerts'
+      ) {
         return [acc[0], [...acc[1], item]];
       }
 
@@ -52,7 +57,12 @@ const StudioMenu = () => {
                 )}
               >
                 <Link href={item.href}>
-                  <span className="inline-block p-2">
+                  <span className="inline-block p-2 relative">
+                    {item.slug === 'alerts' && unreadAlertsCount > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-[10px] w-4 h-4 flex items-center justify-center">
+                        {unreadAlertsCount}
+                      </span>
+                    )}
                     <item.icon className="size-5" />
                   </span>
                   <span>{item.name}</span>

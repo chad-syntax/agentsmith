@@ -37,7 +37,7 @@ const faqData = [
     value: 'plans-and-access',
     trigger: 'What are the available plans and how can I get access?',
     content:
-      'We offer a Pro plan at $240/year (currently 50% off during our alpha phase) for advanced features and priority support. A free Community plan is also available for open-source contributors and hobbyists. Join our waitlist to be notified about availability and get early access!',
+      'We offer a Pro plan at $599/year (currently 50% off during our alpha phase) for advanced features and priority support. A free Community plan is also available for open-source contributors and hobbyists. Join our waitlist to be notified about availability and get early access!',
   },
   {
     value: 'open-source-benefits',

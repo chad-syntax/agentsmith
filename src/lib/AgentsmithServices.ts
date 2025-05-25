@@ -10,8 +10,10 @@ import { GitHubAppService } from './GitHubAppService';
 import { GitHubWebhookService } from './GitHubWebhookService';
 import { EventsService } from './EventsService';
 import { GitHubSyncService } from './GitHubSyncService';
+import { RoadmapService } from './RoadmapService';
 import { Logger } from 'pino';
 import { logger } from './logger';
+import { AlertsService } from './AlertsService';
 
 export type AgentsmithServicesDirectory = {
   users: UsersService;
@@ -24,6 +26,8 @@ export type AgentsmithServicesDirectory = {
   githubWebhook: GitHubWebhookService;
   githubSync: GitHubSyncService;
   events: EventsService;
+  roadmap: RoadmapService;
+  alerts: AlertsService;
 };
 
 type AgentsmithServicesConstructorOptions = {
@@ -50,6 +54,8 @@ export class AgentsmithServices {
     const githubApp = new GitHubAppService({ supabase });
     const githubWebhook = new GitHubWebhookService({ supabase });
     const githubSync = new GitHubSyncService({ supabase });
+    const roadmap = new RoadmapService({ supabase });
+    const alerts = new AlertsService({ supabase });
 
     this.logger = logger.child({ service: 'AgentsmithServicesRoot' });
 
@@ -64,6 +70,8 @@ export class AgentsmithServices {
       githubWebhook,
       githubSync,
       events,
+      roadmap,
+      alerts,
     };
 
     users.services = this.services;
@@ -76,6 +84,8 @@ export class AgentsmithServices {
     githubWebhook.services = this.services;
     githubSync.services = this.services;
     events.services = this.services;
+    roadmap.services = this.services;
+    alerts.services = this.services;
 
     if (initialize) {
       for (const service of Object.values(this.services)) {
