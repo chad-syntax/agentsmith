@@ -1,14 +1,15 @@
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { GetRoadmapItemsResult } from '@/lib/RoadmapService';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/client';
 import { LandingPage } from '@/page-components/LandingPage';
 
 export const revalidate = 604800;
 
 export default async function Landing() {
-  const supabase = await createClient();
+  // non-ssr client for static rendering
+  const supabase = createClient();
 
-  const { services, logger } = new AgentsmithServices({ supabase });
+  const { services, logger } = new AgentsmithServices({ supabase, initialize: false });
 
   let initialRoadmapItems: GetRoadmapItemsResult = [];
   try {

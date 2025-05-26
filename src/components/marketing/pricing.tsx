@@ -53,7 +53,7 @@ const pricingData: PricingCardData[] = [
     buttonText: 'Join Waitlist',
     buttonVariant: 'outline',
     disabled: false,
-    buttonLink: '#join-waitlist',
+    buttonLink: '/#join-waitlist',
     onClick: handleJoinWaitlistClick,
   },
   {

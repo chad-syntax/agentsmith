@@ -86,8 +86,11 @@ export const Header = () => {
             >
               <Link href={routes.studio.home}>Studio</Link>
             </Button>
-            <Button onClick={handleAccessClick} asChild>
+            <Button className="hidden xs:inline-flex" onClick={handleAccessClick} asChild>
               <a href="/#pricing">Early Access</a>
+            </Button>
+            <Button className="inline-flex xs:hidden" onClick={handleAccessClick} asChild>
+              <a href="/#pricing">Alpha</a>
             </Button>
           </div>
         </div>

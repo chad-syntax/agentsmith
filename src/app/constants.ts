@@ -39,9 +39,3 @@ export const statusDisplayNames: Record<RoadmapStatus, string> = {
   COMPLETED: 'Completed',
   CANCELLED: 'Cancelled',
 };
-
-// // Extended RoadmapItem type for client-side state
-// export type RoadmapItem = APIRoadmapItem & {
-//   currentUserUpvoted?: boolean;
-//   currentUserScore?: number | null;
-// };

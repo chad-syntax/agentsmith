@@ -1,14 +1,16 @@
 import { RoadmapPage } from '@/page-components/RoadmapPage';
-import { createClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/client';
 import { GetRoadmapItemsResult } from '@/lib/RoadmapService';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { AuthProvider } from '@/providers/auth';
+import { Suspense } from 'react';
 
 export const revalidate = 43200;
 
 export default async function RoadmapServerPage() {
-  const supabase = await createClient();
-  const { services, logger } = new AgentsmithServices({ supabase });
+  // non-ssr client for static rendering
+  const supabase = createClient();
+  const { services, logger } = new AgentsmithServices({ supabase, initialize: false });
 
   let initialRoadmapItems: GetRoadmapItemsResult = [];
   try {
@@ -18,8 +20,10 @@ export default async function RoadmapServerPage() {
   }
 
   return (
-    <AuthProvider>
-      <RoadmapPage initialRoadmapItems={initialRoadmapItems} />
-    </AuthProvider>
+    <Suspense>
+      <AuthProvider>
+        <RoadmapPage initialRoadmapItems={initialRoadmapItems} />
+      </AuthProvider>
+    </Suspense>
   );
 }

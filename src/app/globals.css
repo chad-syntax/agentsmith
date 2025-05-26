@@ -69,6 +69,9 @@
   --spacing: 0.25rem;
 
   /* Breakpoints */
+  --breakpoint-3xs: 320px;
+  --breakpoint-2xs: 375px;
+  --breakpoint-xs: 425px;
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
   --breakpoint-lg: 1024px;
