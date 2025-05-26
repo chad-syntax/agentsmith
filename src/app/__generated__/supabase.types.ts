@@ -105,7 +105,7 @@ export type Database = {
       }
       alerts: {
         Row: {
-          created_at: string | null
+          created_at: string
           description: string | null
           id: number
           read_at: string | null
@@ -116,7 +116,7 @@ export type Database = {
           uuid: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           id?: never
           read_at?: string | null
@@ -127,7 +127,7 @@ export type Database = {
           uuid?: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           description?: string | null
           id?: never
           read_at?: string | null

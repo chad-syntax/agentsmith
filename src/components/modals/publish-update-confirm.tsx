@@ -18,9 +18,7 @@ type PublishUpdateConfirmModalProps = {
   isUpdating: boolean;
 };
 
-export const PublishUpdateConfirmModal = (
-  props: PublishUpdateConfirmModalProps
-) => {
+export const PublishUpdateConfirmModal = (props: PublishUpdateConfirmModalProps) => {
   const { isOpen, onClose, onConfirm, isUpdating } = props;
 
   return (
@@ -29,15 +27,15 @@ export const PublishUpdateConfirmModal = (
         <DialogHeader>
           <DialogTitle>Update Published Version</DialogTitle>
           <DialogDescription>
-            In order to test your changes, you need to update the published
-            version.
+            This action will update the published version of your prompt.
           </DialogDescription>
         </DialogHeader>
         <div className="flex items-start gap-2 text-amber-600">
           <AlertTriangle className="h-5 w-5 shrink-0" />
           <p className="text-sm">
-            <strong>Warning:</strong> This will immediately update the published
-            version that may be in use by your application.
+            <strong>Warning:</strong> This will immediately update the published version that may be
+            in use by your application. Make sure your code is prepared to handle any changes to
+            variables or content to avoid breaking prompt compilation.
           </p>
         </div>
         <DialogFooter>

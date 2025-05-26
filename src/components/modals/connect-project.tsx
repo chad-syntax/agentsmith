@@ -14,8 +14,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useApp } from '@/providers/app';
 import { connectProject } from '@/app/actions/connect-project';
-import type { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubAppService';
-import { useEffect } from 'react';
+import type { GetProjectRepositoriesForOrganizationResult } from '@/lib/OrganizationsService';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { OrganizationsService } from '@/lib/OrganizationsService';
 
 const formSchema = z.object({
   projectId: z.string(),
@@ -28,12 +30,23 @@ type FormValues = z.infer<typeof formSchema>;
 interface ConnectProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  projectRepositories: GetProjectRepositoriesForOrganizationResult;
+  projectRepositories?: GetProjectRepositoriesForOrganizationResult;
   defaultRepositoryId?: number;
+  defaultProjectUuid?: string;
 }
 
 export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
-  const { open, onOpenChange, projectRepositories, defaultRepositoryId } = props;
+  const {
+    open,
+    onOpenChange,
+    projectRepositories: initialProjectRepositories,
+    defaultRepositoryId,
+    defaultProjectUuid,
+  } = props;
+
+  const [projectRepositories, setProjectRepositories] =
+    useState<GetProjectRepositoriesForOrganizationResult>(initialProjectRepositories ?? []);
+
   const { selectedOrganization } = useApp();
 
   const form = useForm<FormValues>({
@@ -41,6 +54,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
     defaultValues: {
       agentsmithFolder: 'agentsmith',
       projectRepositoryId: defaultRepositoryId,
+      projectId: defaultProjectUuid,
     },
   });
 
@@ -53,6 +67,21 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
       // Keep the value for now, reset can be handled by parent if needed.
     }
   }, [open, defaultRepositoryId, form]);
+
+  useEffect(() => {
+    if (initialProjectRepositories) return;
+    const supabase = createClient();
+    // const { services } = new AgentsmithServices({ supabase });
+    const organizationsService = new OrganizationsService({ supabase });
+    const initialize = async () => {
+      const projectRepositories = await organizationsService.getProjectRepositoriesForOrganization(
+        selectedOrganization.id,
+      );
+      setProjectRepositories(projectRepositories);
+    };
+
+    initialize();
+  }, []);
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -79,7 +108,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent aria-describedby="connect-project-modal-description">
         <DialogHeader>
           <DialogTitle>Connect Project to Repository</DialogTitle>
         </DialogHeader>

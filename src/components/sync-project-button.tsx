@@ -12,10 +12,12 @@ type SyncProjectButtonProps = {
   className?: string;
   onSyncComplete?: () => void;
   projectUuid?: string;
+  size?: 'icon' | 'default' | 'sm' | 'lg' | null;
+  children?: React.ReactNode;
 };
 
 export const SyncProjectButton = (props: SyncProjectButtonProps) => {
-  const { onSyncComplete, className, projectUuid } = props;
+  const { onSyncComplete, className, projectUuid, size, children } = props;
 
   const { selectedProjectUuid } = useApp();
   const targetProjectUuid = projectUuid ?? selectedProjectUuid;
@@ -41,12 +43,12 @@ export const SyncProjectButton = (props: SyncProjectButtonProps) => {
 
   return (
     <Button
-      size="sm"
+      size={size ?? 'sm'}
       className={cn('ml-auto min-w-[58px]', className)}
       onClick={handleClick}
       disabled={loading}
     >
-      {loading ? <RefreshCcw className="animate-spin" size={16} /> : 'Sync'}
+      {loading ? <RefreshCcw className="animate-spin" size={16} /> : (children ?? 'Sync')}
     </Button>
   );
 };

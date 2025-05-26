@@ -38,9 +38,7 @@ export const GET = async (request: Request) => {
       installationId,
     });
 
-    return NextResponse.redirect(
-      new URL(routes.studio.organization(organizationUuid), request.url),
-    );
+    return NextResponse.redirect(new URL(routes.studio.home, request.url));
   } catch (e) {
     logger.error('Failed to create github installation', e);
     return NextResponse.redirect(

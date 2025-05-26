@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
-import { Play, ClipboardCopy } from 'lucide-react';
+import { Play, ClipboardCopy, Save, FileEdit, Send, GitBranchPlus, RefreshCw } from 'lucide-react';
 import { Database } from '@/app/__generated__/supabase.types';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
@@ -246,9 +246,11 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
                   disabled={isSaving}
                   variant="secondary"
                 >
+                  <Save size={16} />
                   {isSaving ? 'Saving...' : 'Save'}
                 </Button>
                 <Button onClick={() => handleSave('PUBLISHED')} disabled={isSaving}>
+                  <Send size={16} />
                   {isSaving ? 'Publishing...' : 'Publish'}
                 </Button>
               </>
@@ -257,13 +259,15 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
             {isPublished && (
               <>
                 <Button
-                  onClick={() => handleSave('PUBLISHED')}
+                  onClick={() => setIsPublishConfirmOpen(true)}
                   disabled={isSaving}
                   className="bg-amber-500 hover:bg-amber-600"
                 >
+                  <RefreshCw size={16} />
                   {isSaving ? 'Updating...' : 'Update Published Version'}
                 </Button>
                 <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion || isSaving}>
+                  <GitBranchPlus size={16} />
                   {isCreatingVersion ? 'Creating...' : 'Create New Version'}
                 </Button>
                 <Button
@@ -271,6 +275,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
                   disabled={isSaving || isSettingDraft}
                   variant="secondary"
                 >
+                  <FileEdit size={16} />
                   {isSettingDraft ? 'Setting to Draft...' : 'Set to Draft'}
                 </Button>
               </>

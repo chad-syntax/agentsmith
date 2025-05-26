@@ -9,10 +9,15 @@ import { compareSemanticVersions } from '@/utils/versioning';
 import { Button } from '@/components/ui/button';
 import { H1, H2, H3, P } from '@/components/typography';
 import { GetPromptsByProjectIdResult } from '@/lib/PromptsService';
+import { format } from 'date-fns';
 
 type PromptsPageProps = {
   prompts: NonNullable<GetPromptsByProjectIdResult>;
   projectId: number;
+};
+
+const formatDate = (dateString: string) => {
+  return format(new Date(dateString), 'M/d/yy h:mma');
 };
 
 export const PromptsPage = (props: PromptsPageProps) => {
@@ -68,57 +73,52 @@ export const PromptsPage = (props: PromptsPageProps) => {
               latestVersion?.prompt_variables.filter((v) => v.required) || [];
 
             return (
-              <div
+              <Link
                 key={prompt.uuid}
-                className="bg-background rounded-lg border p-6 hover:shadow-md transition-shadow"
+                href={routes.studio.promptDetail(selectedProjectUuid, prompt.uuid)}
               >
-                <div className="flex justify-between items-start mb-4">
-                  <H2>{prompt.name}</H2>
-                  <Button variant="link" asChild className="p-0">
-                    <Link href={routes.studio.promptDetail(selectedProjectUuid, prompt.uuid)}>
-                      View Details
-                    </Link>
-                  </Button>
-                </div>
-                <div className="mb-4">
-                  <P className="text-muted-foreground line-clamp-3">{latestVersion?.content}</P>
-                </div>
-                {requiredVariables.length > 0 && (
+                <div className="bg-background rounded-lg border p-6 hover:shadow-md transition-shadow h-full">
+                  <div className="flex justify-between items-start mb-4">
+                    <H2 className="hover:text-primary">{prompt.name}</H2>
+                  </div>
                   <div className="mb-4">
-                    <H3 className="text-muted-foreground mb-2">Required Variables:</H3>
-                    <div className="flex flex-wrap gap-2">
-                      {requiredVariables.map((variable) => (
-                        <span key={variable.id} className="px-2 py-1 bg-muted rounded-md text-xs">
-                          {variable.name}
-                        </span>
-                      ))}
+                    <P className="text-muted-foreground line-clamp-3">{latestVersion?.content}</P>
+                  </div>
+                  {requiredVariables.length > 0 && (
+                    <div className="mb-4">
+                      <H3 className="text-muted-foreground mb-2">Required Variables:</H3>
+                      <div className="flex flex-wrap gap-2">
+                        {requiredVariables.map((variable) => (
+                          <span key={variable.id} className="px-2 py-1 bg-muted rounded-md text-xs">
+                            {variable.name}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">
-                      v{latestVersion?.version || '0.0.0'}
-                    </span>
-                    {latestVersion?.status && (
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded ${
-                          latestVersion.status === 'PUBLISHED'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}
-                      >
-                        {latestVersion.status}
+                  )}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        v{latestVersion?.version || '0.0.0'}
                       </span>
-                    )}
+                      {latestVersion?.status && (
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded ${
+                            latestVersion.status === 'PUBLISHED'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
+                          {latestVersion.status}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {latestVersion ? formatDate(latestVersion.updated_at) : 'No versions yet'}
+                    </span>
                   </div>
-                  <span className="text-sm text-muted-foreground">
-                    {latestVersion
-                      ? new Date(latestVersion.created_at).toLocaleDateString()
-                      : 'No versions yet'}
-                  </span>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>

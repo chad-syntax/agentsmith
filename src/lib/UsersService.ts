@@ -101,6 +101,7 @@ export class UsersService extends AgentsmithSupabaseService {
           id,
           role, 
           organizations (
+            id,
             uuid,
             name, 
             github_app_installations(
@@ -149,9 +150,10 @@ export class UsersService extends AgentsmithSupabaseService {
         const { data, error } = await this.supabase
           .from('organizations')
           .select(
-            'projects(prompts(id), llm_logs(id), agentsmith_events(id, type, created_at)), github_app_installations(status, project_repositories(id)), organization_keys(id, key)',
+            'projects(prompts(id), llm_logs(id), agentsmith_events(id, type, created_at)), github_app_installations(status, project_repositories(id, project_id)), organization_keys(id, key)',
           )
           .eq('uuid', orgUser.organizations.uuid)
+          .eq('projects.agentsmith_events.type', 'SYNC_COMPLETE')
           .limit(1, { referencedTable: 'projects' })
           .limit(1, { referencedTable: 'projects.llm_logs' })
           .limit(1, { referencedTable: 'projects.agentsmith_events' })
@@ -168,16 +170,16 @@ export class UsersService extends AgentsmithSupabaseService {
         const appInstalled = github_app_installations.some(
           (installation) => installation.status === 'ACTIVE',
         );
-        const repoConnected = github_app_installations.some(
-          (installation) => installation.project_repositories.length > 0,
+
+        const repoConnected = github_app_installations.some((installation) =>
+          installation.project_repositories.some((repo) => repo.project_id !== null),
         );
+
         const openrouterConnected = organization_keys.some(
           (key) => key.key === 'OPENROUTER_API_KEY',
         );
 
-        const repoSynced = projects?.[0]?.agentsmith_events?.some(
-          (event) => event.type === 'SYNC_COMPLETE',
-        );
+        const repoSynced = projects?.[0]?.agentsmith_events?.length > 0;
 
         const promptCreated = projects?.[0]?.prompts?.length > 0;
         const promptTested = projects?.[0]?.llm_logs?.length > 0;

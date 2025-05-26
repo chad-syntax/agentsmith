@@ -93,7 +93,10 @@ export const StudioPage = (props: StudioPageProps) => {
                   </CardContent>
                   {orgUser.role === 'ADMIN' && onboardingChecklistItem && !onboardingComplete && (
                     <CardContent>
-                      <OnboardingChecklist onboardingChecklistItem={onboardingChecklistItem} />
+                      <OnboardingChecklist
+                        defaultProjectUuid={orgUser.organizations.projects[0]?.uuid}
+                        onboardingChecklistItem={onboardingChecklistItem}
+                      />
                     </CardContent>
                   )}
                 </Card>
