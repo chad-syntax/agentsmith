@@ -1,7 +1,7 @@
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
 import { notFound } from 'next/navigation';
-import { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubAppService';
+import type { GetProjectRepositoriesForOrganizationResult } from '@/lib/OrganizationsService';
 import { SettingsPage } from '@/page-components/SettingsPage';
 
 type SettingsProps = {
@@ -29,9 +29,10 @@ export default async function Settings(props: SettingsProps) {
   let projectRepositories: GetProjectRepositoriesForOrganizationResult = [];
 
   if (activeGithubAppInstallation?.installation_id) {
-    projectRepositories = await agentsmith.services.githubApp.getProjectRepositoriesForOrganization(
-      organization.id,
-    );
+    projectRepositories =
+      await agentsmith.services.organizations.getProjectRepositoriesForOrganization(
+        organization.id,
+      );
   }
 
   return (

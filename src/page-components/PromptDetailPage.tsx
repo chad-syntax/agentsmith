@@ -81,6 +81,10 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
 
   const highestVersion = getHighestVersion();
 
+  const sortedVersions = allVersions.sort((a, b) => {
+    return compareSemanticVersions(b.version, a.version);
+  });
+
   return (
     <div className={cn('flex', STUDIO_FULL_HEIGHT)}>
       <div className="flex-1 overflow-auto">
@@ -116,7 +120,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
             </Button>
           </div>
           <div className="space-y-4">
-            {allVersions.map((version) => (
+            {sortedVersions.map((version) => (
               <div key={version.id} className="bg-background rounded-lg border">
                 <Button
                   onClick={() => handleVersionToggle(version.id)}

@@ -59,6 +59,23 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     return data;
   }
 
+  public async getProjectRepositoriesForOrganization(organizationId: number) {
+    const { data, error } = await this.supabase
+      .from('project_repositories')
+      .select(
+        '*, github_app_installations!inner(status), organizations!inner(id), projects(uuid, name)',
+      )
+      .eq('github_app_installations.status', 'ACTIVE')
+      .eq('organizations.id', organizationId);
+
+    if (error) {
+      this.logger.error('Failed to fetch project repositories for organization', error);
+      throw error;
+    }
+
+    return data;
+  }
+
   public async getOrganizationKeySecret(organizationUuid: string, key: string) {
     const response = await this.services.vault.getOrganizationKeySecret(organizationUuid, key);
 
@@ -122,4 +139,8 @@ export class OrganizationsService extends AgentsmithSupabaseService {
 
 export type GetOrganizationDataResult = Awaited<
   ReturnType<typeof OrganizationsService.prototype.getOrganizationData>
+>;
+
+export type GetProjectRepositoriesForOrganizationResult = Awaited<
+  ReturnType<typeof OrganizationsService.prototype.getProjectRepositoriesForOrganization>
 >;

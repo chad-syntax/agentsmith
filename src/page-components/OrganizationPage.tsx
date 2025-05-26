@@ -97,9 +97,6 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
                     {project.name}
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <span className="text-sm text-muted-foreground">View Project</span>
-                </CardContent>
               </Card>
             </Link>
           ))}

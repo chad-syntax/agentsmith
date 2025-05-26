@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  useEffect,
+  Dispatch,
+  SetStateAction,
+} from 'react';
 import { ORGANIZATION_KEYS } from '@/app/constants';
 import { redirect, useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
@@ -12,6 +20,7 @@ import { Database } from '@/app/__generated__/supabase.types';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { SyncProjectButton } from '@/components/sync-project-button';
+import { AlertsService } from '@/lib/AlertsService';
 
 type Organization = GetUserOrganizationDataResult['organization_users'][number]['organizations'];
 type Project = Organization['projects'][number];
@@ -32,6 +41,8 @@ type AppContextType = {
   hasOpenRouterKey: boolean;
   isOrganizationAdmin: boolean;
   showSyncToast: (options: ShowSyncToastOptions) => void;
+  unreadAlertsCount: number;
+  setUnreadAlertsCount: Dispatch<SetStateAction<number>>;
 };
 
 const AppContext = createContext<AppContextType>({
@@ -45,6 +56,8 @@ const AppContext = createContext<AppContextType>({
   hasOpenRouterKey: false,
   isOrganizationAdmin: false,
   showSyncToast: () => {},
+  unreadAlertsCount: 0,
+  setUnreadAlertsCount: () => {},
 });
 
 type AppProviderProps = {
@@ -99,11 +112,22 @@ export const AppProvider = (props: AppProviderProps) => {
   );
 
   const [isOrganizationAdmin, setIsOrganizationAdmin] = useState(initialIsOrganizationAdmin);
+  const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
 
   useEffect(() => {
     if (!agentsmithUser) {
       return;
     }
+
+    const getUnreadAlerts = async () => {
+      const alertsService = new AlertsService({
+        supabase,
+      });
+
+      const count = await alertsService.getUnreadAlertsCount();
+
+      setUnreadAlertsCount(count ?? 0);
+    };
 
     const channelId = `agentsmith-events-user-${agentsmithUser.id}`;
 
@@ -195,6 +219,8 @@ export const AppProvider = (props: AppProviderProps) => {
       )
       .subscribe();
 
+    getUnreadAlerts();
+
     return () => {
       supabase.removeChannel(channel);
     };
@@ -270,6 +296,8 @@ export const AppProvider = (props: AppProviderProps) => {
       hasOpenRouterKey,
       isOrganizationAdmin,
       showSyncToast,
+      unreadAlertsCount,
+      setUnreadAlertsCount,
     }),
     [
       selectedOrganizationUuid,
@@ -280,6 +308,8 @@ export const AppProvider = (props: AppProviderProps) => {
       hasOpenRouterKey,
       isOrganizationAdmin,
       showSyncToast,
+      unreadAlertsCount,
+      setUnreadAlertsCount,
     ],
   );
 

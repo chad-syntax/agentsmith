@@ -9,7 +9,7 @@ import { ConnectProjectModal } from '@/components/modals/connect-project';
 import { SyncProjectButton } from '@/components/sync-project-button';
 import { H2, P } from '@/components/typography';
 import { GetOrganizationDataResult } from '@/lib/OrganizationsService';
-import { GetProjectRepositoriesForOrganizationResult } from '@/lib/GitHubAppService';
+import { GetProjectRepositoriesForOrganizationResult } from '@/lib/OrganizationsService';
 import { Button } from '@/components/ui/button';
 import { routes } from '@/utils/routes';
 import { Notebook, Plus } from 'lucide-react';

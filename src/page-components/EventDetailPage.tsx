@@ -138,8 +138,8 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
         </Card>
 
         <H2>Changes</H2>
-        {(eventDetails?.syncChanges ?? []).map((syncChange: any) => (
-          <Card key={`${syncChange.oldSha}-${syncChange.newSha}`}>
+        {(eventDetails?.syncChanges ?? []).map((syncChange: any, index: number) => (
+          <Card key={`${syncChange.oldSha}-${syncChange.newSha}-${index}`}>
             <CardHeader>
               <CardTitle>
                 {syncChange.type} {syncChange.promptSlug}

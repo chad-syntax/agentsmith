@@ -184,11 +184,6 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       throw new Error('Failed to connect project to repository');
     }
 
-    this.services.githubSync.sync({
-      projectRepository: data,
-      source: 'agentsmith',
-    });
-
     return data;
   }
 
@@ -196,23 +191,6 @@ export class GitHubAppService extends AgentsmithSupabaseService {
     const octokit = await this.app.getInstallationOctokit(installationId);
     const response = await octokit.request('GET /installation/repositories');
     return response.data.repositories;
-  }
-
-  async getProjectRepositoriesForOrganization(organizationId: number) {
-    const { data, error } = await this.supabase
-      .from('project_repositories')
-      .select(
-        '*, github_app_installations!inner(status), organizations!inner(id), projects(uuid, name)',
-      )
-      .eq('github_app_installations.status', 'ACTIVE')
-      .eq('organizations.id', organizationId);
-
-    if (error) {
-      this.logger.error('Failed to fetch project repositories for organization', error);
-      throw error;
-    }
-
-    return data;
   }
 
   async createInstallationRepositories(options: CreateInstallationRepositoriesOptions) {
@@ -262,10 +240,6 @@ export class GitHubAppService extends AgentsmithSupabaseService {
 
 export type GetInstallationRepositoriesResult = Awaited<
   ReturnType<typeof GitHubAppService.prototype.getInstallationRepositories>
->;
-
-export type GetProjectRepositoriesForOrganizationResult = Awaited<
-  ReturnType<typeof GitHubAppService.prototype.getProjectRepositoriesForOrganization>
 >;
 
 export type GetProjectRepositoryResult = Awaited<

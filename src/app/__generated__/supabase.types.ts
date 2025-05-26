@@ -82,6 +82,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: number
+          studio_access: boolean
           updated_at: string
         }
         Insert: {
@@ -89,6 +90,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: number
+          studio_access?: boolean
           updated_at?: string
         }
         Update: {
@@ -96,9 +98,61 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: number
+          studio_access?: boolean
           updated_at?: string
         }
         Relationships: []
+      }
+      alerts: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: number
+          read_at: string | null
+          roadmap_item_id: number | null
+          title: string
+          type: string
+          user_id: number
+          uuid: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: never
+          read_at?: string | null
+          roadmap_item_id?: number | null
+          title: string
+          type: string
+          user_id: number
+          uuid?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: never
+          read_at?: string | null
+          roadmap_item_id?: number | null
+          title?: string
+          type?: string
+          user_id?: number
+          uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_roadmap_item_id_fkey"
+            columns: ["roadmap_item_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agentsmith_users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       github_app_installations: {
         Row: {
@@ -607,6 +661,95 @@ export type Database = {
           },
         ]
       }
+      roadmap_items: {
+        Row: {
+          avg_score: number | null
+          body: string
+          created_at: string | null
+          creator_user_id: number
+          id: number
+          slug: string
+          state: Database["public"]["Enums"]["roadmap_item_state"]
+          title: string
+          updated_at: string | null
+          upvote_count: number | null
+        }
+        Insert: {
+          avg_score?: number | null
+          body: string
+          created_at?: string | null
+          creator_user_id: number
+          id?: never
+          slug: string
+          state?: Database["public"]["Enums"]["roadmap_item_state"]
+          title: string
+          updated_at?: string | null
+          upvote_count?: number | null
+        }
+        Update: {
+          avg_score?: number | null
+          body?: string
+          created_at?: string | null
+          creator_user_id?: number
+          id?: never
+          slug?: string
+          state?: Database["public"]["Enums"]["roadmap_item_state"]
+          title?: string
+          updated_at?: string | null
+          upvote_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_items_creator_user_id_fkey"
+            columns: ["creator_user_id"]
+            isOneToOne: false
+            referencedRelation: "agentsmith_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roadmap_upvotes: {
+        Row: {
+          created_at: string | null
+          id: number
+          roadmap_item_id: number
+          score: number
+          updated_at: string | null
+          user_id: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: never
+          roadmap_item_id: number
+          score: number
+          updated_at?: string | null
+          user_id: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: never
+          roadmap_item_id?: number
+          score?: number
+          updated_at?: string | null
+          user_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roadmap_upvotes_roadmap_item_id_fkey"
+            columns: ["roadmap_item_id"]
+            isOneToOne: false
+            referencedRelation: "roadmap_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "roadmap_upvotes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "agentsmith_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -703,6 +846,23 @@ export type Database = {
         }
         Returns: undefined
       }
+      search_roadmap_items: {
+        Args: {
+          search_term: string
+        }
+        Returns: {
+          avg_score: number | null
+          body: string
+          created_at: string | null
+          creator_user_id: number
+          id: number
+          slug: string
+          state: Database["public"]["Enums"]["roadmap_item_state"]
+          title: string
+          updated_at: string | null
+          upvote_count: number | null
+        }[]
+      }
     }
     Enums: {
       agentsmith_event_severity: "DEBUG" | "INFO" | "WARN" | "ERROR"
@@ -719,6 +879,13 @@ export type Database = {
       organization_tier: "FREE" | "PRO" | "ENTERPRISE"
       organization_user_role: "ADMIN" | "MEMBER"
       prompt_status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
+      roadmap_item_state:
+        | "PROPOSED"
+        | "REJECTED"
+        | "PLANNED"
+        | "IN_PROGRESS"
+        | "CANCELLED"
+        | "COMPLETED"
       sync_status_type: "IDLE" | "SYNCING"
       variable_type: "STRING" | "NUMBER" | "BOOLEAN" | "JSON"
     }

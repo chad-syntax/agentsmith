@@ -1,10 +1,12 @@
 export const routes = {
   marketing: {
     home: '/',
-    landing1: '/1landing',
-    landing2: '/2landing',
-    landing3: '/3landing',
     privacy: '/privacy-policy',
+    terms: '/terms-of-service',
+    waitlisted: '/waitlisted',
+    checkoutLanding: '/checkout-landing',
+    roadmap: (proposeModal?: boolean) => `/roadmap${proposeModal ? '?proposeModal=true' : ''}`,
+    roadmapItem: (itemSlug: string) => `/roadmap/${itemSlug}`,
   },
   studio: {
     home: '/studio',
@@ -28,6 +30,7 @@ export const routes = {
     eventDetail: (projectUuid: string, eventUuid: string) =>
       `/studio/project/${projectUuid}/events/${eventUuid}`,
     projectGlobals: (projectUuid: string) => `/studio/project/${projectUuid}/globals`,
+    alerts: '/studio/alerts',
   },
   auth: {
     signIn: '/sign-in',
@@ -58,4 +61,21 @@ export const routes = {
     settingsKeys: 'https://openrouter.ai/settings/keys',
   },
   error: (message: string) => `/error?message=${encodeURIComponent(message)}`,
+  external: {
+    github: 'https://github.com/chad-syntax/agentsmith',
+    stripe: {
+      checkout: {
+        proAlphaClub:
+          process.env.VERCEL_ENV === 'production'
+            ? 'https://buy.stripe.com/dRmfZi8M39K68y92566wE01?prefilled_promo_code=ALPHACLUB'
+            : 'https://buy.stripe.com/test_dRm7sN7Z39LTcII4EO53O01?prefilled_promo_code=ALPHACLUB',
+      },
+    },
+  },
+  emails: {
+    enterprise: 'mailto:enterprise@agentsmith.app',
+    support: 'mailto:support@agentsmith.app',
+    team: 'mailto:team@agentsmith.app',
+    alex: 'mailto:alex@agentsmith.app',
+  },
 } as const;

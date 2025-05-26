@@ -10,6 +10,7 @@ import {
   Pencil,
   Settings,
   Box,
+  Bell,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/providers/app';
@@ -89,6 +90,13 @@ export const useNavItems = () => {
       href: routes.studio.editOrganization(selectedOrganizationUuid),
       icon: Pencil,
       active: pathname === routes.studio.editOrganization(selectedOrganizationUuid),
+    },
+    {
+      name: 'Alerts',
+      slug: 'alerts',
+      href: routes.studio.alerts,
+      icon: Bell,
+      active: pathname === routes.studio.alerts,
     },
     {
       name: 'Settings',

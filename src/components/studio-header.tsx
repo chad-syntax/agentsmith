@@ -52,10 +52,12 @@ export const StudioHeader = () => {
     activeItem.slug !== 'account';
 
   return (
-    <header className="w-full py-2 pl-4.5 pr-3 border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="w-full py-2 pl-[1px] pr-3 border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <h2 className="hidden md:block text-2xl font-bold">A</h2>
+        <div className="flex items-center">
+          <Link href={routes.studio.home}>
+            <h2 className="hidden md:block px-4 text-2xl font-bold">A</h2>
+          </Link>
           <MobileStudioSidebar />
           <Breadcrumb>
             <BreadcrumbList>

@@ -9,7 +9,8 @@ import { User } from '@supabase/supabase-js';
 import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 import { StudioHeader } from '@/components/studio-header';
 import { cn } from '@/utils/shadcn';
-import { STUDIO_FULL_HEIGHT } from '@/app/constants';
+import { IS_WAITLIST_REDIRECT_ENABLED, STUDIO_FULL_HEIGHT } from '@/app/constants';
+import { StudioGiveFeedback } from '@/components/studio-give-feedback';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -56,6 +57,10 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
       if (!firstOrganizationProject) {
         redirectUrl = routes.error('No projects found');
       }
+
+      if (!agentsmithUser?.studio_access && IS_WAITLIST_REDIRECT_ENABLED) {
+        redirectUrl = routes.marketing.waitlisted;
+      }
     }
   } catch (error) {
     logger.error(error);
@@ -81,6 +86,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
         <div className={cn('md:flex', STUDIO_FULL_HEIGHT)}>
           <DesktopStudioSidebar />
           <main className="pl-0 md:pl-12 flex-1 overflow-auto">{children}</main>
+          <StudioGiveFeedback />
         </div>
       </AppProvider>
     </AuthProvider>

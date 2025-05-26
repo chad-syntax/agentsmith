@@ -1,0 +1,1 @@
+alter table public.agentsmith_users add column studio_access boolean not null default false;
