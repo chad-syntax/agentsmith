@@ -2,6 +2,8 @@
 
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
+import { routes } from '@/utils/routes';
+import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export const installGithubApp = async (organizationUuid: string) => {
@@ -38,6 +40,8 @@ export const syncProject = async (projectUuid: string) => {
   if (!projectRepository) {
     throw new Error(`Project repository for project ${project.id} not found, cannot sync project`);
   }
+
+  revalidatePath(routes.studio.home);
 
   await services.githubSync.sync({
     projectRepository,

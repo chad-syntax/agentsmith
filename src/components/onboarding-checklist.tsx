@@ -73,8 +73,6 @@ export const OnboardingChecklist = (props: OnboardingChecklistOptions) => {
           toast.error('Failed to sync project', {
             description: error?.message,
           });
-        } finally {
-          revalidatePath(routes.studio.home);
         }
       },
     },
