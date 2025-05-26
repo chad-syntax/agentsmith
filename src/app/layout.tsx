@@ -33,7 +33,7 @@ export default function RootLayout(props: RootLayoutProps) {
 
   return (
     <html lang="en" className={ibmPlexMono.className} suppressHydrationWarning>
-      {process.env.VERCEL_ENV !== 'production' && (
+      {!process.env.VERCEL_ENV && (
         <head>
           <script src="https://unpkg.com/react-scan/dist/auto.global.js" />
         </head>
