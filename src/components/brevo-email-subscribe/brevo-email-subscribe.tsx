@@ -128,7 +128,6 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
             size="lg"
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium whitespace-nowrap sib-hide-loader-icon-parent"
           >
-            {/* <Loader2 className="mr-2 h-4 w-4 animate-spin sib-hide-loader-icon" /> */}
             Join Waitlist
           </Button>
         </div>
