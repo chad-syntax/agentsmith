@@ -4,6 +4,7 @@ import { GetRoadmapItemsResult } from '@/lib/RoadmapService';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { AuthProvider } from '@/providers/auth';
 import { Suspense } from 'react';
+import { IS_WAITLIST_REDIRECT_ENABLED } from '@/app/constants';
 
 export const revalidate = 43200;
 
@@ -22,7 +23,10 @@ export default async function RoadmapServerPage() {
   return (
     <Suspense>
       <AuthProvider>
-        <RoadmapPage initialRoadmapItems={initialRoadmapItems} />
+        <RoadmapPage
+          initialRoadmapItems={initialRoadmapItems}
+          isWaitlistRedirectEnabled={IS_WAITLIST_REDIRECT_ENABLED}
+        />
       </AuthProvider>
     </Suspense>
   );

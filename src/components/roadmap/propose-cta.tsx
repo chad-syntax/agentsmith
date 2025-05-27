@@ -5,19 +5,19 @@ import { toast } from 'sonner';
 import { useAuth } from '@/providers/auth';
 import { routes } from '@/utils/routes';
 import { cn } from '@/utils/shadcn';
-import { IS_WAITLIST_REDIRECT_ENABLED } from '@/app/constants';
 
 type RoadmapProposeCtaProps = {
   setIsProposeModalOpen: (isOpen: boolean) => void;
+  isWaitlistRedirectEnabled: boolean;
   className?: string;
 };
 
 export const RoadmapProposeCta = (props: RoadmapProposeCtaProps) => {
-  const { setIsProposeModalOpen, className } = props;
+  const { setIsProposeModalOpen, className, isWaitlistRedirectEnabled } = props;
   const { isLoading, agentsmithUser } = useAuth();
 
   const currentUserId = agentsmithUser?.id;
-  const isWaitlisted = agentsmithUser?.studio_access === false && IS_WAITLIST_REDIRECT_ENABLED;
+  const isWaitlisted = agentsmithUser?.studio_access === false && isWaitlistRedirectEnabled;
 
   return isLoading ? (
     <Button disabled className={cn('gap-0', className)}>
