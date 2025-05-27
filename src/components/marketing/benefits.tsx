@@ -69,7 +69,7 @@ export const BenefitsSection = () => {
                 key={benefit.title}
                 className="bg-card border-border rounded-lg overflow-hidden"
               >
-                <CardHeader className="pb-4">
+                <CardHeader>
                   <div className="flex items-center gap-3">
                     <IconComponent className="min-w-6 h-6 w-6 text-primary" />
                     <h3 className="text-xl font-bold text-card-foreground">{benefit.title}</h3>

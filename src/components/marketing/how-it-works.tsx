@@ -48,7 +48,7 @@ export const HowItWorksSection = () => {
               key={step.title}
               className="bg-card border-border rounded-lg overflow-hidden flex flex-col items-center text-center"
             >
-              <CardHeader className="pb-2">
+              <CardHeader>
                 <div className="flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary mb-4 mx-auto">
                   <step.icon className="h-6 w-6" />
                 </div>
