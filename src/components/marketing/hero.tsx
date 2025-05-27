@@ -64,7 +64,8 @@ export const HeroSection = () => {
         interval = setInterval(() => {
           const firstFinishedStrokeIndex = strokeLettersArray.findIndex(
             (stroke) =>
-              stroke.style.strokeDashoffset === '0' && !stroke.classList.contains('finished'),
+              (stroke.style.strokeDashoffset === '0' || stroke.style.strokeDashoffset === '0px') &&
+              !stroke.classList.contains('finished'),
           );
           if (firstFinishedStrokeIndex !== -1) {
             const targetFillLetter = fillLettersArray[firstFinishedStrokeIndex];
