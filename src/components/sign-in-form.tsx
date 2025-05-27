@@ -5,8 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
-import { GithubIcon } from './icons/github';
-import { Loader2 } from 'lucide-react';
+import { Github, Loader2 } from 'lucide-react';
 
 export const SignInForm = ({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) => {
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +52,7 @@ export const SignInForm = ({ className, ...props }: React.ComponentPropsWithoutR
                   <Loader2 className="size-5 animate-spin" />
                 ) : (
                   <>
-                    <GithubIcon className="size-5" />
+                    <Github className="size-5" />
                     Continue with Github
                   </>
                 )}

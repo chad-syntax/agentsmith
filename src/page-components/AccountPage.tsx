@@ -4,8 +4,7 @@ import { useApp } from '@/providers/app';
 import { useAuth } from '@/providers/auth';
 import { H1, H3 } from '@/components/typography';
 import { SignOutButton } from '@/components/sign-out-button';
-import { GithubIcon } from '@/components/icons/github';
-import { Mail } from 'lucide-react';
+import { Github, Mail } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
@@ -41,7 +40,7 @@ export const AccountPage = () => {
             className="flex flex-row items-center gap-2 hover:underline"
           >
             <Badge variant="outline" className="text-md [&>svg]:size-5">
-              <GithubIcon />
+              <Github />
               <span>@{githubUsername}</span>
             </Badge>
           </a>

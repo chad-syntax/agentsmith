@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Code, GitBranch, Shuffle, CheckCircle2, LucideIcon, Code2 } from 'lucide-react';
-import { GithubIcon } from '../icons/github';
+import { Users, GitBranch, ShieldCheck, Shuffle, Github, LineChart } from 'lucide-react';
 
 interface BenefitCardProps {
   icon: any;
@@ -10,40 +9,40 @@ interface BenefitCardProps {
 
 const benefitsData: BenefitCardProps[] = [
   {
-    icon: CheckCircle2,
-    title: 'Exceptional Prompt Authoring',
+    icon: Users,
+    title: 'Collaborative Prompt Management',
     description:
-      'Intuitive prompt engineering tools for both technical and non-technical users, making AI development accessible to everyone.',
+      'Centralized prompt authoring for technical & non-technical users. Auto-detect variables and ensure version sync for seamless collaboration.',
   },
   {
     icon: GitBranch,
-    title: 'Seamless Synchronization',
+    title: 'Git-Powered Handoff',
     description:
-      'Synchronize prompt versions, variables, and content to your repository through Pull Requests for version control and collaboration.',
+      'Sync authors and engineers with automated Pull Requests for prompt and variable changes, keeping developers updated.',
   },
   {
-    icon: Code,
-    title: 'Typesafe SDK',
+    icon: ShieldCheck,
+    title: 'Hardened Prompt Integration',
     description:
-      'Our typesafe SDK is designed to prevent erroneous prompt modifications, ensuring reliability in your AI applications.',
+      'Eliminate runtime errors with our typesafe SDK. Compile-time checks and type hints ensure correct prompt usage and variable handling.',
   },
   {
     icon: Shuffle,
-    title: 'Provider Switching',
+    title: 'Unified API for All LLMs',
     description:
-      'Effortlessly switch between providers and models using OpenRouter, giving you flexibility and cost control.',
+      'Access OpenAI, Google, Anthropic & more via one API (powered by OpenRouter). Switch models/providers easily, no writing wrappers for every provider.',
   },
   {
-    icon: GithubIcon,
-    title: 'Open Source',
+    icon: Github,
+    title: 'Transparent & Adaptable',
     description:
-      'Benefit from our open-source approach, allowing for community contributions and transparency in development.',
+      'Agentsmith is a transparent, open-source platform. Avoid vendor lock-in, benefit from community input, and customize freely.',
   },
   {
-    icon: Code2, // Using Code2 icon from lucide-react for better distinction
-    title: 'TypeScript & Python Support',
+    icon: LineChart,
+    title: 'Clear Observability',
     description:
-      'Use our fully-typed SDKs for TypeScript and Python to integrate AI agents into your applications with confidence and type safety.',
+      'Identify costly prompts and slow models. Track latency and usage to optimize performance and control spend.',
   },
 ];
 
@@ -53,7 +52,7 @@ export const BenefitsSection = () => {
       <div className="pb-10 container px-4 md:px-6 mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">
-            Key Benefits
+            Less Spinning, More Winning
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Agentsmith provides everything you need to build, test, and deploy AI agents with

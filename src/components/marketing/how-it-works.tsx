@@ -11,7 +11,7 @@ interface HowItWorksStep {
 const steps: HowItWorksStep[] = [
   {
     icon: Pencil,
-    title: 'Create Your Prompts',
+    title: 'Author Your Prompts',
     description:
       'Design and author your AI prompts using our intuitive interface, with support for variables and versioning.',
   },
@@ -23,9 +23,9 @@ const steps: HowItWorksStep[] = [
   },
   {
     icon: Rocket,
-    title: 'Deploy & Scale',
+    title: 'Sync & Deploy',
     description:
-      'Deploy your AI agents to production with our SDK, and scale as your needs grow with our flexible infrastructure.',
+      'Sync your prompts to your repository, and deploy your AI agents. Easily scale as your needs grow.',
   },
 ];
 
