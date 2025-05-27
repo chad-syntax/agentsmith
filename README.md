@@ -53,7 +53,7 @@ Guidance and detailed documentation for self-hosting Agentsmith are also under d
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/agentsmith.git
+git clone https://github.com/chad-syntax/agentsmith.git
 cd agentsmith
 ```
 
@@ -78,6 +78,7 @@ GITHUB_APP_ID=your_github_app_id
 GITHUB_APP_PRIVATE_KEY=your_github_app_private_key_base64
 GITHUB_APP_WEBHOOK_SECRET=your_github_app_webhook_secret
 GITHUB_APP_NAME=your_github_app_name
+SMEE_WEBHOOK_PROXY_URL=your_smee_channel_url
 
 # GitHub OAuth (for Supabase Auth)
 SUPABASE_AUTH_GITHUB_CLIENT_ID=your_github_oauth_client_id
@@ -127,6 +128,7 @@ npm run test -- path/to/test.test.ts
 | `GITHUB_APP_PRIVATE_KEY`                    | GitHub App private key (base64 encoded)    | Generated when creating GitHub App                   |
 | `GITHUB_APP_WEBHOOK_SECRET`                 | GitHub App webhook secret                  | Set when creating GitHub App                         |
 | `GITHUB_APP_NAME`                           | GitHub App name/slug                       | GitHub App settings                                  |
+| `SMEE_WEBHOOK_PROXY_URL`                    | (Local Dev Only) Your Smee.io channel URL  | Create a channel at [smee.io](https://smee.io/)      |
 | `SUPABASE_AUTH_GITHUB_CLIENT_ID`            | GitHub OAuth App Client ID                 | GitHub App settings                                  |
 | `SUPABASE_AUTH_GITHUB_SECRET`               | GitHub OAuth App Client Secret             | GitHub App settings                                  |
 | `NEXT_PUBLIC_SITE_URL`                      | Your site URL                              | `http://localhost:3000` for local development        |
@@ -201,7 +203,8 @@ Agentsmith requires a GitHub App for repository synchronization and OAuth authen
      - For **local development**: Use a webhook proxy service like [smee.io](https://smee.io/).
        1. Go to [smee.io](https://smee.io/) and create a new channel.
        2. Use the generated Smee channel URL (e.g., `https://smee.io/your-unique-channel`) as the Webhook URL in your GitHub App settings.
-       3. Start the local Smee client to forward these webhooks to your local server by running: `npm run smee-proxy:start` (this will typically forward to `http://localhost:3000/api/github/webhook` or as configured in your `smee-proxy` script).
+       3. Set `SMEE_WEBHOOK_PROXY_URL` in your `.env.local` to the smee channel url
+       4. Start the local Smee client to forward these webhooks to your local server by running: `npm run smee-proxy:start` (this will typically forward to `http://localhost:3000/api/github/webhook` or as configured in your `smee-proxy` script).
    - **Webhook secret**: Generate a secure random string
 
 ### 2. Set Permissions
