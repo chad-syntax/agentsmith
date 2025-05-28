@@ -94,21 +94,38 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
   return (
     <div id="sib-form-container">
       <div id="brevo-email-subscribe-wrapper" className="w-full max-w-md">
-        <div id="error-message" className="mb-4 hidden">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
+        <Alert
+          id="error-message"
+          className="sib-form-message-panel mb-4"
+          variant="destructive"
+          // style={{ display: 'none' }} // Initially hidden, Brevo script should manage display
+        >
+          <div className="sib-form-message-panel__text sib-form-message-panel__text--center">
+            <AlertCircle
+              className="sib-icon sib-notification__icon h-4 w-4 mr-2"
+              style={{ fill: 'none ' }}
+            />
+            <span className="sib-form-message-panel__inner-text">
               Your subscription could not be saved. Please try again.
-            </AlertDescription>
-          </Alert>
-        </div>
+            </span>
+          </div>
+        </Alert>
 
-        <div id="success-message" className="mb-4 hidden">
-          <Alert>
-            <CheckCircle2 className="h-4 w-4" />
-            <AlertDescription>Your subscription has been successful.</AlertDescription>
-          </Alert>
-        </div>
+        <Alert
+          id="success-message"
+          className="sib-form-message-panel mb-4"
+          // style={{ display: 'none' }} // Initially hidden, Brevo script should manage display
+        >
+          <div className="sib-form-message-panel__text sib-form-message-panel__text--center">
+            <CheckCircle2
+              className="sib-icon sib-notification__icon h-4 w-4 mr-2"
+              style={{ fill: 'none ' }}
+            />
+            <span className="sib-form-message-panel__inner-text">
+              Your subscription has been successful.
+            </span>
+          </div>
+        </Alert>
 
         <form
           id="sib-form"
