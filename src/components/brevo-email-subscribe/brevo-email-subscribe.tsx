@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import Script from 'next/script';
 // No specific CSS import needed if we are using Tailwind for the new design
-// import './brevo-email-subscribe.css';
+import './brevo-email-subscribe.css';
 
 // import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'; // Card structure will be removed
 import { Input } from '@/components/ui/input';
@@ -88,104 +88,106 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
   };
 
   return (
-    <div id="brevo-email-subscribe-wrapper" className="w-full max-w-md">
-      <div id="error-message" className="mb-4 hidden">
-        <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Your subscription could not be saved. Please try again.
-          </AlertDescription>
-        </Alert>
-      </div>
-
-      <div id="success-message" className="mb-4 hidden">
-        <Alert>
-          <CheckCircle2 className="h-4 w-4" />
-          <AlertDescription>Your subscription has been successful.</AlertDescription>
-        </Alert>
-      </div>
-
-      <form
-        id="sib-form"
-        method="POST"
-        action={formSubmitUrl}
-        data-type="subscription"
-        onSubmit={handleSubmit}
-        className="space-y-3"
-      >
-        <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <Input
-            type="email"
-            id="EMAIL"
-            name="EMAIL"
-            placeholder="Enter your email"
-            autoComplete="off"
-            required
-            className="w-full bg-background border-border text-foreground placeholder:text-muted-foreground" // Adjusted styling
-          />
-          <Button
-            type="submit"
-            size="lg"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium whitespace-nowrap sib-hide-loader-icon-parent"
-          >
-            Join Waitlist
-          </Button>
+    <div id="sib-form-container">
+      <div id="brevo-email-subscribe-wrapper" className="w-full max-w-md">
+        <div id="error-message" className="mb-4 hidden">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Your subscription could not be saved. Please try again.
+            </AlertDescription>
+          </Alert>
         </div>
 
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="OPT_IN"
-            name="OPT_IN"
-            value="1"
-            className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary" // Adjusted styling
-          />
-          <Label
-            htmlFor="OPT_IN"
-            className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-left text-muted-foreground" // Adjusted styling
-          >
-            I agree to receive newsletters
-          </Label>
+        <div id="success-message" className="mb-4 hidden">
+          <Alert>
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertDescription>Your subscription has been successful.</AlertDescription>
+          </Alert>
         </div>
 
-        <div className="text-[10px] text-muted-foreground">
-          <p>
-            By submitting this form you agree that the personal data you provided will be
-            transferred to Brevo for processing in accordance with Brevo's{' '}
-            <a
-              href="https://www.brevo.com/en/legal/privacypolicy/"
-              target="_blank"
-              rel="noopener noreferrer" // Added rel for security
-              className="underline hover:text-primary"
+        <form
+          id="sib-form"
+          method="POST"
+          action={formSubmitUrl}
+          data-type="subscription"
+          onSubmit={handleSubmit}
+          className="space-y-3"
+        >
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Input
+              type="email"
+              id="EMAIL"
+              name="EMAIL"
+              placeholder="Enter your email"
+              autoComplete="off"
+              required
+              className="w-full h-10 bg-background border-border text-foreground placeholder:text-muted-foreground" // Adjusted styling
+            />
+            <Button
+              type="submit"
+              size="lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-medium whitespace-nowrap sib-hide-loader-icon-parent"
             >
-              Privacy Policy
-            </a>
-            .
-          </p>
-        </div>
+              <Loader2 className="sib-loader sib-hide-loader-icon h-4 w-4 animate-spin" />
+              Join Waitlist
+            </Button>
+          </div>
 
-        <div
-          className="cf-turnstile g-recaptcha m-0" // Keep class for Brevo script
-          data-sitekey={process.env.NEXT_PUBLIC_CF_TURNSTILE_SITE_KEY}
-          id="sib-captcha" // Keep id for Brevo script
-          data-callback="handleCaptchaResponse" // Keep callback for Brevo script
-          data-language="en"
-        />
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="OPT_IN"
+              name="OPT_IN"
+              value="1"
+              className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary" // Adjusted styling
+            />
+            <Label
+              htmlFor="OPT_IN"
+              className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-left text-muted-foreground" // Adjusted styling
+            >
+              I agree to receive newsletters
+            </Label>
+          </div>
 
-        <input
-          type="text"
-          name="email_address_check"
-          defaultValue=""
-          className="input--hidden m-0 h-0 block"
-        />
-        <input type="hidden" name="locale" defaultValue="en" />
-      </form>
-      {/* Brevo's main script and Cloudflare Turnstile script */}
-      <Script src="https://sibforms.com/forms/end-form/build/main.js" strategy="lazyOnload" />
-      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="lazyOnload" />
-      <Script
-        id="brevo-captcha-handler" // Added id for clarity
-        dangerouslySetInnerHTML={{
-          __html: `
+          <div className="text-[10px] text-muted-foreground">
+            <p>
+              By submitting this form you agree that the personal data you provided will be
+              transferred to Brevo for processing in accordance with Brevo's{' '}
+              <a
+                href="https://www.brevo.com/en/legal/privacypolicy/"
+                target="_blank"
+                rel="noopener noreferrer" // Added rel for security
+                className="underline hover:text-primary"
+              >
+                Privacy Policy
+              </a>
+              .
+            </p>
+          </div>
+
+          <div
+            className="cf-turnstile g-recaptcha m-0" // Keep class for Brevo script
+            data-sitekey={process.env.NEXT_PUBLIC_CF_TURNSTILE_SITE_KEY}
+            id="sib-captcha" // Keep id for Brevo script
+            data-callback="handleCaptchaResponse" // Keep callback for Brevo script
+            data-language="en"
+          />
+
+          <input
+            type="text"
+            name="email_address_check"
+            defaultValue=""
+            className="input--hidden m-0 h-0 block"
+          />
+          <input type="hidden" name="locale" defaultValue="en" />
+        </form>
+        {/* Brevo's main script and Cloudflare Turnstile script */}
+        <Script src="https://sibforms.com/forms/end-form/build/main.js" strategy="lazyOnload" />
+        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="lazyOnload" />
+        <Script
+          id="brevo-captcha-handler" // Added id for clarity
+          dangerouslySetInnerHTML={{
+            __html: `
           function handleCaptchaResponse() {
             var event = new Event('captchaChange');
             document.getElementById('sib-captcha').dispatchEvent(event);
@@ -195,8 +197,9 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
             }
           }
         `,
-        }}
-      />
+          }}
+        />
+      </div>
     </div>
   );
 };

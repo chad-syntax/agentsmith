@@ -103,7 +103,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       await this.getInstallationRepositories(installationId);
     } catch (error: any) {
       // if we get a 404 error, means the installation does not exist
-      this.logger.error('Error fetching installation repositories:', error.status);
+      this.logger.error('Error fetching installation repositories:', error);
 
       if (error.status === 404) {
         return {
