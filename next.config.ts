@@ -52,7 +52,7 @@ const nextConfig: NextConfig = {
       `default-src ${self}`,
       `script-src ${self} ${unsafeEval} ${unsafeInline} ${supabaseWildcard} ${localhostWildcard} ${cfChallenges} ${posthogHosts} ${googleTagManager} ${googleAnalytics} ${googleAds} ${googleAdServices} ${sibforms} ${stripeJs} ${unpkg} ${vercelAssets} ${vercelLive}`,
       `style-src ${self} ${unsafeInline} ${googleFonts} ${gStatic} ${sibforms}`,
-      `img-src ${self} ${blob} ${data} ${supabaseWildcard} ${localhostWildcard} ${googleAnalytics} ${googleAds} ${gStatic} ${githubAvatars} ${googleConnect} ${googleAdServices}`,
+      `img-src ${self} ${blob} ${data} ${supabaseWildcard} ${localhostWildcard} ${googleAnalytics} ${googleAds} ${gStatic} ${githubAvatars} ${googleConnect} ${googleAdServices} ${googleTagManager}`,
       `font-src ${self} ${gStatic}`,
       `worker-src ${self} ${blob}`,
       `frame-src ${self} ${cfChallenges} ${sibforms} ${stripeFrame} td.doubleclick.net ${googleTagManager} ${vercelLive}`,

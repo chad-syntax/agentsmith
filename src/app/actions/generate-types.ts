@@ -3,8 +3,12 @@
 import { Project } from 'ts-morph';
 import { createClient } from '@/lib/supabase/server';
 import type { Database } from '@/app/__generated__/supabase.types';
+import { ActionResponse } from '@/types/action-response';
+import { createErrorResponse, createSuccessResponse } from '@/utils/action-helpers';
 
-export async function generateTypes() {
+export async function generateTypes(): Promise<
+  ActionResponse<{ content: string; filename: string }>
+> {
   // Initialize project and create source file
   const project = new Project();
   const sourceFile = project.createSourceFile('agentsmith.types.ts', '', {
@@ -20,126 +24,111 @@ export async function generateTypes() {
 
   // Fetch prompts from Supabase
   const supabase = await createClient();
-  const { data: prompts, error } = await supabase
-    .from('prompts')
-    .select(
-      `
+  try {
+    const { data: prompts, error } = await supabase
+      .from('prompts')
+      .select(
+        `
       *,
       prompt_versions(*, prompt_variables(*))
-    `
-    )
-    .order('created_at', { ascending: false });
+    `,
+      )
+      .order('created_at', { ascending: false });
 
-  if (error) {
-    console.error('Error fetching prompts:', error);
-    return {
-      content: '// Error generating types: ' + error.message,
-      filename: 'agentsmith.types.ts',
-    };
-  }
+    if (error) {
+      console.error('Error fetching prompts:', error);
+      return createErrorResponse('Error generating types: ' + error.message);
+    }
 
-  // Process prompts to get the latest version and variables
-  const processedPrompts = prompts.map((prompt) => {
-    const versions = prompt.prompt_versions || [];
-    // Sort versions by created_at in descending order
-    const sortedVersions = [...versions].sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+    // Process prompts to get the latest version and variables
+    const processedPrompts = prompts.map((prompt) => {
+      const versions = prompt.prompt_versions || [];
+      // Sort versions by created_at in descending order
+      const sortedVersions = [...versions].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      );
 
-    const latestVersion = sortedVersions.length > 0 ? sortedVersions[0] : null;
-    const variables = latestVersion?.prompt_variables || [];
+      const latestVersion = sortedVersions.length > 0 ? sortedVersions[0] : null;
+      const variables = latestVersion?.prompt_variables || [];
 
-    return {
-      id: prompt.id,
-      name: prompt.name,
-      slug: prompt.uuid,
-      content: latestVersion?.content || '',
-      version: latestVersion?.version || '1.0.0',
-      variables: variables.map((v) => ({
-        name: v.name,
-        type: v.type,
-        required: v.required,
-      })),
-    };
-  });
+      return {
+        id: prompt.id,
+        name: prompt.name,
+        slug: prompt.uuid,
+        content: latestVersion?.content || '',
+        version: latestVersion?.version || '1.0.0',
+        variables: variables.map((v) => ({
+          name: v.name,
+          type: v.type,
+          required: v.required,
+        })),
+      };
+    });
 
-  // Add PromptSlug type
-  const promptSlugs =
-    processedPrompts.map((p) => `'${p.slug}'`).join(' | ') ||
-    "'no_prompts_found'";
+    // Add PromptSlug type
+    const promptSlugs =
+      processedPrompts.map((p) => `'${p.slug}'`).join(' | ') || "'no_prompts_found'";
 
-  sourceFile.addTypeAlias({
-    name: 'PromptSlug',
-    isExported: true,
-    type: promptSlugs,
-  });
+    sourceFile.addTypeAlias({
+      name: 'PromptSlug',
+      isExported: true,
+      type: promptSlugs,
+    });
 
-  // Add Prompt type
-  sourceFile.addTypeAlias({
-    name: 'Prompt',
-    isExported: true,
-    type: `{
-      id: number;
-      name: string;
-      content: string;
-      version: string;
-      variables: PromptVariable[];
-      slug: PromptSlug;
-    }`,
-  });
+    // Add Prompt type
+    sourceFile.addTypeAlias({
+      name: 'Prompt',
+      isExported: true,
+      type: `{\n      id: number;\n      name: string;\n      content: string;\n      version: string;\n      variables: PromptVariable[];\n      slug: PromptSlug;\n    }`,
+    });
 
-  // Add PromptVariable type
-  sourceFile.addTypeAlias({
-    name: 'PromptVariable',
-    isExported: true,
-    type: `{
-      name: string;
-      type: string;
-      required: boolean;
-    }`,
-  });
+    // Add PromptVariable type
+    sourceFile.addTypeAlias({
+      name: 'PromptVariable',
+      isExported: true,
+      type: `{\n      name: string;\n      type: string;\n      required: boolean;\n    }`,
+    });
 
-  // Add Agency type with strict typing based on actual prompts
-  sourceFile.addTypeAlias({
-    name: 'Agency',
-    isExported: true,
-    type: (writer) => {
-      writer.block(() => {
-        writer
-          .write('prompts: ')
-          .block(() => {
-            processedPrompts.forEach((prompt) => {
-              writer.write(
-                `'${prompt.slug}': Prompt & { 
-                  id: ${prompt.id}; 
-                  name: '${prompt.name}'; 
-                  content: string;
-                  version: '${prompt.version}';
-                  variables: [${prompt.variables
+    // Add Agency type with strict typing based on actual prompts
+    sourceFile.addTypeAlias({
+      name: 'Agency',
+      isExported: true,
+      type: (writer) => {
+        writer.block(() => {
+          writer
+            .write('prompts: ')
+            .block(() => {
+              processedPrompts.forEach((prompt) => {
+                writer.write(
+                  `'${prompt.slug}': Prompt & { \n                  id: ${prompt.id}; \n                  name: '${prompt.name}'; \n                  content: string;\n                  version: '${prompt.version}';\n                  variables: [${prompt.variables
                     .map(
-                      (v) => `{ 
-                    name: '${v.name}', 
-                    type: '${v.type}', 
-                    required: ${v.required} 
-                  }`
+                      (
+                        v,
+                      ) => `{ \n                    name: '${v.name}', \n                    type: '${v.type}', 
+                    required: ${v.required} \n                  }`,
                     )
-                    .join(', ')}];
-                  slug: '${prompt.slug}';
-                };\n`
-              );
-            });
-          })
-          .write(';\n');
-      });
-    },
-  });
+                    .join(
+                      ', ',
+                    )}];\n                  slug: '${prompt.slug}';\n                };\n`,
+                );
+              });
+            })
+            .write(';\n');
+        });
+      },
+    });
 
-  // Format the source file
-  sourceFile.formatText();
+    // Format the source file
+    sourceFile.formatText();
 
-  return {
-    content: sourceFile.getFullText(),
-    filename: 'agentsmith.types.ts',
-  };
+    return createSuccessResponse(
+      {
+        content: sourceFile.getFullText(),
+        filename: 'agentsmith.types.ts',
+      },
+      'Types generated successfully.',
+    );
+  } catch (error) {
+    return createErrorResponse(error instanceof Error ? error.message : 'Type generation failed');
+  }
 }

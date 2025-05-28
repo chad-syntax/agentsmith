@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 import { routes } from '@/utils/routes';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
+import { ActionResponse } from '@/types/action-response';
+import { createErrorResponse, createSuccessResponse } from '@/utils/action-helpers';
 
 export const installGithubApp = async (organizationUuid: string) => {
   const supabase = await createClient();
@@ -22,29 +24,37 @@ export const installGithubApp = async (organizationUuid: string) => {
   redirect(installUrl);
 };
 
-export const syncProject = async (projectUuid: string) => {
+export const syncProject = async (projectUuid: string): Promise<ActionResponse> => {
   const supabase = await createClient();
 
   const { services, logger } = new AgentsmithServices({ supabase });
 
   logger.info('calling syncProject action with projectUuid', projectUuid);
 
-  const project = await services.projects.getProjectDataByUuid(projectUuid);
+  try {
+    const project = await services.projects.getProjectDataByUuid(projectUuid);
 
-  if (!project) {
-    throw new Error(`Project with uuid ${projectUuid} not found, cannot sync project`);
+    if (!project) {
+      return createErrorResponse(`Project with uuid ${projectUuid} not found, cannot sync project`);
+    }
+
+    const projectRepository = await services.projects.getProjectRepositoryByProjectId(project.id);
+
+    if (!projectRepository) {
+      return createErrorResponse(
+        `Project repository for project ${project.id} not found, cannot sync project`,
+      );
+    }
+
+    revalidatePath(routes.studio.home);
+
+    await services.githubSync.sync({
+      projectRepository,
+      source: 'agentsmith',
+    });
+    return createSuccessResponse(undefined, 'Project synced successfully.');
+  } catch (error) {
+    logger.error('Error syncing project:', error);
+    return createErrorResponse(error instanceof Error ? error.message : 'Failed to sync project');
   }
-
-  const projectRepository = await services.projects.getProjectRepositoryByProjectId(project.id);
-
-  if (!projectRepository) {
-    throw new Error(`Project repository for project ${project.id} not found, cannot sync project`);
-  }
-
-  revalidatePath(routes.studio.home);
-
-  await services.githubSync.sync({
-    projectRepository,
-    source: 'agentsmith',
-  });
 };

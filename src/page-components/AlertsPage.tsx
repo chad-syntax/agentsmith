@@ -12,6 +12,14 @@ import { createClient } from '@/lib/supabase/client';
 import { AlertsService } from '@/lib/AlertsService';
 import { toast } from 'sonner';
 import { useState } from 'react';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table';
 
 type AlertsPageProps = {
   alerts: GetAlertsResult;
@@ -56,46 +64,46 @@ export const AlertsPage = (props: AlertsPageProps) => {
       <H1 className="mb-4">User Alerts</H1>
 
       {alerts.length === 0 ? (
-        <div className="bg-background rounded-lg shadow-sm p-6 text-center">
+        <div className="bg-background p-6 text-center">
           <P className="text-muted-foreground">No alerts found.</P>
         </div>
       ) : (
-        <div className="bg-background rounded-lg shadow-sm overflow-hidden">
-          <table className="min-w-full divide-y divide-border">
-            <thead className="bg-muted">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        <div className="bg-background overflow-hidden overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                </TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                </TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                </TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                </TableHead>
+                <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-background divide-y divide-border">
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {alerts.map((alert) => {
                 const status = alert.read_at ? 'Read' : 'Unread';
                 return (
-                  <tr key={alert.id} className="hover:bg-muted">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                  <TableRow key={alert.id} className="hover:bg-muted">
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                       {formatDate(alert.created_at)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground max-w-[300px] truncate">
-                      {alert.title}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-sm text-foreground whitespace-normal">
+                      <div className="min-w-sm max-w-md break-words">{alert.title}</div>
+                    </TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                       {alert.type}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           alert.read_at
@@ -105,8 +113,8 @@ export const AlertsPage = (props: AlertsPageProps) => {
                       >
                         {status}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       {!alert.read_at && (
                         <Button
                           variant="link"
@@ -123,12 +131,12 @@ export const AlertsPage = (props: AlertsPageProps) => {
                           </Link>
                         </Button>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       )}
     </div>

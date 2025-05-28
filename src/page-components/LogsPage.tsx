@@ -5,6 +5,14 @@ import { H1, H2, P } from '@/components/typography';
 import { Button } from '@/components/ui/button';
 import { GetProjectDataResult } from '@/lib/ProjectsService';
 import { GetLogsByProjectIdResult } from '@/lib/LLMLogsService';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table';
 
 type LogsPageProps = {
   project: GetProjectDataResult;
@@ -34,78 +42,72 @@ export const LogsPage = (props: LogsPageProps) => {
     <div className="p-6">
       <H1 className="mb-4">Logs</H1>
 
-      <div className="mb-6">
-        <H2>Project: {project.name}</H2>
-      </div>
-
       {logs.length === 0 ? (
         <div className="bg-background rounded-lg shadow-sm p-6 text-center">
           <P className="text-muted-foreground">No logs found for this project.</P>
         </div>
       ) : (
-        <div className="bg-background rounded-lg shadow-sm overflow-hidden">
-          <table className="min-w-full divide-y divide-border">
-            <thead className="bg-muted">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Duration
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-background divide-y divide-border">
-              {logs.map((log) => {
-                // Calculate duration if both start and end time exist
-                const duration = log.end_time
-                  ? (
-                      (new Date(log.end_time).getTime() - new Date(log.start_time).getTime()) /
-                      1000
-                    ).toFixed(2) + 's'
-                  : 'In progress';
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Date
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Status
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Duration
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {logs.map((log) => {
+              // Calculate duration if both start and end time exist
+              const duration = log.end_time
+                ? (
+                    (new Date(log.end_time).getTime() - new Date(log.start_time).getTime()) /
+                    1000
+                  ).toFixed(2) + 's'
+                : 'In progress';
 
-                // Determine status based on end_time
-                const status = log.end_time ? 'Completed' : 'Running';
+              // Determine status based on end_time
+              const status = log.end_time ? 'Completed' : 'Running';
 
-                return (
-                  <tr key={log.uuid} className="hover:bg-muted">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {formatDate(log.created_at)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          log.end_time
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-yellow-100 text-yellow-800'
-                        }`}
-                      >
-                        {status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {duration}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Button variant="link" asChild className="p-0">
-                        <Link href={routes.studio.logDetail(project.uuid, log.uuid)}>
-                          View Details
-                        </Link>
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+              return (
+                <TableRow key={log.uuid} className="hover:bg-muted">
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    {formatDate(log.created_at)}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        log.end_time
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}
+                    >
+                      {status}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    {duration}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <Button variant="link" asChild className="p-0">
+                      <Link href={routes.studio.logDetail(project.uuid, log.uuid)}>
+                        View Details
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
       )}
     </div>
   );

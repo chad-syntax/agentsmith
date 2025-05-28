@@ -7,42 +7,56 @@ import {
   UpdatePromptVersionOptions,
 } from '@/lib/PromptsService';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
+import { ActionResponse } from '@/types/action-response';
+import { createErrorResponse, createSuccessResponse } from '@/utils/action-helpers';
 
-export async function updatePromptVersion(options: UpdatePromptVersionOptions) {
+export async function updatePromptVersion(
+  options: UpdatePromptVersionOptions,
+): Promise<ActionResponse> {
   const supabase = await createClient();
-
   const { services, logger } = new AgentsmithServices({ supabase });
 
   try {
-    return await services.prompts.updatePromptVersion(options);
+    await services.prompts.updatePromptVersion(options);
+    return createSuccessResponse(undefined, 'Prompt version updated successfully.');
   } catch (error) {
     logger.error('Error updating prompt version:', error);
-    throw new Error('Failed to update prompt version');
+    return createErrorResponse(
+      error instanceof Error ? error.message : 'Failed to update prompt version',
+    );
   }
 }
 
-export async function createPromptWithDraftVersion(options: CreatePromptWithDraftVersionOptions) {
+export async function createPromptWithDraftVersion(
+  options: CreatePromptWithDraftVersionOptions,
+): Promise<ActionResponse<{ promptUuid: string; versionUuid: string }>> {
   const supabase = await createClient();
-
   const { services, logger } = new AgentsmithServices({ supabase });
 
   try {
-    return await services.prompts.createPromptWithDraftVersion(options);
+    const result = await services.prompts.createPromptWithDraftVersion(options);
+    return createSuccessResponse(result, 'Prompt with draft version created successfully.');
   } catch (error) {
     logger.error('Error creating prompt with draft version:', error);
-    throw new Error('Failed to create prompt with draft version');
+    return createErrorResponse(
+      error instanceof Error ? error.message : 'Failed to create prompt with draft version',
+    );
   }
 }
 
-export async function createDraftVersion(options: CreateDraftVersionOptions) {
+export async function createDraftVersion(
+  options: CreateDraftVersionOptions,
+): Promise<ActionResponse<{ versionUuid: string }>> {
   const supabase = await createClient();
-
   const { services, logger } = new AgentsmithServices({ supabase });
 
   try {
-    return await services.prompts.createDraftVersion(options);
+    const result = await services.prompts.createDraftVersion(options);
+    return createSuccessResponse(result, 'Draft version created successfully.');
   } catch (error) {
     logger.error('Error creating draft version:', error);
-    throw new Error('Failed to create draft version');
+    return createErrorResponse(
+      error instanceof Error ? error.message : 'Failed to create draft version',
+    );
   }
 }

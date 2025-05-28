@@ -12,7 +12,10 @@ export class AlertsService extends AgentsmithSupabaseService {
   }
 
   async getAlerts() {
-    const { data, error } = await this.supabase.from('alerts').select('*, roadmap_items(slug)');
+    const { data, error } = await this.supabase
+      .from('alerts')
+      .select('*, roadmap_items(slug)')
+      .order('created_at', { ascending: false });
 
     if (error) {
       throw new Error(error.message);

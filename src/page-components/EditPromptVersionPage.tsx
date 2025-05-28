@@ -26,6 +26,7 @@ import { EmojiModeButton } from '@/components/emoji-mode-button';
 import { emojiTokenify } from '@/utils/emoji-tokenify';
 import { cn } from '@/utils/shadcn';
 import { STUDIO_FULL_HEIGHT } from '@/app/constants';
+import { toast } from 'sonner';
 
 type EditPromptVersionPageProps = {
   promptVersion: NonNullable<GetPromptVersionByUuidResult>;
@@ -103,14 +104,14 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     shouldRedirect = true,
   ) => {
     if (!content.trim()) {
-      alert('Please provide content for the prompt');
+      toast.error('Please provide content for the prompt');
       return false;
     }
 
     setIsSaving(true);
 
     try {
-      await updatePromptVersion({
+      const response = await updatePromptVersion({
         promptVersionUuid: currentPromptVersion.uuid,
         content,
         config,
@@ -123,6 +124,12 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
           default_value: v.default_value,
         })),
       });
+
+      if (!response.success) {
+        console.error('Error updating prompt:', response.message);
+        toast.error(response.message || 'Failed to update prompt. Please try again.');
+        return false;
+      }
 
       showSyncToast({
         title: 'Prompt has been updated',
@@ -142,7 +149,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
       return true;
     } catch (error) {
       console.error('Error updating prompt:', error);
-      alert('Failed to update prompt. Please try again.');
+      toast.error('Failed to update prompt. Please try again.');
       return false;
     } finally {
       setIsSaving(false);
@@ -165,20 +172,27 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   const handleCreateNewVersion = async () => {
     setIsCreatingVersion(true);
     try {
-      const { versionUuid } = await createDraftVersion({
+      const response = await createDraftVersion({
         promptId: currentPromptVersion.prompts.id,
         latestVersion: currentPromptVersion.version,
         versionType: 'patch',
       });
 
-      showSyncToast({
-        title: 'Prompt has been updated',
-      });
-
-      router.push(routes.studio.editPromptVersion(selectedProjectUuid, versionUuid));
+      if (response.success && response.data) {
+        showSyncToast({
+          title: 'New draft version created',
+        });
+        router.push(
+          routes.studio.editPromptVersion(selectedProjectUuid, response.data.versionUuid),
+        );
+      } else {
+        console.error('Error creating new version:', response.message);
+        toast.error(response.message || 'Failed to create new version. Please try again.');
+      }
     } catch (error) {
       console.error('Error creating new version:', error);
-      alert('Failed to create new version. Please try again.');
+      toast.error('Failed to create new version. Please try again.');
+    } finally {
       setIsCreatingVersion(false);
     }
   };

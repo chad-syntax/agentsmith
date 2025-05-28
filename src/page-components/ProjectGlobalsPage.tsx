@@ -1,6 +1,6 @@
 'use client';
 
-import { updateProjectGlobals } from '@/app/actions/globals';
+import { updateProjectGlobals } from '@/app/actions/project-globals';
 import { useApp } from '@/providers/app';
 import { JsonEditor } from '@/components/editors/json-editor';
 import { H1 } from '@/components/typography';
@@ -37,7 +37,7 @@ export const ProjectGlobalsPage = (props: ProjectGlobalsPageProps) => {
       });
 
       if (!result.success) {
-        setError(result.error ?? 'Something went wrong saving globals');
+        setError(result.message ?? 'Something went wrong saving globals');
       } else {
         showSyncToast({
           title: 'Globals have been updated',

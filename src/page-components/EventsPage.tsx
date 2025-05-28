@@ -7,6 +7,14 @@ import { H1, H2, P } from '@/components/typography';
 import { Button } from '@/components/ui/button';
 import { GetProjectDataResult } from '@/lib/ProjectsService';
 import { GetEventsByProjectIdResult } from '@/lib/EventsService';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table';
 
 type EventsPageProps = {
   project: GetProjectDataResult;
@@ -40,66 +48,64 @@ export const EventsPage = (props: EventsPageProps) => {
           <P className="text-muted-foreground">No events found for this project.</P>
         </div>
       ) : (
-        <div className="bg-background rounded-lg shadow-sm overflow-hidden">
-          <table className="min-w-full divide-y divide-border">
-            <thead className="bg-muted">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Severity
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-background divide-y divide-border">
-              {events.map((event) => (
-                <tr key={event.uuid} className="hover:bg-muted">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    {formatDate(event.created_at)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {event.type}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                    {event.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                        event.severity === 'ERROR'
-                          ? 'bg-red-100 text-red-800'
-                          : event.severity === 'WARN'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : event.severity === 'INFO'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-800'
-                      }`}
-                    >
-                      {event.severity}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Button variant="link" asChild className="p-0">
-                      <Link href={routes.studio.eventDetail(project.uuid, event.uuid)}>
-                        View Details
-                      </Link>
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Date
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Type
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Name
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Severity
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Actions
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {events.map((event) => (
+              <TableRow key={event.uuid}>
+                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                  {formatDate(event.created_at)}
+                </TableCell>
+                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                  {event.type}
+                </TableCell>
+                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                  {event.name}
+                </TableCell>
+                <TableCell className="px-6 py-4 whitespace-nowrap">
+                  <span
+                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      event.severity === 'ERROR'
+                        ? 'bg-red-100 text-red-800'
+                        : event.severity === 'WARN'
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : event.severity === 'INFO'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {event.severity}
+                  </span>
+                </TableCell>
+                <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <Button variant="link" asChild className="p-0">
+                    <Link href={routes.studio.eventDetail(project.uuid, event.uuid)}>
+                      View Details
+                    </Link>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   );

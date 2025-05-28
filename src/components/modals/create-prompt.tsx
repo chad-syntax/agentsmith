@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 
 type CreatePromptModalProps = {
   isOpen: boolean;
@@ -34,23 +35,31 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
     e.preventDefault();
 
     if (!name.trim()) {
-      alert('Please provide a name for the prompt');
+      toast.error('Please provide a name for the prompt');
       return;
     }
 
     setIsCreating(true);
 
     try {
-      const { promptUuid, versionUuid } = await createPromptWithDraftVersion({
+      const response = await createPromptWithDraftVersion({
         name,
         projectId,
       });
 
-      // Redirect to the edit page for the new draft version
-      router.push(routes.studio.editPromptVersion(selectedProjectUuid, versionUuid));
+      if (response.success && response.data) {
+        // Redirect to the edit page for the new draft version
+        router.push(
+          routes.studio.editPromptVersion(selectedProjectUuid, response.data.versionUuid),
+        );
+      } else {
+        console.error('Error creating prompt:', response.message);
+        toast.error(response.message || 'Failed to create prompt. Please try again.');
+      }
     } catch (error) {
       console.error('Error creating prompt:', error);
-      alert('Failed to create prompt. Please try again.');
+      toast.error('Failed to create prompt. Please try again.');
+    } finally {
       setIsCreating(false);
     }
   };

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
 /* Base color palette */
 :root {
@@ -114,24 +115,6 @@
 
   body {
     @apply bg-background text-foreground;
-  }
-}
-
-/* Animations */
-@layer utilities {
-  .animate-accordion-up {
-    animation: accordion-up 0.2s var(--ease-fluid);
-  }
-  .animate-accordion-down {
-    animation: accordion-down 0.2s var(--ease-fluid);
-  }
-
-  [data-slot='accordion-content'][data-state='open'] {
-    animation: accordion-down 0.2s var(--ease-fluid);
-  }
-
-  [data-slot='accordion-content'][data-state='closed'] {
-    animation: accordion-up 0.2s var(--ease-fluid);
   }
 }
 
