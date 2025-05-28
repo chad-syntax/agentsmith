@@ -22,7 +22,7 @@ const googleAds = 'googleads.g.doubleclick.net';
 const googleAdServices = 'www.googleadservices.com';
 const googleFonts = 'fonts.googleapis.com';
 const gStatic = '*.gstatic.com'; // For fonts, images, styles from Google
-const googleConnect = 'www.google.com'; // For Google Ads/CCM connect
+const googleConnect = 'www.google.com'; // For Google Ads/CCM connect, and now images
 
 // Cloudflare
 const cfChallenges = 'challenges.cloudflare.com';
@@ -35,10 +35,13 @@ const stripeJs = 'js.stripe.com';
 const stripeFrame = '*.stripe.com'; // For frames
 const stripeApi = 'api.stripe.com'; // For connect
 
-// Other known services
-const unpkg = 'unpkg.com';
+// Vercel
 const vercelAssets = 'assets.vercel.com';
 const vercelVitals = 'vitals.vercel-insights.com';
+const vercelLive = 'vercel.live'; // For Vercel live feedback/preview tools
+
+// Other known services
+const unpkg = 'unpkg.com';
 const githubAvatars = 'avatars.githubusercontent.com';
 const openrouter = 'openrouter.ai *.openrouter.ai';
 const githubCom = 'github.com'; // For form-action
@@ -47,13 +50,13 @@ const nextConfig: NextConfig = {
   async headers() {
     const cspHeader = [
       `default-src ${self}`,
-      `script-src ${self} ${unsafeEval} ${unsafeInline} ${supabaseWildcard} ${localhostWildcard} ${cfChallenges} ${posthogHosts} ${googleTagManager} ${googleAnalytics} ${googleAds} ${googleAdServices} ${sibforms} ${stripeJs} ${unpkg} ${vercelAssets}`,
+      `script-src ${self} ${unsafeEval} ${unsafeInline} ${supabaseWildcard} ${localhostWildcard} ${cfChallenges} ${posthogHosts} ${googleTagManager} ${googleAnalytics} ${googleAds} ${googleAdServices} ${sibforms} ${stripeJs} ${unpkg} ${vercelAssets} ${vercelLive}`,
       `style-src ${self} ${unsafeInline} ${googleFonts} ${gStatic} ${sibforms}`,
       `img-src ${self} ${blob} ${data} ${supabaseWildcard} ${localhostWildcard} ${googleAnalytics} ${googleAds} ${gStatic} ${githubAvatars} ${googleConnect} ${googleAdServices}`,
       `font-src ${self} ${gStatic}`,
       `worker-src ${self} ${blob}`,
       `frame-src ${self} ${cfChallenges} ${sibforms} ${stripeFrame} td.doubleclick.net ${googleTagManager}`,
-      `connect-src ${self} ${supabaseWildcard} ${supabaseWsWildcard} ${localhostWildcard} ${localhostWsWildcard} ${cfChallenges} ${posthogHosts} ${googleAnalytics} ${googleTagManager} ${googleAds} ${googleAdServices} ${googleConnect} ${sibforms} ${stripeApi} ${openrouter} ${vercelVitals}`,
+      `connect-src ${self} ${supabaseWildcard} ${supabaseWsWildcard} ${localhostWildcard} ${localhostWsWildcard} ${cfChallenges} ${posthogHosts} ${googleAnalytics} ${googleTagManager} ${googleAds} ${googleAdServices} ${googleConnect} ${sibforms} ${stripeApi} ${openrouter} ${vercelVitals} ${vercelLive} wss://${vercelLive}`,
       `object-src 'none'`, // Note: 'none' should be quoted
       `base-uri ${self}`,
       `form-action ${self} ${githubCom} ${openrouter} ${sibforms}`,

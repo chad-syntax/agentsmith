@@ -27,6 +27,8 @@ declare global {
       common: {
         selectedList: string;
         selectedLists: string;
+        selectedOption: string;
+        selectedOptions: string;
       };
     };
     gtag: (...args: any[]) => void; // Added gtag declaration for Google Analytics
@@ -36,7 +38,7 @@ declare global {
 }
 
 const AGENTSMITH_INITIAL_LANDING_FORM_URL =
-  'https://f2fdd414.sibforms.com/serve/MUIFAEfXwaofbSDfuJbYKpt255dwGkOyoJGRbydfUap-LjkURZrTEFj8mNzSST9zNHWZ88Nu0zoPrfakDdSFw-eEEFT0mtuJc0fSReYBQjbDy3Fa4XfsioEtitRVYh-ArolbK7lWiWjd7tbIo9dFvUsX9B7A2QlbRi2CWkDR_rpGSI4n2gL0hmj2B4GEti6Bg0rPGtkk5coyLux8';
+  'https://f2fdd414.sibforms.com/serve/MUIFAEGos-HRtDNOL4V5kjqhVzi-x4e3vFbXmdHRg2a2KaARHm07HdY31ZrjyEysQzbtVDCIMm_Ucm9JZIVUELNM7SS5JCP6-NStge3w-_fMnNwJ6kT4T7N0g-owW5r3APlQFZdQXGOnOryVZvN9S3N_trQkYgDrSjTtvzjd3hZlJ0OTCtz42xF7jE4l_Z1jivQAG16IddGr0sQH';
 
 export const BrevoForms = {
   agentsmithInitialLanding: AGENTSMITH_INITIAL_LANDING_FORM_URL,
@@ -67,6 +69,8 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
       common: {
         selectedList: '{quantity} list selected',
         selectedLists: '{quantity} lists selected',
+        selectedOption: '{quantity} selected',
+        selectedOptions: '{quantity} selected',
       },
     };
     window.AUTOHIDE = Boolean(0);
@@ -116,11 +120,12 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
         >
           <div className="flex flex-col sm:flex-row gap-3 w-full">
             <Input
-              type="email"
+              type="text"
               id="EMAIL"
               name="EMAIL"
               placeholder="Enter your email"
               autoComplete="off"
+              data-required={true}
               required
               className="w-full h-10 bg-background border-border text-foreground placeholder:text-muted-foreground" // Adjusted styling
             />
@@ -183,7 +188,11 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
         </form>
         {/* Brevo's main script and Cloudflare Turnstile script */}
         <Script src="https://sibforms.com/forms/end-form/build/main.js" strategy="lazyOnload" />
-        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" strategy="lazyOnload" />
+        <Script
+          src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+          strategy="lazyOnload"
+          async={true}
+        />
         <Script
           id="brevo-captcha-handler" // Added id for clarity
           dangerouslySetInnerHTML={{
@@ -191,10 +200,7 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
           function handleCaptchaResponse() {
             var event = new Event('captchaChange');
             document.getElementById('sib-captcha').dispatchEvent(event);
-            // Ensure grecaptcha is available for Brevo's script
-            if (window.turnstile) {
-                 window.grecaptcha = window.turnstile;
-            }
+            window.grecaptcha = window.turnstile;
           }
         `,
           }}
