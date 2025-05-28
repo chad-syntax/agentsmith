@@ -1,6 +1,16 @@
-import { BrevoEmailSubscribe } from '@/components/brevo-email-subscribe/brevo-email-subscribe';
+'use client';
+
+import { Button } from '../ui/button';
+import Link from 'next/link';
 
 export function WaitlistSubscribeSection() {
+  const handleClick = () => {
+    const emailInput = document.getElementById('EMAIL') as HTMLInputElement;
+    if (emailInput) {
+      emailInput.focus();
+    }
+  };
+
   return (
     <section className="bg-background">
       <div className="container px-4 md:px-6 mx-auto">
@@ -12,10 +22,9 @@ export function WaitlistSubscribeSection() {
             Be among the first to access Agentsmith and get 50% off your first year.
           </p>
           <div className="max-w-md mx-auto">
-            <BrevoEmailSubscribe
-              trackingLocation="waitlist-subscribe"
-              form="agentsmithInitialLanding"
-            />
+            <Button onClick={handleClick} asChild>
+              <Link href="/#join-waitlist">Join the Waitlist</Link>
+            </Button>
           </div>
         </div>
       </div>
