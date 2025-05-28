@@ -231,21 +231,108 @@ export const extractTemplateVariables = (
   }
 };
 
+const DISALLOWED_IDENTIFIERS = [
+  'process',
+  'require',
+  'eval',
+  'Function',
+  'this',
+  'window',
+  'document',
+  'self',
+  'globalThis',
+  'constructor',
+  'prototype',
+  '__proto__',
+];
+
+const DISALLOWED_PROPERTY_LOOKUPS = ['__proto__', 'constructor', 'prototype'];
+
+const ensureSecureAstRecursive = (node: any): void => {
+  if (!node) return;
+
+  if (Array.isArray(node)) {
+    node.forEach(ensureSecureAstRecursive);
+    return;
+  }
+
+  switch (node.typename) {
+    case 'Symbol':
+      if (DISALLOWED_IDENTIFIERS.includes(node.value)) {
+        throw new Error(`Security: Disallowed identifier '${node.value}' found.`);
+      }
+      break;
+    case 'LookupVal':
+      if (
+        node.val &&
+        node.val.typename === 'Literal' &&
+        typeof node.val.value === 'string' &&
+        DISALLOWED_PROPERTY_LOOKUPS.includes(node.val.value)
+      ) {
+        throw new Error(`Security: Disallowed property lookup '${node.val.value}' found.`);
+      }
+      ensureSecureAstRecursive(node.target);
+      ensureSecureAstRecursive(node.val);
+      break;
+    default:
+      if (typeof node === 'object') {
+        for (const key in node) {
+          if (
+            Object.prototype.hasOwnProperty.call(node, key) &&
+            !key.startsWith('_') &&
+            key !== 'parent'
+          ) {
+            ensureSecureAstRecursive(node[key]);
+          }
+        }
+      }
+      break;
+  }
+};
+
+const ensureSecureAst = (content: string): void => {
+  try {
+    // @ts-ignore - parser exists but is not in type definitions
+    const ast = nunjucks.parser.parse(content);
+    ensureSecureAstRecursive(ast);
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith('Security:')) {
+      throw error; // Re-throw specific security errors
+    }
+    // For other parsing errors, wrap them if necessary or let them bubble up as Nunjucks errors.
+    // For now, re-throwing to ensure `validateTemplate` can catch them as generic parsing issues if not security related.
+    throw new Error(
+      `Template parsing failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+};
+
 /**
  * Validates if a Nunjucks template is syntactically correct
  * Note: Currently not used in the application, but kept for potential future use
  */
 export const validateTemplate = (content: string): { isValid: boolean; error?: string } => {
   try {
+    // First, check basic Nunjucks syntax
     transform(nunjucks.parser.parse(content));
-
-    return { isValid: true };
   } catch (error) {
     return {
       isValid: false,
       error: error instanceof Error ? error.message : 'Invalid template syntax',
     };
   }
+
+  try {
+    // Then, perform our security AST check
+    ensureSecureAst(content);
+  } catch (error) {
+    return {
+      isValid: false,
+      error: error instanceof Error ? error.message : 'Template violates security policy',
+    };
+  }
+
+  return { isValid: true };
 };
 
 type FindMissingGlobalContextOptions = {
@@ -348,8 +435,8 @@ export const compilePrompt = (
   promptContent: string,
   variables: Record<string, any> & { global: Record<string, any> },
 ): string => {
+  ensureSecureAst(promptContent); // Perform security check first
   const processedVariables = processUniqueValues(variables);
-
   nunjucks.configure({ autoescape: false });
   return nunjucks.renderString(promptContent, processedVariables);
 };

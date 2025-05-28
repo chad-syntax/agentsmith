@@ -1,9 +1,7 @@
-import { Database, Json } from '@/app/__generated__/supabase.types';
+import { Database } from '@/app/__generated__/supabase.types';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AgentsmithSupabaseService } from './AgentsmithSupabaseService';
 import { AgentsmithServicesDirectory } from './AgentsmithServices';
-// @ts-ignore needs to be browser version so nextjs can import it
-import nunjucks from 'nunjucks/browser/nunjucks';
 import {
   OpenrouterRequestBody,
   CompletionConfig,
@@ -16,14 +14,7 @@ import {
 import { routes } from '@/utils/routes';
 import { ORGANIZATION_KEYS, SEMVER_PATTERN } from '@/app/constants';
 import { compareSemanticVersions, incrementVersion } from '@/utils/versioning';
-import {
-  compilePrompt,
-  extractTemplateVariables,
-  findMissingGlobalContext,
-  processUniqueValues,
-} from '@/utils/template-utils';
-
-type PromptVariable = Database['public']['Tables']['prompt_variables']['Row'];
+import { compilePrompt } from '@/utils/template-utils';
 
 type PromptVariableBase = Omit<
   Database['public']['Tables']['prompt_variables']['Row'],

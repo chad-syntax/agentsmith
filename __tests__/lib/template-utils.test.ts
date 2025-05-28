@@ -1,4 +1,9 @@
-import { extractTemplateVariables, validateVariables } from '../../src/utils/template-utils';
+import {
+  extractTemplateVariables,
+  validateVariables,
+  validateTemplate,
+  compilePrompt,
+} from '../../src/utils/template-utils';
 import { Database } from '@/app/__generated__/supabase.types';
 
 type PromptVariable = Database['public']['Tables']['prompt_variables']['Row'];
@@ -823,5 +828,141 @@ describe('validateVariables', () => {
 
     expect(missingRequiredVariables).toEqual([]);
     expect(variablesWithDefaults).toEqual({ opt1: 'a', opt2: '1' });
+  });
+});
+
+describe('validateTemplate', () => {
+  it('should return isValid: true for a valid template', () => {
+    const template = 'Hello {{ name }}!';
+    const result = validateTemplate(template);
+    expect(result.isValid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it("should return isValid: true for a template using 'global'", () => {
+    const template = 'Version: {{ global.version }}';
+    const result = validateTemplate(template);
+    expect(result.isValid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should return isValid: false for Nunjucks syntax errors', () => {
+    const template = 'Hello {{ name !'; // Invalid Nunjucks syntax
+    const result = validateTemplate(template);
+    expect(result.isValid).toBe(false);
+    expect(result.error).toMatch(/expected variable end/i);
+  });
+
+  it('should return isValid: false for disallowed identifiers', () => {
+    const template = 'Data: {{ process.env.SECRET }}';
+    const result = validateTemplate(template);
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe("Security: Disallowed identifier 'process' found.");
+  });
+
+  it('should return isValid: false for another disallowed identifier (eval)', () => {
+    const template = '{{ eval("alert(1)") }}';
+    const result = validateTemplate(template);
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe("Security: Disallowed identifier 'eval' found.");
+  });
+
+  it('should return isValid: false for disallowed property lookups', () => {
+    const template = 'Access: {{ myObj.__proto__ }}';
+    const result = validateTemplate(template);
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe("Security: Disallowed property lookup '__proto__' found.");
+  });
+
+  it('should return isValid: false for disallowed property lookups via string literal', () => {
+    const template = "Access: {{ myObj['constructor'] }}";
+    const result = validateTemplate(template);
+    expect(result.isValid).toBe(false);
+    expect(result.error).toBe("Security: Disallowed property lookup 'constructor' found.");
+  });
+
+  it('should allow legitimate property lookups that are not disallowed', () => {
+    const template = 'Value: {{ myObj.legitProperty }}';
+    const result = validateTemplate(template);
+    expect(result.isValid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should handle complex but valid templates correctly', () => {
+    const template = `
+      {% if user.isAdmin %}
+        Admin: {{ user.name }}
+        {% for item in user.items %}
+          {{ item.id }} - {{ item.value }}
+        {% endfor %}
+      {% else %}
+        User: {{ user.name }}
+      {% endif %}
+    `;
+    const result = validateTemplate(template);
+    expect(result.isValid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+});
+
+describe('compilePrompt', () => {
+  const baseMockVariables = {
+    name: 'Tester',
+    myObj: { legitProperty: 'hello' },
+    global: { version: '1.0' },
+  };
+
+  it('should compile a valid prompt', () => {
+    const template = 'Hello {{ name }}!';
+    expect(() => compilePrompt(template, baseMockVariables)).not.toThrow();
+    expect(compilePrompt(template, baseMockVariables)).toBe('Hello Tester!');
+  });
+
+  it("should compile a prompt using 'global' as it was removed from blacklist by user", () => {
+    const template = 'Version: {{ global.version }}';
+    expect(() => compilePrompt(template, baseMockVariables)).not.toThrow();
+    // Ensure the output matches the global.version from baseMockVariables
+    expect(compilePrompt(template, baseMockVariables)).toBe('Version: 1.0');
+  });
+
+  it('should throw error for disallowed identifiers', () => {
+    const template = 'Data: {{ process.env.SECRET }}';
+    expect(() => compilePrompt(template, baseMockVariables)).toThrow(
+      "Security: Disallowed identifier 'process' found.",
+    );
+  });
+
+  it('should throw error for disallowed property lookups', () => {
+    const template = 'Access: {{ myObj.__proto__ }}';
+    expect(() => compilePrompt(template, baseMockVariables)).toThrow(
+      "Security: Disallowed property lookup '__proto__' found.",
+    );
+  });
+
+  it('should throw error for Nunjucks syntax errors which cause parse fail in ensureSecureAst', () => {
+    const template = 'Hello {{ name !'; // Invalid Nunjucks syntax
+    expect(() => compilePrompt(template, baseMockVariables)).toThrow(
+      'Template parsing failed: expected variable end',
+    );
+  });
+
+  it("should allow mixed-case identifiers like 'Process' if not explicitly blacklisted (current check is case-sensitive)", () => {
+    const template = 'Data: {{ Process.env.SECRET }}'; // 'Process' is not in DISALLOWED_IDENTIFIERS
+    const result = validateTemplate(template);
+    expect(result.isValid).toBe(true);
+    expect(result.error).toBeUndefined();
+
+    const specificMockVariables = {
+      ...baseMockVariables,
+      Process: { env: { SECRET: 'oops' } },
+    };
+    expect(() => compilePrompt(template, specificMockVariables)).not.toThrow();
+    expect(compilePrompt(template, specificMockVariables)).toBe('Data: oops');
+  });
+
+  it('should allow deeply nested valid lookups', () => {
+    const template = 'Deep: {{ a.b.c.d }}';
+    const vars = { ...baseMockVariables, a: { b: { c: { d: 'value' } } } };
+    expect(compilePrompt(template, vars)).toBe('Deep: value');
   });
 });
