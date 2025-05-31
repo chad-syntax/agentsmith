@@ -1,8 +1,11 @@
+import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/app/__generated__/supabase.types';
 import { sha256Hash } from '@/utils/hash';
 import { createSigner } from 'fast-jwt';
-import { AgentsmithServices } from '../AgentsmithServices';
+import { logger } from '../logger';
+
+config();
 
 type CreateSupabaseTokenOptions = {
   userEmail: string;
@@ -16,8 +19,6 @@ type CreateSupabaseTokenOptions = {
 export function createSupabaseToken(options: CreateSupabaseTokenOptions) {
   const { userEmail, authUserId, role = 'authenticated' } = options;
 
-  // JWT secret should match Supabase's JWT secret
-  // This is typically accessed via environment variable
   const jwtSecret = process.env.SUPABASE_JWT_SECRET;
 
   if (!jwtSecret) {
@@ -52,19 +53,21 @@ type ApiKeyOrgResult = {
   email: string;
 };
 
-export const exchangeApiKeyForJwt = async (apiKey: string) => {
+export const exchangeApiKeyForJwt = async (
+  apiKey: string,
+  supabaseUrl?: string,
+  supabaseAnonKey?: string,
+) => {
   const apiKeyHash = sha256Hash(apiKey);
 
   const tempClient = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl ?? process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseAnonKey ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 
   const { data, error } = await tempClient.rpc('get_organization_by_api_key_hash', {
     arg_api_key_hash: apiKeyHash,
   });
-
-  const { logger } = new AgentsmithServices({ supabase: tempClient, initialize: false });
 
   if (error) {
     logger.error('Error getting organization by API key hash', error);

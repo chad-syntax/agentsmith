@@ -14,6 +14,7 @@ import { RoadmapService } from './RoadmapService';
 import { Logger } from 'pino';
 import { logger } from './logger';
 import { AlertsService } from './AlertsService';
+import { TypegenService } from './TypegenService';
 
 export type AgentsmithServicesDirectory = {
   users: UsersService;
@@ -28,6 +29,7 @@ export type AgentsmithServicesDirectory = {
   events: EventsService;
   roadmap: RoadmapService;
   alerts: AlertsService;
+  typegen: TypegenService;
 };
 
 type AgentsmithServicesConstructorOptions = {
@@ -56,6 +58,7 @@ export class AgentsmithServices {
     const githubSync = new GitHubSyncService({ supabase });
     const roadmap = new RoadmapService({ supabase });
     const alerts = new AlertsService({ supabase });
+    const typegen = new TypegenService({ supabase });
 
     this.logger = logger.child({ service: 'AgentsmithServicesRoot' });
 
@@ -72,6 +75,7 @@ export class AgentsmithServices {
       events,
       roadmap,
       alerts,
+      typegen,
     };
 
     users.services = this.services;
@@ -86,6 +90,7 @@ export class AgentsmithServices {
     events.services = this.services;
     roadmap.services = this.services;
     alerts.services = this.services;
+    typegen.services = this.services;
 
     if (initialize) {
       for (const service of Object.values(this.services)) {

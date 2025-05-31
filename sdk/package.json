@@ -1,0 +1,33 @@
+{
+  "name": "@agentsmith/sdk",
+  "version": "0.0.1",
+  "description": "Agentsmith SDK",
+  "main": "index.cjs.js",
+  "module": "index.esm.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w"
+  },
+  "files": [
+    "index.cjs.js",
+    "index.esm.js",
+    "index.d.ts"
+  ],
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^26.0.1",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-json": "^6.1.0",
+    "rollup": "^4.20.0",
+    "rollup-plugin-typescript2": "^0.36.0",
+    "rollup-plugin-dts": "^6.1.1",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "nunjucks": "^3.2.4",
+    "@supabase/supabase-js": "latest",
+    "fast-jwt": "^5.0.5",
+    "dotenv": "^16.4.7"
+  },
+  "peerDependencies": {}
+}
