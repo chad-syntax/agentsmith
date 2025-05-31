@@ -18,7 +18,9 @@ import {
   RepoUpdatePromptAction,
   RepoUpdateVariablesAction,
   RepoUpdateVersionAction,
+  RepoCreateAgentsmithTypesAction,
   SyncAction,
+  RepoUpdateAgentsmithTypesAction,
 } from './sync-actions';
 import { GetAllPromptsDataResult } from '../PromptsService';
 import { AgentsmithState, RepoState, RepoPrompt, RepoVersion } from './sync-states';
@@ -405,6 +407,27 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
         actionPlan.push(updateContentAction);
       }
     }
+  }
+
+  // if agentsmith types do not exist in repo, create in repo
+  if (!repoState.agentsmithTypes) {
+    const createAgentsmithTypesAction: RepoCreateAgentsmithTypesAction = {
+      type: 'create',
+      target: 'repo',
+      entity: 'agentsmithTypes',
+    };
+
+    actionPlan.push(createAgentsmithTypesAction);
+  }
+
+  if (repoState.agentsmithTypes && actionPlan.length > 0) {
+    const updateAgentsmithTypesAction: RepoUpdateAgentsmithTypesAction = {
+      type: 'update',
+      target: 'repo',
+      entity: 'agentsmithTypes',
+    };
+
+    actionPlan.push(updateAgentsmithTypesAction);
   }
 
   return actionPlan;

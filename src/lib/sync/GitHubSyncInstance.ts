@@ -8,6 +8,7 @@ import {
   variablesJsonFilePath,
   contentJ2FilePath,
   globalsJsonFilePath,
+  agentsmithTypesTsFilePath,
 } from './repo-paths';
 import { AgentsmithState, RepoState, RepoPrompt, RepoVersion } from './sync-states';
 import { compareStates } from './compare-states';
@@ -49,6 +50,10 @@ import {
   isRepoCreateGlobalsAction,
   RepoCreateGlobalsAction,
   RepoUpdateGlobalsAction,
+  isRepoCreateAgentsmithTypesAction,
+  isRepoUpdateAgentsmithTypesAction,
+  RepoCreateAgentsmithTypesAction,
+  RepoUpdateAgentsmithTypesAction,
 } from './sync-actions';
 import {
   generatePromptJsonContent,
@@ -83,6 +88,15 @@ export type SyncChange =
       target: 'repo';
       type: SyncChangeType;
       entity: 'globals';
+      oldContent: string | null;
+      newContent: string | null;
+      oldSha: string | null;
+      newSha: string | null;
+    }
+  | {
+      target: 'repo';
+      type: SyncChangeType;
+      entity: 'agentsmithTypes';
       oldContent: string | null;
       newContent: string | null;
       oldSha: string | null;
@@ -176,6 +190,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       return {
         prompts: [],
         globals: null,
+        agentsmithTypes: null,
       };
     }
 
@@ -198,6 +213,11 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       const globalsFile =
         folderContentsWithAgentsmithFolder.find((file) => file.path.endsWith('/globals.json')) ??
         null;
+
+      const agentsmithTypesFile =
+        folderContentsWithAgentsmithFolder.find((file) =>
+          file.path.endsWith('/agentsmith.types.ts'),
+        ) ?? null;
 
       const repoPrompts: RepoPrompt[] = [];
 
@@ -274,9 +294,17 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
           }
         : null;
 
+      const agentsmithTypes = agentsmithTypesFile
+        ? {
+            sha: agentsmithTypesFile.sha,
+            lastModified: agentsmithTypesFile.lastModified,
+          }
+        : null;
+
       return {
         prompts: repoPrompts,
         globals,
+        agentsmithTypes,
       };
     } catch (error) {
       this.logger.error('Error fetching repo state:', error);
@@ -392,7 +420,8 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
           item.path.endsWith('/version.json') ||
           item.path.endsWith('/variables.json') ||
           item.path.endsWith('/content.j2') ||
-          item.path.endsWith('globals.json')),
+          item.path.endsWith('globals.json') ||
+          item.path.endsWith('agentsmith.types.ts')),
     );
 
     // Assert that the filtered files match this hardened type
@@ -514,6 +543,12 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         case isRepoDeleteContentAction(action):
           syncChangePromises.push(this._performRepoDeleteContentAction(action));
           break;
+        case isRepoCreateAgentsmithTypesAction(action):
+          // Do nothing, the regenerate needs to be the last action to run below
+          break;
+        case isRepoUpdateAgentsmithTypesAction(action):
+          // Do nothing, the regenerate needs to be the last action to run below
+          break;
         default:
           throw new Error(
             `Unknown action type: ${action.type} on entity: ${action.entity} on target: ${action.target}`,
@@ -521,7 +556,31 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       }
     }
 
-    return (await Promise.all(syncChangePromises)).flat();
+    const syncChanges = (await Promise.all(syncChangePromises)).flat();
+
+    const regenerateAgentsmithTypesAction = actions.find(
+      (action) =>
+        isRepoCreateAgentsmithTypesAction(action) || isRepoUpdateAgentsmithTypesAction(action),
+    );
+
+    if (regenerateAgentsmithTypesAction) {
+      switch (true) {
+        case isRepoCreateAgentsmithTypesAction(regenerateAgentsmithTypesAction):
+          const createTypesSyncChanges = await this._performRepoCreateAgentsmithTypesAction();
+
+          syncChanges.push(...createTypesSyncChanges);
+          break;
+        case isRepoUpdateAgentsmithTypesAction(regenerateAgentsmithTypesAction):
+          const updateTypesSyncChanges = await this._performRepoUpdateAgentsmithTypesAction();
+
+          syncChanges.push(...updateTypesSyncChanges);
+          break;
+        default:
+          throw new Error(`Unknown create or update agentsmith types action`);
+      }
+    }
+
+    return syncChanges;
   }
 
   private async _performRepoCreateGlobalsAction(
@@ -1559,6 +1618,76 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         newContent: null,
         oldSha: oldFile.sha,
         newSha: null,
+      },
+    ];
+  }
+
+  private async _performRepoCreateAgentsmithTypesAction(): Promise<SyncChange[]> {
+    const agentsmithTypesFilePath = agentsmithTypesTsFilePath({
+      agentsmithFolder: this.agentsmithFolder,
+    });
+
+    // generate the agentsmith types
+    const typesContent = await this.services.typegen.generateTypes({
+      projectId: this.projectId,
+    });
+
+    // write them to github
+    const { sha } = await this._createRepoFile({
+      path: agentsmithTypesFilePath,
+      content: typesContent,
+      message: `create agentsmith types`,
+    });
+
+    return [
+      {
+        target: 'repo',
+        type: 'create',
+        entity: 'agentsmithTypes',
+        oldContent: null,
+        newContent: typesContent,
+        oldSha: null,
+        newSha: sha,
+      },
+    ];
+  }
+
+  private async _performRepoUpdateAgentsmithTypesAction(): Promise<SyncChange[]> {
+    const agentsmithTypesFilePath = agentsmithTypesTsFilePath({
+      agentsmithFolder: this.agentsmithFolder,
+    });
+
+    // get old sha
+    const oldFile = await this._getRepoFileContentString(agentsmithTypesFilePath);
+
+    if (!oldFile) {
+      throw new Error(
+        `Failed to get file content for ${agentsmithTypesFilePath} at ref ${this.branchRef}`,
+      );
+    }
+
+    // generate the agentsmith types
+    const typesContent = await this.services.typegen.generateTypes({
+      projectId: this.projectId,
+    });
+
+    // write them to github
+    const { sha } = await this._updateRepoFile({
+      path: agentsmithTypesFilePath,
+      content: typesContent,
+      message: `update agentsmith types`,
+      sha: oldFile.sha,
+    });
+
+    return [
+      {
+        target: 'repo',
+        type: 'update',
+        entity: 'agentsmithTypes',
+        oldContent: oldFile.content,
+        newContent: typesContent,
+        oldSha: oldFile.sha,
+        newSha: sha,
       },
     ];
   }

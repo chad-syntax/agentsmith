@@ -15,6 +15,7 @@ import { routes } from '@/utils/routes';
 import { ORGANIZATION_KEYS, SEMVER_PATTERN } from '@/app/constants';
 import { compareSemanticVersions, incrementVersion } from '@/utils/versioning';
 import { compilePrompt } from '@/utils/template-utils';
+import { slugify } from '@/utils/slugify';
 
 type PromptVariableBase = Omit<
   Database['public']['Tables']['prompt_variables']['Row'],
@@ -662,10 +663,7 @@ export class PromptsService extends AgentsmithSupabaseService {
     const { name, projectId } = options;
 
     // Generate a slug from the name
-    const slug = name
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
+    const slug = slugify(name);
 
     // Create a new prompt
     const { data: promptData, error: promptError } = await this.supabase

@@ -21,3 +21,6 @@ export const contentJ2FilePath = (options: {
 
 export const globalsJsonFilePath = (options: { agentsmithFolder: string }) =>
   `${options.agentsmithFolder}/globals.json`;
+
+export const agentsmithTypesTsFilePath = (options: { agentsmithFolder: string }) =>
+  `${options.agentsmithFolder}/agentsmith.types.ts`;

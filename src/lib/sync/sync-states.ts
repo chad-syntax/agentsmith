@@ -28,7 +28,13 @@ export type RepoGlobals = {
   lastModified: string;
 };
 
+export type RepoAgentsmithTypes = {
+  sha: string;
+  lastModified: string;
+};
+
 export type RepoState = {
   prompts: RepoPrompt[];
   globals: RepoGlobals | null;
+  agentsmithTypes: RepoAgentsmithTypes | null;
 };

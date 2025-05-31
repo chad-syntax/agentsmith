@@ -8,7 +8,8 @@
     "test:watch": "jest --watch",
     "smee-proxy:start": "node smee-proxy.mjs",
     "typegen-local": "./node_modules/.bin/supabase gen types typescript --local --schema public > ./src/app/__generated__/supabase.types.ts",
-    "typegen-dev": "./node_modules/.bin/supabase gen types typescript --project-id \"jcnpgqhjaoppfhbkcnpv\" --schema public > ./src/app/__generated__/supabase.types.ts"
+    "typegen-dev": "./node_modules/.bin/supabase gen types typescript --project-id \"jcnpgqhjaoppfhbkcnpv\" --schema public > ./src/app/__generated__/supabase.types.ts",
+    "build:sdk": "cd sdk && npm install && npm run build && cd .. && rm -rf sdk-dist && mkdir -p sdk-dist && cp -R sdk/dist/* sdk-dist/ && cp sdk/package.json sdk-dist/package.json && rm -rf sdk-dist/src && rm -rf sdk-dist/sdk && rm -rf sdk-dist/__tests__"
   },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",

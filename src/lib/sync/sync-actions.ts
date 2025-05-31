@@ -187,6 +187,18 @@ export type RepoUpdateGlobalsAction = {
   globals: NonNullable<GetProjectGlobalsByProjectIdResult>;
 };
 
+export type RepoCreateAgentsmithTypesAction = {
+  target: 'repo';
+  type: 'create';
+  entity: 'agentsmithTypes';
+};
+
+export type RepoUpdateAgentsmithTypesAction = {
+  target: 'repo';
+  type: 'update';
+  entity: 'agentsmithTypes';
+};
+
 export type SyncAction =
   | AgentsmithCreatePromptAction
   | AgentsmithUpdatePromptAction
@@ -208,7 +220,9 @@ export type SyncAction =
   | RepoDeleteVariablesAction
   | RepoDeleteContentAction
   | RepoCreateGlobalsAction
-  | RepoUpdateGlobalsAction;
+  | RepoUpdateGlobalsAction
+  | RepoCreateAgentsmithTypesAction
+  | RepoUpdateAgentsmithTypesAction;
 
 export const isAgentsmithCreatePromptAction = (
   action: SyncAction,
@@ -318,4 +332,20 @@ export const isRepoUpdateGlobalsAction = (
   action: SyncAction,
 ): action is RepoUpdateGlobalsAction => {
   return action.target === 'repo' && action.entity === 'globals' && action.type === 'update';
+};
+
+export const isRepoCreateAgentsmithTypesAction = (
+  action: SyncAction,
+): action is RepoCreateAgentsmithTypesAction => {
+  return (
+    action.target === 'repo' && action.entity === 'agentsmithTypes' && action.type === 'create'
+  );
+};
+
+export const isRepoUpdateAgentsmithTypesAction = (
+  action: SyncAction,
+): action is RepoUpdateAgentsmithTypesAction => {
+  return (
+    action.target === 'repo' && action.entity === 'agentsmithTypes' && action.type === 'update'
+  );
 };
