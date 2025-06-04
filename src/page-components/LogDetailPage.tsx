@@ -94,12 +94,22 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
             </div>
             <div>
               <P className="text-sm text-muted-foreground">Start Time</P>
-              <P className="font-medium">{formatDate(log.start_time)}</P>
+              <P className="font-medium">
+                <time dateTime={new Date(log.start_time).toISOString()} suppressHydrationWarning>
+                  {formatDate(log.start_time)}
+                </time>
+              </P>
             </div>
             <div>
               <P className="text-sm text-muted-foreground">End Time</P>
               <P className="font-medium">
-                {log.end_time ? formatDate(log.end_time) : 'Still running'}
+                {log.end_time ? (
+                  <time dateTime={new Date(log.end_time).toISOString()} suppressHydrationWarning>
+                    {formatDate(log.end_time)}
+                  </time>
+                ) : (
+                  'Still running'
+                )}
               </P>
             </div>
             <div>

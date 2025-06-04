@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
+import { Play, Check, X, AlertTriangle, Info, type LucideIcon } from 'lucide-react';
 import { routes } from '@/utils/routes';
 import { H1, H2, P } from '@/components/typography';
 import { Button } from '@/components/ui/button';
@@ -16,6 +18,22 @@ import {
   TableCell,
 } from '@/components/ui/table';
 
+// Added event type to icon mapping
+const eventTypeToIconMap: Record<string, LucideIcon> = {
+  SYNC_START: Play,
+  SYNC_COMPLETE: Check,
+  SYNC_ERROR: X,
+  ALERT: AlertTriangle,
+};
+
+// Added event type to color mapping
+const eventTypeToColorMap: Record<string, string> = {
+  SYNC_START: 'text-blue-800',
+  SYNC_COMPLETE: 'text-green-800',
+  SYNC_ERROR: 'text-red-800',
+  ALERT: 'text-yellow-800',
+};
+
 type EventsPageProps = {
   project: GetProjectDataResult;
   events: GetEventsByProjectIdResult;
@@ -23,6 +41,7 @@ type EventsPageProps = {
 
 export const EventsPage = (props: EventsPageProps) => {
   const { project, events } = props;
+  const router = useRouter();
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -55,55 +74,53 @@ export const EventsPage = (props: EventsPageProps) => {
                 Date
               </TableHead>
               <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Type
+                Severity
               </TableHead>
               <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Name
               </TableHead>
-              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Severity
-              </TableHead>
-              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Actions
-              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {events.map((event) => (
-              <TableRow key={event.uuid}>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                  {formatDate(event.created_at)}
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                  {event.type}
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                  {event.name}
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      event.severity === 'ERROR'
-                        ? 'bg-red-100 text-red-800'
-                        : event.severity === 'WARN'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : event.severity === 'INFO'
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    {event.severity}
-                  </span>
-                </TableCell>
-                <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <Button variant="link" asChild className="p-0">
-                    <Link href={routes.studio.eventDetail(project.uuid, event.uuid)}>
-                      View Details
-                    </Link>
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {events.map((event) => {
+              const IconComponent = eventTypeToIconMap[event.type] || Info;
+              const iconColor = eventTypeToColorMap[event.type] || 'text-gray-800';
+              return (
+                <TableRow
+                  key={event.uuid}
+                  className="hover:bg-muted cursor-pointer"
+                  onClick={() => router.push(routes.studio.eventDetail(project.uuid, event.uuid))}
+                >
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    <time
+                      dateTime={new Date(event.created_at).toISOString()}
+                      suppressHydrationWarning
+                    >
+                      {formatDate(event.created_at)}
+                    </time>
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        event.severity === 'ERROR'
+                          ? 'bg-red-100 text-red-800'
+                          : event.severity === 'WARN'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : event.severity === 'INFO'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {event.severity}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-foreground flex gap-2 items-center">
+                    <IconComponent className={`size-5 ${iconColor}`} />
+                    {event.name}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       )}

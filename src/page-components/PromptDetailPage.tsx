@@ -163,7 +163,12 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
                           </Link>
                         </Button>
                         <span className="text-sm text-muted-foreground">
-                          {new Date(version.created_at).toLocaleDateString()}
+                          <time
+                            dateTime={new Date(version.created_at).toISOString()}
+                            suppressHydrationWarning
+                          >
+                            {new Date(version.created_at).toLocaleDateString()}
+                          </time>
                         </span>
                       </div>
                     </div>

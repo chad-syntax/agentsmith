@@ -121,9 +121,16 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
                   <TableCell>{user.agentsmith_users.email}</TableCell>
                   <TableCell>{user.agentsmith_users.auth_user_id}</TableCell>
                   <TableCell>
-                    {user.agentsmith_users.created_at
-                      ? new Date(user.agentsmith_users.created_at).toLocaleString()
-                      : ''}
+                    {user.agentsmith_users.created_at ? (
+                      <time
+                        dateTime={new Date(user.agentsmith_users.created_at).toISOString()}
+                        suppressHydrationWarning
+                      >
+                        {new Date(user.agentsmith_users.created_at).toLocaleString()}
+                      </time>
+                    ) : (
+                      ''
+                    )}
                   </TableCell>
                 </TableRow>
               ))

@@ -75,6 +75,9 @@ const compiledPrompt = helloWorldPrompt.compile({
 });
 `;
 
+  const isConnected =
+    projectData.project_repositories && projectData.project_repositories.length > 0;
+
   return (
     <>
       <ConnectProjectModal
@@ -108,7 +111,7 @@ const compiledPrompt = helloWorldPrompt.compile({
           </div>
         </div>
 
-        {projectData.project_repositories && projectData.project_repositories.length > 0 && (
+        {isConnected && (
           <div className="mb-4 text-muted-foreground">
             {projectData.name} connected to{' '}
             <a
@@ -140,7 +143,7 @@ const compiledPrompt = helloWorldPrompt.compile({
             .
           </div>
         )}
-        <SyncStatusAlert events={projectData.agentsmith_events} />
+        <SyncStatusAlert isConnected={isConnected} events={projectData.agentsmith_events} />
         {projectData.prompts && projectData.prompts.length > 0 && (
           <div className="mt-6">
             <H3>Prompts</H3>

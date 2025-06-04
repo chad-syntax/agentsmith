@@ -43,9 +43,16 @@ export const RoadmapItemCard = (props: RoadmapItemCardProps) => {
       </CardContent>
       <CardFooter className="border-t pt-6">
         <div className="text-xs text-muted-foreground">
-          {item.created_at
-            ? `Added ${new Date(item.created_at).toLocaleDateString()}`
-            : 'Date not available'}
+          {item.created_at ? (
+            <>
+              Added{' '}
+              <time dateTime={new Date(item.created_at).toISOString()} suppressHydrationWarning>
+                {new Date(item.created_at).toLocaleDateString()}
+              </time>
+            </>
+          ) : (
+            'Date not available'
+          )}
         </div>
       </CardFooter>
     </Card>

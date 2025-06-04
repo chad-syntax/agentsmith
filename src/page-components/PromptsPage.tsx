@@ -114,7 +114,16 @@ export const PromptsPage = (props: PromptsPageProps) => {
                       )}
                     </div>
                     <span className="text-sm text-muted-foreground">
-                      {latestVersion ? formatDate(latestVersion.updated_at) : 'No versions yet'}
+                      {latestVersion ? (
+                        <time
+                          dateTime={new Date(latestVersion.updated_at).toISOString()}
+                          suppressHydrationWarning
+                        >
+                          {formatDate(latestVersion.updated_at)}
+                        </time>
+                      ) : (
+                        'No versions yet'
+                      )}
                     </span>
                   </div>
                 </div>

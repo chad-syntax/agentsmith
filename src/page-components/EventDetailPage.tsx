@@ -103,7 +103,14 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
               </div>
               <div>
                 <P className="text-sm text-muted-foreground">Date</P>
-                <P className="font-medium">{formatDate(event.created_at)}</P>
+                <P className="font-medium">
+                  <time
+                    dateTime={new Date(event.created_at).toISOString()}
+                    suppressHydrationWarning
+                  >
+                    {formatDate(event.created_at)}
+                  </time>
+                </P>
               </div>
               <div>
                 <P className="text-sm text-muted-foreground">Description</P>

@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { ActionResponse } from '@/types/action-response';
 import { createErrorResponse, createSuccessResponse } from '@/utils/action-helpers';
+import type { SyncResult } from '@/lib/GitHubSyncService';
 
 export const installGithubApp = async (organizationUuid: string) => {
   const supabase = await createClient();
@@ -24,7 +25,7 @@ export const installGithubApp = async (organizationUuid: string) => {
   redirect(installUrl);
 };
 
-export const syncProject = async (projectUuid: string): Promise<ActionResponse> => {
+export const syncProject = async (projectUuid: string): Promise<ActionResponse<SyncResult>> => {
   const supabase = await createClient();
 
   const { services, logger } = new AgentsmithServices({ supabase });
@@ -48,11 +49,12 @@ export const syncProject = async (projectUuid: string): Promise<ActionResponse> 
 
     revalidatePath(routes.studio.home);
 
-    await services.githubSync.sync({
+    const result = await services.githubSync.sync({
       projectRepository,
       source: 'agentsmith',
     });
-    return createSuccessResponse(undefined, 'Project synced successfully.');
+
+    return createSuccessResponse(result, 'Project synced successfully.');
   } catch (error) {
     logger.error('Error syncing project:', error);
     return createErrorResponse(error instanceof Error ? error.message : 'Failed to sync project');

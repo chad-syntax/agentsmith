@@ -95,7 +95,12 @@ export const AlertsPage = (props: AlertsPageProps) => {
                 return (
                   <TableRow key={alert.id} className="hover:bg-muted">
                     <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      {formatDate(alert.created_at)}
+                      <time
+                        dateTime={new Date(alert.created_at).toISOString()}
+                        suppressHydrationWarning
+                      >
+                        {formatDate(alert.created_at)}
+                      </time>
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-foreground whitespace-normal">
                       <div className="min-w-sm max-w-md break-words">{alert.title}</div>

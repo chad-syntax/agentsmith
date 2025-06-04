@@ -42,7 +42,11 @@ type SyncInProgressResult = BaseSyncResult & {
   changesMade: false;
 };
 
-type SyncResult = SyncSuccessResult | SyncErrorResult | SyncNoChangesResult | SyncInProgressResult;
+export type SyncResult =
+  | SyncSuccessResult
+  | SyncErrorResult
+  | SyncNoChangesResult
+  | SyncInProgressResult;
 
 type PullRequestDetail = {
   number: number;

@@ -27,7 +27,12 @@ export const SyncProjectButton = (props: SyncProjectButtonProps) => {
   const handleClick = async () => {
     setLoading(true);
     try {
-      await syncProject(targetProjectUuid);
+      const result = await syncProject(targetProjectUuid);
+
+      if (result.data?.status === 'sync_in_progress') {
+        toast.warning('Sync already in progress.');
+        return;
+      }
     } catch (error: any) {
       toast.error('Failed to sync project', {
         description: error?.message,

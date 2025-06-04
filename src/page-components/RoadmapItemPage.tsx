@@ -140,7 +140,13 @@ export const RoadmapItemPage = (props: RoadmapItemPageProps) => {
         <h1 className="text-4xl font-bold tracking-tight mb-3">{roadmapItem.title}</h1>
         {roadmapItem.created_at && (
           <p className="text-sm text-muted-foreground mb-6">
-            Added on {new Date(roadmapItem.created_at).toLocaleDateString()}
+            Added on{' '}
+            <time
+              dateTime={new Date(roadmapItem.created_at).toISOString()}
+              suppressHydrationWarning
+            >
+              {new Date(roadmapItem.created_at).toLocaleDateString()}
+            </time>
           </p>
         )}
       </div>

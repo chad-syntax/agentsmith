@@ -91,7 +91,12 @@ export const LogsPage = (props: LogsPageProps) => {
                   onClick={() => router.push(routes.studio.logDetail(project.uuid, log.uuid))}
                 >
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    {formatDate(log.created_at)}
+                    <time
+                      dateTime={new Date(log.created_at).toISOString()}
+                      suppressHydrationWarning
+                    >
+                      {formatDate(log.created_at)}
+                    </time>
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap">
                     <span
