@@ -43,4 +43,3 @@ next-env.d.ts
 # SDK output
 sdk/dist
 sdk/node_modules
-sdk-dist

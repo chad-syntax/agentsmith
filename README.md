@@ -19,7 +19,7 @@ Agentsmith is an agent development platform for building, testing, and deploying
 
 - ✨ **Exceptional Prompt Authoring** - Intuitive prompt engineering tools with variables and versioning support
 - 🔄 **Seamless GitHub Synchronization** - Sync prompt versions and content to your repository via Pull Requests
-- 🛡️ **Type-Safe SDK** - Fully-typed TypeScript and Python SDKs prevent erroneous prompt modifications
+- 🛡️ **Type-Safe SDK** - Fully-typed TypeScript SDK (Python coming soon!) prevent erroneous prompt modifications
 - ↔️ **Provider Switching** - Effortlessly switch between AI providers and models using OpenRouter
 - 🌍 **Open Source** - Community-driven development with full transparency
 - 🧪 **Test & Refine** - Test prompts with different models and inputs for optimal performance
@@ -35,7 +35,7 @@ Agentsmith is an agent development platform for building, testing, and deploying
 - **GitHub Integration**: GitHub App with Octokit
 - **Testing**: Jest with TypeScript support
 - **Deployment**: Vercel-ready with Supabase integration
-- **SDK**: Agentsmith SDK (TypeScript & Python)
+- **SDK**: Agentsmith TypeScript SDK (Python coming soon!)
 
 ## SDK
 
