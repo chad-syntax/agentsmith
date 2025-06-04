@@ -15,7 +15,12 @@ import {
 import { validateVariables, validateGlobalContext, compilePrompt } from '@/utils/template-utils';
 import { compareSemanticVersions } from '@/utils/versioning';
 import { GenericAgency, PromptIdentifier, HasRequiredKeys, GetPromptVariables } from './types';
-import { CompletionConfig, OPENROUTER_HEADERS, OpenrouterRequestBody } from '@/lib/openrouter';
+import {
+  CompletionConfig,
+  OPENROUTER_HEADERS,
+  OpenrouterNonStreamingResponse,
+  OpenrouterRequestBody,
+} from '@/lib/openrouter';
 import { OrganizationsService } from '@/lib/OrganizationsService';
 import { LLMLogsService } from '@/lib/LLMLogsService';
 import { VaultService } from '@/lib/VaultService';
@@ -360,9 +365,9 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         throw new Error(`Failed to call OpenRouter API: ${responseText}`);
       }
 
-      const completion = await response.json();
+      const completion = (await response.json()) as OpenrouterNonStreamingResponse;
 
-      await llmLogsService.updateLogWithCompletion(log_uuid, completion);
+      await llmLogsService.updateLogWithCompletion(log_uuid, completion as Json);
 
       return { completion, logUuid: log_uuid };
     } catch (error) {
