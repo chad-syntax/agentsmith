@@ -36,6 +36,15 @@ export const OnboardingChecklist = (props: OnboardingChecklistOptions) => {
 
   const { selectedProjectUuid } = useApp();
 
+  const handleConnectOpenrouter = async () => {
+    const response = await connectOpenrouter(organizationUuid);
+
+    if (!response.success) {
+      toast.error('Failed to connect OpenRouter, please try again or contact support.');
+      return;
+    }
+  };
+
   const items = [
     {
       done: appInstalled,
@@ -50,7 +59,7 @@ export const OnboardingChecklist = (props: OnboardingChecklistOptions) => {
     {
       done: openrouterConnected,
       label: 'Connect OpenRouter',
-      onClick: () => connectOpenrouter(organizationUuid),
+      onClick: handleConnectOpenrouter,
     },
     {
       done: promptCreated,

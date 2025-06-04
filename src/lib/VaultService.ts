@@ -93,7 +93,8 @@ export class VaultService extends AgentsmithSupabaseService {
       });
 
       if (error) {
-        this.logger.error('Error creating organization key:', error);
+        // erroring here
+        this.logger.error(`Error creating organization key: ${error.message}`);
         return {
           success: false,
           error: error.message || 'Failed to create organization key',
@@ -105,7 +106,7 @@ export class VaultService extends AgentsmithSupabaseService {
         vaultSecretId: (data as any)?.vault_secret_id,
       };
     } catch (error) {
-      this.logger.error('Unexpected error creating organization key:', error);
+      this.logger.error(`Unexpected error creating organization key: ${error}`);
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
