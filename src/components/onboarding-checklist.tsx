@@ -98,7 +98,7 @@ export const OnboardingChecklist = (props: OnboardingChecklistOptions) => {
                 <SquareIcon className="text-muted-foreground w-5 h-5" />
               )}
               {!item.done && item.href ? (
-                <Link className="text-primary underline" href={item.href}>
+                <Link className="text-primary underline underline-offset-4" href={item.href}>
                   {item.label}
                 </Link>
               ) : !item.done && item.onClick && !item.disabled ? (
@@ -110,7 +110,12 @@ export const OnboardingChecklist = (props: OnboardingChecklistOptions) => {
                   {item.label}
                 </Button>
               ) : (
-                <p className={cn(item.done ? 'text-foreground' : 'text-muted-foreground', 'm-0')}>
+                <p
+                  className={cn(
+                    'm-0 underline-offset-4',
+                    item.done ? 'text-foreground' : 'text-muted-foreground',
+                  )}
+                >
                   {item.label}
                 </p>
               )}

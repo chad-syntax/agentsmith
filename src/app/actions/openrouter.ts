@@ -30,5 +30,5 @@ export const connectOpenrouter = async (organizationUuid: string) => {
 
   const redirectUrl = `${routes.openrouter.oauthInitiate}?callback_url=${callbackUrl}&code_challenge=${generatedCodeChallenge}&code_challenge_method=S256`;
 
-  return redirect(redirectUrl);
+  redirect(redirectUrl);
 };

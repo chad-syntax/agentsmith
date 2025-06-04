@@ -1,17 +1,20 @@
 import { defineConfig } from 'tsup';
 import dotenv from 'dotenv';
 
-const env = dotenv.config({ path: '../.env' }).parsed;
+// Load .env vars (but process.env already has them from the shell if set)
+dotenv.config({ path: '../.env' });
 
-if (!env?.NEXT_PUBLIC_SUPABASE_URL || !env?.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  throw new Error(
-    'NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY is not set, cannot build SDK',
-  );
-}
+const requiredEnvVars = [
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+  'NEXT_PUBLIC_SITE_URL',
+];
 
-if (!env?.NEXT_PUBLIC_SITE_URL) {
-  throw new Error('NEXT_PUBLIC_SITE_URL is not set, cannot build SDK');
-}
+requiredEnvVars.forEach((key) => {
+  if (!process.env[key]) {
+    throw new Error(`${key} is not set, cannot build SDK`);
+  }
+});
 
 export default defineConfig({
   entry: ['./index.ts'],
@@ -21,8 +24,8 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   env: {
-    NEXT_PUBLIC_SITE_URL: env.NEXT_PUBLIC_SITE_URL,
-    NEXT_PUBLIC_SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL,
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL!,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   },
 });
