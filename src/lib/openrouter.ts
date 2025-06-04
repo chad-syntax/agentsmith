@@ -407,6 +407,33 @@ export type OpenrouterResponse = {
   usage?: ResponseUsage;
 };
 
+export type OpenrouterNonStreamingResponse = {
+  id: string;
+  choices: NonStreamingChoice[];
+  created: number;
+  model: string;
+  object: 'chat.completion';
+  usage?: ResponseUsage;
+};
+
+export type OpenrouterStreamingResponse = {
+  id: string;
+  choices: StreamingChoice[];
+  created: number;
+  model: string;
+  object: 'chat.completion.chunk';
+  usage?: ResponseUsage;
+};
+
+export type OpenrouterNonChatResponse = {
+  id: string;
+  choices: NonChatChoice[];
+  created: number;
+  model: string;
+  object: 'chat.completion';
+  usage?: ResponseUsage;
+};
+
 export type OpenrouterModel = {
   id: string;
   name: string;

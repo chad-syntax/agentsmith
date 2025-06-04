@@ -9,8 +9,8 @@ const agentsmithDirectory = path.join(__dirname, 'agentsmith');
 // - can compile without variables for prompt that doesnt require variables
 // - can compile with variables for prompt that requires variables
 // - can compile with variables for prompt that requires variables and we can override the global context
-// - will fail to compile at build time with type errors if we pass in wrong or missing variables
-// - will fail at runtime to compile if we pass in wrong or missing variables
+// - will fail to compile at build time with type errors if we pass in wrong or missing variables (need to somehow test typescript type errors here)
+// - will fail at runtime to compile if we pass in wrong or missing variables (we can cast variables to any to test this)
 // - can execute prompt
 // - can execute prompt with global overrides and config overrides
 
