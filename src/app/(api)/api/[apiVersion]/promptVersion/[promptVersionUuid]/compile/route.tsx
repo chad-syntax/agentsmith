@@ -21,9 +21,11 @@ export async function POST(
 
   const apiKeyHeader = request.headers.get('x-api-key');
   let jwt: string | null = null;
+
   if (apiKeyHeader) {
     try {
-      jwt = await exchangeApiKeyForJwt(apiKeyHeader);
+      const exchangeResult = await exchangeApiKeyForJwt(apiKeyHeader);
+      jwt = exchangeResult.jwt;
     } catch (error) {
       return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
     }

@@ -52,14 +52,16 @@ export const SyncStatusAlert = (props: SyncStatusAlertProps) => {
     <Alert variant={alertVariant} className="mb-4">
       <IconComponent className="h-4 w-4" />
       <AlertTitle>{alertTitle}</AlertTitle>
-      <AlertDescription>{alertDescription}</AlertDescription>
-      <SyncProjectButton
-        size="lg"
-        className="ml-6 mt-2 min-w-[128px]"
-        projectUuid={selectedProjectUuid}
-      >
-        Sync Project
-      </SyncProjectButton>
+      <AlertDescription>
+        {alertDescription}
+        <SyncProjectButton
+          size="lg"
+          className="ml-0 mt-2 min-w-[128px]"
+          projectUuid={selectedProjectUuid}
+        >
+          Sync Project
+        </SyncProjectButton>
+      </AlertDescription>
     </Alert>
   );
 };

@@ -17,6 +17,20 @@ export type GenericAgency = {
   globals: Record<string, any>;
 };
 
+/**
+ * @template CurAgency - The agency type, extending GenericAgency.
+ * @description Creates a union type of all valid prompt slugs from the agency.
+ * This represents the keys of the prompts object in the agency type.
+ * @example
+ * type MyAgency = {
+ *   prompts: {
+ *     'prompt1': { ... },
+ *     'prompt2': { ... }
+ *   },
+ *   globals: {}
+ * };
+ * type MyPromptSlugs = AgencyPromptSlugs<MyAgency>; // "prompt1" | "prompt2"
+ */
 export type AgencyPromptSlugs<CurAgency extends GenericAgency> = keyof CurAgency['prompts'] &
   string;
 

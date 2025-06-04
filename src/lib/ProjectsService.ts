@@ -18,7 +18,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
     const { data: project, error } = await this.supabase
       .from('projects')
       .select(
-        '*, global_contexts(content), prompts(uuid, name), project_repositories(agentsmith_folder, repository_default_branch, repository_full_name), agentsmith_events(type, created_at)',
+        '*, organizations(uuid), global_contexts(content), prompts(uuid, name), project_repositories(agentsmith_folder, repository_default_branch, repository_full_name), agentsmith_events(type, created_at)',
       )
       .eq('uuid', projectUuid)
       .limit(1, { referencedTable: 'agentsmith_events' })

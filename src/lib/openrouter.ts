@@ -190,7 +190,7 @@ export type ResponseFormat = {
   json_schema: JSONSchema;
 };
 
-// Definitions of subtypes are below
+// Definitions of subtypes are below (copied from https://openrouter.ai/docs/api-reference/overview)
 export type OpenrouterRequestBody = {
   // Either "messages" or "prompt" is required
   messages?: Message[];
@@ -242,6 +242,7 @@ export type OpenrouterRequestBody = {
   route?: 'fallback';
   // See "Provider Routing" section: openrouter.ai/docs/provider-routing
   provider?: ProviderPreferencesSchema;
+  user?: string; // A stable identifier for your end-users. Used to help detect and prevent abuse.
   plugins?: OpenrouterPlugin[];
   usage?: {
     include: true;
@@ -308,12 +309,26 @@ export type ToolChoice =
 // as-is. Otherwise, we count using the GPT-4 tokenizer.
 
 export type ResponseUsage = {
-  /** Including images and tools if any */
-  prompt_tokens: number;
-  /** The tokens generated */
-  completion_tokens: number;
-  /** Sum of the above two fields */
+  /** Total cost of the request */
+  cost: number;
+  /** Whether this is a bring-your-own-key request */
+  is_byok: boolean;
+  /** Total tokens used in the request */
   total_tokens: number;
+  /** Tokens used in the prompt */
+  prompt_tokens: number;
+  /** Tokens used in the completion */
+  completion_tokens: number;
+  /** Details about prompt token usage */
+  prompt_tokens_details?: {
+    /** Number of tokens that were cached */
+    cached_tokens?: number;
+  };
+  /** Details about completion token usage */
+  completion_tokens_details?: {
+    /** Number of tokens used for reasoning */
+    reasoning_tokens?: number;
+  };
 };
 
 // Subtypes:
@@ -323,12 +338,28 @@ export type NonChatChoice = {
   error?: ErrorResponse;
 };
 
+export type Annotation = {
+  type: 'url_citation';
+  text?: string;
+  url_citation?: {
+    url: string;
+    title: string;
+    content: string;
+    end_index: number;
+    start_index: number;
+  };
+};
+
 export type NonStreamingChoice = {
+  index?: number;
   finish_reason: string | null;
   native_finish_reason: string | null;
   message: {
-    content: string | null;
     role: string;
+    content: string | null;
+    refusal?: string | null;
+    reasoning?: string;
+    annotations?: Annotation[];
     tool_calls?: ToolCall[];
   };
   error?: ErrorResponse;

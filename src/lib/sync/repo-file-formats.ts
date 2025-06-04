@@ -1,18 +1,15 @@
 import { SEMVER_PATTERN } from '@/app/constants';
 import { GetAllPromptsDataResult } from '../PromptsService';
 import { z } from 'zod';
+import { compareSemanticVersions } from '@/utils/versioning';
 
 const supabaseDatetime = z.string().datetime({ precision: 6, offset: true });
-
-const PromptVersionSchema = z.object({
-  version: z.string(),
-  status: z.string(),
-});
 
 const PromptJSONFileContentSchema = z.object({
   uuid: z.string().uuid(),
   name: z.string(),
   slug: z.string(),
+  latestVersion: z.string().nullable(),
   created_at: supabaseDatetime,
   updated_at: supabaseDatetime,
 });
@@ -22,7 +19,7 @@ export type PromptJSONFileContent = z.infer<typeof PromptJSONFileContentSchema>;
 // Schema for PromptVersionFileJSONContent
 const PromptVersionFileJSONContentSchema = z.object({
   uuid: z.string().uuid(),
-  config: z.unknown().nullable(), // Represents Json | null
+  config: z.any().nullable(), // Represents Json | null
   status: z.string(),
   version: z
     .string()
@@ -41,7 +38,7 @@ const PromptVariableItemSchema = z.object({
   required: z.boolean(),
   created_at: supabaseDatetime,
   updated_at: supabaseDatetime,
-  default_value: z.union([z.number(), z.string(), z.unknown()]).nullable(), // Represents number | string | Json | null
+  default_value: z.union([z.number(), z.string(), z.any()]).nullable(), // Represents number | string | Json | null
 });
 
 // Schema for PromptVariableFileJSONContent (array of items)
@@ -52,10 +49,16 @@ export type PromptVariableFileJSONContent = z.infer<typeof PromptVariableFileJSO
 export const generatePromptJsonContent = (
   prompt: GetAllPromptsDataResult[number],
 ): PromptJSONFileContent => {
+  const latestVersion =
+    prompt.prompt_versions
+      .filter((v) => v.status === 'PUBLISHED')
+      .sort((a, b) => compareSemanticVersions(b.version, a.version))[0]?.version ?? null;
+
   return {
     uuid: prompt.uuid,
     name: prompt.name,
     slug: prompt.slug,
+    latestVersion,
     created_at: prompt.created_at,
     updated_at: prompt.updated_at,
   };

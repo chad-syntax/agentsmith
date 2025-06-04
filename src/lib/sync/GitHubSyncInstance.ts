@@ -1024,7 +1024,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
 
     const promptContent = JSON.stringify(generatePromptJsonContent(prompt), null, 2);
 
-    const message = `create prompt ${prompt.slug} `;
+    const message = `create prompt ${prompt.slug}`;
 
     const { sha } = await this._createRepoFile({
       path: promptFilePath,

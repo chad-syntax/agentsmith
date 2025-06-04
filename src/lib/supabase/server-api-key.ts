@@ -30,8 +30,8 @@ export function createSupabaseToken(options: CreateSupabaseTokenOptions) {
     algorithm: 'HS256',
   });
 
-  const ONE_HOUR = 60 * 60;
-  const exp = Math.round(Date.now() / 1000) + ONE_HOUR;
+  const SIX_HOURS = 60 * 60 * 6;
+  const exp = Math.round(Date.now() / 1000) + SIX_HOURS;
 
   // Construct the JWT payload according to Supabase's expected format
   const payload = {
@@ -42,7 +42,12 @@ export function createSupabaseToken(options: CreateSupabaseTokenOptions) {
     role,
   };
 
-  return signer(payload);
+  const jwt = signer(payload);
+
+  return {
+    jwt,
+    expiresAt: exp,
+  };
 }
 
 type ApiKeyOrgResult = {
@@ -80,9 +85,12 @@ export const exchangeApiKeyForJwt = async (
 
   const result = data as ApiKeyOrgResult;
 
-  const jwt = createSupabaseToken({ userEmail: result.email, authUserId: result.auth_user_id });
+  const { jwt, expiresAt } = createSupabaseToken({
+    userEmail: result.email,
+    authUserId: result.auth_user_id,
+  });
 
-  return jwt;
+  return { jwt, expiresAt };
 };
 
 export const getGithubWebhookUserJwt = () => {
@@ -91,7 +99,7 @@ export const getGithubWebhookUserJwt = () => {
     throw new Error('GITHUB_WEBHOOK_SERVICE_USER_ID is not defined');
   }
 
-  const jwt = createSupabaseToken({
+  const { jwt } = createSupabaseToken({
     userEmail: 'github_webhook@agentsmith.app',
     authUserId: GITHUB_WEBHOOK_SERVICE_USER_ID,
     role: 'github_webhook',
@@ -100,14 +108,14 @@ export const getGithubWebhookUserJwt = () => {
   return jwt;
 };
 
-export const createJwtClient = (jwt: string) => {
+export const createJwtClient = (jwt: string, supabaseUrl?: string, supabaseAnonKey?: string) => {
   if (!jwt) {
     throw new Error('JWT is required');
   }
 
   return createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl ?? process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseAnonKey ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       global: {
         headers: {

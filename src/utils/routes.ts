@@ -44,6 +44,7 @@ export const routes = {
         `/api/v1/promptVersion/${promptVersionUuid}/execute`,
       compilePromptVersion: (promptVersionUuid: string) =>
         `/api/v1/promptVersion/${promptVersionUuid}/compile`,
+      sdkExchange: '/api/v1/sdk-exchange',
     },
   },
   github: {
