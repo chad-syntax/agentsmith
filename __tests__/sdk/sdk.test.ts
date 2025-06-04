@@ -1,131 +1,141 @@
+import fs from 'fs';
 import path from 'path';
 import { AgentsmithClient } from '~/sdk/index';
 import { Agency } from './agentsmith/agentsmith.types';
 
 const agentsmithDirectory = path.join(__dirname, 'agentsmith');
+const apiKey = 'sdk_dummy';
+const projectId = 'project_dummy';
 
-// - can get prompt that is in the file system
-// - can get prompt that is in the database that does not exist in the file system
-// - can compile without variables for prompt that doesnt require variables
-// - can compile with variables for prompt that requires variables
-// - can compile with variables for prompt that requires variables and we can override the global context
-// - will fail to compile at build time with type errors if we pass in wrong or missing variables (need to somehow test typescript type errors here)
-// - will fail at runtime to compile if we pass in wrong or missing variables (we can cast variables to any to test this)
-// - can execute prompt
-// - can execute prompt with global overrides and config overrides
+describe('AgentsmithClient (runtime)', () => {
+  let client: AgentsmithClient<Agency>;
 
-describe('AgentsmithClient', () => {
-  it('testing', async () => {
-    const startTime = performance.now();
-    const apiKey = 'sdk_3eZl3nH0lH9192OdI6DlhLNh0Xnwz3Kp';
-    const projectId = '1a468eec-bba5-41a5-84ea-5e782965f7fb';
-
-    const client = new AgentsmithClient<Agency>(apiKey, projectId, {
+  beforeEach(() => {
+    client = new AgentsmithClient<Agency>(apiKey, projectId, {
       agentsmithDirectory,
     });
+  });
 
-    // should be able to compile without variables
-    const helloWorldPrompt = await client.getPrompt('hello-world@0.0.3');
-
-    const compiled = await helloWorldPrompt.compile({
+  it('gets and compiles a prompt that exists on the local file system', async () => {
+    const prompt = await client.getPrompt('hello-world@0.0.3');
+    const { compiledPrompt, finalVariables } = await prompt.compile({
       firstName: 'John',
       lastName: 'Doe',
     });
 
-    const endTime = performance.now();
+    expect(compiledPrompt).toContain('John');
+    expect(finalVariables).toHaveProperty('firstName', 'John');
+    expect(finalVariables).toHaveProperty('lastName', 'Doe');
+  });
 
-    console.log('compiled', compiled);
-    console.log(`Time taken: ${endTime - startTime} milliseconds`);
+  it('compiles a prompt that requires no variables', async () => {
+    const prompt = await client.getPrompt('hello-world@0.0.1');
+    const { compiledPrompt } = await prompt.compile();
+    expect(typeof compiledPrompt).toBe('string');
+  });
 
-    const executeStartTime = performance.now();
+  it('compiles with variables and global overrides', async () => {
+    const prompt = await client.getPrompt('hello-world@0.0.2');
 
-    const response = await helloWorldPrompt.execute(
-      {
-        firstName: 'John',
-        lastName: 'Doe',
-      },
-      {
-        config: {
-          models: ['x-ai/grok-3-mini-beta'],
-          temperature: 0.5,
-        },
-      },
+    const { compiledPrompt, finalVariables } = await prompt.compile(
+      { name: 'John' },
+      { globals: { gitHubUrl: 'https://github.com/example' } },
     );
 
-    console.log('response', response);
+    expect(compiledPrompt).toContain('John');
+    expect(finalVariables.global.gitHubUrl).toBe('https://github.com/example');
+  });
 
-    const executeEndTime = performance.now();
+  it('throws at runtime when required variables are missing', async () => {
+    const prompt = await client.getPrompt('hello-world@0.0.2');
 
-    console.log(`Time taken: ${executeEndTime - executeStartTime} milliseconds`);
+    // Cast to any so we can bypass TS compile-time checks and test runtime behaviour
+    await expect(prompt.compile({} as any)).rejects.toThrow('Missing required variables');
+  });
 
-    // // should be able to compile without variables but with options
-    // const helloWorldPrompt2 = await client.getPrompt('hello-world@0.0.1');
-    // const compiled2 = helloWorldPrompt2.compile({
-    //   globals: {
-    //     gitHubUrl: 'asd',
-    //   },
-    // });
-    // console.log('compiled2', compiled2);
+  it('executes a prompt and returns a completion', async () => {
+    const prompt = await client.getPrompt('hello-world@0.0.3');
+    const result = await prompt.execute(
+      { firstName: 'John', lastName: 'Doe' },
+      { config: { models: ['my-model'], temperature: 0.3 } },
+    );
 
-    // const v1Vars: GetPromptVariables<Agency, 'hello-world@0.0.1'> = {};
-    // const v2Vars: GetPromptVariables<Agency, 'hello-world@0.0.2'> = {
-    //   name: 'John',
-    // };
-    // const v3Vars: GetPromptVariables<Agency, 'hello-world@0.0.3'> = {
-    //   firstName: 'John',
-    //   lastName: 'Doe',
-    // };
+    expect(result.completion.choices[0].message.content).toBe('Hello from OpenRouter!');
+    expect(result.logUuid).toEqual('mock-log-uuid');
+  });
 
-    // const helloWorldPromptSlugs: AgencyPromptSlugs<Agency> = 'support-chat';
+  describe('database fallback', () => {
+    const slug = 'db-prompt';
+    const version = '0.0.1';
+    let readFileSpy: jest.SpyInstance;
 
-    // const promptIdentifier: PromptIdentifier<Agency> = 'support-chat@0.0.1';
+    beforeEach(() => {
+      // Force fs.readFile to throw ENOENT so SDK falls back to the database
+      const enoentErr = Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+      readFileSpy = jest.spyOn(fs.promises, 'readFile').mockRejectedValue(enoentErr);
 
-    // // should not allow compile with variables
-    // const helloWorldPrompt3 = await client.getPrompt('hello-world@0.0.1');
-    // const compiled3 = helloWorldPrompt3.compile({
-    //   // userName: 'John',
-    // });
-    // console.log('compiled3', compiled3);
+      // Configure Supabase mock to return prompt + globals
+      const mockSupabase = (global as any).mockSupabase as jest.Mocked<any>;
 
-    // // should compile with variables for 0.0.2
-    // const helloWorldPrompt4 = await client.getPrompt('hello-world@0.0.2');
-    // const compiled4 = helloWorldPrompt4.compile({
-    //   name: 'John',
-    // });
-    // console.log('compiled4', compiled4);
+      // Helper to build a chainable PostgREST query builder stub
+      const createBuilder = (response: any) => {
+        const b: any = {};
+        const chain = () => b;
+        ['select', 'eq', 'in', 'is', 'order', 'gte', 'lte'].forEach((m) => (b[m] = jest.fn(chain)));
+        b.single = jest.fn(async () => response);
+        b.then = (resolve: any, reject: any) => Promise.resolve(response).then(resolve, reject);
+        return b;
+      };
 
-    // // should compile with variables for 0.0.2 and with options
-    // const helloWorldPrompt5 = await client.getPrompt('hello-world@0.0.2');
-    // const compiled5 = helloWorldPrompt5.compile(
-    //   {
-    //     name: 'John',
-    //   },
-    //   {
-    //     globals: {
-    //       gitHubUrl: 'asd',
-    //     },
-    //   },
-    // );
+      const promptVersionResponse = {
+        data: {
+          uuid: 'db-version-uuid',
+          version,
+          config: { models: ['test-model'], temperature: 1 },
+          content: 'Hello {{ name }}!',
+          prompt_variables: [
+            {
+              uuid: 'var-uuid',
+              name: 'name',
+              type: 'STRING',
+              required: true,
+              default_value: null,
+            },
+          ],
+          prompts: { uuid: 'prompt-uuid', name: 'DB Prompt', slug },
+        },
+        error: null,
+      };
 
-    // console.log('compiled5', compiled5);
+      const globalsResponse = {
+        data: { content: {} },
+        error: null,
+      };
 
-    // const supportChatPrompt = await client.getPrompt('support-chat');
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === 'prompt_versions') {
+          return createBuilder(promptVersionResponse);
+        }
+        if (table === 'global_contexts') {
+          return createBuilder(globalsResponse);
+        }
+        return createBuilder({ data: null, error: null });
+      });
+    });
 
-    // const supportChatCompiled = supportChatPrompt.compile(
-    //   {
-    //     userMessage: 'Hello, how are you?',
-    //   },
-    //   {
-    //     globals: {
-    //       companyName: 'Agentsmithiez',
-    //     },
-    //   },
-    // );
+    afterEach(() => {
+      readFileSpy.mockRestore();
+    });
 
-    // console.log('support chat prompt metadata', supportChatPrompt.meta);
-    // console.log('support chat prompt version', supportChatPrompt.version);
-    // console.log('support chat prompt variables', supportChatPrompt.variables);
+    it('fetches and compiles prompt data from the database when not found on disk', async () => {
+      const dbClient = new AgentsmithClient<Agency>(apiKey, projectId, {
+        agentsmithDirectory: '/non/existent/path', // intentionally bad path
+      });
 
-    // console.log('supportChatCompiled', supportChatCompiled);
+      const prompt = await dbClient.getPrompt(`${slug}@${version}` as any);
+      const { compiledPrompt } = await (prompt as any).compile({ name: 'John' });
+
+      expect(compiledPrompt).toContain('John');
+    });
   });
 });
