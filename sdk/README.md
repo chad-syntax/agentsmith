@@ -1,7 +1,7 @@
 > [!WARNING]
 > Agentsmith is currently in alpha. Changes are pushed frequently and may include breaking changes. If you encounter any issues, please reach out to support@agentsmith.app for assistance.
 
-# agentsmith/sdk
+# @agentsmith/sdk
 
 The Agentsmith SDK provides a type-safe way to interact with your AI agents and prompts. It enables you to:
 
@@ -32,7 +32,7 @@ const projectId = '123456-abcde-7890-fghij-klmnopqrstuv'; // copy from your proj
 const client = new AgentsmithClient<Agency>(sdkApiKey, projectId);
 ```
 
-### 3. Fetch and compile your prompts
+### 3. Fetch your prompts
 
 ```ts
 // pass in the slug, or a string in `slug@version` format
@@ -103,9 +103,10 @@ You can pass whatever values are supported by [OpenRouter's API](https://openrou
 
 1.  **Install dependencies**
 
-    Navigate to the `agentsmith/sdk` directory and install the necessary dependencies:
+    Navigate to the `sdk` directory and install the necessary dependencies:
 
     ```sh
+    cd sdk
     npm install
     ```
 
@@ -121,7 +122,7 @@ You can pass whatever values are supported by [OpenRouter's API](https://openrou
 
     To test local changes in a consuming project without publishing to npm, use `npm link`:
 
-    - **In the `agentsmith/sdk` directory:**
+    - **In the `sdk` directory:**
       Create a global symbolic link.
 
       ```sh
