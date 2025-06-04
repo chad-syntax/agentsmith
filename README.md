@@ -1,12 +1,15 @@
+> [!WARNING]
+> Agentsmith is currently in alpha. Changes are pushed frequently and may include breaking changes. If you encounter any issues, please reach out to support@agentsmith.app for assistance.
+
 # Agentsmith
 
 **Develop AI agents with peace of mind**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Website](https://img.shields.io/badge/Website-agentsmith.app-brightgreen)](https://agentsmith.app)
-[![Alpha Club](https://img.shields.io/badge/Alpha%20Club-Join%20Now-blueviolet)](https://agentsmith.app/#pricing)
-[![Roadmap](https://img.shields.io/badge/Roadmap-View%20Now-blue)](https://agentsmith.app/roadmap)
-[![Join Waitlist](https://img.shields.io/badge/Join%20Waitlist-Now-ff69b4)](https://agentsmith.app/#join-waitlist)
+[![Website](https://img.shields.io/badge/agentsmith.app-brightgreen)](https://agentsmith.app)
+[![Alpha Club](https://img.shields.io/badge/Join%20Alpha%20Club-blueviolet)](https://agentsmith.app/#pricing)
+[![Roadmap](https://img.shields.io/badge/Roadmap-blue)](https://agentsmith.app/roadmap)
+[![Join Waitlist](https://img.shields.io/badge/Join%20Waitlist-ff69b4)](https://agentsmith.app/#join-waitlist)
 
 ## Overview
 
@@ -16,7 +19,7 @@ Agentsmith is an agent development platform for building, testing, and deploying
 
 - ✨ **Exceptional Prompt Authoring** - Intuitive prompt engineering tools with variables and versioning support
 - 🔄 **Seamless GitHub Synchronization** - Sync prompt versions and content to your repository via Pull Requests
-- 🛡️ **Type-Safe SDK** - Fully-typed TypeScript and Python SDKs prevent erroneous prompt modifications
+- 🛡️ **Type-Safe SDK** - Fully-typed TypeScript SDK (Python coming soon!) prevent erroneous prompt modifications
 - ↔️ **Provider Switching** - Effortlessly switch between AI providers and models using OpenRouter
 - 🌍 **Open Source** - Community-driven development with full transparency
 - 🧪 **Test & Refine** - Test prompts with different models and inputs for optimal performance
@@ -32,6 +35,12 @@ Agentsmith is an agent development platform for building, testing, and deploying
 - **GitHub Integration**: GitHub App with Octokit
 - **Testing**: Jest with TypeScript support
 - **Deployment**: Vercel-ready with Supabase integration
+- **SDK**: Agentsmith TypeScript SDK (Python coming soon!)
+
+## SDK
+
+The Agentsmith SDK allows you to easily integrate your AI agents into your applications.
+For detailed SDK documentation and usage examples, please refer to our [SDK Documentation](sdk/README.md).
 
 ## Documentation
 

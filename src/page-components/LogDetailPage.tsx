@@ -107,8 +107,42 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
               <P className="font-medium">{getDuration(log.start_time, log.end_time)}</P>
             </div>
             <div>
-              <P className="text-sm text-muted-foreground">Prompt Version</P>
-              <P className="font-medium">{log.prompt_versions?.version}</P>
+              <P className="text-sm text-muted-foreground">Prompt</P>
+              <P className="font-medium">
+                {log.prompt_versions ? (
+                  <>
+                    {log.prompt_versions.prompts?.uuid && log.prompt_versions.prompts?.name ? (
+                      <Link
+                        href={routes.studio.promptDetail(
+                          projectUuid,
+                          log.prompt_versions.prompts.uuid,
+                        )}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {log.prompt_versions.prompts.name}
+                      </Link>
+                    ) : (
+                      log.prompt_versions.prompts?.name || 'N/A'
+                    )}
+                    {' @ '}
+                    {log.prompt_versions.uuid && log.prompt_versions.version ? (
+                      <Link
+                        href={routes.studio.editPromptVersion(
+                          projectUuid,
+                          log.prompt_versions.uuid,
+                        )}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {log.prompt_versions.version}
+                      </Link>
+                    ) : (
+                      log.prompt_versions.version || 'N/A'
+                    )}
+                  </>
+                ) : (
+                  'N/A'
+                )}
+              </P>
             </div>
           </div>
         </div>

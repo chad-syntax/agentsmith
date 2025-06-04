@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": false,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "target": "es2019",
+    "types": ["node"],
+    "baseUrl": "../",
+    "paths": {
+      "@/*": ["src/*"],
+      "~/sdk/*": ["sdk/*"],
+      "~/sdk": ["sdk/index.ts"],
+      "~/*": ["./*"]
+    }
+  },
+  "test": "**/*.test-d.ts"
+}

@@ -1,8 +1,11 @@
+import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/app/__generated__/supabase.types';
 import { sha256Hash } from '@/utils/hash';
 import { createSigner } from 'fast-jwt';
-import { AgentsmithServices } from '../AgentsmithServices';
+import { logger } from '../logger';
+
+config();
 
 type CreateSupabaseTokenOptions = {
   userEmail: string;
@@ -16,8 +19,6 @@ type CreateSupabaseTokenOptions = {
 export function createSupabaseToken(options: CreateSupabaseTokenOptions) {
   const { userEmail, authUserId, role = 'authenticated' } = options;
 
-  // JWT secret should match Supabase's JWT secret
-  // This is typically accessed via environment variable
   const jwtSecret = process.env.SUPABASE_JWT_SECRET;
 
   if (!jwtSecret) {
@@ -29,8 +30,8 @@ export function createSupabaseToken(options: CreateSupabaseTokenOptions) {
     algorithm: 'HS256',
   });
 
-  const ONE_HOUR = 60 * 60;
-  const exp = Math.round(Date.now() / 1000) + ONE_HOUR;
+  const SIX_HOURS = 60 * 60 * 6;
+  const exp = Math.round(Date.now() / 1000) + SIX_HOURS;
 
   // Construct the JWT payload according to Supabase's expected format
   const payload = {
@@ -41,7 +42,12 @@ export function createSupabaseToken(options: CreateSupabaseTokenOptions) {
     role,
   };
 
-  return signer(payload);
+  const jwt = signer(payload);
+
+  return {
+    jwt,
+    expiresAt: exp,
+  };
 }
 
 type ApiKeyOrgResult = {
@@ -52,19 +58,21 @@ type ApiKeyOrgResult = {
   email: string;
 };
 
-export const exchangeApiKeyForJwt = async (apiKey: string) => {
+export const exchangeApiKeyForJwt = async (
+  apiKey: string,
+  supabaseUrl?: string,
+  supabaseAnonKey?: string,
+) => {
   const apiKeyHash = sha256Hash(apiKey);
 
   const tempClient = createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl ?? process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseAnonKey ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 
   const { data, error } = await tempClient.rpc('get_organization_by_api_key_hash', {
     arg_api_key_hash: apiKeyHash,
   });
-
-  const { logger } = new AgentsmithServices({ supabase: tempClient, initialize: false });
 
   if (error) {
     logger.error('Error getting organization by API key hash', error);
@@ -77,9 +85,12 @@ export const exchangeApiKeyForJwt = async (apiKey: string) => {
 
   const result = data as ApiKeyOrgResult;
 
-  const jwt = createSupabaseToken({ userEmail: result.email, authUserId: result.auth_user_id });
+  const { jwt, expiresAt } = createSupabaseToken({
+    userEmail: result.email,
+    authUserId: result.auth_user_id,
+  });
 
-  return jwt;
+  return { jwt, expiresAt };
 };
 
 export const getGithubWebhookUserJwt = () => {
@@ -88,7 +99,7 @@ export const getGithubWebhookUserJwt = () => {
     throw new Error('GITHUB_WEBHOOK_SERVICE_USER_ID is not defined');
   }
 
-  const jwt = createSupabaseToken({
+  const { jwt } = createSupabaseToken({
     userEmail: 'github_webhook@agentsmith.app',
     authUserId: GITHUB_WEBHOOK_SERVICE_USER_ID,
     role: 'github_webhook',
@@ -97,14 +108,14 @@ export const getGithubWebhookUserJwt = () => {
   return jwt;
 };
 
-export const createJwtClient = (jwt: string) => {
+export const createJwtClient = (jwt: string, supabaseUrl?: string, supabaseAnonKey?: string) => {
   if (!jwt) {
     throw new Error('JWT is required');
   }
 
   return createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl ?? process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseAnonKey ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       global: {
         headers: {

@@ -6,6 +6,7 @@
     "start": "next start",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:types": "tsd --typings=\"./sdk/src/types.ts\" --files=\"__tests__/sdk/sdk.test-d.ts\"",
     "smee-proxy:start": "node smee-proxy.mjs",
     "typegen-local": "./node_modules/.bin/supabase gen types typescript --local --schema public > ./src/app/__generated__/supabase.types.ts",
     "typegen-dev": "./node_modules/.bin/supabase gen types typescript --project-id \"jcnpgqhjaoppfhbkcnpv\" --schema public > ./src/app/__generated__/supabase.types.ts"
@@ -41,6 +42,7 @@
     "dotenv": "^16.4.7",
     "fast-jwt": "^5.0.5",
     "js-tiktoken": "^1.0.20",
+    "lodash.merge": "^4.6.2",
     "lucide-react": "^0.468.0",
     "next": "^15.1.6",
     "next-themes": "^0.4.4",
@@ -57,12 +59,14 @@
     "react-simple-code-editor": "^0.14.1",
     "sonner": "^2.0.1",
     "ts-morph": "^25.0.1",
+    "tsd": "^0.32.0",
     "vivus": "^0.4.6",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.9",
     "@types/jest": "^29.5.14",
+    "@types/lodash.merge": "^4.6.9",
     "@types/node": "22.10.2",
     "@types/prismjs": "^1.26.5",
     "@types/react": "^19.0.2",

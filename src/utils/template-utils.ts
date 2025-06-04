@@ -3,6 +3,7 @@ import nunjucks from 'nunjucks/browser/nunjucks';
 import { Database } from '@/app/__generated__/supabase.types';
 // @ts-ignore - nunjucks doesn't export these types properly
 import { transform } from 'nunjucks/src/transformer';
+import merge from 'lodash.merge';
 
 export type ParsedVariable = {
   id?: number;
@@ -457,10 +458,7 @@ export const validateVariables = (
     {},
   );
 
-  const variablesWithDefaults = {
-    ...defaultValues,
-    ...variablesToCheck,
-  };
+  const variablesWithDefaults = merge(defaultValues, variablesToCheck);
 
   return { missingRequiredVariables, variablesWithDefaults };
 };

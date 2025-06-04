@@ -1,6 +1,6 @@
 'use client';
 
-import { Pencil } from 'lucide-react';
+import { FileCode, Pencil, Copy, Info, Terminal } from 'lucide-react';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { H1, H3 } from '@/components/typography';
@@ -9,6 +9,18 @@ import { GlobalsList } from '@/components/project/GlobalsList';
 import { SyncStatusAlert } from '@/components/sync-status-alert';
 import { ConnectProjectModal } from '@/components/modals/connect-project';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { generateTypes } from '@/app/actions/generate-types';
+import { fileDownload } from '@/utils/file-download';
+import { toast } from 'sonner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { ApiKeyReveal } from '@/components/api-key-reveal';
+import Editor from 'react-simple-code-editor';
+import { highlight, languages } from 'prismjs';
+import 'prismjs/components/prism-markup-templating';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/themes/prism.css';
 
 export type ProjectPageProps = {
   projectData: NonNullable<GetProjectDataResult>;
@@ -19,6 +31,50 @@ export const ProjectPage = (props: ProjectPageProps) => {
 
   const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(false);
 
+  const handleDownloadTypesClick = async () => {
+    const response = await generateTypes(projectData.id);
+    if (response.success && response.data) {
+      try {
+        fileDownload({
+          content: response.data.content,
+          filename: response.data.filename,
+          type: 'text/typescript',
+        });
+      } catch (error) {
+        console.error(error);
+        toast.error('Failed to download types, please try again or contact support.');
+      }
+    } else if (response.success && !response.data) {
+      toast.error('No types were generated, please try again or contact support.');
+    } else {
+      toast.error('Failed to generate types, please try again or contact support.');
+    }
+  };
+
+  const handleCopyProjectId = async () => {
+    try {
+      await navigator.clipboard.writeText(projectData.uuid);
+      toast.success('Project ID Copied 👍');
+    } catch (err) {
+      console.error('Failed to copy project ID: ', err);
+      toast.error('Failed to copy Project ID');
+    }
+  };
+
+  const sampleSdkCodeContent = `
+// your-file.ts
+import { AgentsmithClient } from '@agentsmith/sdk';
+import { Agency } from '../agentsmith/agentsmith.types';
+
+const agentsmithClient = new AgentsmithClient<Agency>('sdk_********************************', '${projectData.uuid}');
+
+const helloWorldPrompt = agentsmithClient.getPrompt('hello-world@0.0.1');
+
+const compiledPrompt = helloWorldPrompt.compile({
+  name: 'John',
+});
+`;
+
   return (
     <>
       <ConnectProjectModal
@@ -28,12 +84,30 @@ export const ProjectPage = (props: ProjectPageProps) => {
         }}
       />
       <div className="p-6">
-        <div className="flex gap-2 justify-start items-center mb-8">
+        <div className="flex gap-4 justify-start items-center mb-8">
           <H1>{projectData.name}</H1>
           <Link href={routes.studio.editProject(projectData.uuid)}>
             <Pencil className="w-6 h-6 text-muted-foreground" />
           </Link>
         </div>
+        <div className="mb-4">
+          <ApiKeyReveal organizationUuid={projectData.organizations.uuid} keyName="SDK_API_KEY" />
+        </div>
+        <div className="flex justify-start mb-4">
+          <div className="text-sm flex justify-start items-stretch bg-muted border rounded-md">
+            <div className="font-semibold border-r px-2 flex items-center">Project ID</div>
+            <div className="px-4 font-mono border-r flex items-center">{projectData.uuid}</div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCopyProjectId}
+              className="hover:text-primary"
+            >
+              <Copy className="w-4 h-4 hover:text-primary" />
+            </Button>
+          </div>
+        </div>
+
         {projectData.project_repositories && projectData.project_repositories.length > 0 && (
           <div className="mb-4 text-muted-foreground">
             {projectData.name} connected to{' '}
@@ -48,9 +122,17 @@ export const ProjectPage = (props: ProjectPageProps) => {
               {projectData.project_repositories[0].repository_full_name}
             </a>{' '}
             with default branch{' '}
-            <span className="bg-muted-foreground text-muted px-1.5 py-0.5 rounded-xs font-mono">
+            <a
+              href={routes.github.branch(
+                projectData.project_repositories[0].repository_full_name,
+                projectData.project_repositories[0].repository_default_branch,
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-primary"
+            >
               {projectData.project_repositories[0].repository_default_branch}
-            </span>{' '}
+            </a>{' '}
             using folder{' '}
             <span className="bg-muted-foreground text-muted px-1.5 py-0.5 rounded-xs font-mono">
               {projectData.project_repositories[0].agentsmith_folder}
@@ -62,7 +144,7 @@ export const ProjectPage = (props: ProjectPageProps) => {
         {projectData.prompts && projectData.prompts.length > 0 && (
           <div className="mt-6">
             <H3>Prompts</H3>
-            <ul className="list-disc list-inside mt-2">
+            <ul className="list-disc list-inside mt-2 mb-4">
               {projectData.prompts.map((prompt) => (
                 <li key={prompt.uuid}>
                   <Link
@@ -74,8 +156,81 @@ export const ProjectPage = (props: ProjectPageProps) => {
                 </li>
               ))}
             </ul>
+            <Alert variant="default">
+              <Info size={16} />
+              <AlertTitle>Types</AlertTitle>
+              <AlertDescription>
+                Prompt Types will automatically be written to your agentsmith folder during a Sync,
+                or you can download them here.
+                <Button
+                  onClick={handleDownloadTypesClick}
+                  size="lg"
+                  className="mt-2 bg-green-500 hover:bg-green-600 flex items-center gap-2"
+                >
+                  <FileCode size={16} />
+                  Download Types
+                </Button>
+              </AlertDescription>
+            </Alert>
           </div>
         )}
+        <div className="mt-6">
+          <H3>Getting Started with Agentsmith SDK</H3>
+          <Alert variant="default" className="mt-2">
+            <Info size={16} />
+            <AlertTitle>1. Installation</AlertTitle>
+            <AlertDescription>
+              Install the Agentsmith SDK using npm or yarn:
+              <div className="mt-2 font-mono bg-muted p-2 rounded-md">
+                <Terminal size={16} className="inline-block mr-2" />
+                npm install @agentsmith/sdk
+              </div>
+            </AlertDescription>
+          </Alert>
+          <Alert variant="default" className="mt-4">
+            <Info size={16} />
+            <AlertTitle>2. Get Your API Key</AlertTitle>
+            <AlertDescription>
+              Get your API key from below or the organization settings page:
+              <div className="mt-2">
+                <ApiKeyReveal
+                  organizationUuid={projectData.organizations?.uuid || ''}
+                  keyName="SDK_API_KEY"
+                />
+              </div>
+            </AlertDescription>
+          </Alert>
+          <Alert variant="default" className="mt-4">
+            <Info size={16} />
+            <AlertTitle>3. Usage</AlertTitle>
+            <AlertDescription>
+              Initialize the SDK with your API key and project ID:
+              <div className="relative w-full">
+                <div className="absolute top-0 right-0 z-10">
+                  <Button
+                    variant="ghost"
+                    className="cursor-pointer"
+                    size="icon"
+                    onClick={() => {
+                      navigator.clipboard.writeText(sampleSdkCodeContent);
+                      toast.success('Copied code to clipboard');
+                    }}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Editor
+                  value={sampleSdkCodeContent}
+                  onValueChange={() => {}}
+                  highlight={(code) => highlight(code, languages.typescript, 'typescript')}
+                  padding={0}
+                  disabled
+                  className="w-full"
+                />
+              </div>
+            </AlertDescription>
+          </Alert>
+        </div>
         <H3 className="mt-6">Global Context</H3>
         <GlobalsList globalContext={projectData.global_contexts?.content} />
       </div>

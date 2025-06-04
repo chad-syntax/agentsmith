@@ -1,0 +1,25 @@
+{
+  "name": "@agentsmith/sdk",
+  "version": "0.0.1",
+  "description": "Agentsmith SDK",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup"
+  },
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@types/lodash.merge": "^4.6.9",
+    "tsup": "^8.5.0",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "latest",
+    "dotenv": "^16.4.7",
+    "lodash.merge": "^4.6.2",
+    "nunjucks": "^3.2.4"
+  }
+}

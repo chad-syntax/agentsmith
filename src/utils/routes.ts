@@ -44,6 +44,7 @@ export const routes = {
         `/api/v1/promptVersion/${promptVersionUuid}/execute`,
       compilePromptVersion: (promptVersionUuid: string) =>
         `/api/v1/promptVersion/${promptVersionUuid}/compile`,
+      sdkExchange: '/api/v1/sdk-exchange',
     },
   },
   github: {
@@ -52,6 +53,8 @@ export const routes = {
     installation: (installationId: number) =>
       `https://github.com/settings/installations/${installationId}`,
     repository: (repositoryFullName: string) => `https://github.com/${repositoryFullName}`,
+    branch: (repositoryFullName: string, branchName: string) =>
+      `https://github.com/${repositoryFullName}/tree/${branchName}`,
   },
   openrouter: {
     oauthInitiate: 'https://openrouter.ai/auth',

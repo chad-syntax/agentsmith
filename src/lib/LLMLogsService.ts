@@ -65,7 +65,7 @@ export class LLMLogsService extends AgentsmithSupabaseService {
   async getLogsByProjectId(projectId: number) {
     const { data, error } = await this.supabase
       .from('llm_logs')
-      .select('*, projects(*), prompt_versions(*)')
+      .select('*, projects(*), prompt_versions(*, prompts(*))')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false });
 
@@ -84,7 +84,7 @@ export class LLMLogsService extends AgentsmithSupabaseService {
         `
         *,
         projects(*),
-        prompt_versions(*)
+        prompt_versions(*, prompts(*))
       `,
       )
       .eq('uuid', uuid)

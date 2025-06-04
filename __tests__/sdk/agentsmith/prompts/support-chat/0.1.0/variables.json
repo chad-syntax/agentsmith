@@ -1,0 +1,11 @@
+[
+  {
+    "name": "userMessage",
+    "type": "STRING",
+    "uuid": "01bcf6a8-3ee7-46e2-8148-7fa9144dfce5",
+    "required": true,
+    "created_at": "2025-05-30T20:46:22.898146+00:00",
+    "updated_at": "2025-05-30T20:46:22.898146+00:00",
+    "default_value": null
+  }
+]

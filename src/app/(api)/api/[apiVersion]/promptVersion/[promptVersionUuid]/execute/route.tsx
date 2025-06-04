@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 import { CompletionConfig } from '@/lib/openrouter';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { validateGlobalContext, validateVariables } from '@/utils/template-utils';
+import merge from 'lodash.merge';
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
@@ -27,7 +28,8 @@ export async function POST(
 
   if (apiKey) {
     try {
-      jwt = await exchangeApiKeyForJwt(apiKey);
+      const exchangeResult = await exchangeApiKeyForJwt(apiKey);
+      jwt = exchangeResult.jwt;
     } catch (error) {
       return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
     }
@@ -105,13 +107,16 @@ export async function POST(
     );
   }
 
+  const finalConfig = merge(promptVersion.config, body.config, {
+    usage: {
+      include: true,
+    },
+  });
+
   try {
     const response = await agentsmith.services.prompts.executePrompt({
       prompt: promptVersion.prompts,
-      config: {
-        ...(promptVersion.config as CompletionConfig),
-        ...(body.config ?? {}),
-      },
+      config: finalConfig,
       targetVersion: promptVersion,
       variables: variablesWithDefaults,
       globalContext: globalContext as Record<string, any>,

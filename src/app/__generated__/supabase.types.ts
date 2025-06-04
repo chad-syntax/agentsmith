@@ -759,6 +759,15 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      create_llm_log_entry: {
+        Args: {
+          arg_project_uuid: string
+          arg_version_uuid: string
+          arg_variables: Json
+          arg_raw_input: Json
+        }
+        Returns: Json
+      }
       create_organization: {
         Args: {
           arg_name: string

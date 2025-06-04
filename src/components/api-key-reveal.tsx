@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Eye, EyeOff, Clipboard, Check } from 'lucide-react';
+import { Eye, EyeOff, Check, Copy } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { P } from '@/components/typography';
 
@@ -92,45 +92,37 @@ export const ApiKeyReveal = (props: ApiKeyRevealProps) => {
   };
 
   return (
-    <div className="w-full">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <div className="p-2 flex items-center border rounded bg-muted">
-              <span className="font-mono text-sm flex-1">
-                {isRevealed ? apiKey : 'sdk_••••••••••••••••••••••••••••••••'}
-              </span>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleRevealToggle}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
-                  ) : isRevealed ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </Button>
-                {apiKey && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={copyToClipboard}
-                    className={isCopied ? 'text-green-500' : ''}
-                  >
-                    {isCopied ? <Check className="h-4 w-4" /> : <Clipboard className="h-4 w-4" />}
-                  </Button>
-                )}
-              </div>
-            </div>
+    <div className="flex flex-col gap-2">
+      <div className="flex justify-start">
+        <div className="text-sm flex items-stretch bg-muted border rounded-md">
+          <div className="font-semibold border-r px-2 flex items-center">API Key</div>
+          <div className="font-mono flex items-center px-4 border-r">
+            {isRevealed ? apiKey : 'sdk_••••••••••••••••••••••••••••••••'}
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" onClick={handleRevealToggle} disabled={isLoading}>
+              {isLoading ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-current"></div>
+              ) : isRevealed ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+            {apiKey && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={copyToClipboard}
+                className={isCopied ? 'text-green-500 hover:text-green-500' : ''}
+              >
+                {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              </Button>
+            )}
           </div>
         </div>
-        {error && <P className="text-sm text-red-500">{error}</P>}
       </div>
+      {error && <P className="text-sm text-red-500">{error}</P>}
     </div>
   );
 };

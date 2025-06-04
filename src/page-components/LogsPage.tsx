@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { routes } from '@/utils/routes';
 import { H1, H2, P } from '@/components/typography';
@@ -21,6 +24,7 @@ type LogsPageProps = {
 
 export const LogsPage = (props: LogsPageProps) => {
   const { project, logs } = props;
+  const router = useRouter();
 
   // Format date for display
   const formatDate = (dateString: string) => {
@@ -57,10 +61,13 @@ export const LogsPage = (props: LogsPageProps) => {
                 Status
               </TableHead>
               <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Duration
+                Prompt Name
               </TableHead>
               <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                Actions
+                Prompt Version
+              </TableHead>
+              <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                Duration
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -78,7 +85,11 @@ export const LogsPage = (props: LogsPageProps) => {
               const status = log.end_time ? 'Completed' : 'Running';
 
               return (
-                <TableRow key={log.uuid} className="hover:bg-muted">
+                <TableRow
+                  key={log.uuid}
+                  className="hover:bg-muted cursor-pointer"
+                  onClick={() => router.push(routes.studio.logDetail(project.uuid, log.uuid))}
+                >
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {formatDate(log.created_at)}
                   </TableCell>
@@ -94,14 +105,39 @@ export const LogsPage = (props: LogsPageProps) => {
                     </span>
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    {duration}
-                  </TableCell>
-                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Button variant="link" asChild className="p-0">
-                      <Link href={routes.studio.logDetail(project.uuid, log.uuid)}>
-                        View Details
+                    {log.prompt_versions?.prompts?.uuid && log.prompt_versions?.prompts?.name ? (
+                      <Link
+                        href={routes.studio.promptDetail(
+                          project.uuid,
+                          log.prompt_versions.prompts.uuid,
+                        )}
+                        className="hover:text-primary hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {log.prompt_versions.prompts.name}
                       </Link>
-                    </Button>
+                    ) : (
+                      log.prompt_versions?.prompts?.name || 'N/A'
+                    )}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    {log.prompt_versions?.uuid && log.prompt_versions?.version ? (
+                      <Link
+                        href={routes.studio.editPromptVersion(
+                          project.uuid,
+                          log.prompt_versions.uuid,
+                        )}
+                        className="hover:text-primary hover:underline"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {log.prompt_versions.version}
+                      </Link>
+                    ) : (
+                      log.prompt_versions?.version || 'N/A'
+                    )}
+                  </TableCell>
+                  <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    {duration}
                   </TableCell>
                 </TableRow>
               );
