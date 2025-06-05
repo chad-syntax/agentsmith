@@ -72,7 +72,7 @@ export class UsersService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error) {
-      this.logger.error('Error fetching user', error);
+      this.logger.error(error, 'Error fetching user');
       return null;
     }
 
@@ -161,7 +161,7 @@ export class UsersService extends AgentsmithSupabaseService {
           .single();
 
         if (error) {
-          this.logger.error('Error fetching onboarding checklist data', error);
+          this.logger.error(error, 'Error fetching onboarding checklist data');
           return null;
         }
 

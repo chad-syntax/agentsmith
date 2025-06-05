@@ -37,7 +37,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error fetching organization id', error);
+      this.logger.error(error, 'Error fetching organization id');
       return null;
     }
 
@@ -52,7 +52,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error fetching organization data', error);
+      this.logger.error(error, 'Error fetching organization data');
       return null;
     }
 
@@ -69,7 +69,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
       .eq('organizations.id', organizationId);
 
     if (error) {
-      this.logger.error('Failed to fetch project repositories for organization', error);
+      this.logger.error(error, 'Failed to fetch project repositories for organization');
       throw error;
     }
 
@@ -80,7 +80,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     const response = await this.services.vault.getOrganizationKeySecret(organizationUuid, key);
 
     if (response.error) {
-      this.logger.error('Error fetching organization key secret', response.error);
+      this.logger.error(response.error, 'Error fetching organization key secret');
       return response;
     }
 
@@ -97,7 +97,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     );
 
     if (error) {
-      this.logger.error('Error getting OpenRouter code verifier:', error);
+      this.logger.error(error, 'Error getting OpenRouter code verifier:');
       return {
         success: false,
         error: `Failed to get OpenRouter code verifier: ${error}`,
@@ -123,7 +123,7 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     });
 
     if (!success) {
-      this.logger.error('Error creating OpenRouter code verifier:', createError);
+      this.logger.error(createError, 'Error creating OpenRouter code verifier:');
       return {
         success: false,
         error: `Failed to create OpenRouter code verifier: ${createError}`,

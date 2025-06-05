@@ -334,7 +334,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         agentsmithTypes,
       };
     } catch (error) {
-      this.logger.error('Error fetching repo state:', error);
+      this.logger.error(error, 'Error fetching repo state:');
       return null;
     }
   }
@@ -354,7 +354,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     try {
       actions = compareStates({ agentsmithState, repoState });
     } catch (error) {
-      this.logger.error('Error comparing agentsmith and repo states:', error);
+      this.logger.error(error, 'Error comparing agentsmith and repo states:');
       return {
         syncChanges: [],
         actionPlan: [],
@@ -395,7 +395,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     try {
       syncChanges = await this.executeActions(actions);
     } catch (error) {
-      this.logger.error('Error executing sync actions:', error);
+      this.logger.error(error, 'Error executing sync actions:');
       return {
         syncChanges: [],
         actionPlan: actions,
