@@ -72,36 +72,63 @@ type SyncChangeTarget = 'agentsmith' | 'repo';
 type SyncChangeType = 'create' | 'update' | 'delete';
 type SyncChangeEntity = 'prompt' | 'version' | 'variables' | 'content';
 
-export type SyncChange =
-  | {
-      target: SyncChangeTarget;
-      type: SyncChangeType;
-      entity: SyncChangeEntity;
-      promptSlug: string;
-      promptVersion: string | null;
-      oldContent: string | null;
-      newContent: string | null;
-      oldSha: string | null;
-      newSha: string | null;
-    }
-  | {
-      target: 'repo';
-      type: SyncChangeType;
-      entity: 'globals';
-      oldContent: string | null;
-      newContent: string | null;
-      oldSha: string | null;
-      newSha: string | null;
-    }
-  | {
-      target: 'repo';
-      type: SyncChangeType;
-      entity: 'agentsmithTypes';
-      oldContent: string | null;
-      newContent: string | null;
-      oldSha: string | null;
-      newSha: string | null;
-    };
+type PromptLikeSyncChange = {
+  target: SyncChangeTarget;
+  type: SyncChangeType;
+  entity: SyncChangeEntity;
+  promptSlug: string;
+  promptVersion: string | null;
+  oldContent: string | null;
+  newContent: string | null;
+  oldSha: string | null;
+  newSha: string | null;
+};
+
+type GlobalsSyncChange = {
+  target: 'repo';
+  type: SyncChangeType;
+  entity: 'globals';
+  oldContent: string | null;
+  newContent: string | null;
+  oldSha: string | null;
+  newSha: string | null;
+};
+
+type AgentsmithTypesSyncChange = {
+  target: 'repo';
+  type: SyncChangeType;
+  entity: 'agentsmithTypes';
+  oldContent: string | null;
+  newContent: string | null;
+  oldSha: string | null;
+  newSha: string | null;
+};
+
+export type SyncChange = PromptLikeSyncChange | GlobalsSyncChange | AgentsmithTypesSyncChange;
+
+export const isPromptLikeSyncChange = (
+  syncChange: SyncChange,
+): syncChange is PromptLikeSyncChange => {
+  return 'promptSlug' in syncChange && 'promptVersion' in syncChange;
+};
+
+export const isGlobalsSyncChange = (syncChange: SyncChange): syncChange is GlobalsSyncChange => {
+  return syncChange.entity === 'globals';
+};
+
+export const isAgentsmithTypesSyncChange = (
+  syncChange: SyncChange,
+): syncChange is AgentsmithTypesSyncChange => {
+  return syncChange.entity === 'agentsmithTypes';
+};
+
+type ExecuteSyncResult = {
+  syncChanges: SyncChange[];
+  actionPlan: SyncAction[];
+  agentsmithState: AgentsmithState;
+  repoState: RepoState;
+  error?: Error;
+};
 
 type HardenedGitTreeEntry = {
   [P in keyof components['schemas']['git-tree']['tree'][number]]-?: NonNullable<
@@ -312,7 +339,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     }
   }
 
-  public async executeSync(): Promise<SyncChange[]> {
+  public async executeSync(): Promise<ExecuteSyncResult> {
     const [agentsmithState, repoState] = await Promise.all([
       this.getAgentsmithState(),
       this.getRepoState(),
@@ -322,8 +349,20 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       throw new Error('Failed to fetch agentsmith or repo state');
     }
 
-    const actions = compareStates({ agentsmithState, repoState });
+    let actions: SyncAction[] = [];
 
+    try {
+      actions = compareStates({ agentsmithState, repoState });
+    } catch (error) {
+      this.logger.error('Error comparing agentsmith and repo states:', error);
+      return {
+        syncChanges: [],
+        actionPlan: [],
+        agentsmithState,
+        repoState,
+        error: error as Error,
+      };
+    }
     // for debugging purposes
     // const reportDir = `reports/${Date.now()}`;
 
@@ -351,7 +390,20 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       `executing ${actions.length} actions, ${numRepoActions} repo actions, ${numAgentsmithActions} agentsmith actions`,
     );
 
-    const syncChanges = await this.executeActions(actions);
+    let syncChanges: SyncChange[] = [];
+
+    try {
+      syncChanges = await this.executeActions(actions);
+    } catch (error) {
+      this.logger.error('Error executing sync actions:', error);
+      return {
+        syncChanges: [],
+        actionPlan: actions,
+        agentsmithState,
+        repoState,
+        error: error as Error,
+      };
+    }
 
     // for debugging purposes
     // await fs.promises.writeFile(
@@ -359,7 +411,12 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     //   JSON.stringify(syncChanges, null, 2),
     // );
 
-    return syncChanges;
+    return {
+      syncChanges,
+      actionPlan: actions,
+      agentsmithState,
+      repoState,
+    };
   }
 
   private async getRepoFolderContents(): Promise<HardenedGitTreeEntry[] | null> {

@@ -101,7 +101,7 @@ export class AgentsmithServices {
           const result = (service as any).initialize();
           if (result instanceof Promise) {
             result.catch((error) => {
-              this.logger.error(`Failed to initialize service ${service.serviceName}:`, error);
+              this.logger.error(error, `Failed to initialize service ${service.serviceName}:`);
             });
             promises.push(result);
           }

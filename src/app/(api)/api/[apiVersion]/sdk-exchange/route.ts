@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   try {
     body = await request.json();
   } catch (error) {
-    logger.error('Failed to parse request body for API key exchange', error);
+    logger.error(error, 'Failed to parse request body for API key exchange');
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
   const apiKey = body.apiKey;
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     jwt = exchangeResult.jwt;
     expiresAt = exchangeResult.expiresAt;
   } catch (error) {
-    logger.error('Failed to exchange API key for JWT, exchange failed', error);
+    logger.error(error, 'Failed to exchange API key for JWT, exchange failed');
     return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
   }
 

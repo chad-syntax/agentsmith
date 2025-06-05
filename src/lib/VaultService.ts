@@ -59,7 +59,7 @@ export class VaultService extends AgentsmithSupabaseService {
       });
 
       if (error) {
-        this.logger.error('Error getting secret from vault:', error);
+        this.logger.error(error, 'Error getting secret from vault:');
         return {
           data: null,
           error: error.message || 'Failed to get secret from vault',
@@ -68,7 +68,7 @@ export class VaultService extends AgentsmithSupabaseService {
 
       return { data: (data as any)?.value || null };
     } catch (error) {
-      this.logger.error('Unexpected error getting secret from vault:', error);
+      this.logger.error(error, 'Unexpected error getting secret from vault:');
       return {
         data: null,
         error: error instanceof Error ? error.message : String(error),
@@ -93,8 +93,7 @@ export class VaultService extends AgentsmithSupabaseService {
       });
 
       if (error) {
-        // erroring here
-        this.logger.error(`Error creating organization key: ${error.message}`);
+        this.logger.error(error, 'Error creating organization key');
         return {
           success: false,
           error: error.message || 'Failed to create organization key',
@@ -106,7 +105,7 @@ export class VaultService extends AgentsmithSupabaseService {
         vaultSecretId: (data as any)?.vault_secret_id,
       };
     } catch (error) {
-      this.logger.error(`Unexpected error creating organization key: ${error}`);
+      this.logger.error(error, 'Unexpected error creating organization key:');
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -128,7 +127,7 @@ export class VaultService extends AgentsmithSupabaseService {
       });
 
       if (error) {
-        this.logger.error('Error deleting organization key:', error);
+        this.logger.error(error, 'Error deleting organization key:');
         return {
           success: false,
           error: error.message || 'Failed to delete organization key',
@@ -139,7 +138,7 @@ export class VaultService extends AgentsmithSupabaseService {
         success: true,
       };
     } catch (error) {
-      this.logger.error('Unexpected error deleting organization key:', error);
+      this.logger.error(error, 'Unexpected error deleting organization key:');
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -168,7 +167,7 @@ export class VaultService extends AgentsmithSupabaseService {
         description,
       });
     } catch (error) {
-      this.logger.error('Unexpected error replacing organization key:', error);
+      this.logger.error(error, 'Unexpected error replacing organization key:');
       return {
         success: false,
         error: error instanceof Error ? error.message : String(error),
@@ -218,7 +217,7 @@ export class VaultService extends AgentsmithSupabaseService {
 
       return { value: secretData };
     } catch (error) {
-      this.logger.error('Unexpected error getting organization key:', error);
+      this.logger.error(error, 'Unexpected error getting organization key:');
       return {
         value: null,
         error: error instanceof Error ? error.message : String(error),

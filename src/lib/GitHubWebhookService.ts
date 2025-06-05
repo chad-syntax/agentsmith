@@ -37,7 +37,7 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         // Do something
         this.logger.info('github webhook: pull request opened');
       } catch (e) {
-        this.logger.error(`pull_request.opened handler failed with error: ${(<Error>e).message}`);
+        this.logger.error(e, 'pull_request.opened handler failed with error');
       }
     });
 
@@ -46,7 +46,7 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         // Do something else
         this.logger.info('github webhook: pull request edited', payload);
       } catch (e) {
-        this.logger.error(`pull_request.edited handler failed with error: ${(<Error>e).message}`);
+        this.logger.error(e, 'pull_request.edited handler failed with error');
       }
     });
 
@@ -54,7 +54,7 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
       try {
         await this.handlePush(payload);
       } catch (e) {
-        this.logger.error(`push handler failed with error: ${(<Error>e).message}`);
+        this.logger.error(e, 'push handler failed with error');
       }
     });
   }
@@ -69,11 +69,11 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         .eq('installation_id', payload.installation.id);
 
       if (error) {
-        this.logger.error('Failed to update installation status to DELETED:', error);
+        this.logger.error(error, 'Failed to update installation status to DELETED:');
         throw error;
       }
     } catch (e) {
-      this.logger.error(`installation.deleted handler failed with error: ${(<Error>e).message}`);
+      this.logger.error(e, 'installation.deleted handler failed with error');
     }
   }
 
@@ -87,10 +87,10 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         .eq('installation_id', payload.installation.id);
 
       if (error) {
-        this.logger.error('Failed to update installation status to SUSPENDED:', error);
+        this.logger.error(error, 'Failed to update installation status to SUSPENDED:');
       }
     } catch (e) {
-      this.logger.error(`installation.suspended handler failed with error: ${(<Error>e).message}`);
+      this.logger.error(e, 'installation.suspended handler failed with error');
     }
   }
 
@@ -104,11 +104,11 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         .eq('installation_id', payload.installation.id);
 
       if (error) {
-        this.logger.error('Failed to update installation status to ACTIVE:', error);
+        this.logger.error(error, 'Failed to update installation status to ACTIVE:');
         throw error;
       }
     } catch (e) {
-      this.logger.error(`installation.unsuspend handler failed with error: ${(<Error>e).message}`);
+      this.logger.error(e, 'installation.unsuspend handler failed with error');
     }
   }
 
@@ -155,13 +155,11 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
       );
 
       if (error) {
-        this.logger.error('Failed to insert repository records:', error);
+        this.logger.error(error, 'Failed to insert repository records:');
         throw error;
       }
     } catch (e) {
-      this.logger.error(
-        `installation_repositories.added handler failed with error: ${(<Error>e).message}`,
-      );
+      this.logger.error(e, 'installation_repositories.added handler failed with error');
     }
   }
 
@@ -181,13 +179,11 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         );
 
       if (error) {
-        this.logger.error('Failed to delete repository records:', error);
+        this.logger.error(error, 'Failed to delete repository records:');
         throw error;
       }
     } catch (e) {
-      this.logger.error(
-        `installation_repositories.removed handler failed with error: ${(<Error>e).message}`,
-      );
+      this.logger.error(e, 'installation_repositories.removed handler failed with error');
     }
   }
 
@@ -263,8 +259,7 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
 
       this.logger.info(`Sync from repository completed for project ${projectRepo.project_id}`);
     } catch (e) {
-      const error = e instanceof Error ? e.message : String(e);
-      this.logger.error(`push handler failed with error: ${error}`);
+      this.logger.error(e, 'push handler failed with error');
     }
   }
 }

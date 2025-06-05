@@ -56,7 +56,7 @@ export const syncProject = async (projectUuid: string): Promise<ActionResponse<S
 
     return createSuccessResponse(result, 'Project synced successfully.');
   } catch (error) {
-    logger.error('Error syncing project:', error);
+    logger.error(error, 'Error syncing project:');
     return createErrorResponse(error instanceof Error ? error.message : 'Failed to sync project');
   }
 };

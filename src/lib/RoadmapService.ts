@@ -70,7 +70,7 @@ export class RoadmapService extends AgentsmithSupabaseService {
     const { data, error } = await query;
 
     if (error) {
-      this.logger.error('Error getting roadmap items', { error, options });
+      this.logger.error(error, 'Error getting roadmap items', { options });
       throw new Error(error.message);
     }
     return data || [];
@@ -84,7 +84,7 @@ export class RoadmapService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error) {
-      this.logger.error('Error getting roadmap item by ID', { error, id });
+      this.logger.error(error, 'Error getting roadmap item by ID', { id });
       throw new Error(error.message);
     }
     return data;
@@ -98,7 +98,7 @@ export class RoadmapService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error) {
-      this.logger.error('Error getting roadmap item by slug', { error, slug });
+      this.logger.error(error, 'Error getting roadmap item by slug', { slug });
       throw new Error(error.message);
     }
     return data;
@@ -121,7 +121,7 @@ export class RoadmapService extends AgentsmithSupabaseService {
       .single();
 
     if (createError || !newItem) {
-      this.logger.error('Error creating roadmap item', { error: createError, payload });
+      this.logger.error(createError, 'Error creating roadmap item', { payload });
       if (
         createError?.code === '23505' &&
         createError?.message.includes('roadmap_items_slug_key')
@@ -144,8 +144,7 @@ export class RoadmapService extends AgentsmithSupabaseService {
       // Log the error, but don't let it fail the whole item creation if the item itself was created.
       // The user might see the item without their initial vote, which is better than full failure.
       // A retry mechanism or cleanup could be considered for production.
-      this.logger.error('Error creating initial upvote for roadmap item', {
-        error: upvoteError,
+      this.logger.error(upvoteError, 'Error creating initial upvote for roadmap item', {
         roadmap_itemId: newItem.id,
         userId: payload.creator_user_id,
         score: payload.initial_impact_score,
@@ -190,7 +189,7 @@ export class RoadmapService extends AgentsmithSupabaseService {
       .single();
 
     if (error || !data) {
-      this.logger.error('Error updating roadmap item', { error, id, payload });
+      this.logger.error(error, 'Error updating roadmap item', { id, payload });
       if (
         error?.code === '23505' &&
         itemToUpdate.slug &&
@@ -211,7 +210,7 @@ export class RoadmapService extends AgentsmithSupabaseService {
     })) as { data: RoadmapItemRow[] | null; error: any };
 
     if (error) {
-      this.logger.error('Error searching roadmap items', { error, searchTerm });
+      this.logger.error(error, 'Error searching roadmap items', { searchTerm });
       throw new Error(error.message);
     }
     return data || [];
@@ -224,7 +223,7 @@ export class RoadmapService extends AgentsmithSupabaseService {
       .eq('user_id', user_id);
 
     if (error) {
-      this.logger.error('Error getting user upvotes', { error });
+      this.logger.error(error, 'Error getting user upvotes');
       throw new Error(error.message);
     }
     return data || [];
@@ -242,8 +241,7 @@ export class RoadmapService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error) {
-      this.logger.error('Error getting user upvote for item', {
-        error,
+      this.logger.error(error, 'Error getting user upvote for item', {
         roadmap_item_id,
         user_id,
       });
@@ -265,7 +263,7 @@ export class RoadmapService extends AgentsmithSupabaseService {
       .single();
 
     if (error || !data) {
-      this.logger.error('Error creating or updating upvote', { error, payload });
+      this.logger.error(error, 'Error creating or updating upvote', { payload });
       throw new Error(error?.message || 'Failed to create/update upvote and no data returned.');
     }
     return data;
@@ -279,8 +277,7 @@ export class RoadmapService extends AgentsmithSupabaseService {
       .eq('user_id', user_id);
 
     if (error) {
-      this.logger.error('Error deleting upvote', {
-        error,
+      this.logger.error(error, 'Error deleting upvote', {
         roadmap_item_id,
         user_id,
       });

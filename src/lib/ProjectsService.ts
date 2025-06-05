@@ -26,7 +26,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error) {
-      this.logger.error('Error fetching project by uuid:', error);
+      this.logger.error(error, 'Error fetching project by uuid:');
       return null;
     }
 
@@ -41,7 +41,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error) {
-      this.logger.error('Error fetching project by id:', error);
+      this.logger.error(error, 'Error fetching project by id:');
       return null;
     }
 
@@ -59,7 +59,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (repoError) {
-      this.logger.error('Error fetching project repository for push event:', repoError);
+      this.logger.error(repoError, 'Error fetching project repository for push event:');
       return null;
     }
 
@@ -74,7 +74,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (repoError) {
-      this.logger.error('Error fetching project repository for project id:', repoError);
+      this.logger.error(repoError, 'Error fetching project repository for project id:');
       return null;
     }
 
@@ -88,7 +88,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .eq('id', projectRepositoryId);
 
     if (lockError) {
-      this.logger.error('Error locking project repository:', lockError);
+      this.logger.error(lockError, 'Error locking project repository:');
       throw new Error('Error locking project repository');
     }
   }
@@ -100,7 +100,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .eq('id', projectRepositoryId);
 
     if (unlockError) {
-      this.logger.error('Error unlocking project repository:', unlockError);
+      this.logger.error(unlockError, 'Error unlocking project repository:');
       throw new Error('Error unlocking project repository');
     }
   }
@@ -113,7 +113,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error) {
-      this.logger.error('Error fetching project globals:', error);
+      this.logger.error(error, 'Error fetching project globals:');
       return null;
     }
 
@@ -128,7 +128,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (error) {
-      this.logger.error('Error fetching project globals:', error);
+      this.logger.error(error, 'Error fetching project globals:');
       return null;
     }
 
@@ -143,7 +143,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (projectError) {
-      this.logger.error('Failed to get project for globals update:', projectError);
+      this.logger.error(projectError, 'Failed to get project for globals update:');
       throw new Error('Failed to get project for globals update');
     }
 
@@ -161,7 +161,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .eq('project_id', project.id);
 
     if (error) {
-      this.logger.error('Error updating project globals:', error);
+      this.logger.error(error, 'Error updating project globals:');
       throw new Error('Error updating project globals');
     }
   }
@@ -173,7 +173,7 @@ export class ProjectsService extends AgentsmithSupabaseService {
       .eq('project_id', projectId);
 
     if (error) {
-      this.logger.error('Error updating project globals sha:', error);
+      this.logger.error(error, 'Error updating project globals sha:');
       throw new Error('Error updating project globals sha');
     }
   }

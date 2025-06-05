@@ -62,7 +62,7 @@ export class EventsService extends AgentsmithSupabaseService {
     });
 
     if (error) {
-      this.logger.error('Error creating sync start event', error);
+      this.logger.error(error, 'Error creating sync start event');
       throw error;
     }
 
@@ -97,7 +97,7 @@ export class EventsService extends AgentsmithSupabaseService {
     });
 
     if (error) {
-      this.logger.error('Error creating sync complete event', error);
+      this.logger.error(error, 'Error creating sync complete event');
       throw error;
     }
 
@@ -108,6 +108,7 @@ export class EventsService extends AgentsmithSupabaseService {
     const { organizationId, projectId, source, details } = options;
 
     const description = EventsService.getDescription('SYNC_ERROR', source);
+    const destination = source === 'agentsmith' ? 'repo' : 'agentsmith';
 
     const { data, error } = await this.supabase.from('agentsmith_events').insert({
       organization_id: organizationId,
@@ -116,11 +117,15 @@ export class EventsService extends AgentsmithSupabaseService {
       name: 'Sync Error',
       severity: 'ERROR',
       description,
-      details,
+      details: {
+        ...details,
+        source,
+        destination,
+      },
     });
 
     if (error) {
-      this.logger.error('Error creating sync error event', error);
+      this.logger.error(error, 'Error creating sync error event');
       throw error;
     }
 
@@ -141,7 +146,7 @@ export class EventsService extends AgentsmithSupabaseService {
     });
 
     if (error) {
-      this.logger.error('Error creating alert event', error);
+      this.logger.error(error, 'Error creating alert event');
       throw error;
     }
 
@@ -156,7 +161,7 @@ export class EventsService extends AgentsmithSupabaseService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      this.logger.error('Error fetching events:', error);
+      this.logger.error(error, 'Error fetching events:');
       return [];
     }
 
@@ -176,7 +181,7 @@ export class EventsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error fetching event:', error);
+      this.logger.error(error, 'Error fetching event:');
       return null;
     }
 

@@ -72,7 +72,10 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
     });
 
     if (!response.ok) {
-      logger.error('/connect/openrouter: error fetching openrouter key', await response.text());
+      logger.error(
+        { err: await response.text() },
+        '/connect/openrouter: error fetching openrouter key',
+      );
       return NextResponse.redirect(
         new URL(routes.error('Failed to connect OpenRouter: API error'), request.url),
       );
@@ -80,7 +83,7 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
 
     const openrouterResponse = await response.json();
     if (!openrouterResponse.key) {
-      logger.error('/connect/openrouter: no key in response', openrouterResponse);
+      logger.error(openrouterResponse, '/connect/openrouter: no key in response');
       return NextResponse.redirect(
         new URL(routes.error('Failed to connect OpenRouter: No API key in response'), request.url),
       );
@@ -95,7 +98,7 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
     });
 
     if (!success) {
-      logger.error('/connect/openrouter: failed to save key to vault', vaultError);
+      logger.error(vaultError, '/connect/openrouter: failed to save key to vault');
       return NextResponse.redirect(
         new URL(routes.error('Failed to connect OpenRouter: Could not save API key'), request.url),
       );
@@ -104,7 +107,7 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
     logger.info('/connect/openrouter: successfully saved openrouter key');
     return NextResponse.redirect(new URL(routes.studio.home, request.url));
   } catch (error) {
-    logger.error('/connect/openrouter: unexpected error', error);
+    logger.error(error, '/connect/openrouter: unexpected error');
     return NextResponse.redirect(
       new URL(routes.error('Failed to connect OpenRouter: Unexpected error'), request.url),
     );

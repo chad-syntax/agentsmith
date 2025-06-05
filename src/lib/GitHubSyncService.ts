@@ -180,9 +180,32 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
 
       lockAcquired = true;
 
-      const syncChanges = await githubSyncInstance.executeSync();
+      const { syncChanges, actionPlan, agentsmithState, repoState, error } =
+        await githubSyncInstance.executeSync();
 
       const changesMade = syncChanges.length > 0;
+
+      if (error) {
+        await this.services.events.createSyncErrorEvent({
+          organizationId: projectRepository.organization_id,
+          projectId: projectRepository.project_id,
+          source,
+          details: {
+            error: error.message,
+            syncChanges,
+            actionPlan,
+            agentsmithState,
+            repoState,
+          },
+        });
+
+        return {
+          message: 'Error syncing project repository',
+          status: 'error',
+          changesMade,
+          error,
+        };
+      }
 
       if (changesMade) {
         // create PR if createdNewBranch is true and source is agentsmith
@@ -213,6 +236,9 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
             changesMade,
             pullRequestDetail,
             syncChanges,
+            actionPlan,
+            agentsmithState,
+            repoState,
           },
         });
 
@@ -241,6 +267,9 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
           changesMade,
           pullRequestDetail,
           syncChanges,
+          actionPlan,
+          agentsmithState,
+          repoState,
         },
       });
 
@@ -250,7 +279,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         changesMade,
       };
     } catch (error) {
-      this.logger.error('Error syncing project repository:', error);
+      this.logger.error(error, 'Error syncing project repository:');
 
       await this.services.events.createSyncErrorEvent({
         organizationId: projectRepository.organization_id,
@@ -259,6 +288,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         details: {
           pullRequestDetail,
           error: (error as Error).message,
+          source,
         },
       });
 
@@ -301,7 +331,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
           return pullRequests[0];
         }
       } catch (error) {
-        this.logger.error('Error fetching existing pull requests:', { owner, repo, error });
+        this.logger.error(error, 'Error fetching existing pull requests:', { owner, repo });
       }
     }
 
@@ -327,10 +357,9 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       }
       return null;
     } catch (error) {
-      this.logger.error('Error fetching existing pull requests:', {
+      this.logger.error(error, 'Error fetching existing pull requests:', {
         owner,
         repo,
-        error,
       });
       return null;
     }
@@ -363,10 +392,9 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       });
       this.logger.info(`Branch ${newBranchName} created successfully from ${baseBranch}`);
     } catch (error: any) {
-      this.logger.error(`Failed to create branch ${newBranchName}:`, {
+      this.logger.error(error, `Failed to create branch ${newBranchName}:`, {
         owner,
         repo,
-        error,
       });
       if (error.status === 422) {
         this.logger.warn(`Branch ${newBranchName} might already exist.`, {
@@ -409,12 +437,11 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       });
       return pr;
     } catch (error: any) {
-      this.logger.error('Failed to create pull request:', {
+      this.logger.error(error, 'Failed to create pull request:', {
         owner,
         repo,
         headBranch,
         baseBranch,
-        error,
       });
       if (error.status === 422 && error.message?.includes('No commits between')) {
         this.logger.warn('Pull request creation failed likely because there are no changes yet.', {
@@ -481,24 +508,27 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
           await applyLabel();
         } catch (createError: any) {
           this.logger.error(
+            createError,
             `Failed to create label '${AGENTSMITH_PR_LABEL}' or apply it after creation:`,
             {
               owner,
               repo,
               prNumber,
-              createError,
             },
           );
           // Don't fail sync if label creation/application fails after retry
         }
       } else {
         // Log other errors encountered when initially applying the label
-        this.logger.error(`Failed to apply label '${AGENTSMITH_PR_LABEL}' to PR #${prNumber}:`, {
-          owner,
-          repo,
-          prNumber,
+        this.logger.error(
           error,
-        });
+          `Failed to apply label '${AGENTSMITH_PR_LABEL}' to PR #${prNumber}:`,
+          {
+            owner,
+            repo,
+            prNumber,
+          },
+        );
         // Don't fail sync for other label application errors either
       }
     }
@@ -515,7 +545,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       });
       this.logger.info(`Deleted unused branch: ${branchName}`);
     } catch (deleteError) {
-      this.logger.error(`Failed to delete unused branch ${branchName}:`, deleteError);
+      this.logger.error(deleteError, `Failed to delete unused branch ${branchName}:`);
     }
   }
 }

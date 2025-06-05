@@ -10,6 +10,7 @@ import { GetEventByUuidResult } from '@/lib/EventsService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database } from '@/app/__generated__/supabase.types';
 import ReactDiffViewer from 'react-diff-viewer-continued-react19';
+import { isPromptLikeSyncChange, SyncChange } from '@/lib/sync/GitHubSyncInstance';
 
 type EventDetailPageProps = {
   event: NonNullable<GetEventByUuidResult>;
@@ -19,11 +20,6 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
   const { event } = props;
 
   const projectUuid = event.projects?.uuid; // Use optional chaining as project might not always be linked
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'MMM d, yyyy h:mm:ss.SSS a');
-  };
 
   const severityColor = (severity: Database['public']['Enums']['agentsmith_event_severity']) => {
     switch (severity) {
@@ -53,6 +49,8 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
   }
 
   const eventDetails = event.details as any; // TODO: harden type
+
+  const syncChanges = (eventDetails?.syncChanges ?? []) as SyncChange[];
 
   return (
     <div className="p-6">
@@ -108,7 +106,7 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
                     dateTime={new Date(event.created_at).toISOString()}
                     suppressHydrationWarning
                   >
-                    {formatDate(event.created_at)}
+                    {format(new Date(event.created_at), 'MMM d, yyyy h:mm:ss.SSS a')}
                   </time>
                 </P>
               </div>
@@ -145,24 +143,32 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
         </Card>
 
         <H2>Changes</H2>
-        {(eventDetails?.syncChanges ?? []).map((syncChange: any, index: number) => (
-          <Card key={`${syncChange.oldSha}-${syncChange.newSha}-${index}`}>
-            <CardHeader>
-              <CardTitle>
-                {syncChange.type} {syncChange.promptSlug}
-                {syncChange.promptVersion ? `@${syncChange.promptVersion}` : ''}
-                &nbsp;
-                <span className="text-accent">{syncChange.entity}</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ReactDiffViewer
-                oldValue={syncChange.oldContent ?? ''}
-                newValue={syncChange.newContent ?? ''}
-              />
-            </CardContent>
-          </Card>
-        ))}
+        {syncChanges.length === 0 && <P>No changes were made.</P>}
+        {syncChanges.map((syncChange, index) => {
+          const isPromptLike = isPromptLikeSyncChange(syncChange);
+
+          return (
+            <Card key={`${syncChange.oldSha}-${syncChange.newSha}-${index}`}>
+              <CardHeader>
+                <CardTitle>
+                  {syncChange.type}
+                  {isPromptLike && (
+                    <span className="text-primary">
+                      `${syncChange.promptSlug}@${syncChange.promptVersion}`
+                    </span>
+                  )}
+                  <span className="text-accent">{syncChange.entity}</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ReactDiffViewer
+                  oldValue={syncChange.oldContent ?? ''}
+                  newValue={syncChange.newContent ?? ''}
+                />
+              </CardContent>
+            </Card>
+          );
+        })}
 
         {process.env.VERCEL_ENV !== 'production' && (
           <Card className="shadow-sm">

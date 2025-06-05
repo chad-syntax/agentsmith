@@ -130,7 +130,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error fetching prompt version', error);
+      this.logger.error(error, 'Error fetching prompt version');
       return null;
     }
 
@@ -145,7 +145,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error fetching prompt by uuid:', error);
+      this.logger.error(error, 'Error fetching prompt by uuid:');
       return null;
     }
 
@@ -159,7 +159,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .eq('project_id', projectId);
 
     if (error) {
-      this.logger.error('Error fetching prompts:', error);
+      this.logger.error(error, 'Error fetching prompts:');
       return [];
     }
 
@@ -177,7 +177,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      this.logger.error('Error fetching prompt versions:', error);
+      this.logger.error(error, 'Error fetching prompt versions:');
       return [];
     }
 
@@ -191,7 +191,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .eq('prompt_id', promptId);
 
     if (error) {
-      this.logger.error('Error fetching prompt versions:', error);
+      this.logger.error(error, 'Error fetching prompt versions:');
       return null;
     }
 
@@ -229,7 +229,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error fetching prompt version:', error);
+      this.logger.error(error, 'Error fetching prompt version:');
       return null;
     }
 
@@ -243,7 +243,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .eq('project_id', projectId);
 
     if (error) {
-      this.logger.error('Error fetching prompts:', error);
+      this.logger.error(error, 'Error fetching prompts:');
       return [];
     }
 
@@ -265,7 +265,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error creating prompt:', error);
+      this.logger.error(error, 'Error creating prompt:');
       return null;
     }
 
@@ -283,7 +283,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error updating prompt:', error);
+      this.logger.error(error, 'Error updating prompt:');
       return null;
     }
 
@@ -312,7 +312,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (getPromptError || !promptData) {
-      this.logger.error('Error fetching prompt to create version:', getPromptError);
+      this.logger.error(getPromptError, 'Error fetching prompt to create version:');
       return null;
     }
 
@@ -335,7 +335,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error creating version:', error);
+      this.logger.error(error, 'Error creating version:');
       return null;
     }
 
@@ -357,7 +357,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .maybeSingle();
 
     if (versionError) {
-      this.logger.error('Error updating prompt version:', versionError);
+      this.logger.error(versionError, 'Error updating prompt version:');
       return null;
     }
 
@@ -375,8 +375,8 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     if (getPromptVersionError) {
       this.logger.error(
-        'Error fetching prompt version to create variables:',
         getPromptVersionError,
+        'Error fetching prompt version to create variables:',
       );
       return null;
     }
@@ -401,7 +401,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .select('*');
 
     if (createError) {
-      this.logger.error('Error creating prompt variables:', createError);
+      this.logger.error(createError, 'Error creating prompt variables:');
       return null;
     }
 
@@ -418,7 +418,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .eq('prompt.slug', promptSlug);
 
     if (getPromptError || !promptData) {
-      this.logger.error('Error fetching prompt variables:', getPromptError);
+      this.logger.error(getPromptError, 'Error fetching prompt variables:');
       return null;
     }
 
@@ -433,7 +433,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       .select('*');
 
     if (updateError) {
-      this.logger.error('Error updating prompt variables:', updateError);
+      this.logger.error(updateError, 'Error updating prompt variables:');
       return null;
     }
 
@@ -879,7 +879,7 @@ export class PromptsService extends AgentsmithSupabaseService {
 
       return { completion, logUuid: logEntry.uuid };
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error(error, 'Error calling OpenRouter API');
 
       await this.services.llmLogs.updateLogWithCompletion(logEntry.uuid, {
         error: String(error),
@@ -899,8 +899,8 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     if (error) {
       this.logger.error(
-        `Error fetching prompt by project ID ${projectId} and slug ${slug}:`,
         error,
+        `Error fetching prompt by project ID ${projectId} and slug ${slug}:`,
       );
       return null;
     }

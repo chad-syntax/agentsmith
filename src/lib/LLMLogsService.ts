@@ -36,7 +36,7 @@ export class LLMLogsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error creating log entry:', error);
+      this.logger.error(error, 'Error creating log entry:');
       return null;
     }
 
@@ -55,7 +55,7 @@ export class LLMLogsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error updating log entry:', error);
+      this.logger.error(error, 'Error updating log entry:');
       return null;
     }
 
@@ -70,7 +70,7 @@ export class LLMLogsService extends AgentsmithSupabaseService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      this.logger.error('Error fetching logs:', error);
+      this.logger.error(error, 'Error fetching logs:');
       return [];
     }
 
@@ -91,7 +91,7 @@ export class LLMLogsService extends AgentsmithSupabaseService {
       .single();
 
     if (error) {
-      this.logger.error('Error fetching log:', error);
+      this.logger.error(error, 'Error fetching log:');
       return null;
     }
 
