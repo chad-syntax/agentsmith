@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { format } from 'date-fns';
 import { ArrowLeft, ExternalLink } from 'lucide-react';
 import { routes } from '@/utils/routes';
 import { H1, H2, P } from '@/components/typography';
@@ -11,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database } from '@/app/__generated__/supabase.types';
 import ReactDiffViewer from 'react-diff-viewer-continued-react19';
 import { isPromptLikeSyncChange, SyncChange } from '@/lib/sync/GitHubSyncInstance';
+import { DisplayTime } from '@/components/display-time';
 
 type EventDetailPageProps = {
   event: NonNullable<GetEventByUuidResult>;
@@ -102,12 +102,10 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
               <div>
                 <P className="text-sm text-muted-foreground">Date</P>
                 <P className="font-medium">
-                  <time
-                    dateTime={new Date(event.created_at).toISOString()}
-                    suppressHydrationWarning
-                  >
-                    {format(new Date(event.created_at), 'MMM d, yyyy h:mm:ss.SSS a')}
-                  </time>
+                  <DisplayTime
+                    dateTime={event.created_at}
+                    formatString="MMM d, yyyy h:mm:ss.SSS a"
+                  />
                 </P>
               </div>
               <div>

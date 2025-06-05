@@ -9,15 +9,11 @@ import { compareSemanticVersions } from '@/utils/versioning';
 import { Button } from '@/components/ui/button';
 import { H1, H2, H3, P } from '@/components/typography';
 import { GetPromptsByProjectIdResult } from '@/lib/PromptsService';
-import { format } from 'date-fns';
+import { DisplayTime } from '@/components/display-time';
 
 type PromptsPageProps = {
   prompts: NonNullable<GetPromptsByProjectIdResult>;
   projectId: number;
-};
-
-const formatDate = (dateString: string) => {
-  return format(new Date(dateString), 'M/d/yy h:mma');
 };
 
 export const PromptsPage = (props: PromptsPageProps) => {
@@ -115,12 +111,10 @@ export const PromptsPage = (props: PromptsPageProps) => {
                     </div>
                     <span className="text-sm text-muted-foreground">
                       {latestVersion ? (
-                        <time
-                          dateTime={new Date(latestVersion.updated_at).toISOString()}
-                          suppressHydrationWarning
-                        >
-                          {formatDate(latestVersion.updated_at)}
-                        </time>
+                        <DisplayTime
+                          dateTime={latestVersion.updated_at}
+                          formatString="M/d/yy h:mma"
+                        />
                       ) : (
                         'No versions yet'
                       )}

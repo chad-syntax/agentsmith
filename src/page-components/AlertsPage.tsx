@@ -2,7 +2,6 @@
 
 import { GetAlertsResult } from '@/lib/AlertsService';
 import { H1, P } from '@/components/typography';
-import { format } from 'date-fns';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ import {
   TableRow,
   TableCell,
 } from '@/components/ui/table';
+import { DisplayTime } from '@/components/display-time';
 
 type AlertsPageProps = {
   alerts: GetAlertsResult;
@@ -31,12 +31,6 @@ export const AlertsPage = (props: AlertsPageProps) => {
   const { setUnreadAlertsCount } = useApp();
 
   const [alerts, setAlerts] = useState(initialAlerts);
-
-  // Format date for display
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'N/A';
-    return format(new Date(dateString), 'MMM d, yyyy h:mm a');
-  };
 
   const handleMarkAsRead = async (alertId: number) => {
     console.log(`Marking alert ${alertId} as read`);
@@ -95,12 +89,7 @@ export const AlertsPage = (props: AlertsPageProps) => {
                 return (
                   <TableRow key={alert.id} className="hover:bg-muted">
                     <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                      <time
-                        dateTime={new Date(alert.created_at).toISOString()}
-                        suppressHydrationWarning
-                      >
-                        {formatDate(alert.created_at)}
-                      </time>
+                      <DisplayTime dateTime={alert.created_at} formatString="MMM d, yyyy h:mm a" />
                     </TableCell>
                     <TableCell className="px-6 py-4 text-sm text-foreground whitespace-normal">
                       <div className="min-w-sm max-w-md break-words">{alert.title}</div>

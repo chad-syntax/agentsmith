@@ -6,6 +6,7 @@ import { StatusBadge } from './status-badge';
 import { RoadmapVoteCta } from './vote-cta';
 import { Badge } from '../ui/badge';
 import { RoadmapStatus } from '@/app/constants';
+import { DisplayTime } from '../display-time';
 
 type RoadmapItemCardProps = {
   item: RoadmapItem;
@@ -45,10 +46,7 @@ export const RoadmapItemCard = (props: RoadmapItemCardProps) => {
         <div className="text-xs text-muted-foreground">
           {item.created_at ? (
             <>
-              Added{' '}
-              <time dateTime={new Date(item.created_at).toISOString()} suppressHydrationWarning>
-                {new Date(item.created_at).toLocaleDateString()}
-              </time>
+              Added <DisplayTime dateTime={item.created_at} />
             </>
           ) : (
             'Date not available'

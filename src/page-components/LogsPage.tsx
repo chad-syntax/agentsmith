@@ -2,10 +2,8 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
 import { routes } from '@/utils/routes';
-import { H1, H2, P } from '@/components/typography';
-import { Button } from '@/components/ui/button';
+import { H1, P } from '@/components/typography';
 import { GetProjectDataResult } from '@/lib/ProjectsService';
 import { GetLogsByProjectIdResult } from '@/lib/LLMLogsService';
 import {
@@ -16,6 +14,7 @@ import {
   TableRow,
   TableCell,
 } from '@/components/ui/table';
+import { DisplayTime } from '@/components/display-time';
 
 type LogsPageProps = {
   project: GetProjectDataResult;
@@ -25,11 +24,6 @@ type LogsPageProps = {
 export const LogsPage = (props: LogsPageProps) => {
   const { project, logs } = props;
   const router = useRouter();
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'MMM d, yyyy h:mm a');
-  };
 
   if (!project) {
     return (
@@ -91,12 +85,7 @@ export const LogsPage = (props: LogsPageProps) => {
                   onClick={() => router.push(routes.studio.logDetail(project.uuid, log.uuid))}
                 >
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    <time
-                      dateTime={new Date(log.created_at).toISOString()}
-                      suppressHydrationWarning
-                    >
-                      {formatDate(log.created_at)}
-                    </time>
+                    <DisplayTime dateTime={log.created_at} formatString="MMM d, yyyy h:mm a" />
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap">
                     <span

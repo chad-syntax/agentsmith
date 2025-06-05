@@ -6,6 +6,7 @@ import { Info, CheckCircle, AlertCircle } from 'lucide-react';
 import { ElementType } from 'react';
 import { SyncProjectButton } from './sync-project-button';
 import { Alert, AlertTitle, AlertDescription } from './ui/alert';
+import { DisplayTime } from './display-time';
 
 export type SyncStatusAlertProps = {
   events: NonNullable<GetProjectDataResult>['agentsmith_events'];
@@ -66,9 +67,7 @@ export const SyncStatusAlert = (props: SyncStatusAlertProps) => {
       <AlertDescription>
         <div>
           <span>{alertDescription}</span>&nbsp;
-          <time dateTime={alertTime} suppressHydrationWarning>
-            {alertTime}
-          </time>
+          <DisplayTime dateTime={alertTime} />
         </div>
         <SyncProjectButton
           size="lg"

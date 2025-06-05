@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { format } from 'date-fns';
 import { ArrowLeft } from 'lucide-react';
 import { routes } from '@/utils/routes';
 import { H1, H2, P } from '@/components/typography';
 import { Button } from '@/components/ui/button';
 import { GetLogByUuidResult } from '@/lib/LLMLogsService';
 import { JsonEditor } from '@/components/editors/json-editor';
+import { DisplayTime } from '@/components/display-time';
 
 type LogDetailPageProps = {
   log: NonNullable<GetLogByUuidResult>;
@@ -15,11 +15,6 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
   const { log } = props;
 
   const projectUuid = log.projects.uuid;
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'MMM d, yyyy h:mm a');
-  };
 
   // Calculate duration if both start and end time exist
   const getDuration = (startTime: string, endTime: string | null) => {
@@ -95,18 +90,14 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
             <div>
               <P className="text-sm text-muted-foreground">Start Time</P>
               <P className="font-medium">
-                <time dateTime={new Date(log.start_time).toISOString()} suppressHydrationWarning>
-                  {formatDate(log.start_time)}
-                </time>
+                <DisplayTime dateTime={log.start_time} formatString="MMM d, yyyy h:mm a" />
               </P>
             </div>
             <div>
               <P className="text-sm text-muted-foreground">End Time</P>
               <P className="font-medium">
                 {log.end_time ? (
-                  <time dateTime={new Date(log.end_time).toISOString()} suppressHydrationWarning>
-                    {formatDate(log.end_time)}
-                  </time>
+                  <DisplayTime dateTime={log.end_time} formatString="MMM d, yyyy h:mm a" />
                 ) : (
                   'Still running'
                 )}

@@ -1,7 +1,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
 import { Check, X, AlertTriangle, Info, type LucideIcon, CircleFadingArrowUp } from 'lucide-react';
 import { routes } from '@/utils/routes';
 import { H1, P } from '@/components/typography';
@@ -15,6 +14,7 @@ import {
   TableRow,
   TableCell,
 } from '@/components/ui/table';
+import { DisplayTime } from '@/components/display-time';
 
 // Added event type to icon mapping
 const eventTypeToIconMap: Record<string, LucideIcon> = {
@@ -40,11 +40,6 @@ type EventsPageProps = {
 export const EventsPage = (props: EventsPageProps) => {
   const { project, events } = props;
   const router = useRouter();
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return format(new Date(dateString), 'MMM d, yyyy h:mm:ss.SSS a');
-  };
 
   if (!project) {
     return (
@@ -90,12 +85,10 @@ export const EventsPage = (props: EventsPageProps) => {
                   onClick={() => router.push(routes.studio.eventDetail(project.uuid, event.uuid))}
                 >
                   <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    <time
-                      dateTime={new Date(event.created_at).toISOString()}
-                      suppressHydrationWarning
-                    >
-                      {formatDate(event.created_at)}
-                    </time>
+                    <DisplayTime
+                      dateTime={event.created_at}
+                      formatString="MMM d, yyyy h:mm:ss.SSS a"
+                    />
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap">
                     <span
