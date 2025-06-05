@@ -259,7 +259,7 @@ export class PromptsService extends AgentsmithSupabaseService {
         project_id: projectId,
         slug,
         name,
-        sha,
+        last_sync_git_sha: sha,
       })
       .select('*')
       .single();
