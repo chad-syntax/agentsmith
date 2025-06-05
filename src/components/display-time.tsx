@@ -11,17 +11,11 @@ type DisplayTimeProps = {
 export const DisplayTime = (props: DisplayTimeProps) => {
   const { dateTime, formatString } = props;
 
-  const [isMounted, setIsMounted] = useState(false);
+  const [formattedDate, setFormattedDate] = useState(dateTime);
 
   useEffect(() => {
-    setIsMounted(true);
+    setFormattedDate(formatString ? format(new Date(dateTime), formatString) : dateTime);
   }, []);
 
-  const formattedDate = formatString ? format(new Date(dateTime), formatString) : dateTime;
-
-  return (
-    <time dateTime={dateTime} className={!isMounted ? 'opacity-0' : ''}>
-      {formattedDate}
-    </time>
-  );
+  return <time dateTime={dateTime}>{formattedDate}</time>;
 };
