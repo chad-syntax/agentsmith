@@ -142,7 +142,6 @@ export const AppProvider = (props: AppProviderProps) => {
           filter: `created_by=eq.${agentsmithUser.id}`,
         },
         (payload) => {
-          console.log('payload', payload);
           const record = payload.new;
 
           switch (record.type) {

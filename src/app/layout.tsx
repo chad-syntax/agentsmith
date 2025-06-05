@@ -47,8 +47,8 @@ export default function RootLayout(props: RootLayoutProps) {
             enableSystem
             disableTransitionOnChange
           >
-            {children}
             <Toaster expand visibleToasts={9} />
+            {children}
           </ThemeProvider>
         </body>
       </PostHogProvider>

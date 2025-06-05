@@ -95,8 +95,10 @@ export const ApiKeyReveal = (props: ApiKeyRevealProps) => {
     <div className="flex flex-col gap-2">
       <div className="flex justify-start">
         <div className="text-sm flex items-stretch bg-muted border rounded-md">
-          <div className="font-semibold border-r px-2 flex items-center">API Key</div>
-          <div className="font-mono flex items-center px-4 border-r">
+          <div className="font-semibold border-r dark:border-r-muted-foreground/60 px-2 flex items-center">
+            API Key
+          </div>
+          <div className="font-mono flex items-center px-4 border-r dark:border-r-muted-foreground/60">
             {isRevealed ? apiKey : 'sdk_••••••••••••••••••••••••••••••••'}
           </div>
           <div className="flex items-center gap-1">

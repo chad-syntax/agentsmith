@@ -15,12 +15,7 @@ import { fileDownload } from '@/utils/file-download';
 import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ApiKeyReveal } from '@/components/api-key-reveal';
-import Editor from 'react-simple-code-editor';
-import { highlight, languages } from 'prismjs';
-import 'prismjs/components/prism-markup-templating';
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/themes/prism.css';
+import { TypescriptEditor } from '@/components/editors/typescript-editor';
 
 export type ProjectPageProps = {
   projectData: NonNullable<GetProjectDataResult>;
@@ -62,7 +57,7 @@ export const ProjectPage = (props: ProjectPageProps) => {
   };
 
   const sampleSdkCodeContent = `
-// your-file.ts
+// src/file.ts
 import { AgentsmithClient } from '@agentsmith/sdk';
 import { Agency } from '../agentsmith/agentsmith.types';
 
@@ -78,6 +73,8 @@ const compiledPrompt = helloWorldPrompt.compile({
   const isConnected =
     projectData.project_repositories && projectData.project_repositories.length > 0;
 
+  const hasPrompts = projectData.prompts && projectData.prompts.length > 0;
+
   return (
     <>
       <ConnectProjectModal
@@ -87,30 +84,12 @@ const compiledPrompt = helloWorldPrompt.compile({
         }}
       />
       <div className="p-6">
-        <div className="flex gap-4 justify-start items-center mb-8">
+        <div className="flex gap-4 justify-start items-center mb-4">
           <H1>{projectData.name}</H1>
           <Link href={routes.studio.editProject(projectData.uuid)}>
             <Pencil className="w-6 h-6 text-muted-foreground" />
           </Link>
         </div>
-        <div className="mb-4">
-          <ApiKeyReveal organizationUuid={projectData.organizations.uuid} keyName="SDK_API_KEY" />
-        </div>
-        <div className="flex justify-start mb-4">
-          <div className="text-sm flex justify-start items-stretch bg-muted border rounded-md">
-            <div className="font-semibold border-r px-2 flex items-center">Project ID</div>
-            <div className="px-4 font-mono border-r flex items-center">{projectData.uuid}</div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleCopyProjectId}
-              className="hover:text-primary"
-            >
-              <Copy className="w-4 h-4 hover:text-primary" />
-            </Button>
-          </div>
-        </div>
-
         {isConnected && (
           <div className="mb-4 text-muted-foreground">
             {projectData.name} connected to{' '}
@@ -143,40 +122,7 @@ const compiledPrompt = helloWorldPrompt.compile({
             .
           </div>
         )}
-        <SyncStatusAlert isConnected={isConnected} events={projectData.agentsmith_events} />
-        {projectData.prompts && projectData.prompts.length > 0 && (
-          <div className="mt-6">
-            <H3>Prompts</H3>
-            <ul className="list-disc list-inside mt-2 mb-4">
-              {projectData.prompts.map((prompt) => (
-                <li key={prompt.uuid}>
-                  <Link
-                    href={routes.studio.promptDetail(projectData.uuid, prompt.uuid)}
-                    className="underline hover:text-primary"
-                  >
-                    {prompt.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-            <Alert variant="default">
-              <Info size={16} />
-              <AlertTitle>Types</AlertTitle>
-              <AlertDescription>
-                Prompt Types will automatically be written to your agentsmith folder during a Sync,
-                or you can download them here.
-                <Button
-                  onClick={handleDownloadTypesClick}
-                  size="lg"
-                  className="mt-2 bg-green-500 hover:bg-green-600 flex items-center gap-2"
-                >
-                  <FileCode size={16} />
-                  Download Types
-                </Button>
-              </AlertDescription>
-            </Alert>
-          </div>
-        )}
+
         <div className="mt-6">
           <H3>Getting Started with Agentsmith SDK</H3>
           <Alert variant="default" className="mt-2">
@@ -192,14 +138,30 @@ const compiledPrompt = helloWorldPrompt.compile({
           </Alert>
           <Alert variant="default" className="mt-4">
             <Info size={16} />
-            <AlertTitle>2. Get Your API Key</AlertTitle>
+            <AlertTitle>2. Get Your API Key and Project ID</AlertTitle>
             <AlertDescription>
               Get your API key from below or the organization settings page:
-              <div className="mt-2">
+              <div className="my-2">
                 <ApiKeyReveal
                   organizationUuid={projectData.organizations?.uuid || ''}
                   keyName="SDK_API_KEY"
                 />
+              </div>
+              <div className="text-sm flex justify-start items-stretch bg-muted border rounded-md">
+                <div className="font-semibold border-r dark:border-r-muted-foreground/60 px-2 flex items-center">
+                  Project ID
+                </div>
+                <div className="px-4 font-mono border-r dark:border-r-muted-foreground/60 flex items-center">
+                  {projectData.uuid}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleCopyProjectId}
+                  className="hover:text-primary"
+                >
+                  <Copy className="w-4 h-4 hover:text-primary" />
+                </Button>
               </div>
             </AlertDescription>
           </Alert>
@@ -222,17 +184,59 @@ const compiledPrompt = helloWorldPrompt.compile({
                     <Copy className="w-4 h-4" />
                   </Button>
                 </div>
-                <Editor
+                <TypescriptEditor
                   value={sampleSdkCodeContent}
                   onValueChange={() => {}}
-                  highlight={(code) => highlight(code, languages.typescript, 'typescript')}
-                  padding={0}
                   disabled
                   className="w-full"
+                  padding={0}
                 />
               </div>
             </AlertDescription>
           </Alert>
+        </div>
+
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div>
+            <SyncStatusAlert isConnected={isConnected} events={projectData.agentsmith_events} />
+          </div>
+          {hasPrompts && (
+            <div>
+              <Alert variant="default">
+                <Info size={16} />
+                <AlertTitle>Types</AlertTitle>
+                <AlertDescription>
+                  Prompt Types will automatically be written to your agentsmith folder during a
+                  Sync, or you can download them here.
+                  <Button
+                    onClick={handleDownloadTypesClick}
+                    size="lg"
+                    className="mt-2 bg-green-500 hover:bg-green-600 flex items-center gap-2"
+                  >
+                    <FileCode size={16} />
+                    Download Types
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+          {hasPrompts && (
+            <div>
+              <H3>Prompts</H3>
+              <ul className="list-disc list-inside mt-2 mb-4">
+                {projectData.prompts.map((prompt) => (
+                  <li key={prompt.uuid}>
+                    <Link
+                      href={routes.studio.promptDetail(projectData.uuid, prompt.uuid)}
+                      className="underline hover:text-primary"
+                    >
+                      {prompt.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
         <H3 className="mt-6">Global Context</H3>
         <GlobalsList globalContext={projectData.global_contexts?.content} />

@@ -64,10 +64,12 @@ export const SyncStatusAlert = (props: SyncStatusAlertProps) => {
       <IconComponent className="h-4 w-4" />
       <AlertTitle>{alertTitle}</AlertTitle>
       <AlertDescription>
-        <span>{alertDescription}</span>&nbsp;
-        <time dateTime={alertTime} suppressHydrationWarning>
-          {alertTime}
-        </time>
+        <div>
+          <span>{alertDescription}</span>&nbsp;
+          <time dateTime={alertTime} suppressHydrationWarning>
+            {alertTime}
+          </time>
+        </div>
         <SyncProjectButton
           size="lg"
           className="ml-0 mt-2 min-w-[128px]"
