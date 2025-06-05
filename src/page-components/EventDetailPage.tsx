@@ -150,11 +150,13 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
           return (
             <Card key={`${syncChange.oldSha}-${syncChange.newSha}-${index}`}>
               <CardHeader>
-                <CardTitle>
+                <CardTitle className="flex items-center gap-2">
                   {syncChange.type}
                   {isPromptLike && (
-                    <span className="text-primary">
-                      `${syncChange.promptSlug}@${syncChange.promptVersion}`
+                    <span>
+                      <span className="text-destructive">{syncChange.promptSlug}</span>
+                      <span className="px-0.5">@</span>
+                      {syncChange.promptVersion}
                     </span>
                   )}
                   <span className="text-accent">{syncChange.entity}</span>
