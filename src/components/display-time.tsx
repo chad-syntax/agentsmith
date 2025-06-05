@@ -11,7 +11,7 @@ type DisplayTimeProps = {
 export const DisplayTime = (props: DisplayTimeProps) => {
   const { dateTime, formatString } = props;
 
-  const [formattedDate, setFormattedDate] = useState(dateTime);
+  const [formattedDate, setFormattedDate] = useState('');
 
   useEffect(() => {
     setFormattedDate(formatString ? format(new Date(dateTime), formatString) : dateTime);
