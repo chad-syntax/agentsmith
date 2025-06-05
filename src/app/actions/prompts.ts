@@ -9,6 +9,7 @@ import {
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { ActionResponse } from '@/types/action-response';
 import { createErrorResponse, createSuccessResponse } from '@/utils/action-helpers';
+import { revalidatePath } from 'next/cache';
 
 export async function updatePromptVersion(
   options: UpdatePromptVersionOptions,
@@ -18,6 +19,10 @@ export async function updatePromptVersion(
 
   try {
     await services.prompts.updatePromptVersion(options);
+
+    // revalidate the prompt detail page and edit version page
+    revalidatePath(`/studio/project/[projectUuid]/prompts/${options.promptVersionUuid}`, 'page');
+
     return createSuccessResponse(undefined, 'Prompt version updated successfully.');
   } catch (error) {
     logger.error('Error updating prompt version:', error);
