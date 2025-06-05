@@ -114,6 +114,8 @@ export const AppProvider = (props: AppProviderProps) => {
   const [isOrganizationAdmin, setIsOrganizationAdmin] = useState(initialIsOrganizationAdmin);
   const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
 
+  const callToast = () => toast;
+
   useEffect(() => {
     if (!agentsmithUser) {
       return;
@@ -146,7 +148,7 @@ export const AppProvider = (props: AppProviderProps) => {
 
           switch (record.type) {
             case 'SYNC_START':
-              const syncStartedToastId = toast('Sync Started', {
+              const syncStartedToastId = callToast()('Sync Started', {
                 description: `Sync started for project ${selectedProject?.name ?? '...'}`,
                 action: (
                   <Button
@@ -155,7 +157,7 @@ export const AppProvider = (props: AppProviderProps) => {
                     variant="link"
                     className="ml-auto"
                     onClick={() => {
-                      toast.dismiss(syncStartedToastId);
+                      callToast().dismiss(syncStartedToastId);
                     }}
                   >
                     <Link
@@ -168,7 +170,7 @@ export const AppProvider = (props: AppProviderProps) => {
               });
               break;
             case 'SYNC_COMPLETE':
-              const syncCompletedToastId = toast.success('Sync Completed', {
+              const syncCompletedToastId = callToast().success('Sync Completed', {
                 description: `Sync finished successfully for project ${selectedProject?.name ?? '...'}`,
                 action: (
                   <Button
@@ -177,7 +179,7 @@ export const AppProvider = (props: AppProviderProps) => {
                     variant="link"
                     className="ml-auto"
                     onClick={() => {
-                      toast.dismiss(syncCompletedToastId);
+                      callToast().dismiss(syncCompletedToastId);
                     }}
                   >
                     <Link
@@ -190,7 +192,7 @@ export const AppProvider = (props: AppProviderProps) => {
               });
               break;
             case 'SYNC_ERROR':
-              const syncErrorToastId = toast.error('Sync Failed', {
+              const syncErrorToastId = callToast().error('Sync Failed', {
                 description: `Sync failed for project ${selectedProject?.name ?? '...'}. Check logs for details.`,
                 duration: 10000,
                 action: (
@@ -200,7 +202,7 @@ export const AppProvider = (props: AppProviderProps) => {
                     size="sm"
                     className="ml-auto"
                     onClick={() => {
-                      toast.dismiss(syncErrorToastId);
+                      callToast().dismiss(syncErrorToastId);
                     }}
                   >
                     <Link
@@ -224,7 +226,7 @@ export const AppProvider = (props: AppProviderProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, agentsmithUser?.id, selectedProject?.name]);
+  }, [supabase, agentsmithUser?.id, selectedProject?.name, callToast]);
 
   const setSelectedOrganizationUuid = (uuid: string) => {
     _setSelectedOrganizationUuid(uuid);
@@ -269,14 +271,14 @@ export const AppProvider = (props: AppProviderProps) => {
     );
 
     if (isGithubAppInstalled) {
-      const toastId = toast(title, {
+      const toastId = callToast()(title, {
         description: description ?? 'Would you like to sync your project?',
         duration: 6000,
         action: (
           <SyncProjectButton
             projectUuid={selectedProjectUuid}
             onSyncComplete={() => {
-              toast.dismiss(toastId);
+              callToast().dismiss(toastId);
             }}
           />
         ),
