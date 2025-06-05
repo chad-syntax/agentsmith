@@ -166,6 +166,6 @@ This will remove the symbolic links and restore the normal package resolution.
 - [ ] Add background check for latest prompts in db and hold in memory
 - [ ] Add memoization for prompts to reduce calls to fs/db
 - [ ] Reduce request blocking by enqueing log saving requests (background queue)
-- [ ] Improved Error handling and logging
+- [ ] Improved Error handling and logging (reject bad api key)
 - [ ] Support streaming
 - [ ] Support Tool Calling
