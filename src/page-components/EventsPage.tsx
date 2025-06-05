@@ -1,12 +1,10 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { Play, Check, X, AlertTriangle, Info, type LucideIcon } from 'lucide-react';
+import { Check, X, AlertTriangle, Info, type LucideIcon, CircleFadingArrowUp } from 'lucide-react';
 import { routes } from '@/utils/routes';
-import { H1, H2, P } from '@/components/typography';
-import { Button } from '@/components/ui/button';
+import { H1, P } from '@/components/typography';
 import { GetProjectDataResult } from '@/lib/ProjectsService';
 import { GetEventsByProjectIdResult } from '@/lib/EventsService';
 import {
@@ -20,7 +18,7 @@ import {
 
 // Added event type to icon mapping
 const eventTypeToIconMap: Record<string, LucideIcon> = {
-  SYNC_START: Play,
+  SYNC_START: CircleFadingArrowUp,
   SYNC_COMPLETE: Check,
   SYNC_ERROR: X,
   ALERT: AlertTriangle,

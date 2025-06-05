@@ -53,7 +53,11 @@ export const SyncProjectButton = (props: SyncProjectButtonProps) => {
       onClick={handleClick}
       disabled={loading}
     >
-      {loading ? <RefreshCcw className="animate-spin" size={16} /> : (children ?? 'Sync')}
+      {loading ? (
+        <RefreshCcw className="animate-[spin_2s_linear_infinite_reverse]" size={16} />
+      ) : (
+        (children ?? 'Sync')
+      )}
     </Button>
   );
 };

@@ -29,8 +29,8 @@
   --color-pink-400: #ff007f;
 
   /* Oranges */
-  --color-orange-500: #d48900;
-  --color-orange-400: #ffbf00;
+  --color-orange-500: #ff6a00;
+  --color-orange-400: #fb8500;
 }
 
 @theme {
@@ -43,7 +43,7 @@
   --color-secondary-foreground: var(--color-white);
   --color-muted: var(--color-gray-50);
   --color-muted-foreground: var(--color-gray-300);
-  --color-accent: var(--color-orange-500);
+  --color-accent: var(--color-orange-400);
   --color-accent-foreground: var(--color-white);
   --color-destructive: var(--color-red-500);
   --color-destructive-foreground: var(--color-white);
@@ -96,11 +96,11 @@
     --color-secondary-foreground: var(--color-gray-500);
     --color-muted: var(--color-gray-400);
     --color-muted-foreground: var(--color-gray-200);
-    --color-accent: var(--color-orange-400);
-    --color-accent-foreground: var(--color-gray-500);
+    --color-accent: var(--color-orange-500);
+    --color-accent-foreground: var(--color-gray-50);
     --color-destructive: var(--color-red-400);
     --color-destructive-foreground: var(--color-gray-500);
-    --color-warning: var(--color-orange-400);
+    --color-warning: var(--color-orange-500);
     --color-warning-foreground: var(--color-gray-500);
     --color-border: var(--color-gray-400);
     --color-input: var(--color-gray-300);

@@ -47,15 +47,15 @@ export const ThemeSwitcher = () => {
       <DropdownMenuContent className="w-content" align="start">
         <DropdownMenuRadioGroup value={theme} onValueChange={(e) => setTheme(e)}>
           <DropdownMenuRadioItem className="flex gap-2 cursor-pointer" value="light">
-            <Sun size={ICON_SIZE} className="text-muted-foreground" />
+            <Sun size={ICON_SIZE} />
             <span>Light</span>
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem className="flex gap-2 cursor-pointer" value="dark">
-            <Moon size={ICON_SIZE} className="text-muted-foreground" />
+            <Moon size={ICON_SIZE} />
             <span>Dark</span>
           </DropdownMenuRadioItem>
           <DropdownMenuRadioItem className="flex gap-2 cursor-pointer" value="system">
-            <Laptop size={ICON_SIZE} className="text-muted-foreground" />
+            <Laptop size={ICON_SIZE} />
             <span>System</span>
           </DropdownMenuRadioItem>
         </DropdownMenuRadioGroup>

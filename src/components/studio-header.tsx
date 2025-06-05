@@ -141,8 +141,8 @@ export const StudioHeader = () => {
                             className="flex items-center gap-2"
                             key={item.slug}
                           >
-                            <DropdownMenuItem className="w-full cursor-pointer">
-                              <item.icon className="h-4 w-4" />
+                            <DropdownMenuItem className="w-full cursor-pointer group">
+                              <item.icon className="h-4 w-4 text-foreground group-hover:text-accent-foreground" />
                               {item.name}
                             </DropdownMenuItem>
                           </Link>

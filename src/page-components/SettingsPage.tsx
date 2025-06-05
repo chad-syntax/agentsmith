@@ -105,7 +105,7 @@ export const SettingsPage = (props: SettingsPageProps) => {
                     </div>
                   ) : (
                     <Button
-                      className="text-xs text-accent hover:text-accent"
+                      className="text-xs text-primary hover:text-primary"
                       variant="outline"
                       onClick={() => {
                         setTargetRepositoryId(projectRepository.id);

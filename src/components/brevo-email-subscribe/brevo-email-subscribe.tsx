@@ -161,6 +161,7 @@ export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
               id="OPT_IN"
               name="OPT_IN"
               value="1"
+              checked
               className="border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary" // Adjusted styling
             />
             <Label

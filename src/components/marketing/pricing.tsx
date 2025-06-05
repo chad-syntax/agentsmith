@@ -118,7 +118,7 @@ const PricingCardItem = (props: PricingCardProps) => {
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-card-foreground">{card.title}</h3>
           {card.isRecommended && (
-            <div className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground">
+            <div className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground dark:text-card">
               RECOMMENDED
             </div>
           )}
@@ -128,7 +128,7 @@ const PricingCardItem = (props: PricingCardProps) => {
           {card.isDiscounted ? (
             <>
               <span className="line-through text-muted-foreground text-sm">{card.price}</span>
-              <span className="ml-1 text-primary">{card.discountedPrice}</span>
+              <span className="ml-1 text-accent">{card.discountedPrice}</span>
             </>
           ) : (
             <span>{card.price}</span>
@@ -140,7 +140,7 @@ const PricingCardItem = (props: PricingCardProps) => {
           )}
         </div>
         {card.highlightText && (
-          <p className="text-sm text-primary font-medium mt-2">{card.highlightText}</p>
+          <p className="text-sm text-accent font-medium mt-2">{card.highlightText}</p>
         )}
       </CardHeader>
       <CardContent className="mt-2">
@@ -149,7 +149,7 @@ const PricingCardItem = (props: PricingCardProps) => {
           {card.features.map((feature, index) => (
             <li key={index} className="flex items-center">
               <CheckCircle2
-                className={`h-4 w-4 mr-2 ${feature.isPrimary ? 'text-primary' : 'text-muted-foreground'}`}
+                className={`h-4 w-4 mr-2 ${feature.isPrimary ? 'text-muted-foreground' : 'text-gray-200'}`}
               />
               <span>{feature.text}</span>
             </li>
