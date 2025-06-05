@@ -52,8 +52,6 @@ import {
   RepoUpdateGlobalsAction,
   isRepoCreateAgentsmithTypesAction,
   isRepoUpdateAgentsmithTypesAction,
-  RepoCreateAgentsmithTypesAction,
-  RepoUpdateAgentsmithTypesAction,
 } from './sync-actions';
 import {
   generatePromptJsonContent,

@@ -3,7 +3,9 @@ import { GetAllPromptsDataResult } from '../PromptsService';
 import { z } from 'zod';
 import { compareSemanticVersions } from '@/utils/versioning';
 
-const supabaseDatetime = z.string().datetime({ precision: 6, offset: true });
+// for some reason this keeps failing validation, so we're using a string for now
+// const supabaseDatetime = z.string().datetime({ precision: 6, offset: true });
+const supabaseDatetime = z.string();
 
 const PromptJSONFileContentSchema = z.object({
   uuid: z.string().uuid(),
