@@ -71,45 +71,53 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <P className="text-sm text-muted-foreground">Project</P>
-              <P className="font-medium">{log.projects.name}</P>
+              <div className="mt-2 font-medium">{log.projects.name}</div>
             </div>
             <div>
               <P className="text-sm text-muted-foreground">Status</P>
-              <P>
-                <span
-                  className={`px-2 py-1 text-xs font-semibold rounded-full ${
+              <div className="mt-2 font-medium">
+                <div
+                  className={`px-2 py-1 text-xs font-semibold rounded-full inline-block ${
                     log.end_time
                       ? 'border border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400'
                       : 'border border-yellow-500/50 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400'
                   }`}
                 >
                   {log.end_time ? 'Completed' : 'Running'}
-                </span>
-              </P>
+                </div>
+              </div>
             </div>
             <div>
               <P className="text-sm text-muted-foreground">Start Time</P>
-              <P className="font-medium">
-                <DisplayTime dateTime={log.start_time} formatString="MMM d, yyyy h:mm a" />
-              </P>
+              <div className="mt-2 font-medium">
+                <DisplayTime
+                  skeletonClassName="h-[24px]"
+                  dateTime={log.start_time}
+                  formatString="MMM d, yyyy h:mm a"
+                />
+              </div>
             </div>
             <div>
               <P className="text-sm text-muted-foreground">End Time</P>
-              <P className="font-medium">
+              <div className="mt-2 font-medium">
                 {log.end_time ? (
-                  <DisplayTime dateTime={log.end_time} formatString="MMM d, yyyy h:mm a" />
+                  <DisplayTime
+                    skeletonClassName="h-[24px]"
+                    dateTime={log.end_time}
+                    formatString="MMM d, yyyy h:mm a"
+                  />
                 ) : (
                   'Still running'
                 )}
-              </P>
+              </div>
             </div>
             <div>
               <P className="text-sm text-muted-foreground">Duration</P>
-              <P className="font-medium">{getDuration(log.start_time, log.end_time)}</P>
+              <div className="mt-2 font-medium">{getDuration(log.start_time, log.end_time)}</div>
             </div>
             <div>
               <P className="text-sm text-muted-foreground">Prompt</P>
-              <P className="font-medium">
+              <div className="mt-2 font-medium">
                 {log.prompt_versions ? (
                   <>
                     {log.prompt_versions.prompts?.uuid && log.prompt_versions.prompts?.name ? (
@@ -143,7 +151,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
                 ) : (
                   'N/A'
                 )}
-              </P>
+              </div>
             </div>
           </div>
         </div>

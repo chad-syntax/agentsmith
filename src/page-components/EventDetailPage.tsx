@@ -77,45 +77,46 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <P className="text-sm text-muted-foreground">Project</P>
-                <P className="font-medium">{event.projects?.name || 'N/A'}</P>
+                <div className="mt-2 font-medium">{event.projects?.name || 'N/A'}</div>
               </div>
               <div>
                 <P className="text-sm text-muted-foreground">Type</P>
-                <P className="font-medium">{event.type}</P>
+                <div className="mt-2 font-medium">{event.type}</div>
               </div>
               <div>
                 <P className="text-sm text-muted-foreground">Name</P>
-                <P className="font-medium">{event.name}</P>
+                <div className="mt-2 font-medium">{event.name}</div>
               </div>
               <div>
                 <P className="text-sm text-muted-foreground">Severity</P>
-                <P>
-                  <span
-                    className={`px-2 py-1 text-xs font-semibold rounded-full ${severityColor(
+                <div className="mt-2 font-medium">
+                  <div
+                    className={`px-2 py-1 text-xs font-semibold rounded-full inline-block ${severityColor(
                       event.severity,
                     )}`}
                   >
                     {event.severity}
-                  </span>
-                </P>
+                  </div>
+                </div>
               </div>
               <div>
                 <P className="text-sm text-muted-foreground">Date</P>
-                <P className="font-medium">
+                <div className="mt-2 font-medium">
                   <DisplayTime
                     dateTime={event.created_at}
                     formatString="MMM d, yyyy h:mm:ss.SSS a"
+                    skeletonClassName="h-[24px] w-[250px]"
                   />
-                </P>
+                </div>
               </div>
               <div>
                 <P className="text-sm text-muted-foreground">Description</P>
-                <P className="font-medium">{event.description}</P>
+                <div className="mt-2 font-medium">{event.description}</div>
               </div>
               {eventDetails?.pullRequestDetail?.htmlUrl && (
                 <div className="text-blue-500">
                   <P className="text-sm text-muted-foreground">Pull Request</P>
-                  <P>
+                  <div className="mt-2 font-medium">
                     <a
                       target="_blank"
                       rel="noopener noreferrer"
@@ -125,15 +126,15 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
                       View Pull Request (#{eventDetails.pullRequestDetail.number})
                       <ExternalLink className="w-4 h-4 ml-2" />
                     </a>
-                  </P>
+                  </div>
                 </div>
               )}
               {eventDetails?.source && eventDetails?.destination && (
                 <div>
                   <P className="text-sm text-muted-foreground">Source → Destination</P>
-                  <P>
+                  <div className="mt-2 font-medium">
                     {eventDetails.source} → {eventDetails.destination}
-                  </P>
+                  </div>
                 </div>
               )}
             </div>

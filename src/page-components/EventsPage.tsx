@@ -88,6 +88,7 @@ export const EventsPage = (props: EventsPageProps) => {
                     <DisplayTime
                       dateTime={event.created_at}
                       formatString="MMM d, yyyy h:mm:ss.SSS a"
+                      skeletonClassName="h-[20px] w-[227px]"
                     />
                   </TableCell>
                   <TableCell className="px-6 py-4 whitespace-nowrap">

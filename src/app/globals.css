@@ -84,6 +84,9 @@
 
   /* Transitions */
   --ease-fluid: cubic-bezier(0.3, 0, 0, 1);
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.2s ease-in-out;
 }
 
 @layer base {
@@ -120,24 +123,14 @@
   }
 }
 
-@keyframes accordion-down {
+@keyframes fade-in {
   from {
-    height: 0;
+    opacity: 0;
   }
   to {
-    height: var(--radix-accordion-content-height);
+    opacity: 1;
   }
 }
-
-@keyframes accordion-up {
-  from {
-    height: var(--radix-accordion-content-height);
-  }
-  to {
-    height: 0;
-  }
-}
-
 html {
   scroll-behavior: smooth;
 }
