@@ -22,14 +22,10 @@ describe('extractTemplateVariables', () => {
         expect.objectContaining({
           name: 'name',
           type: 'STRING',
-          required: true,
-          default_value: null,
         }),
         expect.objectContaining({
           name: 'weather',
           type: 'STRING',
-          required: true,
-          default_value: null,
         }),
       ]),
     );
@@ -53,14 +49,10 @@ describe('extractTemplateVariables', () => {
         expect.objectContaining({
           name: 'hungry',
           type: 'STRING',
-          required: true,
-          default_value: null,
         }),
         expect.objectContaining({
           name: 'tired',
           type: 'STRING',
-          required: true,
-          default_value: null,
         }),
       ]),
     );
@@ -80,15 +72,11 @@ describe('extractTemplateVariables', () => {
         expect.objectContaining({
           name: 'user',
           type: 'JSON',
-          required: true,
-          default_value: null,
           children: [expect.objectContaining({ name: 'name', type: 'STRING' })],
         }),
         expect.objectContaining({
           name: 'settings',
           type: 'JSON',
-          required: true,
-          default_value: null,
           children: [
             expect.objectContaining({
               name: 'theme',
@@ -123,14 +111,10 @@ describe('extractTemplateVariables', () => {
       expect.objectContaining({
         name: 'items',
         type: 'JSON',
-        required: true,
-        default_value: null,
         children: expect.arrayContaining([
           expect.objectContaining({
             name: 'title',
             type: 'STRING',
-            required: true,
-            default_value: null,
           }),
         ]),
       }),
@@ -141,14 +125,10 @@ describe('extractTemplateVariables', () => {
       expect.objectContaining({
         name: 'users_collection',
         type: 'JSON',
-        required: true,
-        default_value: null,
         children: expect.arrayContaining([
           expect.objectContaining({
             name: 'name',
             type: 'STRING',
-            required: true,
-            default_value: null,
           }),
         ]),
       }),
@@ -159,8 +139,6 @@ describe('extractTemplateVariables', () => {
       expect.objectContaining({
         name: 'other_var',
         type: 'STRING',
-        required: true,
-        default_value: null,
       }),
     );
 
@@ -192,20 +170,14 @@ describe('extractTemplateVariables', () => {
             expect.objectContaining({
               name: 'isAdmin',
               type: 'STRING',
-              required: true,
-              default_value: null,
             }),
             expect.objectContaining({
               name: 'roles',
               type: 'JSON',
-              required: true,
-              default_value: null,
               children: expect.arrayContaining([
                 expect.objectContaining({
                   name: 'name',
                   type: 'STRING',
-                  required: true,
-                  default_value: null,
                 }),
               ]),
             }),
@@ -218,8 +190,6 @@ describe('extractTemplateVariables', () => {
             expect.objectContaining({
               name: 'theme',
               type: 'STRING',
-              required: true,
-              default_value: null,
             }),
           ],
         }),
@@ -269,20 +239,14 @@ describe('extractTemplateVariables', () => {
             expect.objectContaining({
               name: 'name',
               type: 'STRING',
-              required: true,
-              default_value: null,
             }),
             expect.objectContaining({
               name: 'items',
               type: 'JSON',
-              required: true,
-              default_value: null,
               children: expect.arrayContaining([
                 expect.objectContaining({
                   name: 'title',
                   type: 'STRING',
-                  required: true,
-                  default_value: null,
                 }),
               ]),
             }),
@@ -346,14 +310,10 @@ describe('extractTemplateVariables', () => {
         expect.objectContaining({
           name: 'name',
           type: 'STRING',
-          required: true,
-          default_value: null,
         }),
         expect.objectContaining({
           name: 'age',
           type: 'STRING',
-          required: true,
-          default_value: null,
         }),
       ]),
     );
@@ -368,14 +328,10 @@ describe('extractTemplateVariables', () => {
     expect(userVar).toEqual({
       name: 'user',
       type: 'JSON',
-      required: true,
-      default_value: null,
       children: [
         {
           name: 'first_name',
           type: 'STRING',
-          required: true,
-          default_value: null,
         },
       ],
     });
@@ -390,20 +346,14 @@ describe('extractTemplateVariables', () => {
     expect(accountVar).toEqual({
       name: 'account',
       type: 'JSON',
-      required: true,
-      default_value: null,
       children: [
         {
           name: 'settings',
           type: 'JSON',
-          required: true,
-          default_value: null,
           children: [
             {
               name: 'theme',
               type: 'STRING',
-              required: true,
-              default_value: null,
             },
           ],
         },
@@ -421,24 +371,18 @@ describe('extractTemplateVariables', () => {
     expect(greetingVar).toEqual({
       name: 'greeting',
       type: 'STRING',
-      required: true,
-      default_value: null,
     });
 
     const userVar = variables.find((v) => v.name === 'user');
     expect(userVar).toEqual({
       name: 'user',
       type: 'JSON',
-      required: true,
-      default_value: null,
       children: [
-        { name: 'name', type: 'STRING', required: true, default_value: null },
+        { name: 'name', type: 'STRING' },
         {
           name: 'location',
           type: 'JSON',
-          required: true,
-          default_value: null,
-          children: [{ name: 'city', type: 'STRING', required: true, default_value: null }],
+          children: [{ name: 'city', type: 'STRING' }],
         },
       ],
     });
@@ -456,14 +400,10 @@ describe('extractTemplateVariables', () => {
       expect.objectContaining({
         name: 'items_collection_new',
         type: 'JSON',
-        required: true,
-        default_value: null,
         children: expect.arrayContaining([
           expect.objectContaining({
             name: 'name',
             type: 'STRING',
-            required: true,
-            default_value: null,
           }),
         ]),
       }),
