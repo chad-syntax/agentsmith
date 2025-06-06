@@ -9,8 +9,6 @@ export type ParsedVariable = {
   id?: number;
   name: string;
   type: Database['public']['Enums']['variable_type'];
-  required: boolean;
-  default_value: string | null;
   children?: ParsedVariable[];
 };
 
@@ -23,8 +21,6 @@ const createParsedVariable = (
 ): ParsedVariable => ({
   name,
   type,
-  required: true,
-  default_value: null,
 });
 
 class TemplateVariablesExtractor {
@@ -443,7 +439,7 @@ export const compilePrompt = (
 };
 
 export const validateVariables = (
-  variables: ParsedVariable[],
+  variables: Database['public']['Tables']['prompt_variables']['Row'][],
   variablesToCheck: Record<string, string | number | boolean>,
 ): {
   missingRequiredVariables: ParsedVariable[];

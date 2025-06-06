@@ -20,12 +20,14 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ParsedVariable } from '@/utils/template-utils';
+import { Database } from '@/app/__generated__/supabase.types';
+import { JsonEditor } from '../editors/json-editor';
+import { cn } from '@/utils/shadcn';
 
 type PromptTestModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  variables: ParsedVariable[];
+  variables: Database['public']['Tables']['prompt_variables']['Row'][];
   promptVersionUuid: string;
 };
 
@@ -130,7 +132,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-[calc(90%-2rem)] 2xl:max-w-[calc(66%-4rem)]">
         <DialogHeader>
           <DialogTitle>Test Prompt</DialogTitle>
           <DialogDescription>
@@ -138,15 +140,14 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[70vh]">
-          <div className="space-y-6">
-            {/* Input section */}
-            <div className="space-y-4">
+          <div className="flex-col md:flex-row flex gap-4">
+            <div className="flex-1 space-y-4">
               <h3 className="font-medium text-lg">Input Variables</h3>
               {variables.map((variable) => (
                 <div key={variable.id || variable.name} className="space-y-2">
-                  <Label>
+                  <Label className="ml-1.5 gap-1 flex items-start">
                     {variable.name}
-                    {variable.required && <span className="text-destructive">*</span>}
+                    {variable.required && <span className="text-destructive -mt-0.5">*</span>}
                   </Label>
                   <div className="px-1">
                     <Input
@@ -186,27 +187,24 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
               </div>
             </div>
 
-            {/* Results section */}
-            {testResult && (
-              <div className="pt-4 border-t">
-                <h3 className="font-medium text-lg mb-4">Test Results</h3>
-
-                {fullResult?.logUuid && (
-                  <Alert className="mb-4">
-                    <AlertDescription className="flex justify-between items-center">
-                      <span>View detailed logs and information</span>
-                      <Button variant="link" asChild className="p-0">
-                        <Link
-                          href={routes.studio.logDetail(selectedProjectUuid, fullResult.logUuid)}
-                          target="_blank"
-                        >
-                          View Log →
-                        </Link>
-                      </Button>
-                    </AlertDescription>
-                  </Alert>
-                )}
-
+            <div className="flex-1">
+              <h3 className="font-medium text-lg mb-4">Test Results</h3>
+              {fullResult?.logUuid && (
+                <Alert className="mb-4">
+                  <AlertDescription className="flex justify-between items-center">
+                    <span>View detailed execution log</span>
+                    <Button variant="link" asChild className="p-0">
+                      <Link
+                        href={routes.studio.logDetail(selectedProjectUuid, fullResult.logUuid)}
+                        target="_blank"
+                      >
+                        View Log →
+                      </Link>
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              )}
+              {fullResult ? (
                 <Card className="mb-4">
                   <CardHeader>
                     <CardTitle>Response</CardTitle>
@@ -217,30 +215,27 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
                     </div>
                   </CardContent>
                 </Card>
-
-                <div>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setShowRawOutput(!showRawOutput)}
-                    className="flex items-center gap-1 h-auto p-0 mb-2"
-                  >
-                    {showRawOutput ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    <span className="text-sm font-medium">Raw Output</span>
-                  </Button>
-
-                  {showRawOutput && (
-                    <Card className="bg-muted">
-                      <CardContent className="p-0">
-                        <pre className="overflow-auto text-sm font-mono p-4 whitespace-pre-wrap break-all">
-                          {JSON.stringify(fullResult, null, 2)}
-                        </pre>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </div>
-            )}
+              ) : (
+                <Card className="text-center">
+                  <CardContent>Results will appear here.</CardContent>
+                </Card>
+              )}
+            </div>
           </div>
+          {fullResult && (
+            <div>
+              <Button
+                variant="ghost"
+                onClick={() => setShowRawOutput(!showRawOutput)}
+                className="flex items-center gap-1 h-auto p-0 mb-2"
+              >
+                {showRawOutput ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                <span className="text-sm font-medium">Raw Output</span>
+              </Button>
+
+              {showRawOutput && <JsonEditor value={fullResult} onChange={() => {}} readOnly />}
+            </div>
+          )}
         </ScrollArea>
       </DialogContent>
     </Dialog>

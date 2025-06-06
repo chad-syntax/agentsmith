@@ -22,11 +22,12 @@ import {
   compilePrompt,
 } from '@/utils/template-utils'; // Import new utils
 import { toast } from 'sonner';
+import { Database } from '@/app/__generated__/supabase.types';
 
 type CompileToClipboardModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  variables: ParsedVariable[];
+  variables: Database['public']['Tables']['prompt_variables']['Row'][];
   promptContent: string;
   globalContext: Record<string, any>; // Added globalContext prop
 };
@@ -118,7 +119,7 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
             clipboard.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[70vh] pr-6">
+        <ScrollArea className="max-h-[70vh]">
           <div className="space-y-6 py-4">
             <div className="space-y-4">
               {variables.map((variable) => (

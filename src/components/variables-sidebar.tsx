@@ -12,12 +12,14 @@ import {
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/shadcn';
-import { ParsedVariable } from '@/utils/template-utils';
 import { GlobalsList } from '@/components/project/GlobalsList';
+import { Database } from '@/app/__generated__/supabase.types';
+
+type PromptVariable = Database['public']['Tables']['prompt_variables']['Row'];
 
 type VariablesSidebarProps = {
-  variables: ParsedVariable[];
-  onVariablesChange?: (variables: ParsedVariable[]) => void;
+  variables: PromptVariable[];
+  onVariablesChange?: (variables: PromptVariable[]) => void;
   readOnly?: boolean;
   defaultOpen?: boolean;
   globalContext: any;

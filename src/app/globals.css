@@ -67,6 +67,7 @@
   /* Container settings */
   --container-padding: 2rem;
   --container-max-width-2xl: 1400px;
+  --container-max-width-3xl: 1920px;
 
   /* Spacing scale */
   --spacing: 0.25rem;

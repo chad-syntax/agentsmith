@@ -1,6 +1,6 @@
 import fs from 'fs';
 import type { AgentsmithClient } from './AgentsmithClient';
-import { Json } from '@/app/__generated__/supabase.types';
+import { Database, Json } from '@/app/__generated__/supabase.types';
 import {
   PromptJSONFileContent,
   PromptVersionFileJSONContent,
@@ -251,7 +251,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     const globals = (await this.client.initializeGlobals()) as Record<string, any>;
 
     const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
-      this.variables,
+      this.variables as Database['public']['Tables']['prompt_variables']['Row'][],
       variables as Record<string, string | number | boolean | any>,
     );
 

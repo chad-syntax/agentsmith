@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Play, ClipboardCopy, Plus } from 'lucide-react';
+import { Play, ClipboardCopy, GitBranchPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
@@ -109,7 +109,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
               className="bg-green-500 hover:bg-green-600 flex items-center gap-2"
             >
               <Play size={16} />
-              Test Run
+              Test
             </Button>
             <Button
               onClick={() => setIsCompileModalOpen(true)}
@@ -120,7 +120,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
               Compile to Clipboard
             </Button>
             <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion}>
-              <Plus size={16} />
+              <GitBranchPlus size={16} />
               {isCreatingVersion ? 'Creating...' : 'New Version'}
             </Button>
           </div>

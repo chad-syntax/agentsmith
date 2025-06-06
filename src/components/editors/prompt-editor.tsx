@@ -30,8 +30,6 @@ const isVariableDiff = (currentVars: ParsedVariable[], newVars: ParsedVariable[]
     if (
       currentVar.name !== newVar.name ||
       currentVar.type !== newVar.type ||
-      currentVar.required !== newVar.required ||
-      currentVar.default_value !== newVar.default_value ||
       // TODO make this recursive
       currentVar.children?.length !== newVar.children?.length ||
       currentVar.children?.some((child, index) => child.name !== newVar.children?.[index]?.name)

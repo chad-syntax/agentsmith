@@ -1,6 +1,5 @@
 'use client';
 
-import { ParsedVariable } from '@/utils/template-utils';
 import { Database } from '@/app/__generated__/supabase.types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +22,8 @@ import { cn } from '@/utils/shadcn';
 
 type VariableType = Database['public']['Enums']['variable_type'];
 
+type PromptVariable = Database['public']['Tables']['prompt_variables']['Row'];
+
 const typeColors: Record<VariableType, string> = {
   STRING: 'bg-green-500',
   NUMBER: 'bg-orange-500',
@@ -32,8 +33,8 @@ const typeColors: Record<VariableType, string> = {
 };
 
 type VariablesEditorProps = {
-  variables: ParsedVariable[];
-  onVariablesChange?: (variables: ParsedVariable[]) => void;
+  variables: PromptVariable[];
+  onVariablesChange?: (variables: PromptVariable[]) => void;
   readOnly?: boolean;
   className?: string;
 };
@@ -41,7 +42,7 @@ type VariablesEditorProps = {
 export const VariablesEditor = (props: VariablesEditorProps) => {
   const { variables, onVariablesChange, readOnly = false, className } = props;
 
-  const updateVariable = (index: number, field: keyof ParsedVariable, value: string | boolean) => {
+  const updateVariable = (index: number, field: keyof PromptVariable, value: string | boolean) => {
     if (readOnly || !onVariablesChange) return;
     const newVariables = [...variables];
     const variableToUpdate = { ...newVariables[index] };
@@ -91,7 +92,10 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
             disabled={readOnly}
           >
             <div className="flex items-center gap-2">
-              <span className="font-medium hover:underline">{variable.name}</span>
+              <div className="flex justify-start items-start gap-0.5">
+                <span className="font-medium hover:underline">{variable.name}</span>
+                {variable.required && <span className="text-destructive leading-none">*</span>}
+              </div>
               <Badge className={cn('text-white', getBadgeColor(variable.type))}>
                 {variable.type}
               </Badge>

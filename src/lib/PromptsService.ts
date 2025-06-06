@@ -30,6 +30,7 @@ type PromptVariableExisting = Pick<
 >;
 
 export type UpdatePromptVersionOptions = {
+  projectUuid: string;
   promptVersionUuid: string;
   content: string;
   config: CompletionConfig;

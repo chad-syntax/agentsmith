@@ -21,7 +21,14 @@ export async function updatePromptVersion(
     await services.prompts.updatePromptVersion(options);
 
     // revalidate the prompt detail page and edit version page
-    revalidatePath(`/studio/project/[projectUuid]/prompts/${options.promptVersionUuid}`, 'page');
+    revalidatePath(
+      `/studio/project/${options.projectUuid}/prompts/${options.promptVersionUuid}`,
+      'page',
+    );
+    revalidatePath(
+      `/studio/project/${options.projectUuid}/prompts/edit/${options.promptVersionUuid}`,
+      'page',
+    );
 
     return createSuccessResponse(undefined, 'Prompt version updated successfully.');
   } catch (error) {

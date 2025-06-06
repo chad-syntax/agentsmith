@@ -46,6 +46,13 @@ const githubAvatars = 'avatars.githubusercontent.com';
 const openrouter = 'openrouter.ai *.openrouter.ai';
 const githubCom = 'github.com'; // For form-action
 
+// /** @type {import('next').NextConfig} */
+// const nextConfig = {}
+
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig: NextConfig = {
   async headers() {
     const cspHeader = [
@@ -77,4 +84,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

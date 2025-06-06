@@ -3,7 +3,17 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useMemo } from 'react';
-import { Play, ClipboardCopy, Save, FileEdit, Send, GitBranchPlus, RefreshCw } from 'lucide-react';
+import {
+  Play,
+  ClipboardCopy,
+  Save,
+  FileEdit,
+  Send,
+  GitBranchPlus,
+  RefreshCw,
+  Copy,
+  ExternalLink,
+} from 'lucide-react';
 import { Database } from '@/app/__generated__/supabase.types';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
@@ -14,7 +24,6 @@ import { PromptTestModal } from '@/components/modals/test-prompt';
 import { PublishUpdateConfirmModal } from '@/components/modals/publish-update-confirm';
 import { Button } from '@/components/ui/button';
 import { CompileToClipboardModal } from '@/components/modals/compile-to-clipboard';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { H1 } from '@/components/typography';
 import type { CompletionConfig } from '@/lib/openrouter';
@@ -27,6 +36,7 @@ import { emojiTokenify } from '@/utils/emoji-tokenify';
 import { cn } from '@/utils/shadcn';
 import { STUDIO_FULL_HEIGHT } from '@/app/constants';
 import { toast } from 'sonner';
+import { Badge } from '@/components/ui/badge';
 
 type EditPromptVersionPageProps = {
   promptVersion: NonNullable<GetPromptVersionByUuidResult>;
@@ -40,12 +50,15 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   const isPublished = currentPromptVersion.status === 'PUBLISHED';
 
   const router = useRouter();
-  const [initialContent] = useState(initialPromptVersion.content);
-  const [initialVariables] = useState<ParsedVariable[]>(initialPromptVersion.prompt_variables);
+  const [initialContent, setInitialContent] = useState(initialPromptVersion.content);
 
-  const [variables, setVariables] = useState<ParsedVariable[]>(
-    currentPromptVersion.prompt_variables,
+  const [initialConfig, setInitialConfig] = useState(
+    initialPromptVersion.config as CompletionConfig,
   );
+
+  const [variables, setVariables] = useState<
+    Database['public']['Tables']['prompt_variables']['Row'][]
+  >(currentPromptVersion.prompt_variables);
   const [content, setContent] = useState(currentPromptVersion.content);
   const [config, setConfig] = useState(currentPromptVersion.config as CompletionConfig);
   const [isSaving, setIsSaving] = useState(false);
@@ -62,8 +75,10 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
 
   const globalContext = currentPromptVersion.prompts.projects.global_contexts?.content ?? {};
 
-  const hasChanges =
-    content !== initialContent || JSON.stringify(variables) !== JSON.stringify(initialVariables);
+  const hasChanges = useMemo(
+    () => content !== initialContent || JSON.stringify(config) !== JSON.stringify(initialConfig),
+    [content, initialContent, config, initialConfig],
+  );
 
   const editorContent = useMemo(
     () =>
@@ -96,7 +111,15 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
       setMissingGlobals(missingGlobalContext);
     }
 
-    setVariables(nonGlobalVariables);
+    const mergedNonGlobalVariables = variables.map((v) => {
+      const newVariable = nonGlobalVariables.find((nv) => nv.name === v.name);
+      if (newVariable) {
+        return { ...v, ...newVariable };
+      }
+      return v;
+    });
+
+    setVariables(mergedNonGlobalVariables);
   };
 
   const handleSave = async (
@@ -112,6 +135,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
 
     try {
       const response = await updatePromptVersion({
+        projectUuid: selectedProjectUuid,
         promptVersionUuid: currentPromptVersion.uuid,
         content,
         config,
@@ -145,6 +169,9 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         ...currentPromptVersion,
         status,
       });
+
+      setInitialContent(content);
+      setInitialConfig(config);
 
       return true;
     } catch (error) {
@@ -214,11 +241,8 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   };
 
   const handlePublishAndTest = async () => {
-    const saveSuccess = await handleSave('PUBLISHED', false);
+    await handleSave('PUBLISHED', false);
     setIsPublishConfirmOpen(false);
-    if (saveSuccess) {
-      setIsTestModalOpen(true);
-    }
   };
 
   return (
@@ -236,88 +260,105 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
               ← Back to Prompt
             </Link>
           </div>
-          <div className="flex gap-2 mb-4 flex-wrap">
-            <Button
-              onClick={() => setIsCompileModalOpen(true)}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <ClipboardCopy size={16} />
-              Compile to Clipboard
-            </Button>
-            <Button
-              onClick={handleTest}
-              className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
-            >
-              <Play size={16} />
-              Test Prompt
-            </Button>
 
-            {isDraft && (
-              <>
-                <Button
-                  onClick={() => handleSave('DRAFT', false)}
-                  disabled={isSaving}
-                  variant="secondary"
-                >
-                  <Save size={16} />
-                  {isSaving ? 'Saving...' : 'Save'}
-                </Button>
-                <Button onClick={() => handleSave('PUBLISHED')} disabled={isSaving}>
-                  <Send size={16} />
-                  {isSaving ? 'Publishing...' : 'Publish'}
-                </Button>
-              </>
-            )}
+          <div className="flex items-end justify-start mb-4 gap-2">
+            <H1>{currentPromptVersion.prompts.name}</H1>
+            <Badge className="mb-1" variant={currentPromptVersion.status}>
+              {currentPromptVersion.status}
+            </Badge>
+          </div>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-start gap-0.5">
+              <span className="py-1 px-2 bg-muted rounded-sm text-sm">
+                {currentPromptVersion.prompts.slug}@{currentPromptVersion.version}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `${currentPromptVersion.prompts.slug}@${currentPromptVersion.version}`,
+                  );
+                  toast.success('Copied to clipboard');
+                }}
+              >
+                <Copy />
+              </Button>
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              {isDraft && (
+                <>
+                  <Button
+                    onClick={() => handleSave('DRAFT', false)}
+                    disabled={isSaving}
+                    variant="secondary"
+                  >
+                    <Save size={16} />
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </Button>
+                  <Button onClick={() => handleSave('PUBLISHED')} disabled={isSaving}>
+                    <Send size={16} />
+                    {isSaving ? 'Publishing...' : 'Publish'}
+                  </Button>
+                </>
+              )}
 
-            {isPublished && (
-              <>
-                <Button
-                  onClick={() => setIsPublishConfirmOpen(true)}
-                  disabled={isSaving}
-                  className="bg-amber-500 hover:bg-amber-600"
-                >
-                  <RefreshCw size={16} />
-                  {isSaving ? 'Updating...' : 'Update Published Version'}
-                </Button>
-                <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion || isSaving}>
-                  <GitBranchPlus size={16} />
-                  {isCreatingVersion ? 'Creating...' : 'Create New Version'}
-                </Button>
-                <Button
-                  onClick={handleSetToDraft}
-                  disabled={isSaving || isSettingDraft}
-                  variant="secondary"
-                >
-                  <FileEdit size={16} />
-                  {isSettingDraft ? 'Setting to Draft...' : 'Set to Draft'}
-                </Button>
-              </>
-            )}
+              {isPublished && (
+                <>
+                  <Button
+                    onClick={() => setIsPublishConfirmOpen(true)}
+                    disabled={isSaving || !hasChanges}
+                    className="bg-amber-500 hover:bg-amber-600"
+                  >
+                    <RefreshCw size={16} />
+                    {isSaving ? 'Updating...' : 'Update'}
+                  </Button>
+                  <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion || isSaving}>
+                    <GitBranchPlus size={16} />
+                    {isCreatingVersion ? 'Creating...' : 'New Version'}
+                  </Button>
+                  <Button
+                    onClick={handleSetToDraft}
+                    disabled={isSaving || isSettingDraft}
+                    variant="secondary"
+                  >
+                    <FileEdit size={16} />
+                    {isSettingDraft ? 'Setting to Draft...' : 'Set to Draft'}
+                  </Button>
+                </>
+              )}
+              <Button
+                onClick={handleTest}
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
+              >
+                <Play size={16} />
+                Test
+              </Button>
+              <Button
+                onClick={() => setIsCompileModalOpen(true)}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <ClipboardCopy size={16} />
+                Compile to Clipboard
+              </Button>
+            </div>
           </div>
 
-          <H1 className="mb-6">{currentPromptVersion.prompts.name}</H1>
-
           <div className="space-y-6">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <Label className="pb-2">Version</Label>
-                <Input value={currentPromptVersion.version} disabled className="bg-muted" />
-              </div>
-              <div className="flex-1">
-                <Label className="pb-2">Status</Label>
-                <Input
-                  value={currentPromptVersion.status}
-                  disabled
-                  className={`bg-muted ${
-                    isPublished ? 'text-green-600 font-medium' : 'text-amber-600 font-medium'
-                  }`}
-                />
-              </div>
-            </div>
-
             <div>
-              <Label className="pb-2">Config</Label>
+              <Label className="pb-2 justify-between">
+                <span>Config</span>
+                <a
+                  className="text-xs flex items-center gap-1 underline text-primary"
+                  href="https://openrouter.ai/models"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View Available Models on OpenRouter
+                  <ExternalLink size={12} />
+                </a>
+              </Label>
               <JsonEditor
                 value={config}
                 onChange={(value) => setConfig(value as CompletionConfig)}
