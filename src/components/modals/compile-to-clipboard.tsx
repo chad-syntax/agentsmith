@@ -15,19 +15,14 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  ParsedVariable,
-  validateVariables,
-  validateGlobalContext,
-  compilePrompt,
-} from '@/utils/template-utils'; // Import new utils
+import { validateVariables, validateGlobalContext, compilePrompt } from '@/utils/template-utils'; // Import new utils
 import { toast } from 'sonner';
-import { Database } from '@/app/__generated__/supabase.types';
+import { EditorPromptVariable } from '@/types/prompt-editor';
 
 type CompileToClipboardModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  variables: Database['public']['Tables']['prompt_variables']['Row'][];
+  variables: EditorPromptVariable[];
   promptContent: string;
   globalContext: Record<string, any>; // Added globalContext prop
 };

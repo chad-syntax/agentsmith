@@ -20,14 +20,13 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Database } from '@/app/__generated__/supabase.types';
 import { JsonEditor } from '../editors/json-editor';
-import { cn } from '@/utils/shadcn';
+import { EditorPromptVariable } from '@/types/prompt-editor';
 
 type PromptTestModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  variables: Database['public']['Tables']['prompt_variables']['Row'][];
+  variables: EditorPromptVariable[];
   promptVersionUuid: string;
 };
 

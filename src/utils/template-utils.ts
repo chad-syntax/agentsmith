@@ -4,6 +4,7 @@ import { Database } from '@/app/__generated__/supabase.types';
 // @ts-ignore - nunjucks doesn't export these types properly
 import { transform } from 'nunjucks/src/transformer';
 import merge from 'lodash.merge';
+import { EditorPromptVariable } from '@/types/prompt-editor';
 
 export type ParsedVariable = {
   id?: number;
@@ -439,7 +440,7 @@ export const compilePrompt = (
 };
 
 export const validateVariables = (
-  variables: Database['public']['Tables']['prompt_variables']['Row'][],
+  variables: EditorPromptVariable[],
   variablesToCheck: Record<string, string | number | boolean>,
 ): {
   missingRequiredVariables: ParsedVariable[];

@@ -13,13 +13,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/utils/shadcn';
 import { GlobalsList } from '@/components/project/GlobalsList';
-import { Database } from '@/app/__generated__/supabase.types';
-
-type PromptVariable = Database['public']['Tables']['prompt_variables']['Row'];
+import { EditorPromptVariable } from '@/types/prompt-editor';
 
 type VariablesSidebarProps = {
-  variables: PromptVariable[];
-  onVariablesChange?: (variables: PromptVariable[]) => void;
+  variables: EditorPromptVariable[];
+  onVariablesChange?: (variables: EditorPromptVariable[]) => void;
   readOnly?: boolean;
   defaultOpen?: boolean;
   globalContext: any;

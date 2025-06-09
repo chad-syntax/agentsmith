@@ -19,10 +19,9 @@ import {
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/shadcn';
+import { EditorPromptVariable } from '@/types/prompt-editor';
 
 type VariableType = Database['public']['Enums']['variable_type'];
-
-type PromptVariable = Database['public']['Tables']['prompt_variables']['Row'];
 
 const typeColors: Record<VariableType, string> = {
   STRING: 'bg-green-500',
@@ -33,8 +32,8 @@ const typeColors: Record<VariableType, string> = {
 };
 
 type VariablesEditorProps = {
-  variables: PromptVariable[];
-  onVariablesChange?: (variables: PromptVariable[]) => void;
+  variables: EditorPromptVariable[];
+  onVariablesChange?: (variables: EditorPromptVariable[]) => void;
   readOnly?: boolean;
   className?: string;
 };
@@ -42,7 +41,11 @@ type VariablesEditorProps = {
 export const VariablesEditor = (props: VariablesEditorProps) => {
   const { variables, onVariablesChange, readOnly = false, className } = props;
 
-  const updateVariable = (index: number, field: keyof PromptVariable, value: string | boolean) => {
+  const updateVariable = (
+    index: number,
+    field: keyof EditorPromptVariable,
+    value: string | boolean,
+  ) => {
     if (readOnly || !onVariablesChange) return;
     const newVariables = [...variables];
     const variableToUpdate = { ...newVariables[index] };

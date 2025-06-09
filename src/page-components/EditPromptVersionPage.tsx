@@ -37,6 +37,7 @@ import { cn } from '@/utils/shadcn';
 import { STUDIO_FULL_HEIGHT } from '@/app/constants';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import { EditorPromptVariable } from '@/types/prompt-editor';
 
 type EditPromptVersionPageProps = {
   promptVersion: NonNullable<GetPromptVersionByUuidResult>;
@@ -56,9 +57,9 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     initialPromptVersion.config as CompletionConfig,
   );
 
-  const [variables, setVariables] = useState<
-    Database['public']['Tables']['prompt_variables']['Row'][]
-  >(currentPromptVersion.prompt_variables);
+  const [variables, setVariables] = useState<EditorPromptVariable[]>(
+    currentPromptVersion.prompt_variables,
+  );
   const [content, setContent] = useState(currentPromptVersion.content);
   const [config, setConfig] = useState(currentPromptVersion.config as CompletionConfig);
   const [isSaving, setIsSaving] = useState(false);
@@ -111,12 +112,18 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
       setMissingGlobals(missingGlobalContext);
     }
 
-    const mergedNonGlobalVariables = variables.map((v) => {
-      const newVariable = nonGlobalVariables.find((nv) => nv.name === v.name);
-      if (newVariable) {
-        return { ...v, ...newVariable };
+    const mergedNonGlobalVariables = nonGlobalVariables.map((v) => {
+      const existingVariable = variables.find((v2) => v2.name === v.name);
+
+      if (existingVariable) {
+        return { ...existingVariable, ...v };
       }
-      return v;
+
+      return {
+        ...v,
+        required: true,
+        default_value: null,
+      };
     });
 
     setVariables(mergedNonGlobalVariables);
