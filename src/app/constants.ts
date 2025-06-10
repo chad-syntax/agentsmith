@@ -1,3 +1,7 @@
+import typesafeSdkCover from '@/assets/typesafe_sdk_cover.jpg';
+import promptAuthoringCover from '@/assets/prompt_authoring_cover.jpg';
+import gitPoweredHandoffCover from '@/assets/git_powered_handoff_cover.jpg';
+
 export const ORGANIZATION_KEYS = {
   OPENROUTER_API_KEY: 'OPENROUTER_API_KEY',
   OPENROUTER_CODE_VERIFIER: 'OPENROUTER_CODE_VERIFIER',
@@ -39,3 +43,27 @@ export const statusDisplayNames: Record<RoadmapStatus, string> = {
   COMPLETED: 'Completed',
   CANCELLED: 'Cancelled',
 };
+
+export const LANDING_VIDEOS = {
+  typesafeSdk: {
+    mp4: 'https://kk9lsbugwddpmfy6.public.blob.vercel-storage.com/landing-videos/typesafe-sdk/typesafe-3u8HqGxAObETeX2ispm5QSch5yDKLJ.mp4',
+    webm: 'https://kk9lsbugwddpmfy6.public.blob.vercel-storage.com/landing-videos/typesafe-sdk/typesafe-DIKWyjTXMrOMiCnjCQLHqLVasfgeBB.webm',
+    cover: typesafeSdkCover,
+    buttonText: 'Typesafe SDK',
+    copy: 'Eliminate runtime errors with our typesafe SDK. Compile-time checks and type hints ensure correct prompt usage and variable handling.',
+  },
+  promptAuthoring: {
+    mp4: 'https://kk9lsbugwddpmfy6.public.blob.vercel-storage.com/landing-videos/prompt-authoring/prompt_authoring-1I7A2b3AEL46w8Br4kc0am4RJ3Dvyp.mp4',
+    webm: 'https://kk9lsbugwddpmfy6.public.blob.vercel-storage.com/landing-videos/prompt-authoring/prompt_authoring-p80fYfch6kdnsgPg1B0jNpesooAqBe.webm',
+    cover: promptAuthoringCover,
+    buttonText: 'Prompt Authoring',
+    copy: 'Centralized prompt authoring for technical & non-technical users. Auto-detect variables and ensure version sync for seamless collaboration.',
+  },
+  gitPoweredHandoff: {
+    mp4: 'https://kk9lsbugwddpmfy6.public.blob.vercel-storage.com/landing-videos/git-powered-handoff/git_powered_handoff-x1bQnErTy5qz0IjeXgwOUxz4QI31D8.mp4',
+    webm: 'https://kk9lsbugwddpmfy6.public.blob.vercel-storage.com/landing-videos/git-powered-handoff/git_powered_handoff-DuDeHUDZSeGACfJmD9NeqTjDjDuQ4G.webm',
+    cover: gitPoweredHandoffCover,
+    buttonText: 'Git-Powered Handoff',
+    copy: 'Sync authors and engineers with automated Pull Requests for prompt and variable changes, keeping developers updated.',
+  },
+} as const;
