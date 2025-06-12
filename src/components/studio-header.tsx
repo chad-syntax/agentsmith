@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, Settings, Slash } from 'lucide-react';
+import { ChevronDown, RefreshCcw, Settings, Slash } from 'lucide-react';
 
 import {
   Breadcrumb,
@@ -22,6 +22,7 @@ import { routes } from '@/utils/routes';
 import { ThemeSwitcher } from './theme-switcher';
 import { CurrentUserAvatar } from './current-user-avatar';
 import { MobileStudioSidebar } from './studio-sidebar';
+import { SyncProjectButton } from './sync-project-button';
 
 export const StudioHeader = () => {
   const {
@@ -156,6 +157,9 @@ export const StudioHeader = () => {
           </Breadcrumb>
         </div>
         <div className="flex items-center gap-2">
+          <SyncProjectButton size="icon">
+            <RefreshCcw className="size-4" />
+          </SyncProjectButton>
           <ThemeSwitcher />
           <Link className="px-2" href={routes.studio.settings(selectedOrganizationUuid)}>
             <Settings className="h-4 w-4" />

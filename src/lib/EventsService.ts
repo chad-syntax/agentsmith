@@ -9,6 +9,7 @@ type EventsServiceConstructorOptions = {
 type SyncEventOptions = {
   organizationId: number;
   projectId: number;
+  projectName: string;
   source: 'repo' | 'agentsmith';
   details?: Record<string, any>;
 };
@@ -30,9 +31,10 @@ export class EventsService extends AgentsmithSupabaseService {
   private static getDescription(
     type: Database['public']['Enums']['agentsmith_event_type'],
     sourceInput: 'agentsmith' | 'repo',
+    projectName: string,
   ) {
-    const source = sourceInput === 'agentsmith' ? 'Agentsmith' : 'GitHub';
-    const destination = sourceInput === 'repo' ? 'Agentsmith' : 'GitHub';
+    const source = sourceInput === 'agentsmith' ? `Agentsmith: ${projectName}` : 'GitHub';
+    const destination = sourceInput === 'repo' ? `Agentsmith: ${projectName}` : 'GitHub';
 
     const action =
       type === 'SYNC_START' ? 'started' : type === 'SYNC_COMPLETE' ? 'completed' : 'failed';
@@ -41,9 +43,9 @@ export class EventsService extends AgentsmithSupabaseService {
   }
 
   async createSyncStartEvent(options: SyncEventOptions) {
-    const { organizationId, projectId, source: sourceInput, details } = options;
+    const { organizationId, projectId, projectName, source: sourceInput, details } = options;
 
-    const description = EventsService.getDescription('SYNC_START', sourceInput);
+    const description = EventsService.getDescription('SYNC_START', sourceInput, projectName);
 
     const source = sourceInput === 'agentsmith' ? 'agentsmith' : 'repo';
     const destination = sourceInput === 'agentsmith' ? 'repo' : 'agentsmith';
@@ -70,12 +72,12 @@ export class EventsService extends AgentsmithSupabaseService {
   }
 
   async createSyncCompleteEvent(options: SyncEventOptions) {
-    const { organizationId, projectId, source: sourceInput, details } = options;
+    const { organizationId, projectId, projectName, source: sourceInput, details } = options;
 
     const source = sourceInput === 'agentsmith' ? 'agentsmith' : 'repo';
     const destination = sourceInput === 'agentsmith' ? 'repo' : 'agentsmith';
 
-    let description = EventsService.getDescription('SYNC_COMPLETE', sourceInput);
+    let description = EventsService.getDescription('SYNC_COMPLETE', sourceInput, projectName);
     let name = 'Sync Completed';
 
     if (details?.changesMade === false) {
@@ -105,9 +107,9 @@ export class EventsService extends AgentsmithSupabaseService {
   }
 
   async createSyncErrorEvent(options: SyncEventOptions) {
-    const { organizationId, projectId, source, details } = options;
+    const { organizationId, projectId, projectName, source, details } = options;
 
-    const description = EventsService.getDescription('SYNC_ERROR', source);
+    const description = EventsService.getDescription('SYNC_ERROR', source, projectName);
     const destination = source === 'agentsmith' ? 'repo' : 'agentsmith';
 
     const { data, error } = await this.supabase.from('agentsmith_events').insert({

@@ -122,7 +122,48 @@ const compiledPrompt = helloWorldPrompt.compile({
             .
           </div>
         )}
-
+        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div>
+            <SyncStatusAlert isConnected={isConnected} events={projectData.agentsmith_events} />
+          </div>
+          {hasPrompts && (
+            <div>
+              <Alert variant="default">
+                <Info size={16} />
+                <AlertTitle>Types</AlertTitle>
+                <AlertDescription>
+                  Prompt Types will automatically be written to your agentsmith folder during a
+                  Sync, or you can download them here.
+                  <Button
+                    onClick={handleDownloadTypesClick}
+                    size="lg"
+                    className="mt-2 bg-green-500 hover:bg-green-600 flex items-center gap-2"
+                  >
+                    <FileCode size={16} />
+                    Download Types
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            </div>
+          )}
+          {hasPrompts && (
+            <div>
+              <H3>Prompts</H3>
+              <ul className="list-disc list-inside mt-2 mb-4">
+                {projectData.prompts.map((prompt) => (
+                  <li key={prompt.uuid}>
+                    <Link
+                      href={routes.studio.promptDetail(projectData.uuid, prompt.uuid)}
+                      className="underline hover:text-primary"
+                    >
+                      {prompt.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
         <div className="mt-6">
           <H3>Getting Started with Agentsmith SDK</H3>
           <Alert variant="default" className="mt-2">
@@ -196,48 +237,6 @@ const compiledPrompt = helloWorldPrompt.compile({
           </Alert>
         </div>
 
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div>
-            <SyncStatusAlert isConnected={isConnected} events={projectData.agentsmith_events} />
-          </div>
-          {hasPrompts && (
-            <div>
-              <Alert variant="default">
-                <Info size={16} />
-                <AlertTitle>Types</AlertTitle>
-                <AlertDescription>
-                  Prompt Types will automatically be written to your agentsmith folder during a
-                  Sync, or you can download them here.
-                  <Button
-                    onClick={handleDownloadTypesClick}
-                    size="lg"
-                    className="mt-2 bg-green-500 hover:bg-green-600 flex items-center gap-2"
-                  >
-                    <FileCode size={16} />
-                    Download Types
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
-          {hasPrompts && (
-            <div>
-              <H3>Prompts</H3>
-              <ul className="list-disc list-inside mt-2 mb-4">
-                {projectData.prompts.map((prompt) => (
-                  <li key={prompt.uuid}>
-                    <Link
-                      href={routes.studio.promptDetail(projectData.uuid, prompt.uuid)}
-                      className="underline hover:text-primary"
-                    >
-                      {prompt.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
         <H3 className="mt-6">Global Context</H3>
         <GlobalsList globalContext={projectData.global_contexts?.content} />
       </div>

@@ -22,16 +22,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { JsonEditor } from '../editors/json-editor';
 import { EditorPromptVariable } from '@/types/prompt-editor';
+import { Database } from '@/app/__generated__/supabase.types';
+import { cn } from '@/utils/shadcn';
+
+type PromptVersion = Database['public']['Tables']['prompt_versions']['Row'] & {
+  prompts: Database['public']['Tables']['prompts']['Row'];
+  prompt_variables: Database['public']['Tables']['prompt_variables']['Row'][];
+};
 
 type PromptTestModalProps = {
   isOpen: boolean;
   onClose: () => void;
   variables: EditorPromptVariable[];
-  promptVersionUuid: string;
+  promptVersion: PromptVersion;
 };
 
 export const PromptTestModal = (props: PromptTestModalProps) => {
-  const { isOpen, onClose, variables, promptVersionUuid } = props;
+  const { isOpen, onClose, variables, promptVersion } = props;
 
   const [testVariables, setTestVariables] = useState<Record<string, string>>({});
   const [isRunning, setIsRunning] = useState(false);
@@ -50,7 +57,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
     setTestError(null);
 
     try {
-      const response = await fetch(routes.api.v1.executePromptVersion(promptVersionUuid), {
+      const response = await fetch(routes.api.v1.executePromptVersion(promptVersion.uuid), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -131,62 +138,64 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[calc(90%-2rem)] 2xl:max-w-[calc(66%-4rem)]">
+      <DialogContent className="max-w-full max-h-full rounded-none sm:rounded-lg sm:max-w-[calc(95%-2rem)] h-full sm:max-h-[calc(95%-2rem)] flex flex-col flex-start overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Test Prompt</DialogTitle>
+          <DialogTitle>
+            Test&nbsp;
+            <span className="px-2 py-1 bg-muted rounded-md">
+              {promptVersion.prompts.name}@{promptVersion.version}
+            </span>
+          </DialogTitle>
           <DialogDescription>
             Enter the required variables below to test your prompt.
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[70vh]">
-          <div className="flex-col md:flex-row flex gap-4">
-            <div className="flex-1 space-y-4">
-              <h3 className="font-medium text-lg">Input Variables</h3>
-              {variables.map((variable) => (
-                <div key={variable.id || variable.name} className="space-y-2">
-                  <Label className="ml-1.5 gap-1 flex items-start">
-                    {variable.name}
-                    {variable.required && <span className="text-destructive -mt-0.5">*</span>}
-                  </Label>
-                  <div className="px-1">
-                    <Input
-                      type={variable.type === 'NUMBER' ? 'number' : 'text'}
-                      value={testVariables[variable.name] || ''}
-                      onChange={(e) => {
-                        setTestVariables({
-                          ...testVariables,
-                          [variable.name]: e.target.value,
-                        });
-                      }}
-                    />
-                  </div>
+        <div className="flex-col md:flex-row flex-1 flex gap-4">
+          <div className="md:flex-1 space-y-4">
+            <h3 className="font-medium text-lg">Input Variables</h3>
+            {variables.map((variable) => (
+              <div key={variable.id || variable.name} className="space-y-2">
+                <Label className="ml-1.5 gap-1 flex items-start">
+                  {variable.name}
+                  {variable.required && <span className="text-destructive -mt-0.5">*</span>}
+                </Label>
+                <div className="px-1">
+                  <Input
+                    type={variable.type === 'NUMBER' ? 'number' : 'text'}
+                    value={testVariables[variable.name] || ''}
+                    onChange={(e) => {
+                      setTestVariables({
+                        ...testVariables,
+                        [variable.name]: e.target.value,
+                      });
+                    }}
+                  />
                 </div>
-              ))}
-
-              {testError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{testError}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="flex gap-3">
-                <Button
-                  onClick={handleTestPrompt}
-                  disabled={isRunning}
-                  className="flex-1"
-                  variant="default"
-                >
-                  {isRunning ? 'Running...' : 'Run Test'}
-                </Button>
-                {testResult && (
-                  <Button onClick={resetTest} variant="outline">
-                    Reset
-                  </Button>
-                )}
               </div>
+            ))}
+            {testError && (
+              <Alert variant="destructive">
+                <AlertDescription>{testError}</AlertDescription>
+              </Alert>
+            )}
+            <div className="flex gap-3">
+              <Button
+                onClick={handleTestPrompt}
+                disabled={isRunning}
+                className="flex-1"
+                variant="default"
+              >
+                {isRunning ? 'Running...' : 'Run Test'}
+              </Button>
+              {testResult && (
+                <Button onClick={resetTest} variant="outline">
+                  Reset
+                </Button>
+              )}
             </div>
-
-            <div className="flex-1">
+          </div>
+          <div className="md:flex-3 max-h-[calc(100vh-14rem)] flex flex-col overflow-hidden">
+            <div>
               <h3 className="font-medium text-lg mb-4">Test Results</h3>
               {fullResult?.logUuid && (
                 <Alert className="mb-4">
@@ -220,22 +229,32 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
                 </Card>
               )}
             </div>
+            {fullResult && (
+              <div>
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowRawOutput(!showRawOutput)}
+                  className="flex items-center gap-1 mb-2"
+                >
+                  {showRawOutput ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                  <span className="text-sm font-medium">Raw Output</span>
+                </Button>
+              </div>
+            )}
+            {fullResult && showRawOutput && (
+              <div className="flex-1 flex flex-col overflow-auto border rounded">
+                <div className="flex-1 ">
+                  <JsonEditor
+                    innerClassName="border-none"
+                    value={fullResult}
+                    onChange={() => {}}
+                    readOnly
+                  />
+                </div>
+              </div>
+            )}
           </div>
-          {fullResult && (
-            <div>
-              <Button
-                variant="ghost"
-                onClick={() => setShowRawOutput(!showRawOutput)}
-                className="flex items-center gap-1 h-auto p-0 mb-2"
-              >
-                {showRawOutput ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                <span className="text-sm font-medium">Raw Output</span>
-              </Button>
-
-              {showRawOutput && <JsonEditor value={fullResult} onChange={() => {}} readOnly />}
-            </div>
-          )}
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,4 +1,3 @@
-import { BenefitsSection } from '@/components/marketing/benefits';
 import { HowItWorksSection } from '@/components/marketing/how-it-works';
 import { HeroSection } from '@/components/marketing/hero';
 import { FAQSection } from '@/components/marketing/faq';
@@ -17,7 +16,6 @@ export const LandingPage = (props: LandingPageProps) => {
   return (
     <>
       <HeroSection />
-      <BenefitsSection />
       <HowItWorksSection />
       <PricingSection />
       {roadmapItems.length > 0 && <RoadmapSection roadmapItems={roadmapItems} />}

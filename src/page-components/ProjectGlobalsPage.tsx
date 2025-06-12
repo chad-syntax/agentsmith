@@ -18,7 +18,7 @@ type ProjectGlobalsPageProps = {
 export const ProjectGlobalsPage = (props: ProjectGlobalsPageProps) => {
   const { projectUuid, projectGlobals } = props;
 
-  const { showSyncToast } = useApp();
+  const { showSyncTooltip } = useApp();
 
   const [globals, setGlobals] = useState<any>(projectGlobals?.content ?? {});
   const [isSaving, setIsSaving] = useState(false);
@@ -39,9 +39,7 @@ export const ProjectGlobalsPage = (props: ProjectGlobalsPageProps) => {
       if (!result.success) {
         setError(result.message ?? 'Something went wrong saving globals');
       } else {
-        showSyncToast({
-          title: 'Globals have been updated',
-        });
+        showSyncTooltip();
       }
     } catch (error: any) {
       console.error(error);

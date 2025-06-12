@@ -132,7 +132,7 @@ export const HeroSection = () => {
             </p>
           </div>
           <div>
-            <div>&nbsp;</div>
+            <div className="hidden lg:block">&nbsp;</div>
             {/* <div className="w-full h-full min-h-[300px] md:min-h-[400px] rounded-lg overflow-hidden border border-border bg-card">
               {/* <Image
                 src={promptEditorScreenshot}

@@ -18,6 +18,7 @@ type JsonEditorProps<T> = {
   placeholder?: string;
   label?: string;
   className?: string;
+  innerClassName?: string;
   readOnly?: boolean;
 };
 
@@ -30,6 +31,7 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
     label,
     className,
     readOnly = false,
+    innerClassName,
   } = props;
 
   const [jsonText, setJsonText] = useState<string>(JSON.stringify(value, null, 2));
@@ -49,7 +51,13 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
   return (
     <div className={cn('space-y-2', className)}>
       {label && <Label>{label}</Label>}
-      <div className={cn('rounded-md border bg-background', jsonError && 'border-destructive')}>
+      <div
+        className={cn(
+          'rounded-md border bg-background',
+          jsonError && 'border-destructive',
+          innerClassName,
+        )}
+      >
         <Editor
           value={jsonText}
           onValueChange={readOnly ? () => {} : handleJsonChange}

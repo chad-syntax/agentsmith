@@ -83,7 +83,7 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
         userOrganizationData={userOrganizationData}
       >
         <StudioHeader />
-        <div className={cn('md:flex', STUDIO_FULL_HEIGHT)}>
+        <div className={cn('md:flex relative', STUDIO_FULL_HEIGHT)}>
           <DesktopStudioSidebar />
           <main className="pl-0 md:pl-12 flex-1 overflow-auto">{children}</main>
           <StudioGiveFeedback />
