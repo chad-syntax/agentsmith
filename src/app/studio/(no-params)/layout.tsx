@@ -1,14 +1,9 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '&/supabase/server';
-import { DesktopStudioSidebar } from '@/components/studio-sidebar';
-import { AuthProvider } from '@/providers/auth';
-import { AppProvider } from '@/providers/app';
 import { routes } from '@/utils/routes';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
-import { StudioHeader } from '@/components/studio-header';
-import { cn } from '@/utils/shadcn';
 import { IS_WAITLIST_REDIRECT_ENABLED, STUDIO_FULL_HEIGHT } from '@/app/constants';
-import { StudioGiveFeedback } from '@/components/studio-give-feedback';
+import { StudioApp } from '@/app/studio-app';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -43,20 +38,14 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
     const firstOrganizationProject = firstOrganization.projects[0];
 
     return (
-      <AuthProvider user={authUser} agentsmithUser={agentsmithUser ?? undefined}>
-        <AppProvider
-          selectedProjectUuid={firstOrganizationProject.uuid}
-          selectedOrganizationUuid={firstOrganization.uuid}
-          userOrganizationData={userOrganizationData}
-        >
-          <StudioHeader />
-          <div className={cn('md:flex relative', STUDIO_FULL_HEIGHT)}>
-            <DesktopStudioSidebar />
-            <main className="pl-0 md:pl-12 flex-1 overflow-auto">{children}</main>
-            <StudioGiveFeedback />
-          </div>
-        </AppProvider>
-      </AuthProvider>
+      <StudioApp
+        authUser={authUser}
+        agentsmithUser={agentsmithUser}
+        selectedProjectUuid={firstOrganizationProject.uuid}
+        selectedOrganizationUuid={firstOrganization.uuid}
+        userOrganizationData={userOrganizationData}
+        children={children}
+      />
     );
   } catch (error) {
     logger.error(error);

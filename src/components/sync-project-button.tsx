@@ -72,7 +72,7 @@ export const SyncProjectButton = (props: SyncProjectButtonProps) => {
       <TooltipTrigger asChild>
         <Button
           size={size ?? 'sm'}
-          className={cn('ml-auto min-w-[58px]', size === 'icon' && 'min-w-auto', className)}
+          className={cn('ml-auto min-w-[58px]', size === 'icon' && 'min-w-auto size-8', className)}
           onClick={handleClick}
           variant={size === 'icon' ? 'ghost' : 'default'}
           disabled={loading}
