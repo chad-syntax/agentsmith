@@ -7,6 +7,8 @@ import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { validateGlobalContext, validateVariables } from '@/utils/template-utils';
 import merge from 'lodash.merge';
 
+export const maxDuration = 300; // 5 minute function timeout
+
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
   config?: CompletionConfig;
@@ -114,6 +116,7 @@ export async function POST(
   });
 
   try {
+    // TODO: implement timeout logic that updates the log entry with the error
     const response = await agentsmith.services.prompts.executePrompt({
       prompt: promptVersion.prompts,
       config: finalConfig,
