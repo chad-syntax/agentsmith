@@ -54,7 +54,7 @@ export const LandingHeroVideos = () => {
             loop
             muted
             playsInline
-            className="object-cover w-full rounded-sm border border-muted"
+            className="aspect-video w-full rounded-sm border border-muted"
             poster={selectedVideo.cover.src}
             ref={videoRef}
             onMouseEnter={handleMouseEnter}
@@ -63,6 +63,7 @@ export const LandingHeroVideos = () => {
             <source src={selectedVideo.mp4} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
+
           <P className="text-center lg:text-left min-h-[100px]">{selectedVideo.copy}</P>
         </div>
       </div>
