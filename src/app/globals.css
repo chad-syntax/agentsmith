@@ -91,10 +91,10 @@
   --animate-shadow-out-to-in: shadow-out-to-in 0.3s var(--ease-fluid);
   --animate-shadow-in-to-out: shadow-in-to-out 0.3s var(--ease-fluid);
 
-  /* Glass button shadows */
-  --glass-button-shadow-color: rgba(0, 0, 0, 0.2);
-  --glass-button-shadow-out: 0 0px 4px 1px var(--glass-button-shadow-color);
-  --glass-button-shadow-in: inset 0 0px 4px 1px var(--glass-button-shadow-color);
+  /* Shadow button shadows */
+  --shadow-button-shadow-color: rgba(0, 0, 0, 0.2);
+  --shadow-button-shadow-out: 0 0px 4px 1px var(--shadow-button-shadow-color);
+  --shadow-button-shadow-in: inset 0 0px 4px 1px var(--shadow-button-shadow-color);
 }
 
 @layer base {
@@ -124,9 +124,9 @@
     --animate-shadow-out-to-in: dark-shadow-out-to-in 0.3s var(--ease-fluid);
     --animate-shadow-in-to-out: dark-shadow-in-to-out 0.3s var(--ease-fluid);
 
-    --glass-button-shadow-color: rgba(255, 255, 255, 0.6);
-    --glass-button-shadow-out: 0 0px 2px 0px var(--glass-button-shadow-color);
-    --glass-button-shadow-in: inset 0 0px 6px 0px var(--glass-button-shadow-color);
+    --shadow-button-shadow-color: rgba(255, 255, 255, 0.6);
+    --shadow-button-shadow-out: 0 0px 2px 0px var(--shadow-button-shadow-color);
+    --shadow-button-shadow-in: inset 0 0px 6px 0px var(--shadow-button-shadow-color);
   }
 
   * {
@@ -139,12 +139,12 @@
 }
 
 @layer utilities {
-  .glass-button-shadow-in {
-    box-shadow: var(--glass-button-shadow-in);
+  .shadow-button-shadow-in {
+    box-shadow: var(--shadow-button-shadow-in);
   }
 
-  .glass-button-shadow-out {
-    box-shadow: var(--glass-button-shadow-out);
+  .shadow-button-shadow-out {
+    box-shadow: var(--shadow-button-shadow-out);
   }
 }
 

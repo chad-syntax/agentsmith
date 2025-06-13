@@ -5,7 +5,7 @@ import { cn } from '@/utils/shadcn';
 import { useEffect, useRef, useState } from 'react';
 import { Button, buttonVariants } from './ui/button';
 
-const glassButtonVariants = cva(
+const shadowButtonVariants = cva(
   'text-foreground border border-white/20 bg-white/20 backdrop-blur-[20px] backdrop-saturate-120',
   {
     variants: {
@@ -19,9 +19,9 @@ const glassButtonVariants = cva(
   },
 );
 
-const GLASS_BUTTON_ANIMATION_DURATION = 300;
+const SHADOW_BUTTON_ANIMATION_DURATION = 300;
 
-export const GlassButton = ({
+export const ShadowButton = ({
   children,
   variant,
   size,
@@ -31,7 +31,7 @@ export const GlassButton = ({
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
-  } & VariantProps<typeof glassButtonVariants> & {
+  } & VariantProps<typeof shadowButtonVariants> & {
     asChild?: boolean;
   } & {
     active?: boolean;
@@ -39,7 +39,7 @@ export const GlassButton = ({
   const [_active, _setActive] = useState(active ?? false);
   const [_animationClassName, _setAnimationClassName] = useState('');
   const [_activeClassName, _setActiveClassName] = useState(
-    active ? 'glass-button-shadow-in' : 'glass-button-shadow-out',
+    active ? 'shadow-button-shadow-in' : 'shadow-button-shadow-out',
   );
   const isAnimatingRef = useRef(false);
   const activeRef = useRef<boolean>(Boolean(active));
@@ -54,25 +54,25 @@ export const GlassButton = ({
     if (active === true) {
       _setAnimationClassName('animate-shadow-out-to-in');
       setTimeout(() => {
-        _setActiveClassName('glass-button-shadow-in');
-      }, GLASS_BUTTON_ANIMATION_DURATION - 5);
+        _setActiveClassName('shadow-button-shadow-in');
+      }, SHADOW_BUTTON_ANIMATION_DURATION - 5);
     } else {
       _setAnimationClassName('animate-shadow-in-to-out');
       setTimeout(() => {
-        _setActiveClassName('glass-button-shadow-out');
-      }, GLASS_BUTTON_ANIMATION_DURATION - 5);
+        _setActiveClassName('shadow-button-shadow-out');
+      }, SHADOW_BUTTON_ANIMATION_DURATION - 5);
     }
 
     setTimeout(() => {
       isAnimatingRef.current = false;
-    }, GLASS_BUTTON_ANIMATION_DURATION);
+    }, SHADOW_BUTTON_ANIMATION_DURATION);
   }, [active]);
 
   return (
     <Button
       className={cn(
         buttonVariants({ variant, size, className }),
-        glassButtonVariants({ variant, className }),
+        shadowButtonVariants({ variant, className }),
         _animationClassName,
         _activeClassName,
       )}

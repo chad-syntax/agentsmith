@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { GlassButton } from '../glass-button';
+import { ShadowButton } from '../shadow-button';
 import { LANDING_VIDEOS } from '@/app/constants';
 import { P } from '../typography';
 
 export const LandingHeroVideos = () => {
   const [selectedVideoSlug, setSelectedVideoSlug] =
-    useState<keyof typeof LANDING_VIDEOS>('typesafeSdk');
+    useState<keyof typeof LANDING_VIDEOS>('typedPrompts');
 
   const selectedVideo = LANDING_VIDEOS[selectedVideoSlug];
   const selectedVideoRef = useRef<typeof selectedVideoSlug>(selectedVideoSlug);
@@ -37,7 +37,7 @@ export const LandingHeroVideos = () => {
       <div className="lg:pl-6 lg:pr-4">
         <div className="flex gap-2 justify-center flex-wrap pb-4 lg:pb-2">
           {Object.entries(LANDING_VIDEOS).map(([key, value]) => (
-            <GlassButton
+            <ShadowButton
               key={key}
               onClick={() => selectVideo(key as keyof typeof LANDING_VIDEOS)}
               active={selectedVideoSlug === key}
@@ -45,7 +45,7 @@ export const LandingHeroVideos = () => {
             >
               <value.icon size={4} />
               {value.buttonText}
-            </GlassButton>
+            </ShadowButton>
           ))}
         </div>
         <div className="relative">
