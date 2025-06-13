@@ -102,6 +102,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
     }
 
     const isLocked = projectRepository.sync_status === 'SYNCING';
+    const projectName = projectRepository.projects?.name ?? 'Unknown Project';
 
     if (isLocked) {
       return {
@@ -173,6 +174,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       await this.services.events.createSyncStartEvent({
         organizationId: projectRepository.organization_id,
         projectId: projectRepository.project_id,
+        projectName,
         source,
       });
 
@@ -189,6 +191,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         await this.services.events.createSyncErrorEvent({
           organizationId: projectRepository.organization_id,
           projectId: projectRepository.project_id,
+          projectName,
           source,
           details: {
             error: error.message,
@@ -231,6 +234,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         await this.services.events.createSyncCompleteEvent({
           organizationId: projectRepository.organization_id,
           projectId: projectRepository.project_id,
+          projectName,
           source,
           details: {
             changesMade,
@@ -262,6 +266,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       await this.services.events.createSyncCompleteEvent({
         organizationId: projectRepository.organization_id,
         projectId: projectRepository.project_id,
+        projectName,
         source,
         details: {
           changesMade,
@@ -284,6 +289,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       await this.services.events.createSyncErrorEvent({
         organizationId: projectRepository.organization_id,
         projectId: projectRepository.project_id,
+        projectName,
         source,
         details: {
           pullRequestDetail,

@@ -150,7 +150,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
                         <Button
                           variant="link"
                           asChild
-                          className="p-0 h-auto text-blue-500 hover:text-blue-600"
+                          className="p-0 h-auto text-primary hover:text-primary"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <Link
@@ -197,7 +197,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         isOpen={isTestModalOpen}
         onClose={() => setIsTestModalOpen(false)}
         variables={latestVersion.prompt_variables}
-        promptVersionUuid={latestVersion.uuid}
+        promptVersion={latestVersion}
       />
 
       <CreateVersionModal

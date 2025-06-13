@@ -72,7 +72,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   const [isEmojiModeEnabled, setIsEmojiModeEnabled] = useState(false);
   const [tokenBpe, setTokenBpe] = useState<any>(null);
   const [emojiList, setEmojiList] = useState<string[]>([]);
-  const { selectedProjectUuid, showSyncToast } = useApp();
+  const { selectedProjectUuid, showSyncTooltip } = useApp();
 
   const globalContext = currentPromptVersion.prompts.projects.global_contexts?.content ?? {};
 
@@ -162,9 +162,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         return false;
       }
 
-      showSyncToast({
-        title: 'Prompt has been updated',
-      });
+      showSyncTooltip();
 
       if (shouldRedirect) {
         router.push(
@@ -213,9 +211,8 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
       });
 
       if (response.success && response.data) {
-        showSyncToast({
-          title: 'New draft version created',
-        });
+        showSyncTooltip();
+
         router.push(
           routes.studio.editPromptVersion(selectedProjectUuid, response.data.versionUuid),
         );
@@ -411,7 +408,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         isOpen={isTestModalOpen}
         onClose={() => setIsTestModalOpen(false)}
         variables={variables}
-        promptVersionUuid={currentPromptVersion.uuid}
+        promptVersion={currentPromptVersion}
       />
 
       <PublishUpdateConfirmModal

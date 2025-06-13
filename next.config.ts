@@ -39,15 +39,13 @@ const stripeApi = 'api.stripe.com'; // For connect
 const vercelAssets = 'assets.vercel.com';
 const vercelVitals = 'vitals.vercel-insights.com';
 const vercelLive = 'vercel.live'; // For Vercel live feedback/preview tools
+const vercelBlob = '*.public.blob.vercel-storage.com';
 
 // Other known services
 const unpkg = 'unpkg.com';
 const githubAvatars = 'avatars.githubusercontent.com';
 const openrouter = 'openrouter.ai *.openrouter.ai';
 const githubCom = 'github.com'; // For form-action
-
-// /** @type {import('next').NextConfig} */
-// const nextConfig = {}
 
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
@@ -59,8 +57,9 @@ const nextConfig: NextConfig = {
       `default-src ${self}`,
       `script-src ${self} ${unsafeEval} ${unsafeInline} ${supabaseWildcard} ${localhostWildcard} ${cfChallenges} ${posthogHosts} ${googleTagManager} ${googleAnalytics} ${googleAds} ${googleAdServices} ${sibforms} ${stripeJs} ${unpkg} ${vercelAssets} ${vercelLive}`,
       `style-src ${self} ${unsafeInline} ${googleFonts} ${gStatic} ${sibforms}`,
-      `img-src ${self} ${blob} ${data} ${supabaseWildcard} ${localhostWildcard} ${googleAnalytics} ${googleAds} ${gStatic} ${githubAvatars} ${googleConnect} ${googleAdServices} ${googleTagManager}`,
+      `img-src ${self} ${blob} ${data} ${supabaseWildcard} ${localhostWildcard} ${googleAnalytics} ${googleAds} ${gStatic} ${githubAvatars} ${googleConnect} ${googleAdServices} ${googleTagManager} ${vercelBlob}`,
       `font-src ${self} ${gStatic}`,
+      `media-src ${self} ${vercelBlob}`,
       `worker-src ${self} ${blob}`,
       `frame-src ${self} ${cfChallenges} ${sibforms} ${stripeFrame} td.doubleclick.net ${googleTagManager} ${vercelLive}`,
       `connect-src ${self} ${supabaseWildcard} ${supabaseWsWildcard} ${localhostWildcard} ${localhostWsWildcard} ${cfChallenges} ${posthogHosts} ${googleAnalytics} ${googleTagManager} ${googleAds} ${googleAdServices} ${googleConnect} ${sibforms} ${stripeApi} ${openrouter} ${vercelVitals} ${vercelLive} wss://${vercelLive}`,

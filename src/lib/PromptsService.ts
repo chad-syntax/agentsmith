@@ -188,7 +188,7 @@ export class PromptsService extends AgentsmithSupabaseService {
   async getLatestPromptVersion(promptId: number) {
     const { data, error } = await this.supabase
       .from('prompt_versions')
-      .select('*, prompt_variables(*)')
+      .select('*, prompts(*), prompt_variables(*)')
       .eq('prompt_id', promptId);
 
     if (error) {

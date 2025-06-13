@@ -44,13 +44,13 @@ export const Header = () => {
             'shadow-md border border-muted-foreground/25 dark:shadow-muted-foreground/25 dark:shadow-sm',
         )}
       >
-        <div className="flex h-16 items-center justify-between px-4 lg:px-6">
+        <div className="flex items-center justify-between lg:grid lg:grid-cols-3 h-16 px-4 lg:px-6">
           <div className="flex items-center">
             <Link href={routes.marketing.home} className="text-xl font-bold">
               Agentsmith
             </Link>
           </div>
-          <nav className="hidden md:flex items-center gap-x-2 lg:gap-x-6 flex-1 justify-center rounded-md p-1">
+          <nav className="hidden md:flex items-center gap-x-2 lg:gap-x-4 flex-1 justify-center rounded-md p-1">
             <Link
               href="/#benefits"
               className="text-sm font-medium text-foreground/70 hover:text-foreground"
@@ -76,7 +76,7 @@ export const Header = () => {
               FAQ
             </Link>
           </nav>
-          <div className="flex items-center gap-2 lg:gap-4">
+          <div className="flex items-center justify-end gap-2 lg:gap-4">
             <ThemeSwitcher />
             <Button
               onClick={handleStudioClick}

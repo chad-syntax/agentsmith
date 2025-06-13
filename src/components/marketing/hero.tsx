@@ -3,12 +3,11 @@
 import { BrevoEmailSubscribe } from '@/components/brevo-email-subscribe/brevo-email-subscribe';
 import { Button } from '../ui/button';
 import { usePostHog } from 'posthog-js/react';
-import promptEditorScreenshot from '@/assets/prompt-editor-screenshot.png';
-import Image from 'next/image';
 import Vivus from 'vivus';
 import { useEffect, useRef } from 'react';
 import FWord from '@/assets/f-word.svg';
 import { AspectRatio } from '../ui/aspect-ratio';
+import { LandingHeroVideos } from './landing-hero-videos';
 
 export const HeroSection = () => {
   const posthog = usePostHog();
@@ -89,8 +88,8 @@ export const HeroSection = () => {
   }, []);
 
   return (
-    <section className="md:py-16 bg-background  ">
-      <div className="container px-4 md:px-6 relative mx-auto">
+    <section className="md:py-16 bg-background relative">
+      <div className="container px-4 md:px-6 mx-auto">
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
           <div className="flex flex-col justify-center space-y-4">
             <div className="space-y-2">
@@ -133,17 +132,31 @@ export const HeroSection = () => {
             </p>
           </div>
           <div>
-            <div className="w-full h-full min-h-[300px] md:min-h-[400px] rounded-lg overflow-hidden border border-border bg-card">
-              <Image
+            <div className="hidden lg:block">&nbsp;</div>
+            {/* <div className="w-full h-full min-h-[300px] md:min-h-[400px] rounded-lg overflow-hidden border border-border bg-card">
+              {/* <Image
                 src={promptEditorScreenshot}
                 priority
                 alt="Agentsmith App Placeholder"
                 className="object-cover object-left h-full min-h-[300px] md:min-h-[400px] rounded-md"
-              />
-            </div>
+              /> 
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="object-cover object-left h-full min-h-[300px] md:min-h-[400px] rounded-md"
+                poster={VIDEO_URLS.landing.typesafeSdk.cover.src}
+              >
+                <source src={VIDEO_URLS.landing.typesafeSdk.webm} type="video/webm" />
+                <source src={VIDEO_URLS.landing.typesafeSdk.mp4} type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div> */}
           </div>
         </div>
       </div>
+      <LandingHeroVideos />
     </section>
   );
 };

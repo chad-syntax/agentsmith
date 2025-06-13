@@ -18,7 +18,7 @@ export const StudioGiveFeedback = () => {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button className="absolute bottom-3 right-3">
+        <Button className="fixed bottom-3 right-3">
           <Megaphone className="size-4 rotate-y-180" />
           Feedback
         </Button>

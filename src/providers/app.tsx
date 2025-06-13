@@ -15,20 +15,12 @@ import { routes } from '@/utils/routes';
 import type { GetUserOrganizationDataResult } from '@/lib/UsersService';
 import { useAuth } from './auth';
 import { createClient } from '@/lib/supabase/client';
-import { toast } from 'sonner';
 import { Database } from '@/app/__generated__/supabase.types';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { SyncProjectButton } from '@/components/sync-project-button';
 import { AlertsService } from '@/lib/AlertsService';
+import { handleAgentsmithEvent } from './handle-agentsmith-event';
 
 type Organization = GetUserOrganizationDataResult['organization_users'][number]['organizations'];
 type Project = Organization['projects'][number];
-
-type ShowSyncToastOptions = {
-  title: string;
-  description?: string;
-};
 
 type AppContextType = {
   selectedOrganizationUuid: string;
@@ -40,7 +32,8 @@ type AppContextType = {
   userOrganizationData: GetUserOrganizationDataResult;
   hasOpenRouterKey: boolean;
   isOrganizationAdmin: boolean;
-  showSyncToast: (options: ShowSyncToastOptions) => void;
+  showSyncTooltip: () => void;
+  isSyncTooltipVisible: boolean;
   unreadAlertsCount: number;
   setUnreadAlertsCount: Dispatch<SetStateAction<number>>;
 };
@@ -55,7 +48,8 @@ const AppContext = createContext<AppContextType>({
   userOrganizationData: {} as GetUserOrganizationDataResult,
   hasOpenRouterKey: false,
   isOrganizationAdmin: false,
-  showSyncToast: () => {},
+  showSyncTooltip: () => {},
+  isSyncTooltipVisible: false,
   unreadAlertsCount: 0,
   setUnreadAlertsCount: () => {},
 });
@@ -85,6 +79,7 @@ export const AppProvider = (props: AppProviderProps) => {
   const [selectedProjectUuid, _setSelectedProjectUuid] = useState<string>(
     initialSelectedProjectUuid,
   );
+  const [isSyncTooltipVisible, setIsSyncTooltipVisible] = useState(false);
 
   const initialSelectedOrganization =
     userOrganizationData.organization_users.find(
@@ -114,8 +109,6 @@ export const AppProvider = (props: AppProviderProps) => {
   const [isOrganizationAdmin, setIsOrganizationAdmin] = useState(initialIsOrganizationAdmin);
   const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
 
-  const callToast = () => toast;
-
   useEffect(() => {
     if (!agentsmithUser) {
       return;
@@ -143,81 +136,7 @@ export const AppProvider = (props: AppProviderProps) => {
           table: 'agentsmith_events',
           filter: `created_by=eq.${agentsmithUser.id}`,
         },
-        (payload) => {
-          const record = payload.new;
-
-          switch (record.type) {
-            case 'SYNC_START':
-              const syncStartedToastId = callToast()('Sync Started', {
-                description: `Sync started for project ${selectedProject?.name ?? '...'}`,
-                action: (
-                  <Button
-                    asChild
-                    size="sm"
-                    variant="link"
-                    className="ml-auto"
-                    onClick={() => {
-                      callToast().dismiss(syncStartedToastId);
-                    }}
-                  >
-                    <Link
-                      href={routes.studio.eventDetail(selectedProject?.uuid ?? '', record.uuid)}
-                    >
-                      Details
-                    </Link>
-                  </Button>
-                ),
-              });
-              break;
-            case 'SYNC_COMPLETE':
-              const syncCompletedToastId = callToast().success('Sync Completed', {
-                description: `Sync finished successfully for project ${selectedProject?.name ?? '...'}`,
-                action: (
-                  <Button
-                    asChild
-                    size="sm"
-                    variant="link"
-                    className="ml-auto"
-                    onClick={() => {
-                      callToast().dismiss(syncCompletedToastId);
-                    }}
-                  >
-                    <Link
-                      href={routes.studio.eventDetail(selectedProject?.uuid ?? '', record.uuid)}
-                    >
-                      Details
-                    </Link>
-                  </Button>
-                ),
-              });
-              break;
-            case 'SYNC_ERROR':
-              const syncErrorToastId = callToast().error('Sync Failed', {
-                description: `Sync failed for project ${selectedProject?.name ?? '...'}. Check logs for details.`,
-                duration: 10000,
-                action: (
-                  <Button
-                    asChild
-                    variant="destructive"
-                    size="sm"
-                    className="ml-auto"
-                    onClick={() => {
-                      callToast().dismiss(syncErrorToastId);
-                    }}
-                  >
-                    <Link
-                      href={routes.studio.eventDetail(selectedProject?.uuid ?? '', record.uuid)}
-                    >
-                      View
-                    </Link>
-                  </Button>
-                ),
-              });
-              break;
-            default:
-              break;
-          }
-        },
+        handleAgentsmithEvent(selectedProject),
       )
       .subscribe();
 
@@ -226,7 +145,7 @@ export const AppProvider = (props: AppProviderProps) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [supabase, agentsmithUser?.id, selectedProject?.name, callToast]);
+  }, [supabase, agentsmithUser?.id, selectedProject?.name]);
 
   const setSelectedOrganizationUuid = (uuid: string) => {
     _setSelectedOrganizationUuid(uuid);
@@ -263,27 +182,20 @@ export const AppProvider = (props: AppProviderProps) => {
     router.push(routes.studio.project(uuid));
   };
 
-  const showSyncToast = (options: ShowSyncToastOptions) => {
-    const { title, description } = options;
+  const showSyncTooltip = () => {
+    if (isSyncTooltipVisible) return;
 
     const isGithubAppInstalled = selectedOrganization?.github_app_installations.some(
       (installation) => installation.status === 'ACTIVE',
     );
 
-    if (isGithubAppInstalled) {
-      const toastId = callToast()(title, {
-        description: description ?? 'Would you like to sync your project?',
-        duration: 6000,
-        action: (
-          <SyncProjectButton
-            projectUuid={selectedProjectUuid}
-            onSyncComplete={() => {
-              callToast().dismiss(toastId);
-            }}
-          />
-        ),
-      });
-    }
+    if (!isGithubAppInstalled) return;
+
+    setIsSyncTooltipVisible(true);
+
+    setTimeout(() => {
+      setIsSyncTooltipVisible(false);
+    }, 3000);
   };
 
   const value = useMemo(
@@ -297,7 +209,8 @@ export const AppProvider = (props: AppProviderProps) => {
       userOrganizationData,
       hasOpenRouterKey,
       isOrganizationAdmin,
-      showSyncToast,
+      showSyncTooltip,
+      isSyncTooltipVisible,
       unreadAlertsCount,
       setUnreadAlertsCount,
     }),
@@ -309,7 +222,8 @@ export const AppProvider = (props: AppProviderProps) => {
       userOrganizationData,
       hasOpenRouterKey,
       isOrganizationAdmin,
-      showSyncToast,
+      showSyncTooltip,
+      isSyncTooltipVisible,
       unreadAlertsCount,
       setUnreadAlertsCount,
     ],
