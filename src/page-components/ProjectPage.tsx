@@ -24,7 +24,7 @@ export type ProjectPageProps = {
 export const ProjectPage = (props: ProjectPageProps) => {
   const { projectData } = props;
 
-  const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(true);
+  const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(false);
 
   const handleDownloadTypesClick = async () => {
     const response = await generateTypes(projectData.id);
