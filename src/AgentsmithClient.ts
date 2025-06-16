@@ -73,7 +73,9 @@ export class AgentsmithClient<Agency extends GenericAgency> {
       }
       return data.jwt;
     } catch (error) {
-      throw new Error('Failed to exchange API key for JWT');
+      throw new Error(
+        error instanceof Error ? error.message : 'Failed to exchange API key for JWT',
+      );
     }
   }
 
