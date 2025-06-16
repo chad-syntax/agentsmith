@@ -107,7 +107,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
 
       if (this.argVersion === 'latest' && prompt.latestVersion === null) {
         throw new Error(
-          `No published version found for prompt ${this.slug} while trying to fetch latest version from file system`,
+          `No published version found for prompt ${this.slug} while trying to fetch latest version from file system, either publish a version or use a specific version number to use the draft.`,
         );
       }
 
@@ -163,13 +163,16 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
           this.variables = [];
           return;
         }
-        console.error('Failed to read variables from the file system', err);
+        console.error(
+          `Failed to read variables from the file system for ${this.slug}@${this.argVersion}`,
+          err,
+        );
       }
 
-      console.log('successfully read prompt from the file system');
+      console.log(`Successfully read ${this.slug}@${this.argVersion} from the file system`);
       return;
     } catch (err) {
-      console.error('Failed to fetch prompt from the file system', err);
+      console.error(`Failed to fetch ${this.slug}@${this.argVersion} from the file system`, err);
     }
 
     const fetchSpecificVersion = this.argVersion && this.argVersion !== 'latest';
@@ -185,6 +188,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         .single();
 
       if (error) {
+        console.error(`Failed to fetch ${this.slug}@${this.argVersion} from remote`, error);
         throw error;
       }
 
@@ -209,6 +213,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       .eq('status', 'PUBLISHED');
 
     if (error) {
+      console.error(`Failed to fetch ${this.slug}@${this.argVersion} from remote`, error);
       throw error;
     }
 
@@ -216,7 +221,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
 
     if (!latestVersion) {
       throw new Error(
-        `No published version found for prompt ${this.slug} while trying to fetch latest version`,
+        `No published version found for prompt ${this.slug}@${this.argVersion} while trying to fetch latest version, either publish a version or use a specific version number to use the draft.`,
       );
     }
 

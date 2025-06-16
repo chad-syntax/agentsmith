@@ -39,6 +39,18 @@ export class AgentsmithClient<Agency extends GenericAgency> {
     this.supabaseAnonKey = options.supabaseAnonKey ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     this.agentsmithDirectory = options.agentsmithDirectory ?? defaultAgentsmithDirectory;
 
+    if (!this.sdkApiKey || this.sdkApiKey === '') {
+      throw new Error('Agentsmith SDK API key is required to initialize the agentsmith client');
+    }
+
+    if (!this.projectUuid || this.projectUuid === '') {
+      throw new Error('Project UUID is required to initialize the agentsmith client');
+    }
+
+    if (!this.agentsmithApiRoot || this.agentsmithApiRoot === '') {
+      throw new Error('Agentsmith API root is required to initialize the agentsmith client');
+    }
+
     this.initializePromise = this.initialize();
     this.initializeGlobals();
   }
@@ -56,6 +68,9 @@ export class AgentsmithClient<Agency extends GenericAgency> {
         body: JSON.stringify({ apiKey: sdkApiKey }),
       });
       const data = (await response.json()) as SdkExchangeResponse;
+      if ('error' in data) {
+        throw new Error(data.error);
+      }
       return data.jwt;
     } catch (error) {
       throw new Error('Failed to exchange API key for JWT');
