@@ -75,11 +75,12 @@ export const exchangeApiKeyForJwt = async (
   });
 
   if (error) {
-    logger.error('Error getting organization by API key hash', error);
+    logger.error(error, 'Error getting organization by API key hash');
     throw new Error('Failed to get organization by API key hash');
   }
 
   if (!data) {
+    logger.error('No data returned from get_organization_by_api_key_hash');
     throw new Error('No data returned from get_organization_by_api_key_hash');
   }
 

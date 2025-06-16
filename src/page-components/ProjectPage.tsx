@@ -24,7 +24,7 @@ export type ProjectPageProps = {
 export const ProjectPage = (props: ProjectPageProps) => {
   const { projectData } = props;
 
-  const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(false);
+  const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(true);
 
   const handleDownloadTypesClick = async () => {
     const response = await generateTypes(projectData.id);
@@ -170,12 +170,41 @@ const compiledPrompt = helloWorldPrompt.compile({
             <Info size={16} />
             <AlertTitle>1. Installation</AlertTitle>
             <AlertDescription>
+              <div className="text-xs">
+                During alpha phase we are only building the SDK to github branches, npm registry
+                coming soon!
+              </div>
+              Install the Agentsmith SDK via npm:
+              <div className="flex items-center gap-1 mt-2">
+                <div className="font-mono bg-muted p-2 rounded-md flex items-center gap-2">
+                  <Terminal size={16} className="inline-block mr-2" />
+                  <span>
+                    npm install
+                    git+ssh://git@github.com/chad-syntax/agentsmith.git#sdk-release-prod@0.0.1
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(
+                      'npm install git+ssh://git@github.com/chad-syntax/agentsmith.git#sdk-release-prod@0.0.1',
+                    );
+                    toast.success('Copied code to clipboard');
+                  }}
+                  className="hover:text-primary"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </AlertDescription>
+            {/* <AlertDescription>
               Install the Agentsmith SDK using npm or yarn:
               <div className="mt-2 font-mono bg-muted p-2 rounded-md">
                 <Terminal size={16} className="inline-block mr-2" />
                 npm install @agentsmith/sdk
               </div>
-            </AlertDescription>
+            </AlertDescription> */}
           </Alert>
           <Alert variant="default" className="mt-4">
             <Info size={16} />

@@ -32,13 +32,11 @@ export async function POST(request: Request) {
     jwt = exchangeResult.jwt;
     expiresAt = exchangeResult.expiresAt;
   } catch (error) {
-    logger.error(error, 'Failed to exchange API key for JWT, exchange failed');
-    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
-  }
-
-  if (jwt === null || expiresAt === null) {
-    logger.error('Failed to exchange API key for JWT, exchange failed');
-    return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
+    logger.error(error, 'Failed to exchange API key for JWT');
+    return NextResponse.json(
+      { error: 'Failed to exchange API key, check your SDK API key and ensure it is valid.' },
+      { status: 401 },
+    );
   }
 
   logger.info('Successfully exchanged API key for JWT');

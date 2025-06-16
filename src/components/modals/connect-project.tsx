@@ -87,7 +87,8 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
     try {
       await connectProject({
         projectUuid: values.projectId,
-        agentsmithFolder: values.agentsmithFolder,
+        // agentsmithFolder: values.agentsmithFolder,
+        agentsmithFolder: 'agentsmith',
         projectRepositoryId: values.projectRepositoryId,
         organizationUuid: selectedOrganization!.uuid,
       });
@@ -169,7 +170,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
               )}
             />
 
-            <FormField
+            {/* <FormField
               control={form.control}
               name="agentsmithFolder"
               render={({ field }) => (
@@ -180,7 +181,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
                   </FormControl>
                 </FormItem>
               )}
-            />
+            /> */}
 
             <Button type="submit" className="w-full">
               Connect Project
