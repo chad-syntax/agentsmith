@@ -4,6 +4,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "version": "0.0.2",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:types": "tsd --typings=\"./sdk/src/types.ts\" --files=\"__tests__/sdk/sdk.test-d.ts\"",
