@@ -63,7 +63,7 @@ import { Agency } from '../agentsmith/agentsmith.types';
 
 const agentsmithClient = new AgentsmithClient<Agency>('sdk_********************************', '${projectData.uuid}');
 
-const helloWorldPrompt = agentsmithClient.getPrompt('hello-world@0.0.1');
+const helloWorldPrompt = await agentsmithClient.getPrompt('hello-world@0.0.1');
 
 const compiledPrompt = helloWorldPrompt.compile({
   name: 'John',
