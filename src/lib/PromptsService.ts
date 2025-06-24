@@ -141,7 +141,7 @@ export class PromptsService extends AgentsmithSupabaseService {
   async getPromptByUuid(promptUuid: string) {
     const { data, error } = await this.supabase
       .from('prompts')
-      .select('*, projects(id, organizations(uuid), global_contexts(content))')
+      .select('*, projects(id, uuid, organizations(uuid), global_contexts(content))')
       .eq('uuid', promptUuid)
       .single();
 

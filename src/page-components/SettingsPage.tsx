@@ -175,3 +175,39 @@ export const SettingsPage = (props: SettingsPageProps) => {
     </div>
   );
 };
+
+export const SettingsPageSkeleton = () => (
+  <div className="p-4 flex flex-col gap-8">
+    <div>
+      <H2 className="mb-4">GitHub App Installation</H2>
+      <div className="bg-muted rounded w-80 h-8 animate-pulse mb-4 mt-6">&nbsp;</div>
+      <div className="bg-muted rounded w-32 h-6 animate-pulse">&nbsp;</div>
+    </div>
+
+    <div>
+      <H2 className="mb-4">GitHub App Installation Repositories</H2>
+      <div className="flex flex-col gap-2">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center gap-2">
+            <div className="bg-muted rounded w-4 h-4 animate-pulse">&nbsp;</div>
+            <div className="bg-muted rounded w-48 h-4 animate-pulse">&nbsp;</div>
+            <div className="bg-muted rounded w-24 h-5 animate-pulse">&nbsp;</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div>
+      <H2 className="mb-4">Openrouter Account</H2>
+      <div className="bg-muted rounded w-64 h-4 animate-pulse mb-4">&nbsp;</div>
+      <div className="bg-muted rounded w-32 h-6 animate-pulse">&nbsp;</div>
+    </div>
+
+    <div>
+      <H2 className="mb-4">API Key</H2>
+      <div className="bg-muted rounded w-96 h-4 animate-pulse mb-4">&nbsp;</div>
+      <div className="bg-muted rounded max-w-[450px] h-10 animate-pulse mb-4">&nbsp;</div>
+      <div className="bg-muted rounded w-80 h-4 animate-pulse">&nbsp;</div>
+    </div>
+  </div>
+);

@@ -119,3 +119,41 @@ export const EventsPage = (props: EventsPageProps) => {
     </div>
   );
 };
+
+export const EventsPageSkeleton = () => (
+  <div className="p-6">
+    <H1 className="mb-4">Events</H1>
+
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Date
+          </TableHead>
+          <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Severity
+          </TableHead>
+          <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Name
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {[1, 2, 3].map((i) => (
+          <TableRow key={i} className="hover:bg-muted">
+            <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+              <div className="bg-muted rounded w-46 h-5 animate-pulse">&nbsp;</div>
+            </TableCell>
+            <TableCell className="px-6 py-4 whitespace-nowrap">
+              <div className="bg-muted rounded w-10 h-5 animate-pulse">&nbsp;</div>
+            </TableCell>
+            <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-foreground flex gap-2 items-center">
+              <div className="bg-muted rounded w-5 h-5 animate-pulse">&nbsp;</div>
+              <div className="bg-muted rounded w-40 h-4 animate-pulse">&nbsp;</div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </div>
+);

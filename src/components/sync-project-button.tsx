@@ -84,11 +84,13 @@ export const SyncProjectButton = (props: SyncProjectButtonProps) => {
           )}
         </Button>
       </TooltipTrigger>
-      <TooltipContent
-        side="left"
-        className="p-0 bg-background text-foreground border border-muted [&_svg]:fill-muted [&_svg]:bg-muted shadow-sm"
-      >
-        <p className="relative px-3 py-1.5 bg-background rounded-md z-60">Sync Changes to GitHub</p>
+      <TooltipContent side="left">
+        {isTooltipOpen !== undefined && (
+          <p className="absolute animate-[ping_1s_ease-in-out_1_0s_normal]">
+            Sync Changes to GitHub
+          </p>
+        )}
+        <p>Sync Changes to GitHub</p>
       </TooltipContent>
     </Tooltip>
   );

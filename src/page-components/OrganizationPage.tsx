@@ -147,3 +147,73 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
     </div>
   );
 };
+
+export const OrganizationPageSkeleton = () => (
+  <div className="flex-1 w-full flex flex-col gap-12 p-4">
+    <div className="flex items-center gap-2">
+      <div className="bg-muted rounded w-64 h-12 animate-pulse">&nbsp;</div>
+      <Button variant="ghost" size="icon" disabled>
+        <Pencil className="h-4 w-4" />
+      </Button>
+    </div>
+
+    {/* Invite section skeleton */}
+    <div className="flex flex-wrap items-center gap-2">
+      <span className="font-medium">Invite Code:</span>
+      <div className="px-2 py-1 rounded bg-muted text-sm font-mono w-24 h-6 animate-pulse">
+        &nbsp;
+      </div>
+      <Button variant="ghost" size="icon" disabled>
+        <Clipboard className="h-4 w-4" />
+      </Button>
+      <Button variant="ghost" size="icon" disabled>
+        <LinkIcon className="h-4 w-4" />
+      </Button>
+    </div>
+
+    <div className="flex flex-col gap-4">
+      <H2>Projects</H2>
+      <Grid cols={3} gap={6} className="w-full">
+        {[1, 2, 3].map((i) => (
+          <Card key={i} className="h-full">
+            <CardHeader>
+              <div className="bg-muted rounded w-32 h-4 animate-pulse">&nbsp;</div>
+            </CardHeader>
+          </Card>
+        ))}
+      </Grid>
+    </div>
+
+    <div className="flex flex-col gap-4">
+      <H2>Organization Users</H2>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Role</TableHead>
+            <TableHead>Email</TableHead>
+            <TableHead>User ID</TableHead>
+            <TableHead>Created At</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[1, 2, 3].map((i) => (
+            <TableRow key={i}>
+              <TableCell>
+                <div className="bg-muted rounded w-16 h-4 animate-pulse">&nbsp;</div>
+              </TableCell>
+              <TableCell>
+                <div className="bg-muted rounded w-32 h-4 animate-pulse">&nbsp;</div>
+              </TableCell>
+              <TableCell>
+                <div className="bg-muted rounded w-24 h-4 animate-pulse">&nbsp;</div>
+              </TableCell>
+              <TableCell>
+                <div className="bg-muted rounded w-28 h-4 animate-pulse">&nbsp;</div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  </div>
+);

@@ -171,7 +171,7 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
           );
         })}
 
-        {process.env.VERCEL_ENV !== 'production' && (
+        {process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' && (
           <Card className="shadow-sm">
             <CardHeader>
               <CardTitle>Details</CardTitle>
@@ -187,3 +187,91 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
     </div>
   );
 };
+
+export const EventDetailPageSkeleton = () => (
+  <div className="p-6">
+    <div className="mb-2 flex items-center">
+      <Button
+        variant="link"
+        disabled
+        className="mr-4 text-primary hover:text-primary/90 flex items-center p-0"
+      >
+        <ArrowLeft className="w-4 h-4 mr-1" />
+        Back to Events
+      </Button>
+    </div>
+    <H1 className="mb-6">Event Details</H1>
+
+    <div className="space-y-6">
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle>Overview</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <P className="text-sm text-muted-foreground">Project</P>
+              <div className="mt-2 font-medium">
+                <div className="bg-muted rounded w-32 h-6 animate-pulse">&nbsp;</div>
+              </div>
+            </div>
+            <div>
+              <P className="text-sm text-muted-foreground">Type</P>
+              <div className="mt-2 font-medium">
+                <div className="bg-muted rounded w-24 h-6 animate-pulse">&nbsp;</div>
+              </div>
+            </div>
+            <div>
+              <P className="text-sm text-muted-foreground">Name</P>
+              <div className="mt-2 font-medium">
+                <div className="bg-muted rounded w-40 h-6 animate-pulse">&nbsp;</div>
+              </div>
+            </div>
+            <div>
+              <P className="text-sm text-muted-foreground">Severity</P>
+              <div className="mt-2 font-medium">
+                <div className="bg-muted rounded w-16 h-5 animate-pulse">&nbsp;</div>
+              </div>
+            </div>
+            <div>
+              <P className="text-sm text-muted-foreground">Date</P>
+              <div className="mt-2 font-medium">
+                <div className="bg-muted rounded w-48 h-6 animate-pulse">&nbsp;</div>
+              </div>
+            </div>
+            <div>
+              <P className="text-sm text-muted-foreground">Description</P>
+              <div className="mt-2 font-medium">
+                <div className="bg-muted rounded w-56 h-6 animate-pulse">&nbsp;</div>
+              </div>
+            </div>
+            <div>
+              <P className="text-sm text-muted-foreground">Pull Request</P>
+              <div className="mt-2 font-medium">
+                <div className="bg-muted rounded w-48 h-6 animate-pulse">&nbsp;</div>
+              </div>
+            </div>
+            <div>
+              <P className="text-sm text-muted-foreground">Source → Destination</P>
+              <div className="mt-2 font-medium">
+                <div className="bg-muted rounded w-40 h-6 animate-pulse">&nbsp;</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <H2>Changes</H2>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <div className="bg-muted rounded w-32 h-6 animate-pulse">&nbsp;</div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-muted rounded w-full h-32 animate-pulse">&nbsp;</div>
+        </CardContent>
+      </Card>
+    </div>
+  </div>
+);

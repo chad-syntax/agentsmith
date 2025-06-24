@@ -13,13 +13,14 @@ import {
   RefreshCw,
   Copy,
   ExternalLink,
+  ArrowLeft,
 } from 'lucide-react';
 import { Database } from '@/app/__generated__/supabase.types';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
 import { updatePromptVersion, createDraftVersion } from '@/app/actions/prompts';
 import { PromptContentEditor } from '@/components/editors/prompt-editor';
-import { VariablesSidebar } from '@/components/variables-sidebar';
+import { VariablesSidebar, VariablesSidebarSkeleton } from '@/components/variables-sidebar';
 import { PromptTestModal } from '@/components/modals/test-prompt';
 import { PublishUpdateConfirmModal } from '@/components/modals/publish-update-confirm';
 import { Button } from '@/components/ui/button';
@@ -259,9 +260,9 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
                 selectedProjectUuid,
                 currentPromptVersion.prompts.uuid,
               )}
-              className="text-blue-500 hover:text-blue-600"
+              className="text-blue-500 hover:text-blue-600 flex items-center gap-2"
             >
-              ← Back to Prompt
+              <ArrowLeft size={16} /> Back to Prompt
             </Link>
           </div>
 
@@ -434,3 +435,59 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     </div>
   );
 };
+
+export const EditPromptVersionPageSkeleton = () => (
+  <div className={cn('flex', STUDIO_FULL_HEIGHT)}>
+    <div className="flex-1 overflow-auto">
+      <div className="p-6">
+        {/* Back button skeleton */}
+        <div className="mb-6 flex justify-between items-center">
+          <div className="bg-muted rounded w-32 h-6 animate-pulse">&nbsp;</div>
+        </div>
+
+        {/* Title and status badge skeleton */}
+        <div className="flex items-end justify-start mb-4 gap-2">
+          <div className="bg-muted rounded w-48 h-12 animate-pulse">&nbsp;</div>
+          <div className="bg-muted rounded w-20 h-6 animate-pulse">&nbsp;</div>
+        </div>
+
+        {/* Version info and action buttons skeleton */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-start gap-0.5">
+            <div className="bg-muted rounded w-32 h-8 animate-pulse">&nbsp;</div>
+            <div className="bg-muted rounded w-8 h-8 animate-pulse">&nbsp;</div>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            {Array.from({ length: 5 }, (_, index) => (
+              <div key={index} className="bg-muted rounded w-24 h-9 animate-pulse">
+                &nbsp;
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Content skeleton */}
+        <div className="space-y-6">
+          {/* Config editor skeleton */}
+          <div>
+            <div className="pb-2 flex justify-between items-center mb-2">
+              <div className="bg-muted rounded w-16 h-5 animate-pulse">&nbsp;</div>
+              <div className="bg-muted rounded w-48 h-4 animate-pulse">&nbsp;</div>
+            </div>
+            <div className="bg-muted rounded w-full h-32 animate-pulse">&nbsp;</div>
+          </div>
+
+          {/* Content editor skeleton */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="bg-muted rounded w-16 h-5 animate-pulse">&nbsp;</div>
+            </div>
+            <div className="bg-muted rounded w-full h-96 animate-pulse">&nbsp;</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <VariablesSidebarSkeleton />
+  </div>
+);

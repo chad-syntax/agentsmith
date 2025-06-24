@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { H1, H2, H3, P } from '@/components/typography';
 import { GetPromptsByProjectIdResult } from '@/lib/PromptsService';
 import { DisplayTime } from '@/components/display-time';
+import { useRouter } from 'next/navigation';
 
 type PromptsPageProps = {
   prompts: NonNullable<GetPromptsByProjectIdResult>;
@@ -20,6 +21,17 @@ export const PromptsPage = (props: PromptsPageProps) => {
   const { prompts, projectId } = props;
   const { selectedProjectUuid } = useApp();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const router = useRouter();
+
+  const handleEditPromptVersion = (
+    e: React.MouseEvent<HTMLButtonElement>,
+    promptVersionUuid: string,
+  ) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    router.push(routes.studio.editPromptVersion(selectedProjectUuid, promptVersionUuid));
+  };
 
   return (
     <div className="p-6">
@@ -75,7 +87,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
               >
                 <div className="bg-background rounded-lg border p-6 hover:shadow-md transition-shadow h-full">
                   <div className="flex justify-between items-start mb-4">
-                    <H2 className="hover:text-primary">{prompt.name}</H2>
+                    <H2 className="hover:text-primary truncate">{prompt.name}</H2>
                   </div>
                   <div className="mb-4">
                     <P className="text-muted-foreground line-clamp-3">{latestVersion?.content}</P>
@@ -108,6 +120,15 @@ export const PromptsPage = (props: PromptsPageProps) => {
                           {latestVersion.status}
                         </span>
                       )}
+                      {latestVersion && (
+                        <Button
+                          variant="link"
+                          onClick={(e) => handleEditPromptVersion(e, latestVersion.uuid)}
+                          className="p-0"
+                        >
+                          Edit
+                        </Button>
+                      )}
                     </div>
                     <span className="text-sm text-muted-foreground">
                       {latestVersion ? (
@@ -135,3 +156,43 @@ export const PromptsPage = (props: PromptsPageProps) => {
     </div>
   );
 };
+
+export const PromptsPageSkeleton = () => (
+  <div className="p-6">
+    <div className="flex justify-between items-center mb-6">
+      <H1>Prompts Library</H1>
+      <div className="space-x-4">
+        <Button disabled>Create New Prompt</Button>
+      </div>
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {Array.from({ length: 6 }).map((_, index) => (
+        <div key={index} className="bg-background rounded-lg border p-6 animate-pulse">
+          <div className="flex justify-between items-start mb-4">
+            <div className="h-6 bg-muted rounded w-3/4"></div>
+          </div>
+          <div className="mb-4">
+            <div className="h-4 bg-muted rounded w-full mb-2"></div>
+            <div className="h-4 bg-muted rounded w-2/3 mb-2"></div>
+            <div className="h-4 bg-muted rounded w-1/2"></div>
+          </div>
+          <div className="mb-4">
+            <div className="h-4 bg-muted rounded w-1/3 mb-2"></div>
+            <div className="flex flex-wrap gap-2">
+              <div className="h-6 bg-muted rounded w-16"></div>
+              <div className="h-6 bg-muted rounded w-20"></div>
+              <div className="h-6 bg-muted rounded w-14"></div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-4 bg-muted rounded w-12"></div>
+              <div className="h-5 bg-muted rounded w-16"></div>
+            </div>
+            <div className="h-4 bg-muted rounded w-20"></div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);

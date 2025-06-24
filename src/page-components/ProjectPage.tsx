@@ -272,3 +272,19 @@ const compiledPrompt = helloWorldPrompt.compile({
     </>
   );
 };
+
+export const ProjectPageSkeleton = () => (
+  <div className="p-6">
+    <div className="bg-muted rounded w-3/4 h-10 mb-4 animate-pulse">&nbsp;</div>
+    <div className="bg-muted rounded w-full h-6 animate-pulse">&nbsp;</div>
+    <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="bg-muted rounded w-full h-60 animate-pulse">&nbsp;</div>
+      <div className="bg-muted rounded w-full h-60 animate-pulse">&nbsp;</div>
+      <div className="bg-muted rounded w-full h-60 animate-pulse">&nbsp;</div>
+    </div>
+    <div className="bg-muted rounded w-1/2 h-8 mt-6 animate-pulse">&nbsp;</div>
+    <div className="bg-muted rounded w-full h-30 mt-6 animate-pulse">&nbsp;</div>
+    <div className="bg-muted rounded w-full h-40 mt-6 animate-pulse">&nbsp;</div>
+    <div className="bg-muted rounded w-full h-60 mt-6 animate-pulse">&nbsp;</div>
+  </div>
+);

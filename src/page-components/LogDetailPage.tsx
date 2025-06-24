@@ -176,3 +176,78 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
     </div>
   );
 };
+
+export const LogDetailPageSkeleton = () => (
+  <div className="p-6">
+    <div className="mb-2 flex items-center">
+      <Button
+        variant="link"
+        disabled
+        className="mr-4 text-primary hover:text-primary/90 flex items-center p-0"
+      >
+        <ArrowLeft className="w-4 h-4 mr-1" />
+        Back to Logs
+      </Button>
+    </div>
+    <H1 className="mb-6">Log Details</H1>
+
+    <div className="space-y-6">
+      <div className="bg-card p-6 rounded-lg shadow-sm">
+        <H2 className="mb-4">Overview</H2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <P className="text-sm text-muted-foreground">Project</P>
+            <div className="mt-2 font-medium">
+              <div className="bg-muted rounded w-32 h-6 animate-pulse">&nbsp;</div>
+            </div>
+          </div>
+          <div>
+            <P className="text-sm text-muted-foreground">Status</P>
+            <div className="mt-2 font-medium">
+              <div className="bg-muted rounded w-20 h-6 animate-pulse">&nbsp;</div>
+            </div>
+          </div>
+          <div>
+            <P className="text-sm text-muted-foreground">Start Time</P>
+            <div className="mt-2 font-medium">
+              <div className="bg-muted rounded w-40 h-6 animate-pulse">&nbsp;</div>
+            </div>
+          </div>
+          <div>
+            <P className="text-sm text-muted-foreground">End Time</P>
+            <div className="mt-2 font-medium">
+              <div className="bg-muted rounded w-40 h-6 animate-pulse">&nbsp;</div>
+            </div>
+          </div>
+          <div>
+            <P className="text-sm text-muted-foreground">Duration</P>
+            <div className="mt-2 font-medium">
+              <div className="bg-muted rounded w-24 h-6 animate-pulse">&nbsp;</div>
+            </div>
+          </div>
+          <div>
+            <P className="text-sm text-muted-foreground">Prompt</P>
+            <div className="mt-2 font-medium">
+              <div className="bg-muted rounded w-48 h-6 animate-pulse">&nbsp;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-card p-6 rounded-lg shadow-sm">
+        <H2 className="mb-4">Variables</H2>
+        <div className="bg-muted rounded w-full h-32 animate-pulse">&nbsp;</div>
+      </div>
+
+      <div className="bg-card p-6 rounded-lg shadow-sm">
+        <H2 className="mb-4">Raw Input</H2>
+        <div className="bg-muted rounded w-full h-32 animate-pulse">&nbsp;</div>
+      </div>
+
+      <div className="bg-card p-6 rounded-lg shadow-sm">
+        <H2 className="mb-4">Raw Output</H2>
+        <div className="bg-muted rounded w-full h-32 animate-pulse">&nbsp;</div>
+      </div>
+    </div>
+  </div>
+);

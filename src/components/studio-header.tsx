@@ -161,9 +161,6 @@ export const StudioHeader = () => {
             <RefreshCcw className="size-4" />
           </SyncProjectButton>
           <ThemeSwitcher />
-          <Link className="px-2" href={routes.studio.settings(selectedOrganizationUuid)}>
-            <Settings className="h-4 w-4" />
-          </Link>
           <Link href={routes.studio.account}>
             <CurrentUserAvatar />
           </Link>

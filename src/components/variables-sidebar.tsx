@@ -71,3 +71,18 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
     </Collapsible>
   );
 };
+
+export const VariablesSidebarSkeleton = () => (
+  <div className="w-80 border-l bg-background p-4">
+    <div className="mb-4">
+      <div className="bg-muted rounded w-24 h-6 animate-pulse">&nbsp;</div>
+    </div>
+    <div className="space-y-3">
+      {Array.from({ length: 4 }, (_, index) => (
+        <div key={index} className="bg-muted rounded w-full h-16 animate-pulse">
+          &nbsp;
+        </div>
+      ))}
+    </div>
+  </div>
+);

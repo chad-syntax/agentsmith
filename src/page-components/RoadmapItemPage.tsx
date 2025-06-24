@@ -16,6 +16,7 @@ import { routes } from '@/utils/routes';
 import { StatusBadge } from '@/components/roadmap/status-badge';
 import { Badge } from '@/components/ui/badge';
 import { RoadmapStatus, VALID_ROADMAP_SCORES } from '@/app/constants';
+import { ArrowLeft } from 'lucide-react';
 
 type RoadmapItemPageProps = {
   roadmapItem: APIRoadmapItem;
@@ -118,9 +119,9 @@ export const RoadmapItemPage = (props: RoadmapItemPageProps) => {
       <div className="mb-8">
         <Link
           href={routes.marketing.roadmap()}
-          className="text-sm text-primary hover:underline mb-4 inline-block"
+          className="text-sm text-primary hover:underline mb-4 inline-block flex items-center gap-2"
         >
-          &larr; Back to Roadmap
+          <ArrowLeft size={16} /> Back to Roadmap
         </Link>
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-2">

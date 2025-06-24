@@ -4,6 +4,7 @@ import { useApp } from '@/providers/app';
 import { useAuth } from '@/providers/auth';
 import { H1, H3 } from '@/components/typography';
 import { SignOutButton } from '@/components/sign-out-button';
+import { Button } from '@/components/ui/button';
 import { Github, Mail } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -66,3 +67,34 @@ export const AccountPage = () => {
     </div>
   );
 };
+
+export const AccountPageSkeleton = () => (
+  <div className="flex-1 w-full flex flex-col gap-8 p-4">
+    <div className="flex flex-row gap-8 items-center justify-start">
+      <H1>Account</H1>
+      <Button variant="destructive" disabled>
+        Sign Out
+      </Button>
+    </div>
+    <div className="flex flex-col gap-2 items-start">
+      <H3>Details</H3>
+      <div className="bg-muted rounded w-48 h-6 animate-pulse">&nbsp;</div>
+      <div className="bg-muted rounded w-32 h-6 animate-pulse">&nbsp;</div>
+    </div>
+    <div className="flex flex-col gap-4 items-start">
+      <H3>Organization Memberships</H3>
+      <div className="flex flex-col gap-2 items-start">
+        <div className="flex items-center gap-2">
+          <div className="bg-muted rounded w-16 h-6 animate-pulse">&nbsp;</div>
+          <div className="bg-muted rounded w-2 h-2 animate-pulse">&nbsp;</div>
+          <div className="bg-muted rounded w-32 h-6 animate-pulse">&nbsp;</div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="bg-muted rounded w-20 h-6 animate-pulse">&nbsp;</div>
+          <div className="bg-muted rounded w-2 h-2 animate-pulse">&nbsp;</div>
+          <div className="bg-muted rounded w-28 h-6 animate-pulse">&nbsp;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
