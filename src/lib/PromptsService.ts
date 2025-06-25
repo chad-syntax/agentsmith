@@ -839,6 +839,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       promptVersionId: targetVersion.id,
       variables: variablesAndContext,
       rawInput,
+      source: 'STUDIO',
     });
 
     if (!logEntry) {

@@ -24,6 +24,10 @@ const badgeVariants = cva(
         IN_PROGRESS: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
         COMPLETED: 'bg-green-500/10 text-green-400 border-green-500/20',
         CANCELLED: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+        STUDIO: 'bg-green-500/10 text-green-400 border-green-500/20',
+        SDK: 'bg-yellow-600/10 text-yellow-600 border-yellow-600/20',
+        AGENTSMITH_EVAL: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+        AGENTSMITH_AI_AUTHOR: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
       },
     },
     defaultVariants: {

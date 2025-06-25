@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { GetLogByUuidResult } from '@/lib/LLMLogsService';
 import { JsonEditor } from '@/components/editors/json-editor';
 import { DisplayTime } from '@/components/display-time';
+import { LogSourceBadge } from '@/components/log-source-badge';
 
 type LogDetailPageProps = {
   log: NonNullable<GetLogByUuidResult>;
@@ -88,34 +89,6 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
               </div>
             </div>
             <div>
-              <P className="text-sm text-muted-foreground">Start Time</P>
-              <div className="mt-2 font-medium">
-                <DisplayTime
-                  skeletonClassName="h-[24px]"
-                  dateTime={log.start_time}
-                  formatString="MMM d, yyyy h:mm a"
-                />
-              </div>
-            </div>
-            <div>
-              <P className="text-sm text-muted-foreground">End Time</P>
-              <div className="mt-2 font-medium">
-                {log.end_time ? (
-                  <DisplayTime
-                    skeletonClassName="h-[24px]"
-                    dateTime={log.end_time}
-                    formatString="MMM d, yyyy h:mm a"
-                  />
-                ) : (
-                  'Still running'
-                )}
-              </div>
-            </div>
-            <div>
-              <P className="text-sm text-muted-foreground">Duration</P>
-              <div className="mt-2 font-medium">{getDuration(log.start_time, log.end_time)}</div>
-            </div>
-            <div>
               <P className="text-sm text-muted-foreground">Prompt</P>
               <div className="mt-2 font-medium">
                 {log.prompt_versions ? (
@@ -152,6 +125,40 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
                   'N/A'
                 )}
               </div>
+            </div>
+            <div>
+              <P className="text-sm text-muted-foreground">Source</P>
+              <div className="mt-2 font-medium">
+                <LogSourceBadge source={log.source} />
+              </div>
+            </div>
+            <div>
+              <P className="text-sm text-muted-foreground">Start Time</P>
+              <div className="mt-2 font-medium">
+                <DisplayTime
+                  skeletonClassName="h-[24px]"
+                  dateTime={log.start_time}
+                  formatString="MMM d, yyyy h:mm a"
+                />
+              </div>
+            </div>
+            <div>
+              <P className="text-sm text-muted-foreground">End Time</P>
+              <div className="mt-2 font-medium">
+                {log.end_time ? (
+                  <DisplayTime
+                    skeletonClassName="h-[24px]"
+                    dateTime={log.end_time}
+                    formatString="MMM d, yyyy h:mm a"
+                  />
+                ) : (
+                  'Still running'
+                )}
+              </div>
+            </div>
+            <div>
+              <P className="text-sm text-muted-foreground">Duration</P>
+              <div className="mt-2 font-medium">{getDuration(log.start_time, log.end_time)}</div>
             </div>
           </div>
         </div>
@@ -208,6 +215,18 @@ export const LogDetailPageSkeleton = () => (
             </div>
           </div>
           <div>
+            <P className="text-sm text-muted-foreground">Prompt</P>
+            <div className="mt-2 font-medium">
+              <div className="bg-muted rounded w-48 h-6 animate-pulse">&nbsp;</div>
+            </div>
+          </div>
+          <div>
+            <P className="text-sm text-muted-foreground">Source</P>
+            <div className="mt-2 font-medium">
+              <div className="bg-muted rounded w-48 h-6 animate-pulse">&nbsp;</div>
+            </div>
+          </div>
+          <div>
             <P className="text-sm text-muted-foreground">Start Time</P>
             <div className="mt-2 font-medium">
               <div className="bg-muted rounded w-40 h-6 animate-pulse">&nbsp;</div>
@@ -223,12 +242,6 @@ export const LogDetailPageSkeleton = () => (
             <P className="text-sm text-muted-foreground">Duration</P>
             <div className="mt-2 font-medium">
               <div className="bg-muted rounded w-24 h-6 animate-pulse">&nbsp;</div>
-            </div>
-          </div>
-          <div>
-            <P className="text-sm text-muted-foreground">Prompt</P>
-            <div className="mt-2 font-medium">
-              <div className="bg-muted rounded w-48 h-6 animate-pulse">&nbsp;</div>
             </div>
           </div>
         </div>

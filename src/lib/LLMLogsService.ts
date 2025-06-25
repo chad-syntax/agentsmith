@@ -1,4 +1,4 @@
-import { Json } from '@/app/__generated__/supabase.types';
+import { Database, Json } from '@/app/__generated__/supabase.types';
 import {
   AgentsmithSupabaseService,
   AgentsmithSupabaseServiceConstructorOptions,
@@ -11,6 +11,7 @@ type CreateLogEntryOptions = {
   promptVersionId: number;
   variables: Json;
   rawInput: OpenrouterRequestBody;
+  source: Database['public']['Enums']['llm_log_source'];
 };
 
 export class LLMLogsService extends AgentsmithSupabaseService {
@@ -21,7 +22,7 @@ export class LLMLogsService extends AgentsmithSupabaseService {
   }
 
   public async createLogEntry(options: CreateLogEntryOptions) {
-    const { projectId, promptVersionId, variables, rawInput } = options;
+    const { projectId, promptVersionId, variables, rawInput, source } = options;
 
     const { data, error } = await this.supabase
       .from('llm_logs')
@@ -31,6 +32,7 @@ export class LLMLogsService extends AgentsmithSupabaseService {
         prompt_variables: variables,
         raw_input: rawInput as Json,
         start_time: new Date().toISOString(),
+        source,
       })
       .select()
       .single();

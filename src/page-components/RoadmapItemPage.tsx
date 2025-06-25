@@ -119,7 +119,7 @@ export const RoadmapItemPage = (props: RoadmapItemPageProps) => {
       <div className="mb-8">
         <Link
           href={routes.marketing.roadmap()}
-          className="text-sm text-primary hover:underline mb-4 inline-block flex items-center gap-2"
+          className="text-sm text-primary hover:underline mb-4 flex items-center gap-2"
         >
           <ArrowLeft size={16} /> Back to Roadmap
         </Link>
