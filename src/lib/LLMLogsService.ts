@@ -99,6 +99,10 @@ export class LLMLogsService extends AgentsmithSupabaseService {
 
     return data;
   }
+
+  public static createLogUuidSSE(logUuid: string) {
+    return `event: logUuid\ndata: ${JSON.stringify({ logUuid })}\n\n`;
+  }
 }
 
 export type GetLogsByProjectIdResult = Awaited<

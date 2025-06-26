@@ -19,11 +19,11 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { JsonEditor } from '../editors/json-editor';
 import { EditorPromptVariable } from '@/types/prompt-editor';
 import { Database } from '@/app/__generated__/supabase.types';
-import { cn } from '@/utils/shadcn';
+import merge from 'lodash.merge';
+import { streamToIterator } from '@/utils/stream-to-iterator';
 
 type PromptVersion = Database['public']['Tables']['prompt_versions']['Row'] & {
   prompts: Database['public']['Tables']['prompts']['Row'];
@@ -78,6 +78,49 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
         }
 
         throw new Error(errorData.error || 'Failed to run prompt');
+      }
+
+      if ((promptVersion.config as any)?.stream && response.body) {
+        let fullResult: any = {};
+        let content = '';
+
+        try {
+          const stream = streamToIterator(response.body);
+          for await (const event of stream) {
+            if (event.type === 'logUuid') {
+              if (event.data.logUuid) {
+                fullResult.logUuid = event.data.logUuid;
+              }
+            } else {
+              const chunk = event.data;
+              // usage chunk contains null stop values we don't want to merge
+              if (chunk.usage) {
+                fullResult.completion.usage = merge(fullResult.completion.usage, chunk.usage);
+              } else if (chunk.choices) {
+                content += chunk.choices[0].delta.content ?? '';
+                setTestResult(content);
+              }
+              fullResult.completion = merge(fullResult.completion, chunk);
+            }
+          }
+
+          if (fullResult.completion.choices?.[0]) {
+            delete fullResult.completion.choices[0].delta;
+            fullResult.completion.choices[0].message = {
+              role: 'assistant',
+              content,
+            };
+          }
+
+          setFullResult(fullResult);
+        } catch (error) {
+          console.error('Error testing prompt:', error);
+          setTestError(error instanceof Error ? error.message : 'Unknown error occurred');
+        } finally {
+          setIsRunning(false);
+        }
+
+        return;
       }
 
       const data = await response.json();
@@ -212,7 +255,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
                   </AlertDescription>
                 </Alert>
               )}
-              {fullResult ? (
+              {testResult ? (
                 <Card className="mb-4">
                   <CardHeader>
                     <CardTitle>Response</CardTitle>
@@ -237,7 +280,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
                   className="flex items-center gap-1 mb-2"
                 >
                   {showRawOutput ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  <span className="text-sm font-medium">Raw Output</span>
+                  <span className="text-sm font-medium">Execution Response</span>
                 </Button>
               </div>
             )}

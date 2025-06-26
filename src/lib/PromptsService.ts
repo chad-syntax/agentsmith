@@ -875,9 +875,16 @@ export class PromptsService extends AgentsmithSupabaseService {
         throw new Error(`Failed to call OpenRouter API: ${responseText}`);
       }
 
-      const completion = await response.json();
+      if (config.stream) {
+        return {
+          stream: response.body,
+          logUuid: logEntry.uuid,
+        };
+      }
 
-      await this.services.llmLogs.updateLogWithCompletion(logEntry.uuid, completion);
+      const completion = (await response.json()) as OpenrouterRequestBody;
+
+      await this.services.llmLogs.updateLogWithCompletion(logEntry.uuid, completion as any);
 
       return { completion, logUuid: logEntry.uuid };
     } catch (error) {

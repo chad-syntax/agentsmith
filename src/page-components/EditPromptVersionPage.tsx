@@ -142,19 +142,21 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     setIsSaving(true);
 
     try {
+      const vars = variables.map((v) => ({
+        id: v.id,
+        name: v.name,
+        type: v.type as Database['public']['Enums']['variable_type'],
+        required: v.required,
+        default_value: v.default_value,
+      }));
+
       const response = await updatePromptVersion({
         projectUuid: selectedProjectUuid,
         promptVersionUuid: currentPromptVersion.uuid,
         content,
         config,
         status,
-        variables: variables.map((v) => ({
-          id: v.id,
-          name: v.name,
-          type: v.type as Database['public']['Enums']['variable_type'],
-          required: v.required,
-          default_value: v.default_value,
-        })),
+        variables: vars,
       });
 
       if (!response.success) {
@@ -173,7 +175,10 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
 
       setCurrentPromptVersion({
         ...currentPromptVersion,
+        content,
+        config: config as any,
         status,
+        prompt_variables: vars as any,
       });
 
       setInitialContent(content);

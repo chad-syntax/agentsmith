@@ -1,3 +1,4 @@
+import { after } from 'next/server';
 import { ORGANIZATION_KEYS } from '@/app/constants';
 import { createClient } from '@/lib/supabase/server';
 import { createJwtClient, exchangeApiKeyForJwt } from '@/lib/supabase/server-api-key';
@@ -6,6 +7,8 @@ import { CompletionConfig } from '@/lib/openrouter';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { validateGlobalContext, validateVariables } from '@/utils/template-utils';
 import merge from 'lodash.merge';
+import { streamToIterator } from '@/utils/stream-to-iterator';
+import { LLMLogsService } from '@/lib/LLMLogsService';
 
 export const maxDuration = 300; // 5 minute function timeout
 
@@ -125,8 +128,72 @@ export async function POST(
       globalContext: globalContext as Record<string, any>,
     });
 
+    if (response.stream) {
+      const [streamForClient, streamForLogging] = response.stream.tee();
+
+      const logStreamedCompletion = async () => {
+        let fullCompletion: any = {};
+        let content = '';
+
+        try {
+          const stream = streamToIterator(streamForLogging);
+          for await (const event of stream) {
+            if (event.type === 'logUuid') {
+              response.logUuid = event.data.logUuid;
+            } else {
+              const chunk = event.data;
+              // usage chunk contains null stop values we don't want to merge
+              if (chunk.usage) {
+                fullCompletion.usage = merge(fullCompletion.usage, chunk.usage);
+              } else if (chunk.choices) {
+                content += chunk.choices[0].delta.content ?? '';
+                fullCompletion = merge(fullCompletion, chunk);
+              }
+            }
+          }
+
+          // rewrite delta to message
+          if (fullCompletion.choices?.[0]) {
+            delete fullCompletion.choices[0].delta;
+            fullCompletion.choices[0].message = { role: 'assistant', content };
+          }
+
+          await agentsmith.services.llmLogs.updateLogWithCompletion(
+            response.logUuid,
+            fullCompletion,
+          );
+        } catch (error) {
+          agentsmith.logger.error(error, 'Error logging streamed completion');
+          await agentsmith.services.llmLogs.updateLogWithCompletion(response.logUuid, {
+            error: 'Failed to log stream',
+          });
+        }
+      };
+
+      after(logStreamedCompletion);
+
+      const customEventStream = new TransformStream({
+        start(controller) {
+          const logUuidEvent = LLMLogsService.createLogUuidSSE(response.logUuid);
+          controller.enqueue(new TextEncoder().encode(logUuidEvent));
+        },
+        transform(chunk, controller) {
+          controller.enqueue(chunk);
+        },
+      });
+
+      return new Response(streamForClient.pipeThrough(customEventStream), {
+        headers: {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          Connection: 'keep-alive',
+        },
+      });
+    }
+
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
+    agentsmith.logger.error(error, 'Error running prompt');
     return NextResponse.json({ error: 'Error running prompt' }, { status: 500 });
   }
 }
