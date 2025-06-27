@@ -24,6 +24,9 @@ import { EditorPromptVariable } from '@/types/prompt-editor';
 import { Database } from '@/app/__generated__/supabase.types';
 import merge from 'lodash.merge';
 import { streamToIterator } from '@/utils/stream-to-iterator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MarkdownEditor } from '../editors/markdown-editor';
+import { MarkdownRenderer } from '../markdown-renderer';
 
 type PromptVersion = Database['public']['Tables']['prompt_versions']['Row'] & {
   prompts: Database['public']['Tables']['prompts']['Row'];
@@ -45,10 +48,12 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
   const [testResult, setTestResult] = useState<string | null>(null);
   const [fullResult, setFullResult] = useState<any | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
-  const [showRawOutput, setShowRawOutput] = useState(false);
+  const [selectedTab, setSelectedTab] = useState('content');
 
   const { selectedOrganizationUuid, hasOpenRouterKey, isOrganizationAdmin, selectedProjectUuid } =
     useApp();
+
+  const { onboardingChecklist, setOnboardingChecklist } = useApp();
 
   const handleTestPrompt = async () => {
     setIsRunning(true);
@@ -135,6 +140,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
       setTestError(error instanceof Error ? error.message : 'Unknown error occurred');
     } finally {
       setIsRunning(false);
+      setOnboardingChecklist((prev) => (!prev ? null : { ...prev, promptTested: true }));
     }
   };
 
@@ -238,63 +244,54 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
             </div>
           </div>
           <div className="md:flex-3 max-h-[calc(100vh-14rem)] flex flex-col overflow-hidden">
-            <div>
-              <h3 className="font-medium text-lg mb-4">Test Results</h3>
+            <div className="flex items-center justify-between gap-4 mb-4">
+              <h3 className="font-medium text-lg">Test Results</h3>
               {fullResult?.logUuid && (
-                <Alert className="mb-4">
-                  <AlertDescription className="flex justify-between items-center">
-                    <span>View detailed execution log</span>
-                    <Button variant="link" asChild className="p-0">
-                      <Link
-                        href={routes.studio.logDetail(selectedProjectUuid, fullResult.logUuid)}
-                        target="_blank"
-                      >
-                        View Log →
-                      </Link>
-                    </Button>
-                  </AlertDescription>
-                </Alert>
-              )}
-              {testResult ? (
-                <Card className="mb-4">
-                  <CardHeader>
-                    <CardTitle>Response</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="whitespace-pre-wrap bg-muted p-3 rounded-md max-h-[300px] overflow-auto">
-                      {testResult}
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="text-center">
-                  <CardContent>Results will appear here.</CardContent>
-                </Card>
+                <div className="text-sm">
+                  <Link
+                    href={routes.studio.logDetail(selectedProjectUuid, fullResult.logUuid)}
+                    target="_blank"
+                    className="text-blue-500 hover:underline"
+                  >
+                    View detailed execution log →
+                  </Link>
+                </div>
               )}
             </div>
-            {fullResult && (
-              <div>
-                <Button
-                  variant="ghost"
-                  onClick={() => setShowRawOutput(!showRawOutput)}
-                  className="flex items-center gap-1 mb-2"
-                >
-                  {showRawOutput ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                  <span className="text-sm font-medium">Execution Response</span>
-                </Button>
-              </div>
-            )}
-            {fullResult && showRawOutput && (
-              <div className="flex-1 flex flex-col overflow-auto border rounded">
-                <div className="flex-1 ">
-                  <JsonEditor
-                    innerClassName="border-none"
-                    value={fullResult}
-                    onChange={() => {}}
-                    readOnly
-                  />
-                </div>
-              </div>
+
+            {testResult ? (
+              <Tabs
+                value={selectedTab}
+                onValueChange={setSelectedTab}
+                className="flex-1 flex flex-col overflow-hidden"
+              >
+                <TabsList className="w-full md:w-xl rounded-md">
+                  <TabsTrigger className="cursor-pointer rounded-md" value="content">
+                    Content
+                  </TabsTrigger>
+                  <TabsTrigger className="cursor-pointer rounded-md" value="markdown">
+                    Markdown
+                  </TabsTrigger>
+                  <TabsTrigger className="cursor-pointer rounded-md" value="json">
+                    JSON
+                  </TabsTrigger>
+                </TabsList>
+                <TabsContent value="content" className="flex-1 overflow-auto">
+                  <MarkdownEditor value={testResult} readOnly minHeight="100%" />
+                </TabsContent>
+                <TabsContent value="markdown" className="flex-1 overflow-auto">
+                  <div className="p-4 border rounded-md">
+                    <MarkdownRenderer>{testResult}</MarkdownRenderer>
+                  </div>
+                </TabsContent>
+                <TabsContent value="json" className="flex-1 overflow-auto">
+                  <JsonEditor value={fullResult} readOnly minHeight="100%" />
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <Card className="text-center">
+                <CardContent>Results will appear here.</CardContent>
+              </Card>
             )}
           </div>
         </div>

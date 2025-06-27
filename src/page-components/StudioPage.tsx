@@ -1,14 +1,12 @@
 import { routes } from '@/utils/routes';
 import { H1, H3, P } from '@/components/typography';
-import { GetOnboardingChecklistResult, GetUserOrganizationDataResult } from '@/lib/UsersService';
+import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { OnboardingChecklist } from '@/components/onboarding-checklist';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type StudioPageProps = {
   userOrganizationData: NonNullable<GetUserOrganizationDataResult>;
-  onboardingChecklist: GetOnboardingChecklistResult;
 };
 
 const StudioPageHeader = () => (
@@ -45,7 +43,7 @@ const StudioPageHeader = () => (
 );
 
 export const StudioPage = (props: StudioPageProps) => {
-  const { userOrganizationData, onboardingChecklist } = props;
+  const { userOrganizationData } = props;
 
   return (
     <div className="p-4">
@@ -56,14 +54,6 @@ export const StudioPage = (props: StudioPageProps) => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {userOrganizationData.organization_users.map((orgUser) => {
-              const onboardingChecklistItem = onboardingChecklist.find(
-                (item) => item?.organizationUuid === orgUser.organizations.uuid,
-              );
-
-              const onboardingComplete = Object.values(onboardingChecklistItem ?? {}).every(
-                (item) => item,
-              );
-
               return (
                 <Card
                   key={orgUser.organizations.uuid}
@@ -97,14 +87,6 @@ export const StudioPage = (props: StudioPageProps) => {
                       </ul>
                     )}
                   </CardContent>
-                  {orgUser.role === 'ADMIN' && onboardingChecklistItem && !onboardingComplete && (
-                    <CardContent>
-                      <OnboardingChecklist
-                        defaultProjectUuid={orgUser.organizations.projects[0]?.uuid}
-                        onboardingChecklistItem={onboardingChecklistItem}
-                      />
-                    </CardContent>
-                  )}
                 </Card>
               );
             })}

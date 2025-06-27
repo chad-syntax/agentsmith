@@ -24,6 +24,8 @@ export const SyncProjectButton = (props: SyncProjectButtonProps) => {
   const [isTooltipOpen, setIsTooltipOpen] = useState<boolean | undefined>(undefined);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const { onboardingChecklist, setOnboardingChecklist } = useApp();
+
   const targetProjectUuid = projectUuid ?? selectedProjectUuid;
 
   const [loading, setLoading] = useState(false);
@@ -47,6 +49,10 @@ export const SyncProjectButton = (props: SyncProjectButtonProps) => {
 
     if (onSyncComplete) {
       onSyncComplete();
+    }
+
+    if (!onboardingChecklist?.repoSynced) {
+      setOnboardingChecklist((prev) => (!prev ? null : { ...prev, repoSynced: true }));
     }
   };
 

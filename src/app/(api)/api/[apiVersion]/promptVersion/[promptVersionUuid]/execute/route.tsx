@@ -10,7 +10,7 @@ import merge from 'lodash.merge';
 import { streamToIterator } from '@/utils/stream-to-iterator';
 import { LLMLogsService } from '@/lib/LLMLogsService';
 
-export const maxDuration = 300; // 5 minute function timeout
+export const maxDuration = 320; // 5m20s minute function timeout
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
@@ -119,14 +119,19 @@ export async function POST(
   });
 
   try {
-    // TODO: implement timeout logic that updates the log entry with the error
-    const response = await agentsmith.services.prompts.executePrompt({
+    const executePromise = agentsmith.services.prompts.executePrompt({
       prompt: promptVersion.prompts,
       config: finalConfig,
       targetVersion: promptVersion,
       variables: variablesWithDefaults,
       globalContext: globalContext as Record<string, any>,
     });
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out')), 300000),
+    );
+
+    const response = await Promise.race([executePromise, timeoutPromise]);
 
     if (response.stream) {
       const [streamForClient, streamForLogging] = response.stream.tee();
@@ -193,6 +198,9 @@ export async function POST(
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
+    if ((error as Error)?.message === 'Request timed out') {
+      return NextResponse.json({ error: 'Request timed out' }, { status: 504 });
+    }
     agentsmith.logger.error(error, 'Error running prompt');
     return NextResponse.json({ error: 'Error running prompt' }, { status: 500 });
   }

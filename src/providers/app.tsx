@@ -12,12 +12,16 @@ import {
 import { ORGANIZATION_KEYS } from '@/app/constants';
 import { redirect, useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
-import type { GetUserOrganizationDataResult } from '@/lib/UsersService';
+import type {
+  GetOnboardingChecklistResult,
+  GetUserOrganizationDataResult,
+} from '@/lib/UsersService';
 import { useAuth } from './auth';
 import { createClient } from '@/lib/supabase/client';
 import { Database } from '@/app/__generated__/supabase.types';
 import { AlertsService } from '@/lib/AlertsService';
 import { handleAgentsmithEvent } from './handle-agentsmith-event';
+import { UsersService } from '@/lib/UsersService';
 
 type Organization = GetUserOrganizationDataResult['organization_users'][number]['organizations'];
 type Project = Organization['projects'][number];
@@ -36,6 +40,8 @@ type AppContextType = {
   isSyncTooltipVisible: boolean;
   unreadAlertsCount: number;
   setUnreadAlertsCount: Dispatch<SetStateAction<number>>;
+  onboardingChecklist: GetOnboardingChecklistResult[number] | null;
+  setOnboardingChecklist: Dispatch<SetStateAction<GetOnboardingChecklistResult[number] | null>>;
 };
 
 const AppContext = createContext<AppContextType>({
@@ -52,6 +58,8 @@ const AppContext = createContext<AppContextType>({
   isSyncTooltipVisible: false,
   unreadAlertsCount: 0,
   setUnreadAlertsCount: () => {},
+  onboardingChecklist: null,
+  setOnboardingChecklist: () => {},
 });
 
 type AppProviderProps = {
@@ -80,7 +88,9 @@ export const AppProvider = (props: AppProviderProps) => {
     initialSelectedProjectUuid,
   );
   const [isSyncTooltipVisible, setIsSyncTooltipVisible] = useState(false);
-
+  const [onboardingChecklist, setOnboardingChecklist] = useState<
+    GetOnboardingChecklistResult[number] | null
+  >(null);
   const initialSelectedOrganization =
     userOrganizationData.organization_users.find(
       (orgUser) => orgUser.organizations.uuid === initialSelectedOrganizationUuid,
@@ -108,6 +118,16 @@ export const AppProvider = (props: AppProviderProps) => {
 
   const [isOrganizationAdmin, setIsOrganizationAdmin] = useState(initialIsOrganizationAdmin);
   const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
+
+  const getOnboardingChecklist = async () => {
+    const usersService = new UsersService({ supabase });
+    const onboardingChecklist = await usersService.getOnboardingChecklist();
+    const targetOnboardingChecklist =
+      onboardingChecklist.find((item) => item?.organizationUuid === selectedOrganizationUuid) ??
+      null;
+
+    setOnboardingChecklist(targetOnboardingChecklist);
+  };
 
   useEffect(() => {
     if (!agentsmithUser) {
@@ -141,6 +161,7 @@ export const AppProvider = (props: AppProviderProps) => {
       .subscribe();
 
     getUnreadAlerts();
+    getOnboardingChecklist();
 
     return () => {
       supabase.removeChannel(channel);
@@ -213,6 +234,8 @@ export const AppProvider = (props: AppProviderProps) => {
       isSyncTooltipVisible,
       unreadAlertsCount,
       setUnreadAlertsCount,
+      onboardingChecklist,
+      setOnboardingChecklist,
     }),
     [
       selectedOrganizationUuid,
@@ -226,6 +249,8 @@ export const AppProvider = (props: AppProviderProps) => {
       isSyncTooltipVisible,
       unreadAlertsCount,
       setUnreadAlertsCount,
+      onboardingChecklist,
+      setOnboardingChecklist,
     ],
   );
 

@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { H1 } from '@/components/typography';
+import { useApp } from '@/providers/app';
 
 type OrganizationEditPageProps = {
   organizationData: NonNullable<GetOrganizationDataResult>;
@@ -22,6 +23,8 @@ export const OrganizationEditPage = (props: OrganizationEditPageProps) => {
   const [name, setName] = useState(organizationData.name);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { onboardingChecklist, setOnboardingChecklist } = useApp();
 
   const supabase = createClient();
 
@@ -56,6 +59,7 @@ export const OrganizationEditPage = (props: OrganizationEditPageProps) => {
       );
     } finally {
       setIsSaving(false);
+      setOnboardingChecklist((prev) => (!prev ? null : { ...prev, organizationRenamed: true }));
     }
   };
 

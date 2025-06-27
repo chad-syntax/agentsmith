@@ -7,6 +7,7 @@ import { StudioGiveFeedback } from '@/components/studio-give-feedback';
 import { STUDIO_FULL_HEIGHT } from './constants';
 import type { User } from '@supabase/supabase-js';
 import type { GetUserOrganizationDataResult } from '@/lib/UsersService';
+import { OnboardingChecklist } from '@/components/onboarding-checklist';
 
 type StudioAppProps = {
   authUser: User;
@@ -39,6 +40,17 @@ export const StudioApp = (props: StudioAppProps) => {
           <DesktopStudioSidebar />
           <main className="pl-0 md:pl-12 flex-1 overflow-auto">{children}</main>
           <StudioGiveFeedback />
+
+          {/* {orgUser.role === 'ADMIN' && onboardingChecklistItem && !onboardingComplete && (
+                    <CardContent>
+                      <OnboardingChecklist
+                        defaultProjectUuid={orgUser.organizations.projects[0]?.uuid}
+                        onboardingChecklistItem={onboardingChecklistItem}
+                      />
+                    </CardContent>
+                  )} */}
+
+          <OnboardingChecklist />
         </div>
       </AppProvider>
     </AuthProvider>
