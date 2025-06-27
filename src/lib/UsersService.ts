@@ -188,13 +188,13 @@ export class UsersService extends AgentsmithSupabaseService {
 
         return {
           organizationUuid: orgUser.organizations.uuid,
+          organizationRenamed,
           appInstalled,
           repoConnected,
           openrouterConnected,
           promptCreated,
           promptTested,
           repoSynced,
-          organizationRenamed,
         };
       }),
     );

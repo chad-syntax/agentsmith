@@ -11,6 +11,9 @@ const client = new AgentsmithClient<Agency>('sdk_dummy', 'project_dummy', {
 });
 
 (async () => {
+  // ------------------------------------------
+  // Testing Prompt Variables
+  // ------------------------------------------
   const prompt = await client.getPrompt('hello-world@0.0.3');
 
   // ------------------------------------------
@@ -45,4 +48,20 @@ const client = new AgentsmithClient<Agency>('sdk_dummy', 'project_dummy', {
       age: 30 as any, // extra property
     }),
   );
+
+  // ------------------------------------------
+  // Testing Unpublished Prompt
+  // ------------------------------------------
+
+  // ------------------------------------------
+  // VALID usages – should compile
+  // ------------------------------------------
+  expectType<Awaited<ReturnType<typeof client.getPrompt>>>(
+    await client.getPrompt('unpublished-prompt@0.0.1'),
+  );
+
+  // ------------------------------------------
+  // INVALID usages – tsd should flag errors
+  // ------------------------------------------
+  await expectError(client.getPrompt('unpublished-prompt')); // has no published version, therefore cannot get latest
 })();

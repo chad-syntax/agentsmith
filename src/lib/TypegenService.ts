@@ -72,8 +72,7 @@ export class TypegenService extends AgentsmithSupabaseService {
           return null;
         }
 
-        const latestVersion =
-          sortedVersions.find((v) => v.status === 'PUBLISHED') || sortedVersions[0];
+        const latestVersion = sortedVersions.find((v) => v.status === 'PUBLISHED');
 
         return {
           uuid: prompt.uuid,
@@ -123,7 +122,7 @@ export class TypegenService extends AgentsmithSupabaseService {
                 })
                 .join(';\n');
 
-              const latestVersionVariables = p.latestVersion.prompt_variables || [];
+              const latestVersionVariables = p.latestVersion?.prompt_variables || [];
               const latestVersionVariablesString = latestVersionVariables
                 .map(
                   (variable) =>
@@ -131,11 +130,15 @@ export class TypegenService extends AgentsmithSupabaseService {
                 )
                 .join('; ');
 
-              let latestVersionObjectProperties = `uuid: '${p.latestVersion.uuid}'; version: '${p.latestVersion.version}'; config: any; content: string`;
+              let latestVersionObjectProperties = !p.latestVersion
+                ? ''
+                : `uuid: '${p.latestVersion.uuid}'; version: '${p.latestVersion.version}'; config: any; content: string`;
               if (latestVersionVariables.length > 0) {
                 latestVersionObjectProperties += `; variables: { ${latestVersionVariablesString} }`;
               }
-              const latestVersionString = `    'latest': { ${latestVersionObjectProperties} }`;
+              const latestVersionString = !p.latestVersion
+                ? 'latest: never'
+                : `    'latest': { ${latestVersionObjectProperties} }`;
 
               return `  '${p.slug}': {
     uuid: '${p.uuid}';

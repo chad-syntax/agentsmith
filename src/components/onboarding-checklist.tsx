@@ -1,23 +1,27 @@
 'use client';
 
-import { CheckIcon, ChevronDown, SquareIcon } from 'lucide-react';
+import { CheckIcon, ChevronDown, PartyPopper, SquareIcon } from 'lucide-react';
 import { H4 } from '@/components/typography';
 import { cn } from '@/utils/shadcn';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
 import { ConnectProjectModal } from './modals/connect-project';
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from './ui/button';
 import { installGithubApp, syncProject } from '@/app/actions/github';
 import { connectOpenrouter } from '@/app/actions/openrouter';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader } from './ui/card';
 import { Progress } from './ui/progress';
+import { GetOnboardingChecklistResult } from '@/lib/UsersService';
 
 export const OnboardingChecklist = () => {
   const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(false);
   const [listExpanded, setListExpanded] = useState(true);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+  const prevAllItemsCompletedRef = useRef(false);
+  const onboardingChecklistRef = useRef<GetOnboardingChecklistResult[number] | null>(null);
 
   const {
     selectedProjectUuid,
@@ -87,7 +91,36 @@ export const OnboardingChecklist = () => {
 
   const allItemsCompleted = items.every((item) => item.done);
 
-  if (allItemsCompleted) {
+  useEffect(() => {
+    const prevOnboardingChecklist = onboardingChecklistRef.current;
+    onboardingChecklistRef.current = onboardingChecklist;
+    if (prevOnboardingChecklist === null && onboardingChecklist !== null && allItemsCompleted) {
+      setOnboardingCompleted(true);
+    }
+  }, [onboardingChecklist, allItemsCompleted]);
+
+  useEffect(() => {
+    const prevAllItemsCompleted = prevAllItemsCompletedRef.current;
+
+    if (onboardingChecklist && !prevAllItemsCompleted && allItemsCompleted) {
+      toast.success('Onboarding completed!', {
+        icon: <PartyPopper />,
+        description: 'You have learned the basics of Agentsmith! Happy prompting!',
+        duration: 6000,
+        classNames: {
+          icon: 'mr-2!',
+        },
+      });
+
+      setTimeout(() => {
+        setOnboardingCompleted(true);
+      }, 3000);
+    }
+
+    prevAllItemsCompletedRef.current = allItemsCompleted;
+  }, [allItemsCompleted, onboardingChecklist]);
+
+  if (onboardingCompleted || !onboardingChecklist) {
     return null;
   }
 

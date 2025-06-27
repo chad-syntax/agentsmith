@@ -34,6 +34,13 @@ export type GenericAgency = {
 export type AgencyPromptSlugs<CurAgency extends GenericAgency> = keyof CurAgency['prompts'] &
   string;
 
+export type PromptsWithLatest<CurAgency extends GenericAgency> = {
+  [Slug in keyof CurAgency['prompts']]: CurAgency['prompts'][Slug]['versions']['latest'] extends never
+    ? never
+    : Slug;
+}[keyof CurAgency['prompts']] &
+  string;
+
 /**
  * @template CurAgency - The agency type, extending GenericAgency.
  * @template Slug - A prompt slug from the agency.
@@ -55,7 +62,12 @@ export type AgencyPromptSlugs<CurAgency extends GenericAgency> = keyof CurAgency
 export type AllPromptVersionKeys<
   CurAgency extends GenericAgency,
   Slug extends AgencyPromptSlugs<CurAgency>,
-> = keyof CurAgency['prompts'][Slug]['versions'] & string;
+> = keyof {
+  [K in keyof CurAgency['prompts'][Slug]['versions'] as CurAgency['prompts'][Slug]['versions'][K] extends never
+    ? never
+    : K]: CurAgency['prompts'][Slug]['versions'][K];
+} &
+  string;
 
 /**
  * @template CurAgency - The agency type, extending GenericAgency.
@@ -73,7 +85,7 @@ export type AllPromptVersionKeys<
  * type MyPromptIDs = PromptIdentifier<MyAgency>; // "prompt1" | "prompt2" | "prompt1@0.0.1" | "prompt1@latest" | "prompt2@1.0.0" | "prompt2@latest"
  */
 export type PromptIdentifier<CurAgency extends GenericAgency> =
-  | AgencyPromptSlugs<CurAgency> // Plain slugs like 'hello-world'
+  | PromptsWithLatest<CurAgency> // Plain slugs like 'hello-world'
   | {
       // Slug with @version or @latest, like 'hello-world@0.0.1' or 'hello-world@latest'
       [SPSlug in AgencyPromptSlugs<CurAgency>]: `${SPSlug}@${AllPromptVersionKeys<CurAgency, SPSlug>}`;
