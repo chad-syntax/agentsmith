@@ -8,7 +8,7 @@ DEFAULT_BRANCH="develop"
 TEMP_BRANCH="sdk-prod-temp"
 
 # Get version from sdk/package.json
-VERSION=$(jq -r .version sdk/package.json)
+VERSION=$(jq -r .version ts-sdk/package.json)
 RELEASE_BRANCH="sdk-release-prod@$VERSION"
 
 # Make sure we're on the default branch
@@ -30,7 +30,7 @@ git checkout -b $TEMP_BRANCH
 
 # Install dependencies
 echo "🔄 Installing dependencies..."
-cd sdk
+cd ts-sdk
 npm install
 
 # Build SDK
@@ -46,9 +46,9 @@ echo "🏗️  Building SDK..."
 cd ..
 
 # Force add dist/ and node_modules/
-echo "➕ Adding sdk/dist and sdk/node_modules..."
-git add -f sdk/dist
-git add -f sdk/node_modules
+echo "➕ Adding ts-sdk/dist and ts-sdk/node_modules..."
+git add -f ts-sdk/dist
+git add -f ts-sdk/node_modules
 
 # Commit production build
 echo "📦 Committing production SDK build..."
@@ -56,7 +56,7 @@ git commit -m "Build production SDK $VERSION"
 
 # Subtree split and push to release branch
 echo "🌳 Splitting subtree to $RELEASE_BRANCH..."
-git subtree split --prefix=sdk -b "$RELEASE_BRANCH"
+git subtree split --prefix=ts-sdk -b "$RELEASE_BRANCH"
 git push -f origin "$RELEASE_BRANCH"
 
 # Checkout default branch and clean up

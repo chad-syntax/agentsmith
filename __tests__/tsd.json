@@ -9,8 +9,8 @@
     "baseUrl": "../",
     "paths": {
       "@/*": ["src/*"],
-      "~/sdk/*": ["sdk/*"],
-      "~/sdk": ["sdk/index.ts"],
+      "~/ts-sdk/*": ["ts-sdk/*"],
+      "~/ts-sdk": ["ts-sdk/index.ts"],
       "~/*": ["./*"]
     }
   },

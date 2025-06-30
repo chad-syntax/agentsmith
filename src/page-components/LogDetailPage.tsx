@@ -21,7 +21,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
   const getDuration = (startTime: string, endTime: string | null) => {
     if (endTime) {
       const duration = (new Date(endTime).getTime() - new Date(startTime).getTime()) / 1000;
-      return `${duration.toFixed(2)} seconds`;
+      return `${duration.toFixed(4)} seconds`;
     }
     return 'In progress';
   };
@@ -138,7 +138,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
                 <DisplayTime
                   skeletonClassName="h-[24px]"
                   dateTime={log.start_time}
-                  formatString="MMM d, yyyy h:mm a"
+                  formatString="MMM d, yyyy h:mm:ss.SSS a"
                 />
               </div>
             </div>
@@ -149,7 +149,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
                   <DisplayTime
                     skeletonClassName="h-[24px]"
                     dateTime={log.end_time}
-                    formatString="MMM d, yyyy h:mm a"
+                    formatString="MMM d, yyyy h:mm:ss.SSS a"
                   />
                 ) : (
                   'Still running'

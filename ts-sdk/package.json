@@ -20,6 +20,7 @@
     "@supabase/supabase-js": "latest",
     "dotenv": "^16.4.7",
     "lodash.merge": "^4.6.2",
-    "nunjucks": "^3.2.4"
+    "nunjucks": "^3.2.4",
+    "p-queue": "^8.1.0"
   }
 }

@@ -1,7 +1,7 @@
 import { expectType, expectError } from 'tsd';
 import path from 'path';
 
-import { AgentsmithClient } from '../../sdk/index';
+import { AgentsmithClient } from '../../ts-sdk/index';
 import { Agency } from './agentsmith/agentsmith.types';
 
 const agentsmithDirectory = path.join(__dirname, 'agentsmith');
@@ -64,4 +64,39 @@ const client = new AgentsmithClient<Agency>('sdk_dummy', 'project_dummy', {
   // INVALID usages – tsd should flag errors
   // ------------------------------------------
   await expectError(client.getPrompt('unpublished-prompt')); // has no published version, therefore cannot get latest
+
+  // ------------------------------------------
+  // Testing Execute Result
+  // ------------------------------------------
+  const streamingPrompt = await client.getPrompt('streaming-prompt@0.0.1');
+
+  // By default, should be streaming
+  const streamingResult = await streamingPrompt.execute();
+  expectType<AsyncGenerator<string | undefined, void, unknown>>(streamingResult.tokens);
+  await expectError(streamingResult.completion);
+
+  // When overridden, should be non-streaming
+  const nonStreamingResultFromStreaming = await streamingPrompt.execute(
+    {},
+    { config: { stream: false } },
+  );
+  expectType<any>(nonStreamingResultFromStreaming.completion);
+  await expectError(nonStreamingResultFromStreaming.tokens);
+
+  const nonStreamingPrompt = await client.getPrompt('non-streaming-prompt@0.0.1');
+
+  // By default, should be non-streaming
+  const nonStreamingResult = await nonStreamingPrompt.execute({});
+  expectType<any>(nonStreamingResult.completion);
+  await expectError(nonStreamingResult.tokens);
+
+  // When overridden, should be streaming
+  const streamingResultFromNonStreaming = await nonStreamingPrompt.execute(
+    {},
+    { config: { stream: true } },
+  );
+  expectType<AsyncGenerator<string | undefined, void, unknown>>(
+    streamingResultFromNonStreaming.tokens,
+  );
+  await expectError(streamingResultFromNonStreaming.completion);
 })();

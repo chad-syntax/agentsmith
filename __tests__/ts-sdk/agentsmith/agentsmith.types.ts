@@ -36,6 +36,24 @@ export type Agency = {
                 '0.0.1': { uuid: 'aac26f05-3d14-45a6-bded-0c8de072f796'; version: '0.0.1'; config: any; content: string }
             }
         };
+        'streaming-prompt': {
+            uuid: '5b3a72a5-4af6-4670-a18f-0ce43035dce4';
+            name: 'Streaming Prompt';
+            slug: 'streaming-prompt';
+            versions: {
+                'latest': never;
+                '0.0.1': { uuid: 'aac26f05-3d14-45a6-bded-0c8de072f796'; version: '0.0.1'; config: { stream: true }; content: string }
+            }
+        };
+        'non-streaming-prompt': {
+            uuid: '5b3a72a5-4af6-4670-a18f-0ce43035dce4';
+            name: 'Non-Streaming Prompt';
+            slug: 'non-streaming-prompt';
+            versions: {
+                'latest': never;
+                '0.0.1': { uuid: 'aac26f05-3d14-45a6-bded-0c8de072f796'; version: '0.0.1'; config: { }; content: string }
+            }
+        };
     };
     globals: {
         'gitHubUrl': 'https://github.com/chad-syntax/agentsmith';

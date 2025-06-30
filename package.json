@@ -7,7 +7,7 @@
     "version": "0.0.2",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:types": "tsd --typings=\"./sdk/src/types.ts\" --files=\"__tests__/sdk/sdk.test-d.ts\"",
+    "test:types": "tsd --typings=\"./ts-sdk/src/types.ts\" --files=\"__tests__/ts-sdk/sdk.test-d.ts\"",
     "smee-proxy:start": "node smee-proxy.mjs",
     "typegen-local": "./node_modules/.bin/supabase gen types typescript --local --schema public > ./src/app/__generated__/supabase.types.ts",
     "typegen-dev": "./node_modules/.bin/supabase gen types typescript --project-id \"jcnpgqhjaoppfhbkcnpv\" --schema public > ./src/app/__generated__/supabase.types.ts"
