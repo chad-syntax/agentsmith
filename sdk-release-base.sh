@@ -106,14 +106,14 @@ build_sdk() {
     cd ..
     
     # Force add dist/ and node_modules/
-    echo "➕ Adding ts-sdk/dist and ts-sdk/node_modules..."
+    # echo "➕ Adding ts-sdk/dist and ts-sdk/node_modules..."
     # git add -f ts-sdk/dist
     # git add -f ts-sdk/node_modules
-    git add ts-sdk/package.json
+    # git add ts-sdk/package.json
     
-    # Commit build
-    echo "📦 Committing $environment SDK build..."
-    git commit -m "Build $environment SDK $version"
+    # # Commit build
+    # echo "📦 Committing $environment SDK build..."
+    # git commit -m "Build $environment SDK $version"
     
     echo "✅ $environment SDK $version built successfully!"
 }
