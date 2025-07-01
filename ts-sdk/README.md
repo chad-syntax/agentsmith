@@ -1,7 +1,7 @@
 > [!WARNING]
 > Agentsmith is currently in alpha. Changes are pushed frequently and may include breaking changes. If you encounter any issues, please reach out to support@agentsmith.app for assistance.
 
-# @agentsmith/sdk
+# @agentsmith-app/sdk
 
 The Agentsmith SDK provides a type-safe way to interact with your AI agents and prompts. It enables you to:
 
@@ -17,7 +17,7 @@ The SDK is designed to work seamlessly with the Agentsmith platform, ensuring th
 ### 1. Install the SDK
 
 ```sh
-npm install @agentsmith/sdk
+npm install @agentsmith-app/sdk
 ```
 
 ### 2. Initialize the SDK in your code
@@ -401,10 +401,10 @@ This is particularly useful for:
     - **In your consuming project:**
       Link the globally created symbolic link to your project's `node_modules` directory.
       ```sh
-      npm link @agentsmith/sdk
+      npm link @agentsmith-app/sdk
       ```
 
-    Now, your consuming project will use your local version of `@agentsmith/sdk`. Changes in the SDK (followed by a rebuild) will be reflected immediately.
+    Now, your consuming project will use your local version of `@agentsmith-app/sdk`. Changes in the SDK (followed by a rebuild) will be reflected immediately.
 
 ### Unlinking the SDK
 
@@ -413,9 +413,9 @@ Once you're done with local development and testing, you might want to unlink th
 1.  **In your consuming project:**
 
     ```sh
-    npm unlink @agentsmith/sdk
+    npm unlink @agentsmith-app/sdk
     # Optionally, reinstall the package from npm if you were using a published version before linking
-    # npm install @agentsmith/sdk
+    # npm install @agentsmith-app/sdk
     ```
 
 2.  **In the `agentsmith/sdk` directory (optional but good practice):**
