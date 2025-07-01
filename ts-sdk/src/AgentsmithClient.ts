@@ -7,7 +7,7 @@ import { globalsJsonFilePath } from '@/lib/sync/repo-paths';
 import { SdkExchangeResponse } from '@/types/api-responses';
 import { routes } from '@/utils/routes';
 import { SupabaseClient } from '@supabase/supabase-js';
-import { GenericAgency, PromptIdentifier } from './types';
+import { GenericAgency, PromptIdentifier, Logger, LogLevel } from './types';
 import { Prompt } from './Prompt';
 
 const defaultAgentsmithDirectory = path.join(process.cwd(), 'agentsmith');
@@ -21,6 +21,8 @@ type AgentsmithClientOptions = {
   agentsmithDirectory?: string;
   queueOptions?: PQueueOptions<any, any>;
   fetchStrategy?: FetchStrategy;
+  logger?: Logger;
+  logLevel?: LogLevel;
 };
 
 export class AgentsmithClient<Agency extends GenericAgency> {
@@ -30,6 +32,7 @@ export class AgentsmithClient<Agency extends GenericAgency> {
   public queue: PQueue;
   public abortController: AbortController;
   public fetchStrategy: FetchStrategy;
+  public logger: Logger;
 
   private sdkApiKey: string;
   private fetchGlobalsPromise: Promise<Agency['globals']> | null = null;
@@ -39,6 +42,7 @@ export class AgentsmithClient<Agency extends GenericAgency> {
   private supabaseUrl: string;
   private supabaseAnonKey: string;
   private refreshJwtTimeout: NodeJS.Timeout | null = null;
+  private logLevel: LogLevel;
 
   constructor(sdkApiKey: string, projectId: string, options: AgentsmithClientOptions = {}) {
     this.sdkApiKey = sdkApiKey;
@@ -48,6 +52,8 @@ export class AgentsmithClient<Agency extends GenericAgency> {
     this.supabaseAnonKey = options.supabaseAnonKey ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
     this.agentsmithDirectory = options.agentsmithDirectory ?? defaultAgentsmithDirectory;
     this.fetchStrategy = options.fetchStrategy ?? 'remote-fallback';
+    this.logLevel = options.logLevel ?? 'warn';
+    this.logger = options.logger ?? this.createDefaultLogger(this.logLevel);
 
     this.queue = new PQueue({ ...options.queueOptions });
 
@@ -70,6 +76,23 @@ export class AgentsmithClient<Agency extends GenericAgency> {
     });
   }
 
+  private createDefaultLogger(logLevel: LogLevel): Logger {
+    const shouldLog = (level: LogLevel) => {
+      if (logLevel === 'silent') return false;
+      const levels: LogLevel[] = ['debug', 'info', 'warn', 'error'];
+      return levels.indexOf(level) >= levels.indexOf(logLevel);
+    };
+
+    const noOp = () => {};
+
+    return {
+      debug: shouldLog('debug') ? console.debug.bind(console) : noOp,
+      info: shouldLog('info') ? console.info.bind(console) : noOp,
+      warn: shouldLog('warn') ? console.warn.bind(console) : noOp,
+      error: shouldLog('error') ? console.error.bind(console) : noOp,
+    };
+  }
+
   private async initialize() {
     try {
       const jwt = await this.exchangeApiKeyForJwt(this.sdkApiKey);
@@ -78,7 +101,7 @@ export class AgentsmithClient<Agency extends GenericAgency> {
       this.supabase = createJwtClient(jwt, this.supabaseUrl, this.supabaseAnonKey);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
-      console.error('Failed to initialize the agentsmith client', error);
+      this.logger.error('Failed to initialize the agentsmith client', error);
       throw error;
     }
   }
@@ -149,7 +172,7 @@ export class AgentsmithClient<Agency extends GenericAgency> {
       try {
         return await this.fetchGlobalsFromFileSystem();
       } catch (error) {
-        console.error('Failed to fetch globals from file system', error);
+        this.logger.error('Failed to fetch globals from file system', error);
         throw new Error('Failed to fetch globals from file system (fs-only strategy)');
       }
     }
@@ -158,11 +181,14 @@ export class AgentsmithClient<Agency extends GenericAgency> {
       try {
         return await this.fetchGlobalsFromRemote();
       } catch (error) {
-        console.warn('Failed to fetch globals from remote, falling back to file system');
+        this.logger.warn('Failed to fetch globals from remote, falling back to file system');
         try {
           return await this.fetchGlobalsFromFileSystem();
         } catch (fsError) {
-          console.error('Failed to fetch globals from file system after remote fallback', fsError);
+          this.logger.error(
+            'Failed to fetch globals from file system after remote fallback',
+            fsError,
+          );
           throw new Error('Failed to fetch globals from both remote and file system');
         }
       }
@@ -172,7 +198,7 @@ export class AgentsmithClient<Agency extends GenericAgency> {
     try {
       return await this.fetchGlobalsFromFileSystem();
     } catch (error) {
-      console.warn('Failed to fetch globals from file system, falling back to remote');
+      this.logger.warn('Failed to fetch globals from file system, falling back to remote');
       return this.fetchGlobalsFromRemote();
     }
   }

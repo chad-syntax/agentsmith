@@ -93,10 +93,12 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     if (this.client.fetchStrategy === 'remote-only') {
       try {
         await this._initFromRemote();
-        console.log(`Successfully initialized ${this.slug}@${this.argVersion} from remote`);
+        this.client.logger.info(
+          `Successfully initialized ${this.slug}@${this.argVersion} from remote`,
+        );
         return;
       } catch (err) {
-        console.error(`Failed to initialize prompt ${this.slug} from remote`, err);
+        this.client.logger.error(`Failed to initialize prompt ${this.slug} from remote`, err);
         throw new Error(
           `Failed to initialize prompt ${this.slug} from remote (remote-only strategy)`,
         );
@@ -106,19 +108,23 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     if (this.client.fetchStrategy === 'fs-fallback') {
       try {
         await this._initFromRemote();
-        console.log(`Successfully initialized ${this.slug}@${this.argVersion} from remote`);
+        this.client.logger.info(
+          `Successfully initialized ${this.slug}@${this.argVersion} from remote`,
+        );
         return;
       } catch (err) {
-        console.warn(
+        this.client.logger.warn(
           `Could not initialize ${this.slug}@${this.argVersion} from remote, falling back to filesystem.`,
           err,
         );
         try {
           await this._initFromFileSystem();
-          console.log(`Successfully initialized ${this.slug}@${this.argVersion} from file system`);
+          this.client.logger.info(
+            `Successfully initialized ${this.slug}@${this.argVersion} from file system`,
+          );
           return;
         } catch (fsErr) {
-          console.error(
+          this.client.logger.error(
             `Could not initialize ${this.slug}@${this.argVersion} from filesystem after remote fallback.`,
             fsErr,
           );
@@ -130,13 +136,17 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     // remote-fallback
     try {
       await this._initFromFileSystem();
-      console.log(`Successfully initialized ${this.slug}@${this.argVersion} from file system`);
+      this.client.logger.info(
+        `Successfully initialized ${this.slug}@${this.argVersion} from file system`,
+      );
     } catch (err) {
-      console.warn(
+      this.client.logger.warn(
         `Could not initialize ${this.slug}@${this.argVersion} from filesystem, falling back to remote.`,
       );
       await this._initFromRemote();
-      console.log(`Successfully initialized ${this.slug}@${this.argVersion} from remote`);
+      this.client.logger.info(
+        `Successfully initialized ${this.slug}@${this.argVersion} from remote`,
+      );
     }
   }
 
@@ -516,7 +526,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         content,
       } as unknown as ExecuteImplementationResult<Agency, PromptArg>;
     } catch (error) {
-      console.error(error);
+      this.client.logger.error(error);
 
       await llmLogsService.updateLogWithCompletion(log_uuid, {
         error: String(error),
