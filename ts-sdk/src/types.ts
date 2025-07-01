@@ -1,5 +1,5 @@
-import { Database, Json } from '@/app/__generated__/supabase.types';
-import { Prompt } from './Prompt';
+import { OpenrouterNonStreamingResponse, OpenrouterRequestBody } from '@/lib/openrouter';
+export type { Message } from '@/lib/openrouter';
 
 export type GenericPromptVersion = {
   version: string;
@@ -155,53 +155,6 @@ export type ResponseFormat = {
   json_schema: any; // Keeping this simple for now
 };
 
-export type Tool = {
-  type: 'function';
-  function: {
-    name: string;
-    description?: string;
-    parameters: object;
-  };
-};
-
-export type Message = {
-  role: 'user' | 'assistant' | 'system' | 'tool';
-  content: string;
-  name?: string;
-  tool_call_id?: string;
-};
-
-export type OpenrouterRequestBody = {
-  model?: string;
-  response_format?: ResponseFormat;
-  stop?: string | string[];
-  stream?: boolean;
-  max_tokens?: number;
-  temperature?: number;
-  tools?: Tool[];
-  tool_choice?: 'none' | 'auto' | { type: 'function'; function: { name: string } };
-  seed?: number;
-  top_p?: number;
-  top_k?: number;
-  frequency_penalty?: number;
-  presence_penalty?: number;
-  repetition_penalty?: number;
-  logit_bias?: { [key: number]: number };
-  top_logprobs?: number;
-  min_p?: number;
-  top_a?: number;
-  prediction?: { type: 'content'; content: string };
-  transforms?: string[];
-  models?: string[];
-  route?: 'fallback';
-  provider?: any;
-  user?: string;
-  plugins?: any[];
-  usage?: {
-    include: true;
-  };
-};
-
 export type CompletionConfig = Omit<OpenrouterRequestBody, 'messages' | 'prompt'>;
 
 export type CompileOptions<Agency extends GenericAgency> = {
@@ -251,13 +204,17 @@ export type ExecuteStreamingResult = {
   stream: ReadableStream<Uint8Array>;
   logUuid: string;
   response: Response;
+  compiledPrompt: string;
+  finalVariables: any;
 };
 
 export type ExecuteNonStreamingResult = {
-  completion: any; // TODO: type this with OpenrouterNonStreamingResponse
+  completion: OpenrouterNonStreamingResponse;
   logUuid: string;
   response: Response;
   content: string | null;
+  compiledPrompt: string;
+  finalVariables: any;
 };
 
 // This helper extracts the type of the 'stream' property from the runtime options.

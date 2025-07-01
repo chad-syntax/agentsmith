@@ -105,6 +105,21 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       }
     }
 
+    if (this.client.fetchStrategy === 'fs-only') {
+      try {
+        await this._initFromFileSystem();
+        this.client.logger.info(
+          `Successfully initialized ${this.slug}@${this.argVersion} from file system`,
+        );
+        return;
+      } catch (err) {
+        this.client.logger.error(`Failed to initialize prompt ${this.slug} from file system`, err);
+        throw new Error(
+          `Failed to initialize prompt ${this.slug} from file system (fs-only strategy)`,
+        );
+      }
+    }
+
     if (this.client.fetchStrategy === 'fs-fallback') {
       try {
         await this._initFromRemote();
@@ -508,6 +523,8 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
           stream: streamToIterator(streamForUsage),
           logUuid: log_uuid,
           response,
+          compiledPrompt,
+          finalVariables,
         } as unknown as ExecuteImplementationResult<Agency, PromptArg>;
       }
 
@@ -524,6 +541,8 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         logUuid: log_uuid,
         response,
         content,
+        compiledPrompt,
+        finalVariables,
       } as unknown as ExecuteImplementationResult<Agency, PromptArg>;
     } catch (error) {
       this.client.logger.error(error);

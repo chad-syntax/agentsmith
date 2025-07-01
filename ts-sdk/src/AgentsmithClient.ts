@@ -9,6 +9,7 @@ import { routes } from '@/utils/routes';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { GenericAgency, PromptIdentifier, Logger, LogLevel } from './types';
 import { Prompt } from './Prompt';
+import { wait } from '@/utils/wait';
 
 const defaultAgentsmithDirectory = path.join(process.cwd(), 'agentsmith');
 
@@ -128,7 +129,7 @@ export class AgentsmithClient<Agency extends GenericAgency> {
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return '';
       throw new Error(
-        error instanceof Error ? error.message : 'Failed to exchange API key for JWT',
+        `Failed to communicate with ${this.agentsmithApiRoot}${routes.api.v1.sdkExchange} to exchange API key for JWT: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }
@@ -248,8 +249,7 @@ export class AgentsmithClient<Agency extends GenericAgency> {
   }
 
   public async shutdown() {
-    this.abortController.abort();
-    await this.queue.onIdle();
+    await Promise.race([this.queue.onIdle(), wait(10000)]);
     if (this.refreshJwtTimeout) {
       clearTimeout(this.refreshJwtTimeout);
       this.refreshJwtTimeout = null;
@@ -258,5 +258,6 @@ export class AgentsmithClient<Agency extends GenericAgency> {
       this.supabase.realtime.disconnect();
       await this.supabase.auth.signOut();
     }
+    this.abortController.abort();
   }
 }
