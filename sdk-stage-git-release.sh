@@ -1,78 +1,64 @@
 #!/bin/bash
 
-# Exit immediately on error
-set -e
+# Source the base release script
+source ./sdk-release-base.sh
 
-# Config
-DEFAULT_BRANCH="develop"
-TEMP_BRANCH="sdk-staging-temp"
+# Environment-specific configuration
+NEXT_PUBLIC_SITE_URL="https://staging.agentsmith.app"
+NEXT_PUBLIC_SUPABASE_URL="https://ehpaperavkeicrwhvsbx.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVocGFwZXJhdmtlaWNyd2h2c2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NTA3NTQsImV4cCI6MjA2MzMyNjc1NH0.rntsQRcyVBb9UTahY4LSq5o4vuUSYfZS6h4NUK8qme0"
 
-# Get version from sdk/package.json
-VERSION=$(jq -r .version ts-sdk/package.json)
-RELEASE_BRANCH="sdk-release-staging@$VERSION"
+# Get base version from sdk/package.json
+BASE_VERSION=$(jq -r .version ts-sdk/package.json)
+PACKAGE_NAME="@agentsmith-app/staging-sdk"
 
-# Make sure we're on the default branch
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-if [ "$CURRENT_BRANCH" != "$DEFAULT_BRANCH" ]; then
-  echo "⚠️  You must be on '$DEFAULT_BRANCH' branch to run this script."
-  exit 1
+# Check if GitHub CLI is installed
+if ! command -v gh &> /dev/null; then
+    echo "❌ GitHub CLI (gh) is required but not installed."
+    echo "Install it from: https://cli.github.com/"
+    exit 1
 fi
 
-# Delete temp branch if it exists
-if git show-ref --quiet refs/heads/$TEMP_BRANCH; then
-  echo "🧹 Deleting existing $TEMP_BRANCH branch..."
-  git branch -D $TEMP_BRANCH
+# Check if user is authenticated with GitHub
+if ! gh auth status &> /dev/null; then
+    echo "❌ Please authenticate with GitHub CLI first: gh auth login"
+    exit 1
 fi
 
-# Create temp branch
-echo "🔀 Creating temporary branch: $TEMP_BRANCH"
-git checkout -b $TEMP_BRANCH
+# Get the next staging version
+VERSION=$(get_next_staging_version "$BASE_VERSION")
 
-# Install dependencies
-echo "🔄 Installing dependencies..."
-cd ts-sdk
-npm install
+echo "🚀 Starting staging SDK release..."
+echo "📦 Package: $PACKAGE_NAME"
+echo "🏷️  Version: $VERSION"
 
-# Build SDK
-echo "🏗️  Building SDK..."
-# Set build env vars
-(
-  export NEXT_PUBLIC_SITE_URL="https://staging.agentsmith.app"
-  export NEXT_PUBLIC_SUPABASE_URL="https://ehpaperavkeicrwhvsbx.supabase.co"
-  export NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVocGFwZXJhdmtlaWNyd2h2c2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NTA3NTQsImV4cCI6MjA2MzMyNjc1NH0.rntsQRcyVBb9UTahY4LSq5o4vuUSYfZS6h4NUK8qme0"
-  npm run build
-)
+# Build the SDK
+build_sdk \
+    "staging" \
+    "$PACKAGE_NAME" \
+    "$VERSION" \
+    "$NEXT_PUBLIC_SITE_URL" \
+    "$NEXT_PUBLIC_SUPABASE_URL" \
+    "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
 
-cd ..
+# Create git tag and GitHub release
+RELEASE_NOTES="Staging SDK release $VERSION
 
-# Force add dist/ and node_modules/
-echo "➕ Adding ts-sdk/dist and ts-sdk/node_modules..."
-git add -f ts-sdk/dist
-git add -f ts-sdk/node_modules
+This is a staging build pointing to the staging environment.
+- Site URL: $NEXT_PUBLIC_SITE_URL
+- Supabase: $NEXT_PUBLIC_SUPABASE_URL
 
-# Commit staging build
-echo "📦 Committing staging SDK build..."
-git commit -m "Build staging SDK $VERSION"
+Install with: \`npm install $PACKAGE_NAME@$VERSION\`"
 
-# Subtree split and push to release branch
-echo "🌳 Splitting subtree to $RELEASE_BRANCH..."
-git subtree split --prefix=ts-sdk -b "$RELEASE_BRANCH"
-git push -f origin "$RELEASE_BRANCH"
+create_git_release "$VERSION" "$RELEASE_NOTES" "true"
 
-# Checkout default branch and clean up
-echo "🔙 Switching back to $DEFAULT_BRANCH"
-git checkout $DEFAULT_BRANCH
+# Publish to npm (last, after git operations succeed)
+publish_sdk "$PACKAGE_NAME" "$VERSION"
 
-# Delete local temp branch if it exists
-if git show-ref --quiet refs/heads/$TEMP_BRANCH; then
-  echo "🧹 Deleting existing local temp branch $TEMP_BRANCH..."
-  git branch -D $TEMP_BRANCH
-fi
+# Restore original package.json
+restore_package_json
 
-# Delete local release branch if it exists
-if git show-ref --quiet refs/heads/"$RELEASE_BRANCH"; then
-  echo "🧹 Deleting existing local release branch $RELEASE_BRANCH..."
-  git branch -D "$RELEASE_BRANCH"
-fi
-
-echo "✅ Staging SDK release $VERSION pushed to $RELEASE_BRANCH!"
+echo "✅ Staging SDK release $VERSION completed!"
+echo "📦 Published to npm as $PACKAGE_NAME@$VERSION"
+echo "🏷️  Git tag: sdk-v$VERSION"
+echo "🚀 GitHub release created"

@@ -8,6 +8,10 @@
   "scripts": {
     "build": "tsup"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chad-syntax/agentsmith"
+  },
   "files": [
     "dist"
   ],

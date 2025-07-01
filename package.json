@@ -12,6 +12,10 @@
     "typegen-local": "./node_modules/.bin/supabase gen types typescript --local --schema public > ./src/app/__generated__/supabase.types.ts",
     "typegen-dev": "./node_modules/.bin/supabase gen types typescript --project-id \"jcnpgqhjaoppfhbkcnpv\" --schema public > ./src/app/__generated__/supabase.types.ts"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chad-syntax/agentsmith"
+  },
   "dependencies": {
     "@hookform/resolvers": "^4.1.3",
     "@next/bundle-analyzer": "^15.3.3",
