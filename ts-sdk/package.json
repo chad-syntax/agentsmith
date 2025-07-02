@@ -1,12 +1,16 @@
 {
-  "name": "@agentsmith/sdk",
-  "version": "0.0.1",
-  "description": "Agentsmith SDK",
+  "name": "@agentsmith-app/staging-sdk",
+  "version": "0.0.2",
+  "description": "Agentsmith TypeScript SDK",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chad-syntax/agentsmith.git"
   },
   "files": [
     "dist"
@@ -20,6 +24,7 @@
     "@supabase/supabase-js": "latest",
     "dotenv": "^16.4.7",
     "lodash.merge": "^4.6.2",
-    "nunjucks": "^3.2.4"
+    "nunjucks": "^3.2.4",
+    "p-queue": "^8.1.0"
   }
 }

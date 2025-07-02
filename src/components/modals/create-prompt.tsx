@@ -29,7 +29,7 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
   const [name, setName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const router = useRouter();
-  const { selectedProjectUuid } = useApp();
+  const { selectedProjectUuid, onboardingChecklist, setOnboardingChecklist } = useApp();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,8 +59,11 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
     } catch (error) {
       console.error('Error creating prompt:', error);
       toast.error('Failed to create prompt. Please try again.');
-    } finally {
       setIsCreating(false);
+    } finally {
+      if (!onboardingChecklist?.promptCreated) {
+        setOnboardingChecklist((prev) => (!prev ? null : { ...prev, promptCreated: true }));
+      }
     }
   };
 

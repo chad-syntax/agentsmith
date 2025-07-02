@@ -16,6 +16,8 @@ export const routes = {
     project: (projectUuid: string) => `/studio/project/${projectUuid}`,
     editProject: (projectUuid: string) => `/studio/project/${projectUuid}/edit`,
     prompts: (projectUuid: string) => `/studio/project/${projectUuid}/prompts`,
+    editPrompt: (projectUuid: string, promptUuid: string) =>
+      `/studio/project/${projectUuid}/prompts/${promptUuid}/edit`,
     promptDetail: (projectUuid: string, promptId: string) =>
       `/studio/project/${projectUuid}/prompts/${promptId}`,
     editPromptVersion: (projectUuid: string, promptVersionUuid: string) =>

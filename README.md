@@ -40,7 +40,7 @@ Agentsmith is an agent development platform for building, testing, and deploying
 ## SDK
 
 The Agentsmith SDK allows you to easily integrate your AI agents into your applications.
-For detailed SDK documentation and usage examples, please refer to our [SDK Documentation](sdk/README.md).
+For detailed SDK documentation and usage examples, please refer to our [SDK Documentation](ts-sdk/README.md).
 
 ## Documentation
 

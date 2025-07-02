@@ -1,63 +1,59 @@
 import { routes } from '@/utils/routes';
 import { H1, H3, P } from '@/components/typography';
-import { GetOnboardingChecklistResult, GetUserOrganizationDataResult } from '@/lib/UsersService';
+import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { OnboardingChecklist } from '@/components/onboarding-checklist';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 type StudioPageProps = {
   userOrganizationData: NonNullable<GetUserOrganizationDataResult>;
-  onboardingChecklist: GetOnboardingChecklistResult;
 };
 
+const StudioPageHeader = () => (
+  <>
+    <div className="flex justify-start items-start gap-2">
+      <H1 className="mb-6 relative">Agentsmith Studio</H1>
+      <span className="text-xs tracking-wider font-light">ALPHA</span>
+    </div>
+    <Alert>
+      <AlertTitle className="text-lg font-semibold">
+        👋 Hello, Thank you for trying Agentsmith!
+      </AlertTitle>
+      <AlertDescription>
+        <P>
+          Making this app as bitchin' as possible is my top priority. Click the Feedback button at
+          the bottom-right corner at any time, or reach out to{' '}
+          <a className="underline" href={routes.emails.alex}>
+            alex@agentsmith.app
+          </a>{' '}
+          <br />
+          Also make sure to ⭐️ the repo on{' '}
+          <a
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline"
+            href={routes.external.github}
+          >
+            GitHub!
+          </a>
+        </P>
+      </AlertDescription>
+    </Alert>
+  </>
+);
+
 export const StudioPage = (props: StudioPageProps) => {
-  const { userOrganizationData, onboardingChecklist } = props;
+  const { userOrganizationData } = props;
 
   return (
     <div className="p-4">
-      <div className="flex justify-start items-start gap-2">
-        <H1 className="mb-6 relative">Agentsmith Studio</H1>
-        <span className="text-xs tracking-wider font-light">ALPHA</span>
-      </div>
-      <Alert>
-        <AlertTitle className="text-lg font-semibold">
-          👋 Hello, Thank you for trying Agentsmith!
-        </AlertTitle>
-        <AlertDescription>
-          <P>
-            Making this app as bitchin' as possible is my top priority. Click the Feedback button at
-            the bottom-right corner at any time, or reach out to{' '}
-            <a className="underline" href={routes.emails.alex}>
-              alex@agentsmith.app
-            </a>{' '}
-            <br />
-            Also make sure to ⭐️ the repo on{' '}
-            <a
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-              href={routes.external.github}
-            >
-              GitHub!
-            </a>
-          </P>
-        </AlertDescription>
-      </Alert>
+      <StudioPageHeader />
       <div className="mt-6">
         {userOrganizationData.organization_users.length === 0 ? (
           <P>You don't have any organizations yet.</P>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {userOrganizationData.organization_users.map((orgUser) => {
-              const onboardingChecklistItem = onboardingChecklist.find(
-                (item) => item?.organizationUuid === orgUser.organizations.uuid,
-              );
-
-              const onboardingComplete = Object.values(onboardingChecklistItem ?? {}).every(
-                (item) => item,
-              );
-
               return (
                 <Card
                   key={orgUser.organizations.uuid}
@@ -91,14 +87,6 @@ export const StudioPage = (props: StudioPageProps) => {
                       </ul>
                     )}
                   </CardContent>
-                  {orgUser.role === 'ADMIN' && onboardingChecklistItem && !onboardingComplete && (
-                    <CardContent>
-                      <OnboardingChecklist
-                        defaultProjectUuid={orgUser.organizations.projects[0]?.uuid}
-                        onboardingChecklistItem={onboardingChecklistItem}
-                      />
-                    </CardContent>
-                  )}
                 </Card>
               );
             })}
@@ -108,3 +96,21 @@ export const StudioPage = (props: StudioPageProps) => {
     </div>
   );
 };
+
+export const StudioPageSkeleton = () => (
+  <div className="p-4">
+    <StudioPageHeader />
+    <div className="mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl bg-muted rounded w-3/4">&nbsp;</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="bg-muted rounded w-full mb-2">&nbsp;</div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  </div>
+);

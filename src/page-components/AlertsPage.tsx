@@ -136,3 +136,60 @@ export const AlertsPage = (props: AlertsPageProps) => {
     </div>
   );
 };
+
+export const AlertsPageSkeleton = () => (
+  <div className="p-6">
+    <H1 className="mb-4">User Alerts</H1>
+
+    <div className="bg-background overflow-hidden overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Date
+            </TableHead>
+            <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Title
+            </TableHead>
+            <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Type
+            </TableHead>
+            <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Status
+            </TableHead>
+            <TableHead className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              Actions
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[1, 2, 3].map((i) => (
+            <TableRow key={i} className="hover:bg-muted">
+              <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                <div className="bg-muted rounded w-24 h-4 animate-pulse">&nbsp;</div>
+              </TableCell>
+              <TableCell className="px-6 py-4 text-sm text-foreground whitespace-normal">
+                <div className="min-w-sm max-w-md">
+                  <div className="bg-muted rounded w-48 h-4 animate-pulse mb-1">&nbsp;</div>
+                  <div className="bg-muted rounded w-32 h-3 animate-pulse">&nbsp;</div>
+                </div>
+              </TableCell>
+              <TableCell className="px-6 py-4 whitespace-nowrap text-sm text-foreground">
+                <div className="bg-muted rounded w-16 h-4 animate-pulse">&nbsp;</div>
+              </TableCell>
+              <TableCell className="px-6 py-4 whitespace-nowrap">
+                <div className="bg-muted rounded w-12 h-5 animate-pulse">&nbsp;</div>
+              </TableCell>
+              <TableCell className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <div className="flex gap-2">
+                  <div className="bg-muted rounded w-8 h-8 animate-pulse">&nbsp;</div>
+                  <div className="bg-muted rounded w-8 h-8 animate-pulse">&nbsp;</div>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  </div>
+);

@@ -150,7 +150,7 @@ export class UsersService extends AgentsmithSupabaseService {
         const { data, error } = await this.supabase
           .from('organizations')
           .select(
-            'projects(prompts(id), llm_logs(id), agentsmith_events(id, type, created_at)), github_app_installations(status, project_repositories(id, project_id)), organization_keys(id, key)',
+            'name, projects(prompts(id), llm_logs(id), agentsmith_events(id, type, created_at)), github_app_installations(status, project_repositories(id, project_id)), organization_keys(id, key)',
           )
           .eq('uuid', orgUser.organizations.uuid)
           .eq('projects.agentsmith_events.type', 'SYNC_COMPLETE')
@@ -184,8 +184,11 @@ export class UsersService extends AgentsmithSupabaseService {
         const promptCreated = projects?.[0]?.prompts?.length > 0;
         const promptTested = projects?.[0]?.llm_logs?.length > 0;
 
+        const organizationRenamed = data.name !== 'Default Organization';
+
         return {
           organizationUuid: orgUser.organizations.uuid,
+          organizationRenamed,
           appInstalled,
           repoConnected,
           openrouterConnected,
@@ -212,4 +215,5 @@ export type GetOnboardingChecklistResult = ({
   promptCreated: boolean;
   promptTested: boolean;
   repoSynced: boolean;
+  organizationRenamed: boolean;
 } | null)[];

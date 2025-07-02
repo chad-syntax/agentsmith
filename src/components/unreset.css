@@ -1,0 +1,3 @@
+.unreset * {
+  all: revert;
+}

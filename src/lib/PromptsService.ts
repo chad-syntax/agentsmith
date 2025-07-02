@@ -141,7 +141,7 @@ export class PromptsService extends AgentsmithSupabaseService {
   async getPromptByUuid(promptUuid: string) {
     const { data, error } = await this.supabase
       .from('prompts')
-      .select('*, projects(id, organizations(uuid), global_contexts(content))')
+      .select('*, projects(id, uuid, organizations(uuid), global_contexts(content))')
       .eq('uuid', promptUuid)
       .single();
 
@@ -839,6 +839,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       promptVersionId: targetVersion.id,
       variables: variablesAndContext,
       rawInput,
+      source: 'STUDIO',
     });
 
     if (!logEntry) {
@@ -874,9 +875,16 @@ export class PromptsService extends AgentsmithSupabaseService {
         throw new Error(`Failed to call OpenRouter API: ${responseText}`);
       }
 
-      const completion = await response.json();
+      if (config.stream) {
+        return {
+          stream: response.body,
+          logUuid: logEntry.uuid,
+        };
+      }
 
-      await this.services.llmLogs.updateLogWithCompletion(logEntry.uuid, completion);
+      const completion = (await response.json()) as OpenrouterRequestBody;
+
+      await this.services.llmLogs.updateLogWithCompletion(logEntry.uuid, completion as any);
 
       return { completion, logUuid: logEntry.uuid };
     } catch (error) {

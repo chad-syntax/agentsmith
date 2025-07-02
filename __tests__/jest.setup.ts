@@ -63,6 +63,11 @@ jest.mock('@/app/__generated__/supabase.types', () => ({
     // OpenRouter completion endpoint
     return Promise.resolve({
       ok: true,
+      body: new ReadableStream({
+        start(controller) {
+          controller.close();
+        },
+      }),
       json: () =>
         Promise.resolve({
           id: 'mock-completion',

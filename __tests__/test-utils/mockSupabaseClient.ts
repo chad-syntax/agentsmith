@@ -32,5 +32,11 @@ export const createMockSupabaseClient = () => {
       }
       return { data: null, error: null } as SupabaseResponse;
     }),
+    realtime: {
+      disconnect: jest.fn(),
+    },
+    auth: {
+      signOut: jest.fn(),
+    },
   };
 };

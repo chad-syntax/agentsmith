@@ -237,6 +237,7 @@ export type Database = {
           prompt_version_id: number
           raw_input: Json
           raw_output: Json | null
+          source: Database["public"]["Enums"]["llm_log_source"]
           start_time: string
           updated_at: string
           uuid: string
@@ -250,6 +251,7 @@ export type Database = {
           prompt_version_id: number
           raw_input: Json
           raw_output?: Json | null
+          source?: Database["public"]["Enums"]["llm_log_source"]
           start_time: string
           updated_at?: string
           uuid?: string
@@ -263,6 +265,7 @@ export type Database = {
           prompt_version_id?: number
           raw_input?: Json
           raw_output?: Json | null
+          source?: Database["public"]["Enums"]["llm_log_source"]
           start_time?: string
           updated_at?: string
           uuid?: string
@@ -885,6 +888,11 @@ export type Database = {
         | "ACTIVE"
         | "SUSPENDED"
         | "DELETED"
+      llm_log_source:
+        | "STUDIO"
+        | "SDK"
+        | "AGENTSMITH_EVAL"
+        | "AGENTSMITH_AI_AUTHOR"
       organization_tier: "FREE" | "PRO" | "ENTERPRISE"
       organization_user_role: "ADMIN" | "MEMBER"
       prompt_status: "DRAFT" | "PUBLISHED" | "ARCHIVED"

@@ -73,3 +73,13 @@ export const ProjectGlobalsPage = (props: ProjectGlobalsPageProps) => {
     </div>
   );
 };
+
+export const ProjectGlobalsPageSkeleton = () => (
+  <div className="p-6">
+    <H1 className="mb-4">Project Globals</H1>
+    <form>
+      <div className="bg-muted rounded w-full h-64 animate-pulse mb-4">&nbsp;</div>
+      <Button disabled>Save</Button>
+    </form>
+  </div>
+);

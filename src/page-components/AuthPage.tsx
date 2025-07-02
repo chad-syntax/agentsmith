@@ -10,11 +10,11 @@ export const AuthPage = () => (
       <SignInForm />
     </div>
     <div>
-      <div className="mt-8 flex gap-4 text-sm">
+      <div className="mt-8 grid grid-cols-3 text-sm text-center">
         <Link href="/" className="hover:underline">
           Home
         </Link>
-        <span>|</span>
+        <span className="flex items-center justify-center">|</span>
         <a href={routes.emails.support} className="hover:underline">
           Support
         </a>

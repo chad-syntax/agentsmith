@@ -268,26 +268,21 @@ export type ImageContentPart = {
 
 export type ContentPart = TextContent | ImageContentPart;
 
-export type Message =
-  | {
-      role: 'user' | 'assistant' | 'system';
-      // ContentParts are only for the "user" role:
-      content: string | ContentPart[];
-      // If "name" is included, it will be prepended like this
-      // for non-OpenAI models: `{name}: {content}`
-      name?: string;
-    }
-  | {
-      role: 'tool';
-      content: string;
-      tool_call_id: string;
-      name?: string;
-    };
+export type Message = {
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  // ContentParts are only for the "user" role:
+  content: string | ContentPart[] | null;
+  // If "name" is included, it will be prepended like this
+  // for non-OpenAI models: `{name}: {content}`
+  name?: string;
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
+};
 
 export type FunctionDescription = {
   description?: string;
   name: string;
-  parameters: object; // JSON Schema object
+  parameters: JSONSchemaDefinition;
 };
 
 export type Tool = {
@@ -355,7 +350,7 @@ export type NonStreamingChoice = {
   finish_reason: string | null;
   native_finish_reason: string | null;
   message: {
-    role: string;
+    role: 'user' | 'assistant' | 'system' | 'tool';
     content: string | null;
     refusal?: string | null;
     reasoning?: string;
@@ -370,7 +365,7 @@ export type StreamingChoice = {
   native_finish_reason: string | null;
   delta: {
     content: string | null;
-    role?: string;
+    role?: 'user' | 'assistant' | 'system' | 'tool';
     tool_calls?: ToolCall[];
   };
   error?: ErrorResponse;
@@ -383,10 +378,13 @@ export type ErrorResponse = {
 };
 
 export type ToolCall = {
+  index: number;
   id: string;
   type: 'function';
-  // function: FunctionCall;
-  function: any;
+  function: {
+    name: string;
+    arguments: string;
+  };
 };
 
 export type OpenrouterResponse = {

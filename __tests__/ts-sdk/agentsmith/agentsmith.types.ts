@@ -26,7 +26,34 @@ export type Agency = {
                 '0.0.2': { uuid: '4d2bdcb8-d8f9-4a32-ba1e-ffd8d9acf06a'; version: '0.0.2'; config: any; content: string; variables: { 'name': string } };
                 '0.0.1': { uuid: 'aac26f05-3d14-45a6-bded-0c8de072f796'; version: '0.0.1'; config: any; content: string }
             }
-        }
+        };
+        'unpublished-prompt': {
+            uuid: '5b3a72a5-4af6-4670-a18f-0ce43035dce4';
+            name: 'Unpublished Prompt';
+            slug: 'unpublished-prompt';
+            versions: {
+                'latest': never;
+                '0.0.1': { uuid: 'aac26f05-3d14-45a6-bded-0c8de072f796'; version: '0.0.1'; config: any; content: string }
+            }
+        };
+        'streaming-prompt': {
+            uuid: '5b3a72a5-4af6-4670-a18f-0ce43035dce4';
+            name: 'Streaming Prompt';
+            slug: 'streaming-prompt';
+            versions: {
+                'latest': never;
+                '0.0.1': { uuid: 'aac26f05-3d14-45a6-bded-0c8de072f796'; version: '0.0.1'; config: { stream: true }; content: string }
+            }
+        };
+        'non-streaming-prompt': {
+            uuid: '5b3a72a5-4af6-4670-a18f-0ce43035dce4';
+            name: 'Non-Streaming Prompt';
+            slug: 'non-streaming-prompt';
+            versions: {
+                'latest': never;
+                '0.0.1': { uuid: 'aac26f05-3d14-45a6-bded-0c8de072f796'; version: '0.0.1'; config: { }; content: string }
+            }
+        };
     };
     globals: {
         'gitHubUrl': 'https://github.com/chad-syntax/agentsmith';

@@ -24,6 +24,24 @@ const variableTypeToTsType = (type: string) => {
   }
 };
 
+const jsonToTsType = (json: any): any => {
+  if (typeof json === 'string') {
+    return `'${json}'`;
+  }
+  if (typeof json === 'object' && json !== null) {
+    if (Array.isArray(json)) {
+      return `[${json.map((item) => jsonToTsType(item)).join(', ')}]`;
+    } else {
+      const entries = Object.entries(json).map(([key, value]) => {
+        const tsValue = jsonToTsType(value);
+        return `'${key}': ${tsValue}`;
+      });
+      return `{ ${entries.join('; ')} }`;
+    }
+  }
+  return JSON.stringify(json);
+};
+
 export class TypegenService extends AgentsmithSupabaseService {
   constructor(options: AgentsmithSupabaseServiceConstructorOptions) {
     super({
@@ -72,8 +90,7 @@ export class TypegenService extends AgentsmithSupabaseService {
           return null;
         }
 
-        const latestVersion =
-          sortedVersions.find((v) => v.status === 'PUBLISHED') || sortedVersions[0];
+        const latestVersion = sortedVersions.find((v) => v.status === 'PUBLISHED');
 
         return {
           uuid: prompt.uuid,
@@ -112,10 +129,11 @@ export class TypegenService extends AgentsmithSupabaseService {
                   const variablesString = v.variables
                     .map(
                       (variable) =>
-                        `'${variable.name}'${variable.required ? '' : '?'}: ${variableTypeToTsType(variable.type)}`,
+                        `${variable.name}${variable.required ? '' : '?'}: ${variableTypeToTsType(variable.type)}`,
                     )
                     .join('; ');
-                  let versionObjectProperties = `uuid: '${v.uuid}'; version: '${v.version}'; config: any; content: string`;
+                  const versionConfig = `config: ${JSON.stringify(v.config)}`;
+                  let versionObjectProperties = `uuid: '${v.uuid}'; version: '${v.version}'; ${versionConfig}; content: string`;
                   if (v.variables.length > 0) {
                     versionObjectProperties += `; variables: { ${variablesString} }`;
                   }
@@ -123,7 +141,7 @@ export class TypegenService extends AgentsmithSupabaseService {
                 })
                 .join(';\n');
 
-              const latestVersionVariables = p.latestVersion.prompt_variables || [];
+              const latestVersionVariables = p.latestVersion?.prompt_variables || [];
               const latestVersionVariablesString = latestVersionVariables
                 .map(
                   (variable) =>
@@ -131,11 +149,15 @@ export class TypegenService extends AgentsmithSupabaseService {
                 )
                 .join('; ');
 
-              let latestVersionObjectProperties = `uuid: '${p.latestVersion.uuid}'; version: '${p.latestVersion.version}'; config: any; content: string`;
+              let latestVersionObjectProperties = !p.latestVersion
+                ? ''
+                : `uuid: '${p.latestVersion.uuid}'; version: '${p.latestVersion.version}'; config: ${JSON.stringify(p.latestVersion.config)}; content: string`;
               if (latestVersionVariables.length > 0) {
                 latestVersionObjectProperties += `; variables: { ${latestVersionVariablesString} }`;
               }
-              const latestVersionString = `    'latest': { ${latestVersionObjectProperties} }`;
+              const latestVersionString = !p.latestVersion
+                ? 'latest: never'
+                : `    latest: { ${latestVersionObjectProperties} }`;
 
               return `  '${p.slug}': {
     uuid: '${p.uuid}';
@@ -152,9 +174,9 @@ ${versionsString}
         globals: {${Object.entries(globals?.content || {})
           .map(([key, value]) => {
             if (typeof value === 'string') {
-              return `    '${key}': '${value}'`;
+              return `    ${key}: '${value}'`;
             }
-            return `    '${key}': ${value}`;
+            return `    ${key}: ${value}`;
           })
           .join(';\n')}}
       }`,

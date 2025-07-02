@@ -30,6 +30,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface ConnectProjectModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSubmit?: (values: FormValues) => void;
   projectRepositories?: GetProjectRepositoriesForOrganizationResult;
   defaultRepositoryId?: number;
   defaultProjectUuid?: string;
@@ -39,6 +40,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
   const {
     open,
     onOpenChange,
+    onSubmit: onSubmitCallback,
     projectRepositories: initialProjectRepositories,
     defaultRepositoryId,
     defaultProjectUuid,
@@ -46,6 +48,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
 
   const [projectRepositories, setProjectRepositories] =
     useState<GetProjectRepositoriesForOrganizationResult>(initialProjectRepositories ?? []);
+  const [isLoading, setIsLoading] = useState(false);
 
   const { selectedOrganization } = useApp();
 
@@ -85,6 +88,7 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
 
   const onSubmit = async (values: FormValues) => {
     try {
+      setIsLoading(true);
       await connectProject({
         projectUuid: values.projectId,
         // agentsmithFolder: values.agentsmithFolder,
@@ -92,9 +96,12 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
         projectRepositoryId: values.projectRepositoryId,
         organizationUuid: selectedOrganization!.uuid,
       });
+      onSubmitCallback?.(values);
       onOpenChange(false);
     } catch (error) {
       console.error('Failed to connect project:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -183,8 +190,8 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
               )}
             /> */}
 
-            <Button type="submit" className="w-full">
-              Connect Project
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Connecting...' : 'Connect Project'}
             </Button>
           </form>
         </Form>
