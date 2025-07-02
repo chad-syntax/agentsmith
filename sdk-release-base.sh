@@ -103,17 +103,13 @@ build_sdk() {
     echo "🌐 Site URL: $site_url"
     echo "🗄️  Supabase URL: $supabase_url"
     
-    # Create temporary package.json for this build
-    local temp_package_json="ts-sdk/package.json.temp"
-    cp ts-sdk/package.json "$temp_package_json"
-    
-    # Update package.json with correct name and version
+    # Update package.json with correct name and version in place
+    cd ts-sdk
     jq --arg name "$package_name" --arg version "$version" \
-        '.name = $name | .version = $version' "$temp_package_json" > ts-sdk/package.json
+        '.name = $name | .version = $version' package.json > package.json.tmp && mv package.json.tmp package.json
     
     # Install dependencies
     echo "🔄 Installing dependencies..."
-    cd ts-sdk
     npm install
     
     # Build SDK with environment-specific variables
@@ -155,11 +151,8 @@ publish_sdk() {
 
 # Function to restore original package.json
 restore_package_json() {
-    local temp_package_json="ts-sdk/package.json.temp"
-    
-    if [ -f "$temp_package_json" ]; then
-        echo "🔄 Restoring original package.json..."
-        mv "$temp_package_json" ts-sdk/package.json
-        git checkout ts-sdk/package.json
-    fi
+    echo "🔄 Restoring original package.json..."
+    cd ts-sdk
+    git checkout package.json package-lock.json
+    cd ..
 } 

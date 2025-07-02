@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ApiKeyReveal } from '@/components/api-key-reveal';
 import { TypescriptEditor } from '@/components/editors/typescript-editor';
+import { installSdk, sdkUsage } from '@/constants/sdk-documentation';
 
 export type ProjectPageProps = {
   projectData: NonNullable<GetProjectDataResult>;
@@ -55,20 +56,6 @@ export const ProjectPage = (props: ProjectPageProps) => {
       toast.error('Failed to copy Project ID');
     }
   };
-
-  const sampleSdkCodeContent = `
-// src/file.ts
-import { AgentsmithClient } from '@agentsmith/sdk';
-import { Agency } from '../agentsmith/agentsmith.types';
-
-const agentsmithClient = new AgentsmithClient<Agency>('sdk_********************************', '${projectData.uuid}');
-
-const helloWorldPrompt = await agentsmithClient.getPrompt('hello-world@0.0.1');
-
-const compiledPrompt = helloWorldPrompt.compile({
-  name: 'John',
-});
-`;
 
   const isConnected =
     projectData.project_repositories && projectData.project_repositories.length > 0;
@@ -178,18 +165,13 @@ const compiledPrompt = helloWorldPrompt.compile({
               <div className="flex items-center gap-1 mt-2">
                 <div className="font-mono bg-muted p-2 rounded-md flex items-center gap-2">
                   <Terminal size={16} className="inline-block mr-2" />
-                  <span>
-                    npm install
-                    git+ssh://git@github.com/chad-syntax/agentsmith.git#sdk-release-prod@0.0.1
-                  </span>
+                  <span>{installSdk}</span>
                 </div>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => {
-                    navigator.clipboard.writeText(
-                      'npm install git+ssh://git@github.com/chad-syntax/agentsmith.git#sdk-release-prod@0.0.1',
-                    );
+                    navigator.clipboard.writeText(installSdk);
                     toast.success('Copied code to clipboard');
                   }}
                   className="hover:text-primary"
@@ -198,13 +180,6 @@ const compiledPrompt = helloWorldPrompt.compile({
                 </Button>
               </div>
             </AlertDescription>
-            {/* <AlertDescription>
-              Install the Agentsmith SDK using npm or yarn:
-              <div className="mt-2 font-mono bg-muted p-2 rounded-md">
-                <Terminal size={16} className="inline-block mr-2" />
-                npm install @agentsmith/sdk
-              </div>
-            </AlertDescription> */}
           </Alert>
           <Alert variant="default" className="mt-4">
             <Info size={16} />
@@ -247,7 +222,7 @@ const compiledPrompt = helloWorldPrompt.compile({
                     className="cursor-pointer"
                     size="icon"
                     onClick={() => {
-                      navigator.clipboard.writeText(sampleSdkCodeContent);
+                      navigator.clipboard.writeText(sdkUsage(projectData.uuid));
                       toast.success('Copied code to clipboard');
                     }}
                   >
@@ -255,7 +230,7 @@ const compiledPrompt = helloWorldPrompt.compile({
                   </Button>
                 </div>
                 <TypescriptEditor
-                  value={sampleSdkCodeContent}
+                  value={sdkUsage(projectData.uuid)}
                   onValueChange={() => {}}
                   disabled
                   className="w-full"
