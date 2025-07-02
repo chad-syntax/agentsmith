@@ -11,6 +11,12 @@ check_npm_version() {
     local package_name=$1
     local version=$2
     
+    # First check if package exists at all
+    if ! npm view "$package_name" version >/dev/null 2>&1; then
+        return 1  # Package doesn't exist, so version doesn't exist
+    fi
+    
+    # Package exists, check specific version
     if npm view "$package_name@$version" version >/dev/null 2>&1; then
         return 0  # Version exists
     else
@@ -18,31 +24,43 @@ check_npm_version() {
     fi
 }
 
-# Function to get next staging version
+# Function to get next staging version using git tags
 get_next_staging_version() {
     local base_version=$1
-    local package_name="@agentsmith-app/staging-sdk"
     
-    # Find the highest staging version for this base version
+    # Find the highest staging version for this base version from git tags
     local highest_staging=0
-    local published_versions=$(npm view "$package_name" versions --json 2>/dev/null || echo "[]")
     
-    # Parse published versions to find the highest staging number
-    if [ "$published_versions" != "[]" ]; then
-        local versions_list=$(echo "$published_versions" | jq -r '.[]' 2>/dev/null || echo "")
-        if [ -n "$versions_list" ]; then
-            while IFS= read -r version; do
-                if [[ $version =~ ^${base_version}-staging\.([0-9]+)$ ]]; then
-                    local staging_num=${BASH_REMATCH[1]}
-                    if [ $staging_num -gt $highest_staging ]; then
-                        highest_staging=$staging_num
-                    fi
+    # Get all tags that match the staging pattern for this base version
+    local staging_tags=$(git tag -l "sdk-v${base_version}-staging.*" 2>/dev/null || echo "")
+    
+    if [ -n "$staging_tags" ]; then
+        while IFS= read -r tag; do
+            # Extract version from tag (sdk-v0.0.2-staging.1 -> 0.0.2-staging.1)
+            local version=${tag#sdk-v}
+            if [[ $version =~ ^${base_version}-staging\.([0-9]+)$ ]]; then
+                local staging_num=${BASH_REMATCH[1]}
+                if [ $staging_num -gt $highest_staging ]; then
+                    highest_staging=$staging_num
                 fi
-            done <<< "$versions_list"
-        fi
+            fi
+        done <<< "$staging_tags"
     fi
     
     echo "${base_version}-staging.$((highest_staging + 1))"
+}
+
+# Function to check npm authentication
+check_npm_auth() {
+    echo "🔐 Checking npm authentication..."
+    if ! npm whoami >/dev/null 2>&1; then
+        echo "❌ You are not logged in to npm!"
+        echo "💡 Please run: npm login"
+        echo "💡 Or set NPM_TOKEN environment variable for CI/CD"
+        return 1
+    fi
+    echo "✅ npm authentication verified"
+    return 0
 }
 
 # Function to create git tag and release
@@ -58,8 +76,12 @@ create_git_release() {
     echo "🚀 Pushing tag to remote..."
     git push origin "$tag_name"
     
+    # Wait a moment for the tag to be available on GitHub
+    echo "⏳ Waiting for tag to be available on GitHub..."
+    sleep 2
+    
     echo "📝 Creating GitHub release..."
-    local gh_cmd="gh release create \"$tag_name\" --title \"SDK Release $version\" --notes \"$release_notes\" --target \"$tag_name\""
+    local gh_cmd="gh release create \"$tag_name\" --title \"SDK Release $version\" --notes \"$release_notes\""
     
     if [ "$is_prerelease" = "true" ]; then
         gh_cmd="$gh_cmd --prerelease --latest=false"

@@ -25,6 +25,11 @@ if ! gh auth status &> /dev/null; then
     exit 1
 fi
 
+# Check npm authentication
+if ! check_npm_auth; then
+    exit 1
+fi
+
 # Check if this version has already been published
 echo "🔍 Checking if version $VERSION has already been published..."
 if check_npm_version "$PACKAGE_NAME" "$VERSION"; then

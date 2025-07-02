@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/chad-syntax/agentsmith"
+    "url": "git+https://github.com/chad-syntax/agentsmith.git"
   },
   "files": [
     "dist"

@@ -25,6 +25,11 @@ if ! gh auth status &> /dev/null; then
     exit 1
 fi
 
+# Check npm authentication
+if ! check_npm_auth; then
+    exit 1
+fi
+
 # Get the next staging version
 VERSION=$(get_next_staging_version "$BASE_VERSION")
 
