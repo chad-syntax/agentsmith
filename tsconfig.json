@@ -22,12 +22,10 @@
     "paths": {
       "@/*": ["./src/*"],
       "&/*": ["./src/lib/*"],
-      "~/*": ["./*"],
-      "~/ts-sdk/*": ["ts-sdk/*"],
-      "~/ts-sdk": ["ts-sdk/index.ts"]
+      "~/*": ["./*"]
     },
     "baseUrl": "./"
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "ts-sdk", "**/*.test-d.ts"]
+  "exclude": ["node_modules", "ts-sdk", "__tests__", "**/*.test-d.ts"]
 }

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { AgentsmithClient } from '~/ts-sdk/index';
-import { ExecuteNonStreamingResult } from '~/ts-sdk/src/types';
+import { AgentsmithClient } from '../../ts-sdk/index';
+import { ExecuteNonStreamingResult } from '../../ts-sdk/src/types';
 import { Agency } from './agentsmith/agentsmith.types';
 
 const agentsmithDirectory = path.join(__dirname, 'agentsmith');
