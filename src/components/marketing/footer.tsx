@@ -19,6 +19,7 @@ const footerData: FooterColumn[] = [
     links: [
       { href: '/#benefits', label: 'Product' },
       { href: routes.marketing.roadmap(), label: 'Roadmap' },
+      { href: routes.docs.home, label: 'Docs' },
       { href: '/#how-it-works', label: 'How It Works' },
       { href: '/#pricing', label: 'Pricing' },
       { href: '/#faq', label: 'FAQ' },
@@ -26,7 +27,14 @@ const footerData: FooterColumn[] = [
   },
   {
     title: 'Resources',
-    links: [{ href: routes.external.github, label: 'GitHub', external: true }],
+    links: [
+      { href: routes.external.github, label: 'GitHub', external: true },
+      {
+        href: routes.external.npm,
+        label: 'NPM',
+        external: true,
+      },
+    ],
   },
   {
     title: 'Legal',

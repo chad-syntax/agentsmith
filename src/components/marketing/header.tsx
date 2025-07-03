@@ -58,10 +58,10 @@ export const Header = () => {
               Product
             </Link>
             <Link
-              href="/#how-it-works"
+              href={routes.docs.home}
               className="text-sm font-medium text-foreground/70 hover:text-foreground"
             >
-              How It Works
+              Docs
             </Link>
             <Link
               href="/#pricing"

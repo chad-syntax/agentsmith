@@ -8,6 +8,9 @@ export const routes = {
     roadmap: (proposeModal?: boolean) => `/roadmap${proposeModal ? '?proposeModal=true' : ''}`,
     roadmapItem: (itemSlug: string) => `/roadmap/${itemSlug}`,
   },
+  docs: {
+    home: '/docs',
+  },
   studio: {
     home: '/studio',
     organization: (organizationUuid: string) => `/studio/organization/${organizationUuid}`,
@@ -68,6 +71,7 @@ export const routes = {
   error: (message: string) => `/error?message=${encodeURIComponent(message)}`,
   external: {
     github: 'https://github.com/chad-syntax/agentsmith',
+    npm: 'https://www.npmjs.com/package/@agentsmith-app/sdk',
     stripe: {
       checkout: {
         proAlphaClub:
