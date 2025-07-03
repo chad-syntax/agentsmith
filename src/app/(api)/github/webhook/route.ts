@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { EmitterWebhookEventName } from '@octokit/webhooks/dist-types/types';
+import { EmitterWebhookEventName } from '@octokit/webhooks';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createJwtClient, getGithubWebhookUserJwt } from '@/lib/supabase/server-api-key';
 

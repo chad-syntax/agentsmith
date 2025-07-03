@@ -1,0 +1,38 @@
+---
+title: Core Concepts
+description: Learn how Agentsmith works
+---
+
+## Architecture
+
+Agentsmith is a platform that consists of four main components:
+
+1. **Agentsmith Studio** - A Next.js application that provides a visual interface for creating and managing prompts
+2. **Git Sync Engine** - A system that syncs prompts from the studio to a GitHub repository as files
+3. **Agentsmith SDK** - A TypeScript SDK for fetching and executing prompts from the file system (and/or studio)
+4. **OpenRouter** - All AI calls are made through OpenRouter to achieve maximum flexibility and cost-efficiency
+
+## OpenRouter
+
+We built Agentsmith to be as flexible as possible, which is why we use OpenRouter as the backbone of making LLM calls.
+With OpenRouter, you get a unified API for all LLMs and access to many providers.
+Allowing you to focus on on the prompts rather than the underlying infrastructure, while also giving you the flexibility to switch models and providers as needed.
+
+## Agentsmith SDK
+
+The Agentsmith SDK was designed to use types and files to provide intellisense in your IDE. The SDK will guard against mis-using prompts and provide a type-safe way to execute prompts.
+You can make sure you are avoiding silent errors by using the correct variables and configuration when executing a prompt.
+
+To learn more about the SDK, see the [SDK](/docs/sdk) page.
+
+## Prompt Authoring
+
+Authors can create prompts in the studio which will save the prompt content, variables, and configuration to the database.
+
+To learn more about prompt authoring, see the [Prompt Authoring](/docs/prompt-authoring) page.
+
+## Git Sync
+
+Authors can sync the prompts to a connected GitHub repository at any time by clicking the sync button in the studio header, or on the project home page.
+
+To learn more about git-powered handoff, see the [Git-Sync](/docs/git-sync) page.
