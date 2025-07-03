@@ -420,7 +420,9 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
     actionPlan.push(createAgentsmithTypesAction);
   }
 
-  if (repoState.agentsmithTypes && actionPlan.length > 0) {
+  const hasRepoActions = actionPlan.some((action) => action.target === 'repo');
+
+  if (repoState.agentsmithTypes && hasRepoActions) {
     const updateAgentsmithTypesAction: RepoUpdateAgentsmithTypesAction = {
       type: 'update',
       target: 'repo',
