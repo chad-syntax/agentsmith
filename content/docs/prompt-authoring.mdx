@@ -1,0 +1,69 @@
+---
+title: Prompt Authoring
+description: Author prompts with ease
+---
+
+## Jinja
+
+All prompts should follow the Jinja2 template syntax, more specifically, the [nunjucks](https://mozilla.github.io/nunjucks/templating.html) syntax.
+
+## Versioning
+
+When first creating a prompt, it will be in DRAFT status. This means it will not be available under the "latest" tag when fetching via the SDK.
+However, you can still fetch the prompt by using the `version` parameter. (e.g. `hello-world@0.0.1`)
+
+You can publish a prompt by clicking the "Publish" button in the studio.
+That version will then be the "latest" version of the prompt and available for fetching via the SDK via the slug (`hello-world`) or the latest tag (`hello-world@latest`).
+
+You can then create a new version of the prompt by clicking the "Create New Version" button in the studio.
+We make sure you follow the [semver](https://semver.org/) convention for versioning which quick access for patch, minor, and major version bumps.
+
+### Updating a published version
+
+Once your prompt is published, it is generally advised to create a new version for any changes you make.
+However, you can also update a version that is already published by clicking the "Update Published Version" button in the studio.
+You will be met with a modal asking you to confirm, as this may affect any systems you have that are using that version expecting different variables or configuration.
+
+## Variables
+
+You can define variables in your prompt by using the `{{ variable_name }}` syntax.
+You have the option to define the type of the variable, and the default value.
+
+### Global Variables
+
+Under the "Globals" tab in the studio, you can define global variables that are available to all prompts.
+
+These variables are available to all prompts, and can be used by calling `{{ global.variable_name }}` in your prompt.
+
+### Advanced Templating
+
+You can use the same features as nunjucks allows to use all kinds of logic in your prompts.
+
+For example, you can use the `{% if %}` tag to conditionally include content in your prompt.
+
+```jinja
+{% if condition %}
+This will be included in your prompt.
+{% endif %}
+```
+
+You can also use the `{% for %}` tag to loop through a list of items.
+
+```jinja
+{% for item in list %}
+{{ item }}
+{% endfor %}
+```
+
+See all the available tags and filters [here](https://mozilla.github.io/nunjucks/templating.html).
+
+## Configuration
+
+Each prompt comes with configuration that will be passed to OpenRouter when executed.
+You can provide a list of up to three models for OpenRouter to choose at random, or specify "openrouter/auto" to let OpenRouter choose the best model for your prompt.
+
+You can find a full list of all available models [here](https://openrouter.ai/models).
+
+Models have a wide range of support for different features. Such as web search, tools, and more. You can view all available configuration [here](https://openrouter.ai/docs/api-reference/overview).
+
+You can further override the configuration when you execute a prompt via the [SDK](/docs/sdk).
