@@ -103,10 +103,10 @@ export const HeroSection = () => {
                 </a>
               </Button>
               <h1 className="font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-foreground">
-                <div className="text-[26px] 2xs:text-[30px] xs:text-[35px] sm:text-[56px] md:text-[66px] lg:text-[44px] xl:text-[56px] 2xl:text-6xl 3xl:text-[82px] text-center">
+                <div className="text-[26px] 2xs:text-[30px] xs:text-[35px] sm:text-[56px] md:text-[66px] lg:text-[44px] xl:text-[56px] 2xl:text-6xl 3xl:text-[62px] text-center">
                   DEVELOP AGENTS WITH
                 </div>
-                <div className="text-center -mt-6 2xs:-mt-8 xs:-mt-8 sm:-mt-0 text-[60px] 2xs:text-[72px] xs:text-[82px] sm:text-[130px] md:text-[150px] lg:text-8xl xl:text-9xl 2xl:text-[140px] 3xl:text-[192px]">
+                <div className="text-center -mt-6 2xs:-mt-8 xs:-mt-8 sm:-mt-0 text-[60px] 2xs:text-[72px] xs:text-[82px] sm:text-[130px] md:text-[150px] lg:text-8xl xl:text-9xl 2xl:text-[140px] 3xl:text-[140px]">
                   PEACE OF
                 </div>
                 <AspectRatio
@@ -115,7 +115,7 @@ export const HeroSection = () => {
                 >
                   <div id="vivus" ref={vivusRef} className="w-full h-full" />
                 </AspectRatio>
-                <div className="-mt-30 2xs:-mt-38 max-sm:-mb-12 xs:-mt-44 sm:-mt-44 md:-mt-50 lg:-mt-34 xl:-mt-48 3xl:-mt-66 text-center text-[120px] 2xs:text-[144px] xs:text-[158px] sm:text-[256px] md:text-[296px] lg:text-[196px] xl:text-[248px] 2xl:text-[272px] 3xl:text-[382px]">
+                <div className="-mt-30 2xs:-mt-38 max-sm:-mb-12 xs:-mt-44 sm:-mt-44 md:-mt-50 lg:-mt-34 xl:-mt-48 3xl:-mt-56 text-center text-[120px] 2xs:text-[144px] xs:text-[158px] sm:text-[256px] md:text-[296px] lg:text-[196px] xl:text-[248px] 2xl:text-[272px] 3xl:text-[277px]">
                   MIND
                 </div>
               </h1>
@@ -133,26 +133,6 @@ export const HeroSection = () => {
           </div>
           <div>
             <div className="hidden lg:block">&nbsp;</div>
-            {/* <div className="w-full h-full min-h-[300px] md:min-h-[400px] rounded-lg overflow-hidden border border-border bg-card">
-              {/* <Image
-                src={promptEditorScreenshot}
-                priority
-                alt="Agentsmith App Placeholder"
-                className="object-cover object-left h-full min-h-[300px] md:min-h-[400px] rounded-md"
-              /> 
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="object-cover object-left h-full min-h-[300px] md:min-h-[400px] rounded-md"
-                poster={VIDEO_URLS.landing.typesafeSdk.cover.src}
-              >
-                <source src={VIDEO_URLS.landing.typesafeSdk.webm} type="video/webm" />
-                <source src={VIDEO_URLS.landing.typesafeSdk.mp4} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-            </div> */}
           </div>
         </div>
       </div>
