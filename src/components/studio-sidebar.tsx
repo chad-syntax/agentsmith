@@ -87,7 +87,7 @@ export const DesktopStudioSidebar = () => {
     <aside
       className={cn(
         'hidden md:block border-r bg-background transition-all duration-250 absolute z-50 h-[calc(100vh-49px)]',
-        isOpen ? 'w-64' : 'w-12',
+        isOpen ? 'w-44' : 'w-12',
       )}
       onMouseEnter={() => setIsOpen(true)}
       onMouseLeave={() => setIsOpen(false)}
