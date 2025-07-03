@@ -2,7 +2,7 @@ import {
   AgentsmithSupabaseService,
   AgentsmithSupabaseServiceConstructorOptions,
 } from './AgentsmithSupabaseService';
-import { EmitterWebhookEvent } from '@octokit/webhooks/dist-types/types';
+import { EmitterWebhookEvent } from '@octokit/webhooks';
 
 export class GitHubWebhookService extends AgentsmithSupabaseService {
   constructor(options: AgentsmithSupabaseServiceConstructorOptions) {
