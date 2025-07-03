@@ -18,7 +18,7 @@ type BaseSyncResult = {
 
 type SyncSuccessResult = BaseSyncResult & {
   status: 'success';
-  changesMade: true;
+  changesMade: boolean;
   pullRequest?: {
     number: number;
     url: string;
@@ -81,6 +81,7 @@ type SyncOptionsFromRepo = {
   projectRepository: NonNullable<GetProjectRepositoryByInstallationIdResult>;
   source: 'repo';
   branchRef: string;
+  isMainBranch: boolean;
 };
 
 type SyncOptions = SyncOptionsFromAgentsmith | SyncOptionsFromRepo;
@@ -117,60 +118,61 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
     );
 
     const [owner, repo] = projectRepository.repository_full_name.split('/');
+    const isMainBranch = source === 'repo' && options.isMainBranch;
 
     let lockAcquired = false;
     let pullRequestDetail: PullRequestDetail | null = null;
     let branchRef: string | null = source === 'repo' ? options.branchRef : null;
     let createdNewBranch = false;
 
-    const existingPr = await this.findExistingAgentsmithPr({
-      octokit,
-      owner,
-      repo,
-      branchRef,
-    });
-
-    if (existingPr) {
-      pullRequestDetail = {
-        number: existingPr.number,
-        title: existingPr.title,
-        htmlUrl: existingPr.html_url,
-      };
-
-      branchRef = existingPr.head.ref;
-      createdNewBranch = false;
-    } else if (source === 'agentsmith') {
-      const newBranchName = `agentsmith-sync-${Date.now()}`;
-      await this.createBranch({
+    try {
+      const existingPr = await this.findExistingAgentsmithPr({
         octokit,
         owner,
         repo,
-        baseBranch: projectRepository.repository_default_branch,
-        newBranchName,
+        branchRef,
       });
 
-      branchRef = newBranchName;
-      createdNewBranch = true;
-    }
+      if (existingPr) {
+        pullRequestDetail = {
+          number: existingPr.number,
+          title: existingPr.title,
+          htmlUrl: existingPr.html_url,
+        };
 
-    if (!branchRef) {
-      throw new Error('branchRef could not be determined for sync');
-    }
+        branchRef = existingPr.head.ref;
+        createdNewBranch = false;
+      } else if (source === 'agentsmith' || isMainBranch) {
+        const newBranchName = `agentsmith-sync-${Date.now()}`;
+        await this.createBranch({
+          octokit,
+          owner,
+          repo,
+          baseBranch: projectRepository.repository_default_branch,
+          newBranchName,
+        });
 
-    const githubSyncInstance = new GitHubSyncInstance({
-      supabase: this.supabase,
-      octokit,
-      owner,
-      repo,
-      branchRef,
-      defaultBranch: projectRepository.repository_default_branch,
-      agentsmithFolder: projectRepository.agentsmith_folder,
-      projectId: projectRepository.project_id,
-    });
+        branchRef = newBranchName;
+        createdNewBranch = true;
+      }
 
-    githubSyncInstance.services = this.services;
+      if (!branchRef) {
+        throw new Error('branchRef could not be determined for sync');
+      }
 
-    try {
+      const githubSyncInstance = new GitHubSyncInstance({
+        supabase: this.supabase,
+        octokit,
+        owner,
+        repo,
+        branchRef,
+        isMainBranch,
+        agentsmithFolder: projectRepository.agentsmith_folder,
+        projectId: projectRepository.project_id,
+      });
+
+      githubSyncInstance.services = this.services;
+
       await this.services.events.createSyncStartEvent({
         organizationId: projectRepository.organization_id,
         projectId: projectRepository.project_id,
@@ -186,6 +188,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         await githubSyncInstance.executeSync();
 
       const changesMade = syncChanges.length > 0;
+      const repoChangesMade = syncChanges.filter((change) => change.target === 'repo').length > 0;
 
       if (error) {
         await this.services.events.createSyncErrorEvent({
@@ -210,7 +213,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         };
       }
 
-      if (changesMade) {
+      if (repoChangesMade) {
         // create PR if createdNewBranch is true and source is agentsmith
         if (createdNewBranch) {
           const body = `This PR is automatically created by the Agentsmith GitHub Sync service. It is used to sync the project ${projectRepository.projects?.name ?? 'Unknown Project'} from Agentsmith.`;
@@ -254,7 +257,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         };
       }
 
-      if (!changesMade && createdNewBranch) {
+      if (!repoChangesMade && createdNewBranch) {
         await this.deleteBranch({
           octokit,
           owner,
@@ -281,7 +284,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
       return {
         message: 'No changes made',
         status: 'no_changes',
-        changesMade,
+        changesMade: false,
       };
     } catch (error) {
       this.logger.error(error, 'Error syncing project repository:');
@@ -298,7 +301,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
         },
       });
 
-      if (createdNewBranch) {
+      if (createdNewBranch && branchRef) {
         await this.deleteBranch({
           octokit,
           owner,
@@ -479,7 +482,6 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
     prNumber: number;
   }): Promise<void> {
     const { octokit, owner, repo, prNumber } = options;
-    const labelColor = '000000'; // Default color (black)
 
     const applyLabel = async () => {
       await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/labels', {
@@ -506,7 +508,7 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
             owner,
             repo,
             name: AGENTSMITH_PR_LABEL,
-            color: labelColor,
+            color: '000000',
             description: 'PRs created by Agentsmith sync',
           });
           this.logger.info(`Label '${AGENTSMITH_PR_LABEL}' created successfully.`);

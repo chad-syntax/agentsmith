@@ -161,7 +161,7 @@ type GitHubSyncInstanceOptions = {
   owner: string;
   repo: string;
   branchRef: string;
-  defaultBranch: string;
+  isMainBranch: boolean;
   agentsmithFolder: string;
   projectId: number;
 };
@@ -184,7 +184,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     this.branchRef = options.branchRef;
     this.agentsmithFolder = options.agentsmithFolder;
     this.projectId = options.projectId;
-    this.isMainBranch = options.defaultBranch === this.branchRef;
+    this.isMainBranch = options.isMainBranch;
   }
 
   public async getAgentsmithState(): Promise<AgentsmithState> {
@@ -385,7 +385,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     const numAgentsmithActions = actions.filter((action) => action.target === 'agentsmith').length;
 
     this.logger.info(
-      `executing ${actions.length} actions, ${numRepoActions} repo actions, ${numAgentsmithActions} agentsmith actions`,
+      `executing ${actions.length} actions, ${numRepoActions} repo actions, ${numAgentsmithActions} agentsmith actions on project ${this.projectId} repo ${this.repo} branch ${this.branchRef}`,
     );
 
     let syncChanges: SyncChange[] = [];

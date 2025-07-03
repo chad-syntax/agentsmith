@@ -337,7 +337,7 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     if (error) {
       this.logger.error(error, 'Error creating version:');
-      return null;
+      throw error;
     }
 
     return data;

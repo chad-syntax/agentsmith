@@ -197,22 +197,13 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         return;
       }
 
-      // TODO: we should also check if the push was a result of a agentsmith PR being merged, and if so, we should not sync
-      // we assume the repo is already synced from the PR being pushed to and we don't need to sync again
-      // const isAgentsmithPr = payload.commits.some((commit) =>
-      //   commit.message.toLowerCase().includes('agentsmith'),
-      // );
-
-      // if (isAgentsmithPr) {
-      //   console.log('Push event from agentsmith PR, skipping sync.');
-      //   return;
-      // }
-
       // Ignore pushes made by our bot to prevent sync loops
       const pusher = payload.pusher;
       const isAgentsmithBot = pusher.name.includes('agentsmith') && pusher.name.includes('[bot]');
       if (isAgentsmithBot) {
-        this.logger.info('Push event from agentsmith bot, ignoring to prevent sync loops.');
+        this.logger.info(
+          `Push event from agentsmith bot ${pusher.name}, ignoring to prevent sync loops. Pushed branch ref: ${payload.ref}, repository id: ${payload.repository.id}`,
+        );
         return;
       }
 
@@ -222,18 +213,24 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
       );
 
       if (shouldSkipSync) {
-        this.logger.info('Push contains [skip sync] in commit message, skipping sync operation.');
+        this.logger.info(
+          `Push contains [skip sync] in commit message, skipping sync operation. Pushed branch ref: ${payload.ref}, repository id: ${payload.repository.id}`,
+        );
         return;
       }
 
       const installationId = payload.installation?.id;
       if (!installationId) {
-        this.logger.warn('Push event missing installation ID, cannot sync.');
+        this.logger.warn(
+          `Push event missing installation ID, cannot sync. Pushed branch ref: ${payload.ref}, repository id: ${payload.repository.id}`,
+        );
         return;
       }
 
       const repositoryId = payload.repository.id;
       const pushedBranchRef = payload.ref; // e.g., "refs/heads/main"
+      const defaultBranch = payload.repository.default_branch;
+      const isMainBranch = pushedBranchRef === `refs/heads/${defaultBranch}`;
 
       const projectRepo = await this.services.projects.getProjectRepositoryByInstallationId({
         repositoryId,
@@ -255,6 +252,7 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
         projectRepository: projectRepo,
         source: 'repo',
         branchRef: pushedBranchRef,
+        isMainBranch,
       });
 
       this.logger.info(`Sync from repository completed for project ${projectRepo.project_id}`);
