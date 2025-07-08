@@ -28,6 +28,7 @@ export const routes = {
     logs: (projectUuid: string) => `/studio/project/${projectUuid}/logs`,
     logDetail: (projectUuid: string, logId: string) =>
       `/studio/project/${projectUuid}/logs/${logId}`,
+    metrics: (projectUuid: string) => `/studio/project/${projectUuid}/metrics`,
     account: `/studio/account`,
     resetPassword: `/studio/reset-password`,
     joinOrganization: (organizationInviteCode: string) => `/join/${organizationInviteCode}`,
