@@ -11,6 +11,7 @@ import {
   Settings,
   Box,
   Bell,
+  BarChart3,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/providers/app';
@@ -54,6 +55,13 @@ export const useNavItems = () => {
       href: routes.studio.logs(selectedProjectUuid),
       icon: List,
       active: pathname.startsWith(routes.studio.logs(selectedProjectUuid)),
+    },
+    {
+      name: 'Metrics',
+      slug: 'metrics',
+      href: routes.studio.metrics(selectedProjectUuid),
+      icon: BarChart3,
+      active: pathname.startsWith(routes.studio.metrics(selectedProjectUuid)),
     },
     {
       name: 'Events',
