@@ -12,6 +12,7 @@ import { signInAction } from '@/app/actions/auth';
 import { SubmitButton } from './submit-button';
 import { FormMessage, Message } from './form-message';
 import { useSearchParams } from 'next/navigation';
+import { isProd } from '@/utils/is-env';
 
 export const SignInForm = ({ className, ...props }: React.ComponentPropsWithoutRef<'div'>) => {
   const [error, setError] = useState<string | null>(null);
@@ -66,42 +67,50 @@ export const SignInForm = ({ className, ...props }: React.ComponentPropsWithoutR
               </Button>
             </div>
           </form>
-          <form>
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-sm text-muted-foreground">or</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  required
-                />
+          {!isProd && (
+            <form>
+              <div className="flex items-center gap-2 my-6">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-sm text-muted-foreground">or</span>
+                <div className="flex-1 h-px bg-border" />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  required
-                />
-              </div>
+              <div>
+                <div className="flex flex-col gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
 
-              <SubmitButton pendingText="Signing In..." formAction={signInAction}>
-                Sign in
-              </SubmitButton>
-              <FormMessage message={Object.fromEntries(searchParams) as Message} />
-            </div>
-          </form>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      placeholder="Enter your password"
+                      required
+                    />
+                  </div>
+
+                  <SubmitButton
+                    className="w-full"
+                    pendingText="Signing In..."
+                    formAction={signInAction}
+                  >
+                    Sign in
+                  </SubmitButton>
+                </div>
+                <FormMessage message={Object.fromEntries(searchParams) as Message} />
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
     </div>

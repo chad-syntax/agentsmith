@@ -2,6 +2,7 @@
 
 import posthog from 'posthog-js';
 import { PostHogProvider as PostHogProviderComponent } from 'posthog-js/react';
+import { isDev } from '@/utils/is-env';
 
 const hasPostHogEnvVars =
   process.env.NEXT_PUBLIC_POSTHOG_KEY && process.env.NEXT_PUBLIC_POSTHOG_HOST;
@@ -12,9 +13,7 @@ if (typeof window !== 'undefined') {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
     });
   } else {
-    console.warn(
-      'No PostHog environment variables found, cannot initialize PostHog'
-    );
+    console.warn('No PostHog environment variables found, cannot initialize PostHog');
   }
 }
 
@@ -25,9 +24,7 @@ type PostHogProviderProps = {
 export const PostHogProvider = (props: PostHogProviderProps) => {
   const { children } = props;
 
-  return (
-    <PostHogProviderComponent client={posthog}>
-      {children}
-    </PostHogProviderComponent>
-  );
+  if (isDev) return children;
+
+  return <PostHogProviderComponent client={posthog}>{children}</PostHogProviderComponent>;
 };
