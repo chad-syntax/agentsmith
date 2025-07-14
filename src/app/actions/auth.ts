@@ -1,10 +1,10 @@
-// 'use server';
+'use server';
 
-// import { encodedRedirect } from '@/utils/utils';
-// import { createClient } from '@/lib/supabase/server';
-// import { headers } from 'next/headers';
-// import { redirect } from 'next/navigation';
-// import { routes } from '@/utils/routes';
+import { encodedRedirect } from '@/utils/utils';
+import { createClient } from '@/lib/supabase/server';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { routes } from '@/utils/routes';
 
 // export const signUpAction = async (formData: FormData) => {
 //   const email = formData.get('email')?.toString();
@@ -36,22 +36,22 @@
 //   }
 // };
 
-// export const signInAction = async (formData: FormData) => {
-//   const email = formData.get('email') as string;
-//   const password = formData.get('password') as string;
-//   const supabase = await createClient();
+export const signInAction = async (formData: FormData) => {
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const supabase = await createClient();
 
-//   const { error } = await supabase.auth.signInWithPassword({
-//     email,
-//     password,
-//   });
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 
-//   if (error) {
-//     return encodedRedirect('error', routes.auth.signIn, error.message);
-//   }
+  if (error) {
+    return encodedRedirect('error', routes.auth.signIn, error.message);
+  }
 
-//   return redirect(routes.studio.home);
-// };
+  return redirect(routes.studio.home);
+};
 
 // export const forgotPasswordAction = async (formData: FormData) => {
 //   const email = formData.get('email')?.toString();

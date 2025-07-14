@@ -4,9 +4,10 @@ import { ThemeProvider } from 'next-themes';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Toaster } from '@/components/ui/sonner';
 import { PostHogProvider } from '@/providers/posthog';
+import { isDev, isProd } from '@/utils/is-env';
 
 const defaultUrl =
-  process.env.VERCEL_ENV === 'production' && process.env.NEXT_PUBLIC_SITE_URL
+  isProd && process.env.NEXT_PUBLIC_SITE_URL
     ? process.env.NEXT_PUBLIC_SITE_URL
     : process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
@@ -33,11 +34,11 @@ export default function RootLayout(props: RootLayoutProps) {
 
   return (
     <html lang="en" className={ibmPlexMono.className} suppressHydrationWarning>
-      {/* {!process.env.VERCEL_ENV && (
+      {isDev && (
         <head>
           <script src="https://unpkg.com/react-scan/dist/auto.global.js" />
         </head>
-      )} */}
+      )}
       <PostHogProvider>
         <GoogleAnalytics gaId="G-PZG86YG9ZZ" />
         <body className="bg-background text-foreground">

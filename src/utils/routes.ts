@@ -1,3 +1,5 @@
+import { isProd } from './is-env';
+
 export const routes = {
   marketing: {
     home: '/',
@@ -28,6 +30,7 @@ export const routes = {
     logs: (projectUuid: string) => `/studio/project/${projectUuid}/logs`,
     logDetail: (projectUuid: string, logId: string) =>
       `/studio/project/${projectUuid}/logs/${logId}`,
+    metrics: (projectUuid: string) => `/studio/project/${projectUuid}/metrics`,
     account: `/studio/account`,
     resetPassword: `/studio/reset-password`,
     joinOrganization: (organizationInviteCode: string) => `/join/${organizationInviteCode}`,
@@ -74,10 +77,9 @@ export const routes = {
     npm: 'https://www.npmjs.com/package/@agentsmith-app/sdk',
     stripe: {
       checkout: {
-        proAlphaClub:
-          process.env.VERCEL_ENV === 'production'
-            ? 'https://buy.stripe.com/dRmfZi8M39K68y92566wE01?prefilled_promo_code=ALPHACLUB'
-            : 'https://buy.stripe.com/test_dRm7sN7Z39LTcII4EO53O01?prefilled_promo_code=ALPHACLUB',
+        proAlphaClub: isProd
+          ? 'https://buy.stripe.com/dRmfZi8M39K68y92566wE01?prefilled_promo_code=ALPHACLUB'
+          : 'https://buy.stripe.com/test_dRm7sN7Z39LTcII4EO53O01?prefilled_promo_code=ALPHACLUB',
       },
     },
   },

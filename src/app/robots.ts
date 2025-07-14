@@ -1,7 +1,8 @@
 import type { MetadataRoute } from 'next';
+import { isProd } from '@/utils/is-env';
 
 export default function robots(): MetadataRoute.Robots {
-  if (process.env.VERCEL_ENV === 'production') {
+  if (isProd) {
     return {
       rules: {
         userAgent: '*',

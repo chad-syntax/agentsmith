@@ -11,6 +11,7 @@ import { Database } from '@/app/__generated__/supabase.types';
 import ReactDiffViewer from 'react-diff-viewer-continued-react19';
 import { isPromptLikeSyncChange, SyncChange } from '@/lib/sync/GitHubSyncInstance';
 import { DisplayTime } from '@/components/display-time';
+import { isProd } from '@/utils/is-env';
 
 type EventDetailPageProps = {
   event: NonNullable<GetEventByUuidResult>;
@@ -171,7 +172,7 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
           );
         })}
 
-        {process.env.NEXT_PUBLIC_VERCEL_ENV !== 'production' && (
+        {!isProd && (
           <Card className="shadow-sm">
             <CardHeader>
               <CardTitle>Details</CardTitle>

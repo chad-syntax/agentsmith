@@ -229,44 +229,74 @@ export type Database = {
       }
       llm_logs: {
         Row: {
+          cached_tokens: number | null
+          completion_tokens: number | null
+          cost_usd: number | null
           created_at: string
+          duration_ms: number | null
           end_time: string | null
           id: number
+          model: string | null
           project_id: number
+          prompt_tokens: number | null
           prompt_variables: Json
           prompt_version_id: number
+          provider: string | null
           raw_input: Json
           raw_output: Json | null
+          reasoning_tokens: number | null
           source: Database["public"]["Enums"]["llm_log_source"]
           start_time: string
+          total_tokens: number | null
+          tps: number | null
           updated_at: string
           uuid: string
         }
         Insert: {
+          cached_tokens?: number | null
+          completion_tokens?: number | null
+          cost_usd?: number | null
           created_at?: string
+          duration_ms?: number | null
           end_time?: string | null
           id?: number
+          model?: string | null
           project_id: number
+          prompt_tokens?: number | null
           prompt_variables: Json
           prompt_version_id: number
+          provider?: string | null
           raw_input: Json
           raw_output?: Json | null
+          reasoning_tokens?: number | null
           source?: Database["public"]["Enums"]["llm_log_source"]
           start_time: string
+          total_tokens?: number | null
+          tps?: number | null
           updated_at?: string
           uuid?: string
         }
         Update: {
+          cached_tokens?: number | null
+          completion_tokens?: number | null
+          cost_usd?: number | null
           created_at?: string
+          duration_ms?: number | null
           end_time?: string | null
           id?: number
+          model?: string | null
           project_id?: number
+          prompt_tokens?: number | null
           prompt_variables?: Json
           prompt_version_id?: number
+          provider?: string | null
           raw_input?: Json
           raw_output?: Json | null
+          reasoning_tokens?: number | null
           source?: Database["public"]["Enums"]["llm_log_source"]
           start_time?: string
+          total_tokens?: number | null
+          tps?: number | null
           updated_at?: string
           uuid?: string
         }
@@ -802,6 +832,41 @@ export type Database = {
           length: number
         }
         Returns: string
+      }
+      get_llm_log_filter_options: {
+        Args: {
+          arg_project_id: number
+          arg_start_date: string
+          arg_end_date: string
+        }
+        Returns: {
+          models: string[]
+          providers: string[]
+          prompts: Json
+          sources: string[]
+        }[]
+      }
+      get_llm_log_metrics: {
+        Args: {
+          arg_project_id: number
+          arg_start_date: string
+          arg_end_date: string
+          arg_model?: string
+          arg_provider?: string
+          arg_prompt_id?: number
+          arg_source?: string
+          arg_group_by?: string
+        }
+        Returns: {
+          bucket_timestamp: string
+          group_dimension: string
+          total_tokens: number
+          total_prompt_tokens: number
+          total_completion_tokens: number
+          total_cost: number
+          avg_duration_ms: number
+          request_count: number
+        }[]
       }
       get_organization_by_api_key_hash: {
         Args: {

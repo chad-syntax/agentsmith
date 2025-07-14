@@ -1,6 +1,8 @@
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
-import { LogsPage } from '@/page-components/LogsPage';
+import { LogsPage } from '@/page-components/LogsPage/LogsPage';
+import { routes } from '@/utils/routes';
+import { redirect } from 'next/navigation';
 
 type LogsProps = {
   params: Promise<{ projectUuid: string }>;
@@ -13,11 +15,23 @@ export default async function Logs(props: LogsProps) {
 
   const agentsmith = new AgentsmithServices({ supabase });
 
-  // Get the first project
+  // Get the project data
   const project = await agentsmith.services.projects.getProjectDataByUuid(projectUuid);
 
-  // If no project exists, pass empty logs array
-  const logs = project ? await agentsmith.services.llmLogs.getLogsByProjectId(project.id) : [];
+  if (!project) {
+    redirect(routes.error('Project not found, cannot load logs.'));
+  }
 
-  return <LogsPage project={project} logs={logs} />;
+  // Get available filters for the last 30 days
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - 30);
+
+  const availableFilters = await agentsmith.services.metrics.getAvailableFilters(
+    project.id,
+    startDate,
+    endDate,
+  );
+
+  return <LogsPage project={project} availableFilters={availableFilters} />;
 }

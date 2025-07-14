@@ -1,11 +1,7 @@
 import pino from 'pino';
+import { isProd } from '@/utils/is-env';
 
-const level =
-  process.env.VERCEL_ENV === 'production'
-    ? 'info'
-    : process.env.VERCEL_ENV === 'preview'
-      ? 'debug'
-      : 'debug';
+const level = isProd ? 'info' : 'debug';
 
 export const logger = pino({
   level,

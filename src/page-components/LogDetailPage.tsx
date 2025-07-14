@@ -99,7 +99,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
                           projectUuid,
                           log.prompt_versions.prompts.uuid,
                         )}
-                        className="hover:text-primary hover:underline"
+                        className="hover:text-primary underline"
                       >
                         {log.prompt_versions.prompts.name}
                       </Link>
@@ -113,7 +113,7 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
                           projectUuid,
                           log.prompt_versions.uuid,
                         )}
-                        className="hover:text-primary hover:underline"
+                        className="hover:text-primary underline"
                       >
                         {log.prompt_versions.version}
                       </Link>

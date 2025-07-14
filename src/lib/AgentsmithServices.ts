@@ -15,6 +15,7 @@ import { Logger } from 'pino';
 import { logger } from './logger';
 import { AlertsService } from './AlertsService';
 import { TypegenService } from './TypegenService';
+import { MetricsService } from './MetricsService';
 
 export type AgentsmithServicesDirectory = {
   users: UsersService;
@@ -30,6 +31,7 @@ export type AgentsmithServicesDirectory = {
   roadmap: RoadmapService;
   alerts: AlertsService;
   typegen: TypegenService;
+  metrics: MetricsService;
 };
 
 type AgentsmithServicesConstructorOptions = {
@@ -59,6 +61,7 @@ export class AgentsmithServices {
     const roadmap = new RoadmapService({ supabase });
     const alerts = new AlertsService({ supabase });
     const typegen = new TypegenService({ supabase });
+    const metrics = new MetricsService({ supabase });
 
     this.logger = logger.child({ service: 'AgentsmithServicesRoot' });
 
@@ -76,6 +79,7 @@ export class AgentsmithServices {
       roadmap,
       alerts,
       typegen,
+      metrics,
     };
 
     users.services = this.services;
@@ -91,6 +95,7 @@ export class AgentsmithServices {
     roadmap.services = this.services;
     alerts.services = this.services;
     typegen.services = this.services;
+    metrics.services = this.services;
 
     if (initialize) {
       for (const service of Object.values(this.services)) {
