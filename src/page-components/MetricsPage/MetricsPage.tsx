@@ -84,9 +84,7 @@ export const MetricsPage = (props: MetricsPageProps) => {
       ...args,
     };
     try {
-      console.log('fetching metrics data', options);
       const metricsData = await metricsService.getMetricsData(options);
-      console.log('metrics data', metricsData);
       setChartData(metricsData);
     } catch (error) {
       setError(

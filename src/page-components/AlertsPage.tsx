@@ -33,7 +33,6 @@ export const AlertsPage = (props: AlertsPageProps) => {
   const [alerts, setAlerts] = useState(initialAlerts);
 
   const handleMarkAsRead = async (alertId: number) => {
-    console.log(`Marking alert ${alertId} as read`);
     const supabase = createClient();
 
     const alertsService = new AlertsService({ supabase });
