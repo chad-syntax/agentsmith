@@ -64,7 +64,7 @@ export const useNavItems = () => {
       active: pathname.startsWith(routes.studio.metrics(selectedProjectUuid)),
     },
     {
-      name: 'Events',
+      name: 'Sync Events',
       slug: 'events',
       href: routes.studio.events(selectedProjectUuid),
       icon: Activity,
