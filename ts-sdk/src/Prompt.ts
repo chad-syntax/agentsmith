@@ -85,6 +85,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
 
     this.compile = this._compile.bind(this) as any;
     this.execute = this._execute.bind(this) as any;
+    this.init = this.init.bind(this);
   }
 
   public async init() {

@@ -75,6 +75,11 @@ export class AgentsmithClient<Agency extends GenericAgency> {
     this.initializeGlobals().catch(() => {
       // This is to prevent unhandled promise rejections in tests
     });
+
+    // Bind public methods to preserve 'this' context
+    this.getPrompt = this.getPrompt.bind(this);
+    this.initializeGlobals = this.initializeGlobals.bind(this);
+    this.shutdown = this.shutdown.bind(this);
   }
 
   private createDefaultLogger(logLevel: LogLevel): Logger {
