@@ -1,5 +1,5 @@
 {
-  "name": "@agentsmith-app/staging-sdk",
+  "name": "@agentsmith-app/sdk",
   "version": "0.0.4",
   "description": "Agentsmith TypeScript SDK",
   "main": "./dist/index.js",
