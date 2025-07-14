@@ -12,20 +12,39 @@ alter table llm_logs add column tps numeric;
 -- Create a function to extract and update the new columns from raw_output
 create or replace function update_llm_log_metrics()
 returns trigger as $$
+declare temp_text text;
 begin
   -- Only proceed if raw_output is being updated and is not null
   if new.raw_output is not null and (old.raw_output is null or old.raw_output != new.raw_output) then
     -- Extract tokens from usage object
-    new.prompt_tokens := (new.raw_output->'usage'->>'prompt_tokens')::integer;
-    new.completion_tokens := (new.raw_output->'usage'->>'completion_tokens')::integer;
-    new.total_tokens := (new.raw_output->'usage'->>'total_tokens')::integer;
-    new.reasoning_tokens := (new.raw_output->'usage'->>'prompt_tokens_details'->>'reasoning_tokens')::integer;
-    new.cached_tokens := (new.raw_output->'usage'->>'completion_tokens_details'->>'cached_tokens')::integer;
+    temp_text := new.raw_output->'usage'->>'prompt_tokens';
+    if temp_text is not null then
+        new.prompt_tokens := temp_text::integer;
+    end if;
+    temp_text := new.raw_output->'usage'->>'completion_tokens';
+    if temp_text is not null then
+        new.completion_tokens := temp_text::integer;
+    end if;
+    temp_text := new.raw_output->'usage'->>'total_tokens';
+    if temp_text is not null then
+        new.total_tokens := temp_text::integer;
+    end if;
+    temp_text := new.raw_output->'usage'->'completion_tokens_details'->>'reasoning_tokens';
+    if temp_text is not null then
+        new.reasoning_tokens := temp_text::integer;
+    end if;
+    temp_text := new.raw_output->'usage'->'prompt_tokens_details'->>'cached_tokens';
+    if temp_text is not null then
+        new.cached_tokens := temp_text::integer;
+    end if;
     
     -- Extract cost and convert to USD (assuming cost is already in USD)
-    new.cost_usd := (new.raw_output->'usage'->>'cost')::numeric;
+    temp_text := new.raw_output->'usage'->>'cost';
+    if temp_text is not null then
+        new.cost_usd := temp_text::numeric;
+    end if;
     
-    -- Extract model and provider
+    -- Extract model and provider (text, so null is fine)
     new.model := new.raw_output->>'model';
     new.provider := new.raw_output->>'provider';
     

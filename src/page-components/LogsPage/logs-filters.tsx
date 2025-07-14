@@ -11,7 +11,6 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { GetAvailableFiltersResult } from '@/lib/MetricsService';
 import { Database } from '@/app/__generated__/supabase.types';
 import { Download, X } from 'lucide-react';
-import { downloadCSVData } from '@/utils/download-csv-data';
 
 export type LogsFilters = {
   status: 'all' | 'completed' | 'running';

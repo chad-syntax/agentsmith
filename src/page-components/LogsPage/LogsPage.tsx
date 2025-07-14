@@ -1,65 +1,27 @@
 'use client';
 
 import { useState, useCallback, useMemo } from 'react';
-
-import { H1, P } from '@/components/typography';
+import { H1 } from '@/components/typography';
 import { GetProjectDataResult } from '@/lib/ProjectsService';
 import { GetAvailableFiltersResult } from '@/lib/MetricsService';
 import {
   LogsFilters,
   LogsFilters as LogsFiltersType,
 } from '@/page-components/LogsPage/logs-filters';
-import { LogItem } from '@/page-components/LogsPage/log-item';
+import {
+  renderLogItem,
+  renderNoResults,
+  renderSkeleton,
+} from '@/page-components/LogsPage/log-item';
 import { InfiniteList } from '@/components/infinite-list';
 import { createLogsQueryHandler } from '@/lib/logs-query-handler';
-import { SupabaseTableData } from '@/hooks/use-infinite-query';
 import { downloadCSVData } from '@/utils/download-csv-data';
+import { LogData } from './log-type';
 
 type LogsPageProps = {
   project: NonNullable<GetProjectDataResult>;
   availableFilters: GetAvailableFiltersResult;
 };
-
-// Define the log data type based on the joined query
-type LogData = SupabaseTableData<'llm_logs'> & {
-  prompt_versions: {
-    uuid: string;
-    version: string;
-    prompts: {
-      uuid: string;
-      name: string;
-    } | null;
-  } | null;
-};
-
-const renderLogItem = (project: NonNullable<GetProjectDataResult>) => (log: any) => (
-  <LogItem key={log.uuid} log={log as LogData} projectUuid={project.uuid} />
-);
-
-const renderNoResults = () => (
-  <div className="text-center py-10">
-    <P className="text-muted-foreground">No logs found matching your filters.</P>
-  </div>
-);
-
-const renderSkeleton = (count: number) => (
-  <div className="flex flex-col">
-    {Array.from({ length: count }).map((_, index) => (
-      <div key={index} className="border-b border-border last:border-b-0">
-        <div className="grid grid-cols-8 gap-4 px-6 py-4">
-          <div className="bg-muted rounded w-32 h-4 animate-pulse">&nbsp;</div>
-          <div className="bg-muted rounded w-20 h-5 animate-pulse">&nbsp;</div>
-          <div className="bg-muted rounded w-16 h-4 animate-pulse">&nbsp;</div>
-          <div className="bg-muted rounded w-40 h-4 animate-pulse">&nbsp;</div>
-          <div className="bg-muted rounded w-16 h-4 animate-pulse">&nbsp;</div>
-          <div className="bg-muted rounded w-24 h-4 animate-pulse">&nbsp;</div>
-          <div className="bg-muted rounded w-20 h-4 animate-pulse">&nbsp;</div>
-          <div className="bg-muted rounded w-12 h-4 animate-pulse">&nbsp;</div>
-        </div>
-      </div>
-    ))}
-  </div>
-);
 
 export const LogsPage = (props: LogsPageProps) => {
   const { project, availableFilters } = props;
@@ -86,17 +48,6 @@ export const LogsPage = (props: LogsPageProps) => {
   const queryHandler = useMemo(() => {
     return createLogsQueryHandler(filters, project.id);
   }, [filters]);
-
-  if (!project) {
-    return (
-      <div className="p-6">
-        <H1 className="mb-4">Logs</H1>
-        <div className="bg-background rounded-lg shadow-sm p-6 text-center">
-          <P className="text-muted-foreground">No projects found. Create a project first.</P>
-        </div>
-      </div>
-    );
-  }
 
   const handleDownloadCSVClick = () => {
     const startDate = filters.dateRange.from.toISOString().split('T')[0];
