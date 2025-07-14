@@ -118,10 +118,11 @@ export const createJwtClient = (jwt: string, supabaseUrl?: string, supabaseAnonK
     supabaseUrl ?? process.env.NEXT_PUBLIC_SUPABASE_URL!,
     supabaseAnonKey ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
-      global: {
-        headers: {
-          Authorization: `Bearer ${jwt}`,
-        },
+      accessToken: async () => jwt,
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+        detectSessionInUrl: false,
       },
     },
   );
