@@ -254,14 +254,13 @@ export class AgentsmithClient<Agency extends GenericAgency> {
   }
 
   public async shutdown() {
-    await Promise.race([this.queue.onIdle(), wait(10000)]);
+    await this.queue.onIdle();
     if (this.refreshJwtTimeout) {
       clearTimeout(this.refreshJwtTimeout);
       this.refreshJwtTimeout = null;
     }
     if (this.supabase) {
       this.supabase.realtime.disconnect();
-      await this.supabase.auth.signOut();
     }
     this.abortController.abort();
   }
