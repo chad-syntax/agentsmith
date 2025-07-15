@@ -1,4 +1,4 @@
-import { OpenrouterNonStreamingResponse, OpenrouterRequestBody } from '@/lib/openrouter';
+import { OpenrouterNonStreamingResponse, OpenrouterRequestBody, ToolCall } from '@/lib/openrouter';
 export type { Message } from '@/lib/openrouter';
 
 export type GenericPromptVersion = {
@@ -201,6 +201,8 @@ export type GetPromptContent<
 
 export type ExecuteStreamingResult = {
   tokens: AsyncGenerator<string | undefined, void, unknown>;
+  toolCalls: AsyncGenerator<ToolCall, void, unknown>;
+  completion: Promise<OpenrouterNonStreamingResponse>;
   stream: ReadableStream<Uint8Array>;
   logUuid: string;
   response: Response;

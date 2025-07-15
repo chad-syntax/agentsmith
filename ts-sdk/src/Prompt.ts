@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import type { AgentsmithClient } from './AgentsmithClient';
 import { Database, Json } from '@/app/__generated__/supabase.types';
 import {
@@ -31,6 +32,7 @@ import {
   OPENROUTER_HEADERS,
   OpenrouterNonStreamingResponse,
   OpenrouterRequestBody,
+  ToolCall,
 } from '@/lib/openrouter';
 import { OrganizationsService } from '@/lib/OrganizationsService';
 import { LLMLogsService } from '@/lib/LLMLogsService';
@@ -481,47 +483,75 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         throw new Error('No body present in response from OpenRouter');
       }
 
-      if (this.version.config.stream || configOverrides?.stream) {
-        const [streamForClient, streamForLogging] = response.body.tee();
-        const [streamForTokens, streamForUsage] = streamForClient.tee();
+      const accumulateStreamAndCreateFinalCompletion = async (
+        stream: AsyncIterable<OpenrouterStreamEvent>,
+      ) => {
+        let fullCompletion: any = {};
+        let content = '';
 
-        const iterator = streamToIterator(streamForTokens);
+        for await (const event of stream) {
+          const chunk = event.data;
+          // usage chunk contains null stop values we don't want to merge
+          if (chunk.usage) {
+            fullCompletion.usage = merge(fullCompletion.usage, chunk.usage);
+          } else if (chunk.choices) {
+            content += chunk.choices[0].delta.content ?? '';
+            fullCompletion = merge(fullCompletion, chunk);
+          }
+        }
+
+        // rewrite delta to message
+        if (fullCompletion.choices?.[0]) {
+          const final_tool_calls = fullCompletion.choices[0].delta.tool_calls;
+          delete fullCompletion.choices[0].delta;
+          fullCompletion.choices[0].message = { role: 'assistant', content };
+          if (final_tool_calls) {
+            fullCompletion.choices[0].message.tool_calls = final_tool_calls;
+          }
+        }
+        return fullCompletion as OpenrouterNonStreamingResponse;
+      };
+
+      if (this.version.config.stream || 'stream' in (configOverrides ?? {})) {
+        const [streamForClient, streamForLogging] = response.body.tee();
+        const [streamA, streamB] = streamForClient.tee();
+        const [streamForTokens, streamForToolCalls] = streamA.tee();
+        const [streamForCompletion, streamForStream] = streamB.tee();
 
         const tokens = async function* () {
-          for await (const chunk of iterator) {
-            const str = (chunk as OpenrouterStreamEvent).data?.choices?.[0]?.delta?.content;
-            yield str;
+          for await (const chunk of streamToIterator<OpenrouterStreamEvent>(streamForTokens)) {
+            const str = chunk.data?.choices?.[0]?.delta?.content;
+            if (str) {
+              yield str;
+            }
           }
         };
 
-        this.client.queue.add(async () => {
-          let fullCompletion: any = {};
-          let content = '';
-
-          for await (const event of streamToIterator(streamForLogging)) {
-            const typedEvent = event as OpenrouterStreamEvent;
-            const chunk = typedEvent.data;
-            // usage chunk contains null stop values we don't want to merge
-            if (chunk.usage) {
-              fullCompletion.usage = merge(fullCompletion.usage, chunk.usage);
-            } else if (chunk.choices) {
-              content += chunk.choices[0].delta.content ?? '';
-              fullCompletion = merge(fullCompletion, chunk);
+        const toolCalls = async function* () {
+          for await (const chunk of streamToIterator<OpenrouterStreamEvent>(streamForToolCalls)) {
+            for (const tool of chunk.data.choices?.[0]?.delta?.tool_calls ?? []) {
+              yield tool;
             }
           }
+        };
 
-          // rewrite delta to message
-          if (fullCompletion.choices?.[0]) {
-            delete fullCompletion.choices[0].delta;
-            fullCompletion.choices[0].message = { role: 'assistant', content };
-          }
+        const completion = async () => {
+          const stream = streamToIterator<OpenrouterStreamEvent>(streamForCompletion);
+          return accumulateStreamAndCreateFinalCompletion(stream);
+        };
 
-          await llmLogsService.updateLogWithCompletion(log_uuid, fullCompletion);
+        this.client.queue.add(async () => {
+          const fullCompletion = await accumulateStreamAndCreateFinalCompletion(
+            streamToIterator<OpenrouterStreamEvent>(streamForLogging),
+          );
+          await llmLogsService.updateLogWithCompletion(log_uuid, fullCompletion as Json);
         });
 
         return {
           tokens: tokens(),
-          stream: streamToIterator(streamForUsage),
+          stream: streamToIterator<OpenrouterStreamEvent>(streamForStream),
+          completion: completion(),
+          toolCalls: toolCalls(),
           logUuid: log_uuid,
           response,
           compiledPrompt,
@@ -536,6 +566,38 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       this.client.queue.add(async () => {
         await llmLogsService.updateLogWithCompletion(log_uuid, completion as Json);
       });
+
+      const completionLogsDirectory = this.client.completionLogsDirectory;
+
+      if (completionLogsDirectory) {
+        this.client.queue.add(async () => {
+          // Ensure the completionLogsDirectory exists
+          await fs.promises.mkdir(completionLogsDirectory, { recursive: true });
+
+          const logDir = this.client.completionLogDirTransformer
+            ? this.client.completionLogDirTransformer({
+                logUuid: log_uuid,
+                rawInput,
+                rawOutput: completion,
+                prompt: this.meta,
+                promptVersion: this.version,
+                variables: finalVariables,
+              })
+            : `${Date.now()}-${log_uuid}`;
+
+          // Create a subfolder named `${log_uuid}-${Date.now()}`
+          const logFolder = path.join(completionLogsDirectory, logDir);
+          await fs.promises.mkdir(logFolder, { recursive: true });
+
+          // Save raw_input.json and raw_output.json in the subfolder
+          const rawInputPath = path.join(logFolder, 'raw_input.json');
+          const rawOutputPath = path.join(logFolder, 'raw_output.json');
+          const variablesPath = path.join(logFolder, 'variables.json');
+          await fs.promises.writeFile(rawInputPath, JSON.stringify(rawInput, null, 2));
+          await fs.promises.writeFile(rawOutputPath, JSON.stringify(completion, null, 2));
+          await fs.promises.writeFile(variablesPath, JSON.stringify(finalVariables, null, 2));
+        });
+      }
 
       return {
         completion,

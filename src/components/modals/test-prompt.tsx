@@ -43,7 +43,7 @@ type PromptTestModalProps = {
 export const PromptTestModal = (props: PromptTestModalProps) => {
   const { isOpen, onClose, variables, promptVersion } = props;
 
-  const [testVariables, setTestVariables] = useState<Record<string, string>>({});
+  const [testVariables, setTestVariables] = useState<Record<string, string | object>>({});
   const [isRunning, setIsRunning] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [fullResult, setFullResult] = useState<any | null>(null);
@@ -209,16 +209,29 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
                   {variable.required && <span className="text-destructive -mt-0.5">*</span>}
                 </Label>
                 <div className="px-1">
-                  <Input
-                    type={variable.type === 'NUMBER' ? 'number' : 'text'}
-                    value={testVariables[variable.name] || ''}
-                    onChange={(e) => {
-                      setTestVariables({
-                        ...testVariables,
-                        [variable.name]: e.target.value,
-                      });
-                    }}
-                  />
+                  {variable.type === 'JSON' ? (
+                    <JsonEditor
+                      value={testVariables[variable.name] as object}
+                      onChange={(value) => {
+                        setTestVariables({
+                          ...testVariables,
+                          [variable.name]: value,
+                        });
+                      }}
+                      minHeight="100%"
+                    />
+                  ) : (
+                    <Input
+                      type={variable.type === 'NUMBER' ? 'number' : 'text'}
+                      value={(testVariables[variable.name] as string) || ''}
+                      onChange={(e) => {
+                        setTestVariables({
+                          ...testVariables,
+                          [variable.name]: e.target.value,
+                        });
+                      }}
+                    />
+                  )}
                 </div>
               </div>
             ))}

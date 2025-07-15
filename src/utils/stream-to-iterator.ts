@@ -15,7 +15,9 @@ export type LogUuidEvent = {
 
 export type StreamEvent = OpenrouterStreamEvent | LogUuidEvent;
 
-export async function* streamToIterator(stream: ReadableStream<Uint8Array<ArrayBufferLike>>) {
+export async function* streamToIterator<T extends StreamEvent>(
+  stream: ReadableStream<Uint8Array<ArrayBufferLike>>,
+): AsyncGenerator<T, void, undefined> {
   const eventStream = stream
     .pipeThrough(new TextDecoderStream())
     .pipeThrough(new EventSourceParserStream());
@@ -35,7 +37,7 @@ export async function* streamToIterator(stream: ReadableStream<Uint8Array<ArrayB
 
       try {
         const data = JSON.parse(event.data);
-        yield { type: event.event || 'message', data } as StreamEvent;
+        yield { type: event.event || 'message', data } as T;
       } catch (e) {
         console.error('Error parsing stream data', e);
       }
