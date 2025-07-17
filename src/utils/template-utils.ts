@@ -486,7 +486,6 @@ export const compilePrompt = (
         res: { src: string; path: string; noCache: boolean } | null,
       ) => void,
     ) {
-      console.log('getting source for', name);
       const [slug, version] = name.split('@');
       if (!slug) {
         callback(new Error('Invalid template name'), null);

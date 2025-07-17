@@ -242,8 +242,6 @@ export class TypegenService extends AgentsmithSupabaseService {
 
     const unformattedText = sourceFile.getFullText();
 
-    console.log('!!! unformattedText', unformattedText);
-
     return format(unformattedText, {
       parser: 'typescript',
       singleQuote: true,

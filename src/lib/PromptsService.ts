@@ -625,8 +625,6 @@ export class PromptsService extends AgentsmithSupabaseService {
       includes: incomingIncludes,
     } = options;
 
-    console.log('incoming includes', incomingIncludes);
-
     const { data: versionData, error: getVersionError } = await this.supabase
       .from('prompt_versions')
       .select('*, prompt_variables(*)')
@@ -645,8 +643,6 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     const currentVariables: PromptVariableExisting[] = versionData.prompt_variables || [];
     const currentIncludes = await this.fetchPromptIncludes(promptVersionUuid);
-
-    console.log('current includes', currentIncludes);
 
     const includesToAdd: ParsedInclude[] = [];
     const includeIdsToDelete: number[] = [];
@@ -675,7 +671,6 @@ export class PromptsService extends AgentsmithSupabaseService {
       });
 
       if (!currentInclude) {
-        console.log(`marking include ${incomingInclude.arg} for addition`);
         includesToAdd.push(incomingInclude);
       }
     }
@@ -703,7 +698,6 @@ export class PromptsService extends AgentsmithSupabaseService {
       });
 
       if (!incomingInclude) {
-        console.log(`marking include ${currentInclude.arg} for deletion, id: ${currentInclude.id}`);
         includeIdsToDelete.push(currentInclude.id);
       }
     }
@@ -1005,8 +999,6 @@ export class PromptsService extends AgentsmithSupabaseService {
       variablesAndContext,
       promptLoader,
     );
-
-    console.log('!!! compiled prompt', compiledPrompt, '!!!');
 
     const freeModelsOnlyEnabled = process.env.FREE_MODELS_ONLY === 'true';
 
