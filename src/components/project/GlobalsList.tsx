@@ -41,9 +41,11 @@ export const GlobalsList = (props: GlobalsListProps) => {
   if (!globalContext || Object.keys(globalContext).length === 0) {
     return (
       <div>
-        <p className="text-sm text-muted-foreground mt-2">No global context variables defined.</p>
+        <p className="text-sm text-muted-foreground p-4 border bg-muted rounded-md text-center">
+          No global variables defined.
+        </p>
         <Link
-          className="text-sm text-primary mt-2 block hover:underline"
+          className="text-sm text-primary mt-2 block hover:underline text-center"
           href={routes.studio.projectGlobals(selectedProjectUuid)}
         >
           Edit Globals

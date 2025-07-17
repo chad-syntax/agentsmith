@@ -9,7 +9,6 @@ export type GenericPromptVersion = {
 };
 
 export type GenericPrompt = {
-  uuid: string;
   name: string;
   slug: string;
   versions: Record<string, GenericPromptVersion>;

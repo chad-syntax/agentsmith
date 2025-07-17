@@ -90,6 +90,14 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
     return compareSemanticVersions(b.version, a.version);
   });
 
+  const includedPrompts = latestVersion.prompt_includes.map((pi) => ({
+    slug: pi.prompt_versions.prompts.slug,
+    version: pi.prompt_versions.version,
+    versionUuid: pi.prompt_versions.uuid,
+    variables: pi.prompt_versions.prompt_variables,
+    content: pi.prompt_versions.content,
+  }));
+
   return (
     <div className={cn('flex', STUDIO_FULL_HEIGHT)}>
       <div className="flex-1 overflow-auto">
@@ -197,6 +205,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
       <VariablesSidebar
         globalContext={prompt.projects.global_contexts?.content ?? {}}
         variables={latestVersion.prompt_variables}
+        includedPrompts={includedPrompts}
         readOnly
       />
 
@@ -205,6 +214,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         onClose={() => setIsTestModalOpen(false)}
         variables={latestVersion.prompt_variables}
         promptVersion={latestVersion}
+        includedPrompts={includedPrompts}
       />
 
       <CreateVersionModal
@@ -218,6 +228,7 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         isOpen={isCompileModalOpen}
         onClose={() => setIsCompileModalOpen(false)}
         variables={latestVersion.prompt_variables}
+        includedPrompts={includedPrompts}
         promptContent={latestVersion.content}
         globalContext={
           typeof prompt.projects.global_contexts?.content === 'object' &&

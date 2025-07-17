@@ -13,7 +13,7 @@ import { LLMLogsService } from '@/lib/LLMLogsService';
 export const maxDuration = 320; // 5m20s minute function timeout
 
 type RequestBody = {
-  variables: Record<string, string | number | boolean>;
+  variables: Record<string, string | number | boolean | object>;
   config?: CompletionConfig;
 };
 
@@ -61,6 +61,8 @@ export async function POST(
   }
 
   const variables = promptVersion.prompt_variables || [];
+  const includedPromptVariables =
+    promptVersion.prompt_includes?.flatMap((pi) => pi.prompt_versions.prompt_variables) || [];
   const globalContext = promptVersion.prompts.projects.global_contexts?.content ?? {};
 
   let body: RequestBody;
@@ -71,7 +73,7 @@ export async function POST(
   }
 
   const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
-    variables,
+    [...variables, ...includedPromptVariables],
     body.variables,
   );
 
@@ -124,6 +126,7 @@ export async function POST(
       config: finalConfig,
       targetVersion: promptVersion,
       variables: variablesWithDefaults,
+      promptIncludes: promptVersion.prompt_includes,
       globalContext: globalContext as Record<string, any>,
     });
 

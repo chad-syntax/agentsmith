@@ -13,7 +13,12 @@ import {
   contentJ2FilePath,
   variablesJsonFilePath,
 } from '@/lib/sync/repo-paths';
-import { validateVariables, validateGlobalContext, compilePrompt } from '@/utils/template-utils';
+import {
+  validateVariables,
+  validateGlobalContext,
+  compilePrompt,
+  extract,
+} from '@/utils/template-utils';
 import { compareSemanticVersions } from '@/utils/versioning';
 import {
   GenericAgency,
@@ -32,7 +37,6 @@ import {
   OPENROUTER_HEADERS,
   OpenrouterNonStreamingResponse,
   OpenrouterRequestBody,
-  ToolCall,
 } from '@/lib/openrouter';
 import { OrganizationsService } from '@/lib/OrganizationsService';
 import { LLMLogsService } from '@/lib/LLMLogsService';
@@ -42,12 +46,27 @@ import { routes } from '@/utils/routes';
 import { OpenrouterStreamEvent, streamToIterator } from '@/utils/stream-to-iterator';
 import merge from 'lodash.merge';
 
+type FetchedPromptFromFileSystem = {
+  meta: PromptJSONFileContent;
+  version: PromptVersionFileJSONContent;
+  variables: PromptVariableFileJSONContent;
+  content: string;
+  includedPrompts: FetchedPromptFromFileSystem[];
+};
+
 type PromptConstructorOptions<
   Agency extends GenericAgency,
   PromptArg extends PromptIdentifier<Agency>,
 > = {
   arg: PromptArg;
   client: AgentsmithClient<Agency>;
+};
+
+type LogCompletionToFileOptions = {
+  logUuid: string;
+  rawInput: any;
+  rawOutput: any;
+  variables: any;
 };
 
 export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdentifier<Agency>> {
@@ -70,7 +89,20 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     name: string;
     type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'JSON';
     required: boolean;
-    default_value: string | null;
+    default_value?: string | null;
+  }[];
+  public includedPrompts!: {
+    slug: string;
+    version: string;
+    versionUuid: string;
+    content: string;
+    variables: {
+      uuid: string;
+      name: string;
+      type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'JSON';
+      required: boolean;
+      default_value?: string | null;
+    }[];
   }[];
 
   public execute: ExecuteSignature<Agency, PromptArg>;
@@ -169,81 +201,23 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
   }
 
   private async _initFromFileSystem() {
-    const promptJsonPath = promptJsonFilePath({
-      agentsmithFolder: this.client.agentsmithDirectory,
-      promptSlug: this.slug,
-    });
+    const { meta, version, variables, content, includedPrompts } =
+      await this.fetchPromptFromFileSystem(this.slug, this.argVersion);
 
-    const promptJson = await fs.promises.readFile(promptJsonPath, 'utf-8');
-
-    const prompt = JSON.parse(promptJson) as PromptJSONFileContent;
-
-    this.meta = {
-      uuid: prompt.uuid,
-      name: prompt.name,
-      slug: prompt.slug,
-    };
-
-    if (this.argVersion === 'latest' && prompt.latestVersion === null) {
-      throw new Error(
-        `No published version found for prompt ${this.slug} while trying to fetch latest version from file system, either publish a version or use a specific version number to use the draft.`,
-      );
-    }
-
-    const targetVersion =
-      this.argVersion === 'latest' && prompt.latestVersion !== null
-        ? prompt.latestVersion
-        : this.argVersion;
-
-    const versionJsonPath = versionJsonFilePath({
-      agentsmithFolder: this.client.agentsmithDirectory,
-      promptSlug: this.slug,
-      version: targetVersion,
-    });
-
-    const versionJsonFileContent = await fs.promises.readFile(versionJsonPath, 'utf-8');
-    const versionJson = JSON.parse(versionJsonFileContent) as PromptVersionFileJSONContent;
-
-    const contentJ2Path = contentJ2FilePath({
-      agentsmithFolder: this.client.agentsmithDirectory,
-      promptSlug: this.slug,
-      version: targetVersion,
-    });
-
-    const contentJ2FileContent = await fs.promises.readFile(contentJ2Path, 'utf-8');
-
+    this.meta = meta;
     this.version = {
-      uuid: versionJson.uuid,
-      version: versionJson.version,
-      config: versionJson.config as GetPromptConfig<Agency, PromptArg>,
-      content: contentJ2FileContent,
+      ...version,
+      config: version.config as GetPromptConfig<Agency, PromptArg>,
+      content,
     };
-
-    const variablesJsonPath = variablesJsonFilePath({
-      agentsmithFolder: this.client.agentsmithDirectory,
-      promptSlug: this.slug,
-      version: targetVersion,
-    });
-
-    try {
-      const variablesJsonFileContent = await fs.promises.readFile(variablesJsonPath, 'utf-8');
-
-      const variablesJson = JSON.parse(variablesJsonFileContent) as PromptVariableFileJSONContent;
-
-      this.variables = variablesJson.map((variable) => ({
-        uuid: variable.uuid,
-        name: variable.name,
-        type: variable.type,
-        required: variable.required,
-        default_value: variable.default_value,
-      }));
-    } catch (err: any) {
-      if (err.code === 'ENOENT') {
-        this.variables = [];
-      } else {
-        throw err;
-      }
-    }
+    this.variables = variables;
+    this.includedPrompts = includedPrompts.map((ip) => ({
+      slug: ip.meta.slug,
+      version: ip.version.version,
+      versionUuid: ip.version.uuid,
+      content: ip.content,
+      variables: ip.variables,
+    }));
   }
 
   private async _initFromRemote() {
@@ -255,7 +229,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       const { data, error } = await this.client.supabase
         .from('prompt_versions')
         .select(
-          'uuid, version, config, content, prompt_variables(uuid, name, type, required, default_value), prompts!inner(uuid, name, slug)',
+          'uuid, version, config, content, prompt_variables(uuid, name, type, required, default_value), prompts!inner(uuid, name, slug), prompt_includes!prompt_version_id(prompt_versions!included_prompt_version_id(uuid, version, content, prompts(slug), prompt_variables(uuid, name, type, required, default_value)))',
         )
         .eq('prompts.slug', this.slug)
         .eq('version', this.argVersion)
@@ -271,7 +245,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         throw new Error(`Prompt version ${this.slug}@${this.argVersion} not found in remote.`);
       }
 
-      const { prompts, prompt_variables, ...version } = data;
+      const { prompts, prompt_variables, prompt_includes, ...version } = data;
 
       this.meta = prompts;
       this.version = {
@@ -280,6 +254,13 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         content: version.content as GetPromptContent<Agency, PromptArg>,
       };
       this.variables = prompt_variables;
+      this.includedPrompts = prompt_includes.map((ip) => ({
+        slug: ip.prompt_versions.prompts.slug,
+        version: ip.prompt_versions.version,
+        versionUuid: ip.prompt_versions.uuid,
+        content: ip.prompt_versions.content,
+        variables: ip.prompt_versions.prompt_variables,
+      }));
 
       return;
     }
@@ -287,7 +268,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     const { data, error } = await this.client.supabase
       .from('prompt_versions')
       .select(
-        'uuid, version, config, content, prompt_variables(uuid, name, type, required, default_value), prompts!inner(uuid, name, slug)',
+        'uuid, version, config, content, prompt_variables(uuid, name, type, required, default_value), prompts!inner(uuid, name, slug), prompt_includes!prompt_version_id(prompt_versions!included_prompt_version_id(uuid, version, content, prompts(slug), prompt_variables(uuid, name, type, required, default_value)))',
       )
       .eq('prompts.slug', this.slug)
       .eq('status', 'PUBLISHED')
@@ -306,7 +287,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       );
     }
 
-    const { prompts, prompt_variables, ...version } = latestVersion;
+    const { prompts, prompt_variables, prompt_includes, ...version } = latestVersion;
 
     this.meta = prompts;
     this.version = {
@@ -315,6 +296,99 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       content: version.content as GetPromptContent<Agency, PromptArg>,
     };
     this.variables = prompt_variables;
+    this.includedPrompts = prompt_includes.map((ip) => ({
+      slug: ip.prompt_versions.prompts.slug,
+      version: ip.prompt_versions.version,
+      versionUuid: ip.prompt_versions.uuid,
+      content: ip.prompt_versions.content,
+      variables: ip.prompt_versions.prompt_variables,
+    }));
+  }
+
+  private async fetchPromptJsonFromFileSystem(slug: string) {
+    const promptJsonPath = promptJsonFilePath({
+      agentsmithFolder: this.client.agentsmithDirectory,
+      promptSlug: slug,
+    });
+
+    const promptJson = await fs.promises.readFile(promptJsonPath, 'utf-8');
+
+    return JSON.parse(promptJson) as PromptJSONFileContent;
+  }
+
+  private async fetchPromptVersionJsonFromFileSystem(slug: string, version: string) {
+    const versionJsonPath = versionJsonFilePath({
+      agentsmithFolder: this.client.agentsmithDirectory,
+      promptSlug: slug,
+      version,
+    });
+
+    const versionJson = await fs.promises.readFile(versionJsonPath, 'utf-8');
+
+    return JSON.parse(versionJson) as PromptVersionFileJSONContent;
+  }
+
+  private async fetchPromptVariablesJsonFromFileSystem(slug: string, version: string) {
+    const variablesJsonPath = variablesJsonFilePath({
+      agentsmithFolder: this.client.agentsmithDirectory,
+      promptSlug: slug,
+      version,
+    });
+
+    const variablesJson = await fs.promises.readFile(variablesJsonPath, 'utf-8');
+
+    return JSON.parse(variablesJson) as PromptVariableFileJSONContent;
+  }
+
+  private async fetchPromptContentFromFileSystem(slug: string, version: string) {
+    const contentJ2Path = contentJ2FilePath({
+      agentsmithFolder: this.client.agentsmithDirectory,
+      promptSlug: slug,
+      version,
+    });
+
+    const contentJ2FileContent = await fs.promises.readFile(contentJ2Path, 'utf-8');
+
+    return contentJ2FileContent;
+  }
+
+  private async fetchPromptFromFileSystem(
+    slug: string,
+    initialVersion: string | null,
+  ): Promise<FetchedPromptFromFileSystem> {
+    const isTargetingLatest = initialVersion === null || initialVersion === 'latest';
+
+    const promptJson = await this.fetchPromptJsonFromFileSystem(slug);
+    const targetVersion = isTargetingLatest ? promptJson.latestVersion : initialVersion;
+
+    if (!targetVersion) {
+      throw new Error(
+        `No published version found for prompt ${slug} while trying to fetch latest version from file system, either publish a version or use a specific version number to use the draft.`,
+      );
+    }
+
+    const [versionJson, variablesJson, content] = await Promise.all([
+      this.fetchPromptVersionJsonFromFileSystem(slug, targetVersion),
+      this.fetchPromptVariablesJsonFromFileSystem(slug, targetVersion),
+      this.fetchPromptContentFromFileSystem(slug, targetVersion),
+    ]);
+
+    const { includes } = extract(content);
+
+    const includedPrompts = await Promise.all(
+      includes.map(async (include) => {
+        const includedPrompt = await this.fetchPromptFromFileSystem(include.slug, include.version);
+        return includedPrompt;
+      }),
+    );
+
+    return {
+      meta: promptJson,
+      version: versionJson,
+      variables: variablesJson,
+      content,
+      includedPrompts,
+    };
   }
 
   private parseOverloadedArgs<V, O>(
@@ -361,7 +435,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     const globals = (await this.client.initializeGlobals()) as Record<string, any>;
 
     const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
-      this.variables as Database['public']['Tables']['prompt_variables']['Row'][],
+      [...this.variables, ...this.includedPrompts.flatMap((ip) => ip.variables)],
       variables as Record<string, string | number | boolean | any>,
     );
 
@@ -382,9 +456,59 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       global: finalGlobalContext,
     };
 
-    const compiledPrompt = compilePrompt(this.version.content, finalVariables);
+    const promptLoader = (slug: string, version: string | null) => {
+      const includedPromptVersion =
+        version !== null && version !== 'latest'
+          ? this.includedPrompts.find((ip) => ip.slug === slug && ip.version === version)
+          : this.includedPrompts
+              .filter((ip) => ip.slug === slug)
+              .sort((a, b) => compareSemanticVersions(b.version, a.version))[0];
+
+      if (!includedPromptVersion) {
+        throw new Error(`Included prompt ${slug}@${version} not found`);
+      }
+
+      return includedPromptVersion.content;
+    };
+
+    const compiledPrompt = await compilePrompt(this.version.content, finalVariables, promptLoader);
 
     return { compiledPrompt, finalVariables };
+  }
+
+  private async logCompletionToFile(options: LogCompletionToFileOptions) {
+    const { logUuid, rawInput, rawOutput, variables } = options;
+
+    const completionLogsDirectory = this.client.completionLogsDirectory;
+    if (!completionLogsDirectory) return;
+
+    this.client.queue.add(async () => {
+      // Ensure the completionLogsDirectory exists
+      await fs.promises.mkdir(completionLogsDirectory, { recursive: true });
+
+      const logDir = this.client.completionLogDirTransformer
+        ? this.client.completionLogDirTransformer({
+            logUuid,
+            rawInput,
+            rawOutput,
+            prompt: this.meta,
+            promptVersion: this.version,
+            variables,
+          })
+        : `${Date.now()}-${logUuid}`;
+
+      // Create a subfolder named `${log_uuid}-${Date.now()}`
+      const logFolder = path.join(completionLogsDirectory, logDir);
+      await fs.promises.mkdir(logFolder, { recursive: true });
+
+      // Save raw_input.json and raw_output.json in the subfolder
+      const rawInputPath = path.join(logFolder, 'raw_input.json');
+      const rawOutputPath = path.join(logFolder, 'raw_output.json');
+      const variablesPath = path.join(logFolder, 'variables.json');
+      await fs.promises.writeFile(rawInputPath, JSON.stringify(rawInput, null, 2));
+      await fs.promises.writeFile(rawOutputPath, JSON.stringify(rawOutput, null, 2));
+      await fs.promises.writeFile(variablesPath, JSON.stringify(variables, null, 2));
+    });
   }
 
   private async _execute(...args: any[]): Promise<ExecuteImplementationResult<Agency, PromptArg>> {
@@ -544,6 +668,12 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
           const fullCompletion = await accumulateStreamAndCreateFinalCompletion(
             streamToIterator<OpenrouterStreamEvent>(streamForLogging),
           );
+          this.logCompletionToFile({
+            logUuid: log_uuid,
+            rawInput,
+            rawOutput: fullCompletion,
+            variables: finalVariables,
+          });
           await llmLogsService.updateLogWithCompletion(log_uuid, fullCompletion as Json);
         });
 
@@ -567,37 +697,12 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         await llmLogsService.updateLogWithCompletion(log_uuid, completion as Json);
       });
 
-      const completionLogsDirectory = this.client.completionLogsDirectory;
-
-      if (completionLogsDirectory) {
-        this.client.queue.add(async () => {
-          // Ensure the completionLogsDirectory exists
-          await fs.promises.mkdir(completionLogsDirectory, { recursive: true });
-
-          const logDir = this.client.completionLogDirTransformer
-            ? this.client.completionLogDirTransformer({
-                logUuid: log_uuid,
-                rawInput,
-                rawOutput: completion,
-                prompt: this.meta,
-                promptVersion: this.version,
-                variables: finalVariables,
-              })
-            : `${Date.now()}-${log_uuid}`;
-
-          // Create a subfolder named `${log_uuid}-${Date.now()}`
-          const logFolder = path.join(completionLogsDirectory, logDir);
-          await fs.promises.mkdir(logFolder, { recursive: true });
-
-          // Save raw_input.json and raw_output.json in the subfolder
-          const rawInputPath = path.join(logFolder, 'raw_input.json');
-          const rawOutputPath = path.join(logFolder, 'raw_output.json');
-          const variablesPath = path.join(logFolder, 'variables.json');
-          await fs.promises.writeFile(rawInputPath, JSON.stringify(rawInput, null, 2));
-          await fs.promises.writeFile(rawOutputPath, JSON.stringify(completion, null, 2));
-          await fs.promises.writeFile(variablesPath, JSON.stringify(finalVariables, null, 2));
-        });
-      }
+      this.logCompletionToFile({
+        logUuid: log_uuid,
+        rawInput,
+        rawOutput: completion,
+        variables: finalVariables,
+      });
 
       return {
         completion,

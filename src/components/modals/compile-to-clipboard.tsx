@@ -17,22 +17,27 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { validateVariables, validateGlobalContext, compilePrompt } from '@/utils/template-utils'; // Import new utils
 import { toast } from 'sonner';
-import { EditorPromptVariable } from '@/types/prompt-editor';
+import { EditorPromptVariable, IncludedPrompt } from '@/types/prompt-editor';
+import { JsonEditor } from '../editors/json-editor';
+import { makePromptLoaderFromUI } from '@/utils/make-prompt-loader';
 
 type CompileToClipboardModalProps = {
   isOpen: boolean;
   onClose: () => void;
   variables: EditorPromptVariable[];
+  includedPrompts: IncludedPrompt[];
   promptContent: string;
   globalContext: Record<string, any>; // Added globalContext prop
 };
 
 export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => {
-  const { isOpen, onClose, variables, promptContent, globalContext } = props; // Destructure globalContext
+  const { isOpen, onClose, variables, promptContent, globalContext, includedPrompts } = props; // Destructure globalContext
 
-  const [inputValues, setInputValues] = useState<Record<string, string>>({});
+  const [inputValues, setInputValues] = useState<Record<string, string | object>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const allVariables = [...variables, ...includedPrompts.flatMap((ip) => ip.variables)];
 
   const handleInputChange = (variableName: string, value: string) => {
     setInputValues((prev) => ({
@@ -48,7 +53,7 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
 
     // 1. Validate standard variables
     const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
-      variables,
+      allVariables,
       inputValues,
     );
 
@@ -82,7 +87,13 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
         global: globalContext,
       };
 
-      const compiledContent = compilePrompt(promptContent, finalVariablesForCompilation);
+      const promptLoader = makePromptLoaderFromUI(includedPrompts);
+
+      const compiledContent = await compilePrompt(
+        promptContent,
+        finalVariablesForCompilation,
+        promptLoader,
+      );
 
       await navigator.clipboard.writeText(compiledContent);
       toast.success('Compiled prompt copied to clipboard!');
@@ -117,22 +128,35 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
         <ScrollArea className="max-h-[70vh]">
           <div className="space-y-6 py-4">
             <div className="space-y-4">
-              {variables.map((variable) => (
+              {allVariables.map((variable) => (
                 <div key={variable.id || variable.name} className="space-y-2">
                   <Label htmlFor={variable.name}>
                     {variable.name}
                     {variable.required && <span className="text-destructive ml-1">*</span>}
                   </Label>
                   <div className="mx-1">
-                    <Input
-                      id={variable.name}
-                      type={variable.type === 'NUMBER' ? 'number' : 'text'}
-                      value={inputValues[variable.name] || ''}
-                      placeholder={
-                        variable.default_value ? `Default: ${variable.default_value}` : ''
-                      }
-                      onChange={(e) => handleInputChange(variable.name, e.target.value)}
-                    />
+                    {variable.type === 'JSON' ? (
+                      <JsonEditor
+                        value={inputValues[variable.name] as object}
+                        onChange={(value) => {
+                          setInputValues({
+                            ...inputValues,
+                            [variable.name]: value,
+                          });
+                        }}
+                        minHeight="100%"
+                      />
+                    ) : (
+                      <Input
+                        id={variable.name}
+                        type={variable.type === 'NUMBER' ? 'number' : 'text'}
+                        value={(inputValues[variable.name] as string | number) || ''}
+                        placeholder={
+                          variable.default_value ? `Default: ${variable.default_value}` : ''
+                        }
+                        onChange={(e) => handleInputChange(variable.name, e.target.value)}
+                      />
+                    )}
                   </div>
                 </div>
               ))}

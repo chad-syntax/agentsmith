@@ -2,7 +2,9 @@ import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
 import { createJwtClient } from '@/lib/supabase/server-api-key';
 import { exchangeApiKeyForJwt } from '@/lib/supabase/server-api-key';
+import { makePromptLoaderFromDB } from '@/utils/make-prompt-loader';
 import { compilePrompt, validateGlobalContext, validateVariables } from '@/utils/template-utils';
+import { compareSemanticVersions } from '@/utils/versioning';
 import { NextResponse } from 'next/server';
 
 type RequestBody = {
@@ -53,6 +55,8 @@ export async function POST(
   }
 
   const variables = promptVersion.prompt_variables || [];
+  const includedPromptVariables =
+    promptVersion.prompt_includes?.flatMap((pi) => pi.prompt_versions.prompt_variables) || [];
   const globalContext = promptVersion.prompts.projects.global_contexts?.content ?? {};
 
   let body: RequestBody;
@@ -63,7 +67,7 @@ export async function POST(
   }
 
   const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
-    variables,
+    [...variables, ...includedPromptVariables],
     body.variables,
   );
 
@@ -89,10 +93,16 @@ export async function POST(
     );
   }
 
-  const compiledPrompt = compilePrompt(promptVersion.content, {
-    ...variablesWithDefaults,
-    global: globalContext as Record<string, any>,
-  });
+  const promptLoader = makePromptLoaderFromDB(promptVersion.prompt_includes);
+
+  const compiledPrompt = await compilePrompt(
+    promptVersion.content,
+    {
+      ...variablesWithDefaults,
+      global: globalContext as Record<string, any>,
+    },
+    promptLoader,
+  );
 
   return NextResponse.json({ compiledPrompt }, { status: 200 });
 }

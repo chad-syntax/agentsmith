@@ -104,7 +104,7 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
               </Badge>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="p-4 pt-2 space-y-4 border rounded-b-md bg-background">
+          <AccordionContent className="p-4 pt-2 space-y-4 border rounded-b-md bg-background mb-4">
             <div className="space-y-2 flex items-center gap-2">
               <Label className="mb-0" htmlFor={`type-${index}`}>
                 Type

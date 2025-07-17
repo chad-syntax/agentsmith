@@ -4,42 +4,12 @@ import {
   AgentsmithSupabaseServiceConstructorOptions,
 } from './AgentsmithSupabaseService';
 import { compareSemanticVersions } from '@/utils/versioning';
+import generateTypeDeclaration from '@/utils/object-to-declare';
+import { format } from 'prettier';
+import { RESERVED_KEYWORDS } from '@/constants/reserved-keywords';
 
 type GenerateTypesOptions = {
   projectId: number;
-};
-
-const variableTypeToTsType = (type: string) => {
-  switch (type) {
-    case 'STRING':
-      return 'string';
-    case 'NUMBER':
-      return 'number';
-    case 'BOOLEAN':
-      return 'boolean';
-    case 'JSON':
-      return 'any';
-    default:
-      return 'any';
-  }
-};
-
-const jsonToTsType = (json: any): any => {
-  if (typeof json === 'string') {
-    return `'${json}'`;
-  }
-  if (typeof json === 'object' && json !== null) {
-    if (Array.isArray(json)) {
-      return `[${json.map((item) => jsonToTsType(item)).join(', ')}]`;
-    } else {
-      const entries = Object.entries(json).map(([key, value]) => {
-        const tsValue = jsonToTsType(value);
-        return `'${key}': ${tsValue}`;
-      });
-      return `{ ${entries.join('; ')} }`;
-    }
-  }
-  return JSON.stringify(json);
 };
 
 export class TypegenService extends AgentsmithSupabaseService {
@@ -50,10 +20,49 @@ export class TypegenService extends AgentsmithSupabaseService {
     });
   }
 
+  private variableTypeToTsType(type: string) {
+    switch (type) {
+      case 'STRING':
+        return 'string';
+      case 'NUMBER':
+        return 'number';
+      case 'BOOLEAN':
+        return 'boolean';
+      case 'JSON':
+        return 'any';
+      default:
+        return 'any';
+    }
+  }
+
+  private _normalizeNameSegment(name: string) {
+    return name.replace(/-/g, '_').replace(/\./g, '_');
+  }
+
+  private _normalizeTypeName(
+    type: 'Prompt' | 'PromptVersion' | 'PromptConfig' | 'PromptVariables',
+    slug: string,
+    version?: string,
+  ) {
+    const slugSegment = this._normalizeNameSegment(slug);
+    if (version) {
+      const versionSegment = this._normalizeNameSegment(version);
+      return `${type}__${slugSegment}__${versionSegment}`;
+    }
+    return `${type}__${slugSegment}`;
+  }
+
+  private _formatTypeKey(key: string) {
+    const validIdentifierRegex = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
+    if (validIdentifierRegex.test(key) && !RESERVED_KEYWORDS.has(key)) {
+      return key;
+    }
+    return `'${key}'`;
+  }
+
   async generateTypes(options: GenerateTypesOptions) {
     const { projectId } = options;
 
-    // process prompts to get the latest version and variables
     const project = new Project();
     const sourceFile = project.createSourceFile('agentsmith.types.ts', '', {
       overwrite: true,
@@ -71,120 +80,178 @@ export class TypegenService extends AgentsmithSupabaseService {
     ]);
 
     // Fetch prompts from Supabase
-
-    // fetch all prompts, prompt_versions, and prompt_variables
     const prompts = await this.services.prompts.getAllPromptsData(projectId);
 
-    const globals = await this.services.projects.getProjectGlobalsByProjectId(projectId);
+    const projectGlobals = await this.services.projects.getProjectGlobalsByProjectId(projectId);
 
-    // Process prompts to get the latest version and variables
-    const processedPrompts = prompts
-      .map((prompt) => {
-        const versions = prompt.prompt_versions || [];
-        // Sort versions by created_at in descending order
-        const sortedVersions = [...versions].sort((a, b) =>
-          compareSemanticVersions(b.version, a.version),
+    // First pass: Generate all variable types
+    for (const prompt of prompts) {
+      for (const version of prompt.prompt_versions) {
+        const variablesTypeName = this._normalizeTypeName(
+          'PromptVariables',
+          prompt.slug,
+          version.version,
+        );
+        sourceFile.addTypeAlias({
+          name: variablesTypeName,
+          isExported: true,
+          type: (writer) => {
+            if (version.prompt_variables.length === 0) {
+              writer.write('{}');
+              return;
+            }
+            writer.block(() => {
+              for (const variable of version.prompt_variables) {
+                writer.writeLine(
+                  `${this._formatTypeKey(variable.name)}${
+                    variable.required ? '' : '?'
+                  }: ${this.variableTypeToTsType(variable.type)};`,
+                );
+              }
+            });
+          },
+        });
+        sourceFile.addStatements('\n\n');
+      }
+    }
+
+    // Second pass: Generate all other types
+    for (const prompt of prompts) {
+      for (const version of prompt.prompt_versions) {
+        // Create a dedicated type for the config
+        const configTypeName = this._normalizeTypeName(
+          'PromptConfig',
+          prompt.slug,
+          version.version,
         );
 
-        if (sortedVersions.length === 0) {
-          return null;
-        }
+        const configType = generateTypeDeclaration(version.config, {
+          rootName: configTypeName,
+        }).replace(`interface ${configTypeName}`, '');
 
-        const latestVersion = sortedVersions.find((v) => v.status === 'PUBLISHED');
+        sourceFile.addTypeAlias({
+          name: configTypeName,
+          isExported: true,
+          type: configType,
+        });
+        sourceFile.addStatements('\n\n');
 
-        return {
-          uuid: prompt.uuid,
-          name: prompt.name,
-          slug: prompt.slug,
-          latestVersion,
-          versions: sortedVersions.map((v) => ({
-            uuid: v.uuid,
-            version: v.version,
-            config: v.config,
-            content: v.content,
-            status: v.status,
-            variables: v.prompt_variables.map((pv) => ({
-              uuid: pv.uuid,
-              name: pv.name,
-              type: pv.type,
-              required: pv.required,
-              default_value: pv.default_value,
-            })),
-          })),
-        };
-      })
-      .filter((p) => p !== null);
+        const typeName = this._normalizeTypeName('PromptVersion', prompt.slug, version.version);
+        sourceFile.addTypeAlias({
+          name: typeName,
+          isExported: true,
+          type: (writer) => {
+            writer.block(() => {
+              writer.writeLine(`version: '${version.version}';`);
+              writer.writeLine(`config: ${configTypeName};`);
+
+              const variableTypeNames = [];
+              const ownVariablesTypeName = this._normalizeTypeName(
+                'PromptVariables',
+                prompt.slug,
+                version.version,
+              );
+              variableTypeNames.push(ownVariablesTypeName);
+
+              if (version.prompt_includes && version.prompt_includes.length > 0) {
+                for (const include of version.prompt_includes) {
+                  if (include.prompt_versions) {
+                    const includedVariablesTypeName = this._normalizeTypeName(
+                      'PromptVariables',
+                      include.prompt_versions.prompts.slug,
+                      include.prompt_versions.version,
+                    );
+                    variableTypeNames.push(includedVariablesTypeName);
+                  }
+                }
+              }
+
+              writer.writeLine(`variables: ${variableTypeNames.join(' & ')};`);
+              writer.writeLine(`content: string;`);
+            });
+          },
+        });
+        sourceFile.addStatements('\n\n');
+      }
+
+      const typeName = this._normalizeTypeName('Prompt', prompt.slug);
+      sourceFile.addTypeAlias({
+        name: typeName,
+        isExported: true,
+        type: (writer) => {
+          writer.block(() => {
+            writer.writeLine(`name: '${prompt.name}';`);
+            writer.writeLine(`slug: '${prompt.slug}';`);
+            writer.write('versions: ').block(() => {
+              const latestVersion = (prompt.prompt_versions || [])
+                .filter((v) => v.status === 'PUBLISHED')
+                .sort((a, b) => compareSemanticVersions(b.version, a.version))[0];
+
+              if (latestVersion) {
+                const latestVersionTypeName = this._normalizeTypeName(
+                  'PromptVersion',
+                  prompt.slug,
+                  latestVersion.version,
+                );
+                writer.writeLine(`latest: ${latestVersionTypeName};`);
+              } else {
+                writer.writeLine('latest: never;');
+              }
+
+              for (const version of prompt.prompt_versions) {
+                const versionTypeName = this._normalizeTypeName(
+                  'PromptVersion',
+                  prompt.slug,
+                  version.version,
+                );
+                writer.writeLine(`'${version.version}': ${versionTypeName};`);
+              }
+            });
+          });
+        },
+      });
+      sourceFile.addStatements('\n\n');
+    }
+
+    const globalsContent = projectGlobals?.content || {};
+
+    const globalsType = generateTypeDeclaration(globalsContent, {
+      rootName: 'Globals',
+    }).replace(`interface Globals`, '');
+    sourceFile.addTypeAlias({
+      name: 'Globals',
+      isExported: true,
+      type: globalsType,
+    });
 
     sourceFile.addTypeAlias({
       name: 'Agency',
       isExported: true,
-      type: `{
-        prompts: {
-          ${processedPrompts
-            .map((p) => {
-              if (!p) return '';
-
-              const versionsString = p.versions
-                .map((v) => {
-                  const variablesString = v.variables
-                    .map(
-                      (variable) =>
-                        `${variable.name}${variable.required ? '' : '?'}: ${variableTypeToTsType(variable.type)}`,
-                    )
-                    .join('; ');
-                  const versionConfig = `config: ${JSON.stringify(v.config)}`;
-                  let versionObjectProperties = `uuid: '${v.uuid}'; version: '${v.version}'; ${versionConfig}; content: string`;
-                  if (v.variables.length > 0) {
-                    versionObjectProperties += `; variables: { ${variablesString} }`;
-                  }
-                  return `    '${v.version}': { ${versionObjectProperties} }`;
-                })
-                .join(';\n');
-
-              const latestVersionVariables = p.latestVersion?.prompt_variables || [];
-              const latestVersionVariablesString = latestVersionVariables
-                .map(
-                  (variable) =>
-                    `'${variable.name}'${variable.required ? '' : '?'}: ${variableTypeToTsType(variable.type)}`,
-                )
-                .join('; ');
-
-              let latestVersionObjectProperties = !p.latestVersion
-                ? ''
-                : `uuid: '${p.latestVersion.uuid}'; version: '${p.latestVersion.version}'; config: ${JSON.stringify(p.latestVersion.config)}; content: string`;
-              if (latestVersionVariables.length > 0) {
-                latestVersionObjectProperties += `; variables: { ${latestVersionVariablesString} }`;
-              }
-              const latestVersionString = !p.latestVersion
-                ? 'latest: never'
-                : `    latest: { ${latestVersionObjectProperties} }`;
-
-              return `  '${p.slug}': {
-    uuid: '${p.uuid}';
-    name: '${p.name}';
-    slug: '${p.slug}';
-    versions: {
-${latestVersionString};
-${versionsString}
-    }
-  }`;
-            })
-            .join(';\n')}
-        };
-        globals: {${Object.entries(globals?.content || {})
-          .map(([key, value]) => {
-            if (typeof value === 'string') {
-              return `    ${key}: '${value}'`;
+      type: (writer) => {
+        writer.block(() => {
+          writer.write('prompts: ').block(() => {
+            for (const prompt of prompts) {
+              const typeName = this._normalizeTypeName('Prompt', prompt.slug);
+              writer.writeLine(`${this._formatTypeKey(prompt.slug)}: ${typeName};`);
             }
-            return `    ${key}: ${value}`;
-          })
-          .join(';\n')}}
-      }`,
+          });
+          writer.writeLine(`globals: Globals;`);
+        });
+      },
     });
 
-    // Format the source file
-    sourceFile.formatText();
+    const unformattedText = sourceFile.getFullText();
 
-    return sourceFile.getFullText();
+    console.log('!!! unformattedText', unformattedText);
+
+    return format(unformattedText, {
+      parser: 'typescript',
+      singleQuote: true,
+      trailingComma: 'all',
+      printWidth: 100,
+      tabWidth: 2,
+      useTabs: false,
+      semi: true,
+    });
   }
 }

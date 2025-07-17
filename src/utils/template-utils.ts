@@ -6,11 +6,20 @@ import { transform } from 'nunjucks/src/transformer';
 import merge from 'lodash.merge';
 import { EditorPromptVariable } from '@/types/prompt-editor';
 
+export const SEMVER_PATTERN =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+
 export type ParsedVariable = {
   id?: number;
   name: string;
   type: Database['public']['Enums']['variable_type'];
   children?: ParsedVariable[];
+};
+
+export type ParsedInclude = {
+  arg: string;
+  slug: string;
+  version: string | null;
 };
 
 /**
@@ -26,6 +35,7 @@ const createParsedVariable = (
 
 class TemplateVariablesExtractor {
   private variableMap = new Map<string, ParsedVariable>();
+  private includeMap = new Map<string, ParsedInclude>();
   private localVariables = new Set<string>();
 
   /* ---------- Utilities ---------- */
@@ -129,6 +139,35 @@ class TemplateVariablesExtractor {
         break;
       }
 
+      case 'Include': {
+        if (node.template?.typename === 'Literal') {
+          const arg = node.template.value;
+          if (this.includeMap.has(arg)) {
+            break;
+          }
+          const [slug, version] = arg.split('@');
+
+          if (!slug) {
+            throw new Error(`Include is missing an identifier: {% include "${arg}" %}`);
+          }
+          if (arg.includes('@') && !version) {
+            throw new Error(`Include is missing a version: {% include "${arg}" %}`);
+          }
+          if (version && version !== 'latest' && !SEMVER_PATTERN.test(version)) {
+            throw new Error(`Include has an invalid semver: {% include "${arg}" %}`);
+          }
+
+          this.includeMap.set(arg, {
+            arg,
+            slug,
+            version: version || null,
+          });
+        } else {
+          throw new Error('Include must be a string literal');
+        }
+        break;
+      }
+
       case 'LookupVal': {
         const path = this.literalPathFromLookup(node);
         if (!path) {
@@ -197,33 +236,36 @@ class TemplateVariablesExtractor {
   }
 
   /* ---------- Public API ---------- */
-  public extractVariables(ast: any): ParsedVariable[] {
+  public extract(ast: any): { variables: ParsedVariable[]; includes: ParsedInclude[] } {
     this.traverseNode(ast);
-    return Array.from(this.variableMap.values());
+    return {
+      variables: Array.from(this.variableMap.values()),
+      includes: Array.from(this.includeMap.values()),
+    };
   }
 }
 
 /**
  * Walks through the Nunjucks AST and extracts all Symbol nodes
  * @param content Template string to parse
- * @param ignoreGlobals Whether to ignore global variables
  * @returns Array of extracted variable names with detected types
  */
-export const extractTemplateVariables = (
+export const extract = (
   content: string,
-): { variables: ParsedVariable[]; error?: Error } => {
+): { variables: ParsedVariable[]; includes: ParsedInclude[]; error?: Error } => {
   try {
     // Parse the template and build variables using the extractor class
     // @ts-ignore - parser exists but is not in type definitions
     const ast = transform(nunjucks.parser.parse(content));
 
     const extractor = new TemplateVariablesExtractor();
-    const variables = extractor.extractVariables(ast);
+    const { variables, includes } = extractor.extract(ast);
 
-    return { variables };
+    return { variables, includes };
   } catch (error) {
     return {
       variables: [],
+      includes: [],
       error: error instanceof Error ? error : new Error('Unknown error'),
     };
   }
@@ -412,7 +454,7 @@ export const validateGlobalContext = (
   content: string,
   globalContext: Record<string, any>,
 ): { missingGlobalContext: string[] } => {
-  const { variables, error } = extractTemplateVariables(content);
+  const { variables, error } = extract(content);
 
   if (error) {
     throw new Error('Error validating global context: ' + error.message);
@@ -432,19 +474,59 @@ export const validateGlobalContext = (
 export const compilePrompt = (
   promptContent: string,
   variables: Record<string, any> & { global: Record<string, any> },
-): string => {
+  promptLoader: (slug: string, version: string | null) => string,
+): Promise<string> => {
   ensureSecureAst(promptContent); // Perform security check first
   const processedVariables = processUniqueValues(variables);
+  const MyLoader = nunjucks.Loader.extend({
+    getSource: function (
+      name: string,
+      callback: (
+        err: Error | null,
+        res: { src: string; path: string; noCache: boolean } | null,
+      ) => void,
+    ) {
+      console.log('getting source for', name);
+      const [slug, version] = name.split('@');
+      if (!slug) {
+        callback(new Error('Invalid template name'), null);
+        return;
+      }
+
+      return {
+        src: promptLoader(slug, version ?? null),
+        path: name,
+        noCache: true,
+      };
+    },
+  });
+
   nunjucks.configure({ autoescape: false });
-  return nunjucks.renderString(promptContent, processedVariables);
+  const nunjucksEnv = new nunjucks.Environment(new MyLoader());
+
+  return new Promise((resolve, reject) => {
+    nunjucksEnv.renderString(
+      promptContent,
+      processedVariables,
+      (err: Error | null, result: string | null) => {
+        if (err) {
+          reject(err);
+        } else if (!result) {
+          reject(new Error('No result from nunjucks renderString'));
+        } else {
+          resolve(result);
+        }
+      },
+    );
+  });
 };
 
 export const validateVariables = (
   variables: EditorPromptVariable[],
-  variablesToCheck: Record<string, string | number | boolean>,
+  variablesToCheck: Record<string, string | number | boolean | object>,
 ): {
-  missingRequiredVariables: ParsedVariable[];
-  variablesWithDefaults: Record<string, string | number | boolean>;
+  missingRequiredVariables: EditorPromptVariable[];
+  variablesWithDefaults: Record<string, string | number | boolean | object>;
 } => {
   const missingRequiredVariables = variables
     .filter((v) => v.required)

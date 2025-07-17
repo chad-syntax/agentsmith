@@ -40,7 +40,7 @@ const PromptVariableItemSchema = z.object({
   required: z.boolean(),
   created_at: supabaseDatetime,
   updated_at: supabaseDatetime,
-  default_value: z.union([z.number(), z.string(), z.any()]).nullable(), // Represents number | string | Json | null
+  default_value: z.union([z.number(), z.string(), z.any()]).nullable().optional(), // Represents number | string | Json | null
 });
 
 // Schema for PromptVariableFileJSONContent (array of items)

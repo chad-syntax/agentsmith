@@ -30,7 +30,7 @@ import { H1 } from '@/components/typography';
 import type { CompletionConfig } from '@/lib/openrouter';
 import { JsonEditor } from '@/components/editors/json-editor';
 import { GetPromptVersionByUuidResult } from '@/lib/PromptsService';
-import { findMissingGlobalContext, ParsedVariable } from '@/utils/template-utils';
+import { findMissingGlobalContext, ParsedInclude, ParsedVariable } from '@/utils/template-utils';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { EmojiModeButton } from '@/components/emoji-mode-button';
 import { emojiTokenify } from '@/utils/emoji-tokenify';
@@ -38,7 +38,8 @@ import { cn } from '@/utils/shadcn';
 import { STUDIO_FULL_HEIGHT } from '@/app/constants';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
-import { EditorPromptVariable } from '@/types/prompt-editor';
+import { EditorPromptVariable, IncludedPrompt } from '@/types/prompt-editor';
+import { createClient } from '@/lib/supabase/client';
 
 type EditPromptVersionPageProps = {
   promptVersion: NonNullable<GetPromptVersionByUuidResult>;
@@ -51,6 +52,14 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   const isDraft = currentPromptVersion.status === 'DRAFT';
   const isPublished = currentPromptVersion.status === 'PUBLISHED';
 
+  const initialIncludedPrompts = initialPromptVersion.prompt_includes.map((pi) => ({
+    slug: pi.prompt_versions.prompts.slug,
+    version: pi.prompt_versions.version,
+    versionUuid: pi.prompt_versions.uuid,
+    variables: pi.prompt_versions.prompt_variables,
+    content: pi.prompt_versions.content,
+  }));
+
   const router = useRouter();
   const [initialContent, setInitialContent] = useState(initialPromptVersion.content);
 
@@ -61,8 +70,12 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   const [variables, setVariables] = useState<EditorPromptVariable[]>(
     currentPromptVersion.prompt_variables,
   );
+
   const [content, setContent] = useState(currentPromptVersion.content);
   const [config, setConfig] = useState(currentPromptVersion.config as CompletionConfig);
+  const [includes, setIncludes] = useState<ParsedInclude[]>([]);
+  const [includedPrompts, setIncludedPrompts] = useState<IncludedPrompt[]>(initialIncludedPrompts);
+  const [notExistingIncludes, setNotExistingIncludes] = useState<Set<string>>(new Set());
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingVersion, setIsCreatingVersion] = useState(false);
   const [isSettingDraft, setIsSettingDraft] = useState(false);
@@ -73,7 +86,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
   const [isEmojiModeEnabled, setIsEmojiModeEnabled] = useState(false);
   const [tokenBpe, setTokenBpe] = useState<any>(null);
   const [emojiList, setEmojiList] = useState<string[]>([]);
-  const { selectedProjectUuid, showSyncTooltip } = useApp();
+  const { selectedProjectUuid, showSyncTooltip, selectedProject } = useApp();
 
   const globalContext = currentPromptVersion.prompts.projects.global_contexts?.content ?? {};
 
@@ -98,6 +111,58 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
 
     loadTokenify();
   }, [isEmojiModeEnabled]);
+
+  useEffect(() => {
+    const getIncludes = async () => {
+      const supabase = createClient();
+
+      const includedPrompts: IncludedPrompt[] = [];
+
+      const notExistingIncludes = new Set<string>();
+
+      for (const include of includes) {
+        let query = supabase
+          .from('prompts')
+          .select('*, prompt_versions(*, prompt_variables(*))')
+          .eq('slug', include.slug)
+          .eq('project_id', selectedProject.id);
+        if (include.version === null || include.version === 'latest') {
+          query = query
+            .order('created_at', { ascending: false, referencedTable: 'prompt_versions' })
+            .limit(1, { referencedTable: 'prompt_versions' });
+        } else {
+          query = query.eq('prompt_versions.version', include.version);
+        }
+
+        const { data, error } = await query.maybeSingle();
+
+        if (error) {
+          console.error('Error getting includes:', error);
+          return;
+        }
+
+        if (!data || data.prompt_versions.length === 0) {
+          notExistingIncludes.add(include.arg);
+          continue;
+        }
+
+        includedPrompts.push(
+          ...data.prompt_versions.map((pv) => ({
+            slug: include.slug,
+            version: pv.version,
+            versionUuid: pv.uuid,
+            variables: pv.prompt_variables,
+            content: pv.content,
+          })),
+        );
+      }
+
+      setIncludedPrompts(includedPrompts);
+      setNotExistingIncludes(notExistingIncludes);
+    };
+
+    getIncludes();
+  }, [includes]);
 
   const handleContentChange = (newContent: string) => {
     setContent(newContent);
@@ -130,6 +195,10 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
     setVariables(mergedNonGlobalVariables);
   };
 
+  const handleIncludesChange = (newIncludes: ParsedInclude[]) => {
+    setIncludes(newIncludes);
+  };
+
   const handleSave = async (
     status: Database['public']['Enums']['prompt_status'],
     shouldRedirect = true,
@@ -147,7 +216,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         name: v.name,
         type: v.type as Database['public']['Enums']['variable_type'],
         required: v.required,
-        default_value: v.default_value,
+        default_value: v.default_value ?? null,
       }));
 
       const response = await updatePromptVersion({
@@ -157,6 +226,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         config,
         status,
         variables: vars,
+        includes,
       });
 
       if (!response.success) {
@@ -391,11 +461,24 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
                   </AlertDescription>
                 </Alert>
               )}
+              {notExistingIncludes.size > 0 && (
+                <Alert className="mb-4" variant="destructive">
+                  <AlertTitle>Missing Includes</AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc list-inside ml-1">
+                      {Array.from(notExistingIncludes).map((n) => (
+                        <li key={n}>Prompt "{n}" not found</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
               <PromptContentEditor
                 content={editorContent}
                 readOnly={isEmojiModeEnabled}
                 onContentChange={handleContentChange}
                 onVariablesChange={handleVariablesChange}
+                onIncludesChange={handleIncludesChange}
                 minHeight="500px"
                 className={isEmojiModeEnabled ? 'text-2xl' : ''}
               />
@@ -408,6 +491,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         globalContext={globalContext}
         variables={variables}
         onVariablesChange={handleVariablesChange}
+        includedPrompts={includedPrompts}
       />
 
       <PromptTestModal
@@ -415,6 +499,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         onClose={() => setIsTestModalOpen(false)}
         variables={variables}
         promptVersion={currentPromptVersion}
+        includedPrompts={includedPrompts}
       />
 
       <PublishUpdateConfirmModal
@@ -428,6 +513,7 @@ export const EditPromptVersionPage = (props: EditPromptVersionPageProps) => {
         isOpen={isCompileModalOpen}
         onClose={() => setIsCompileModalOpen(false)}
         variables={variables}
+        includedPrompts={includedPrompts}
         promptContent={content}
         globalContext={
           typeof currentPromptVersion.prompts.projects.global_contexts?.content === 'object' &&

@@ -7,7 +7,7 @@ import 'prismjs/components/prism-markup-templating';
 import 'prismjs/components/prism-django';
 import 'prismjs/themes/prism.css';
 import { AlertCircle } from 'lucide-react';
-import { extractTemplateVariables } from '@/utils/template-utils';
+import { extract, ParsedInclude } from '@/utils/template-utils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/utils/shadcn';
 import { ParsedVariable } from '@/utils/template-utils';
@@ -16,6 +16,7 @@ type PromptContentEditorProps = {
   content: string;
   onContentChange: (content: string) => void;
   onVariablesChange?: (variables: ParsedVariable[]) => void;
+  onIncludesChange?: (includes: ParsedInclude[]) => void;
   readOnly?: boolean;
   minHeight?: string;
   className?: string;
@@ -41,11 +42,18 @@ const isVariableDiff = (currentVars: ParsedVariable[], newVars: ParsedVariable[]
   return false;
 };
 
+const isIncludeDiff = (currentIncludes: ParsedInclude[], newIncludes: ParsedInclude[]): boolean => {
+  if (currentIncludes.length !== newIncludes.length) return true;
+
+  return currentIncludes.some((include, index) => include.arg !== newIncludes[index].arg);
+};
+
 export const PromptContentEditor = (props: PromptContentEditorProps) => {
   const {
     content,
     onContentChange,
     onVariablesChange,
+    onIncludesChange,
     readOnly = false,
     minHeight = '300px',
     className,
@@ -54,21 +62,25 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
   const [templateError, setTemplateError] = useState<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const detectedVariablesRef = useRef<ParsedVariable[]>([]);
+  const detectedIncludesRef = useRef<ParsedInclude[]>([]);
 
   // Effect to detect variables when content changes
   useEffect(() => {
-    if (!onVariablesChange) return;
-
+    if (!onVariablesChange && !onIncludesChange) return;
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
     timeoutRef.current = setTimeout(() => {
-      const { variables: detectedVariables, error } = extractTemplateVariables(content);
+      const { variables: detectedVariables, includes: detectedIncludes, error } = extract(content);
 
-      const isDiff = isVariableDiff(detectedVariablesRef.current, detectedVariables);
+      const isDiff =
+        isVariableDiff(detectedVariablesRef.current, detectedVariables) ||
+        isIncludeDiff(detectedIncludesRef.current, detectedIncludes);
 
       if (!error && isDiff) {
-        onVariablesChange(detectedVariables);
+        onVariablesChange?.(detectedVariables);
+        onIncludesChange?.(detectedIncludes);
         detectedVariablesRef.current = detectedVariables;
+        detectedIncludesRef.current = detectedIncludes;
       }
 
       setTemplateError(error?.message ?? null);

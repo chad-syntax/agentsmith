@@ -6,7 +6,6 @@ import { useApp } from '@/providers/app';
 import { NonStreamingChoice } from '@/lib/openrouter';
 import { connectOpenrouter } from '@/app/actions/openrouter';
 import { routes } from '@/utils/routes';
-import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,15 +17,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { JsonEditor } from '../editors/json-editor';
-import { EditorPromptVariable } from '@/types/prompt-editor';
+import { EditorPromptVariable, IncludedPrompt } from '@/types/prompt-editor';
 import { Database } from '@/app/__generated__/supabase.types';
 import merge from 'lodash.merge';
 import { streamToIterator } from '@/utils/stream-to-iterator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MarkdownEditor } from '../editors/markdown-editor';
 import { MarkdownRenderer } from '../markdown-renderer';
+import { ExecutePromptResponseError } from '@/types/api-responses';
 
 type PromptVersion = Database['public']['Tables']['prompt_versions']['Row'] & {
   prompts: Database['public']['Tables']['prompts']['Row'];
@@ -38,10 +38,11 @@ type PromptTestModalProps = {
   onClose: () => void;
   variables: EditorPromptVariable[];
   promptVersion: PromptVersion;
+  includedPrompts: IncludedPrompt[];
 };
 
 export const PromptTestModal = (props: PromptTestModalProps) => {
-  const { isOpen, onClose, variables, promptVersion } = props;
+  const { isOpen, onClose, variables, promptVersion, includedPrompts } = props;
 
   const [testVariables, setTestVariables] = useState<Record<string, string | object>>({});
   const [isRunning, setIsRunning] = useState(false);
@@ -53,7 +54,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
   const { selectedOrganizationUuid, hasOpenRouterKey, isOrganizationAdmin, selectedProjectUuid } =
     useApp();
 
-  const { onboardingChecklist, setOnboardingChecklist } = useApp();
+  const { setOnboardingChecklist } = useApp();
 
   const handleTestPrompt = async () => {
     setIsRunning(true);
@@ -73,11 +74,18 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as ExecutePromptResponseError;
 
         if (errorData.missingGlobalContext) {
           setTestError(
             `Missing global context variables: ${errorData.missingGlobalContext.join(', ')}`,
+          );
+          return;
+        }
+
+        if (errorData.missingRequiredVariables) {
+          setTestError(
+            `Missing required variables: ${errorData.missingRequiredVariables.map((v) => v.name).join(', ')}`,
           );
           return;
         }
@@ -185,9 +193,11 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
     );
   }
 
+  const allVariables = [...variables, ...includedPrompts.flatMap((ip) => ip.variables)];
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-full max-h-full rounded-none sm:rounded-lg sm:max-w-[calc(95%-2rem)] h-full sm:max-h-[calc(95%-2rem)] flex flex-col flex-start overflow-hidden">
+      <DialogContent className="max-w-full max-h-full rounded-none sm:rounded-lg sm:max-w-[calc(98%-2rem)] h-full sm:max-h-[calc(98%-2rem)] flex flex-col flex-start overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             Test&nbsp;
@@ -202,7 +212,7 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
         <div className="flex-col md:flex-row flex-1 flex gap-4">
           <div className="md:flex-1 space-y-4">
             <h3 className="font-medium text-lg">Input Variables</h3>
-            {variables.map((variable) => (
+            {allVariables.map((variable) => (
               <div key={variable.id || variable.name} className="space-y-2">
                 <Label className="ml-1.5 gap-1 flex items-start">
                   {variable.name}
