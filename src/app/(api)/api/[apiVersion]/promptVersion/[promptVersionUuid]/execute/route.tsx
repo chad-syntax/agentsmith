@@ -9,6 +9,7 @@ import { validateGlobalContext, validateVariables } from '@/utils/template-utils
 import merge from 'lodash.merge';
 import { streamToIterator } from '@/utils/stream-to-iterator';
 import { LLMLogsService } from '@/lib/LLMLogsService';
+import { mergeIncludedVariables } from '@/utils/merge-included-variables';
 
 export const maxDuration = 320; // 5m20s minute function timeout
 
@@ -72,8 +73,13 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
+  const allVariables = mergeIncludedVariables({
+    variables,
+    includedPromptVariables,
+  });
+
   const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
-    [...variables, ...includedPromptVariables],
+    allVariables,
     body.variables,
   );
 

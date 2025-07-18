@@ -27,6 +27,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MarkdownEditor } from '../editors/markdown-editor';
 import { MarkdownRenderer } from '../markdown-renderer';
 import { ExecutePromptResponseError } from '@/types/api-responses';
+import { mergeIncludedVariables } from '@/utils/merge-included-variables';
 
 type PromptVersion = Database['public']['Tables']['prompt_versions']['Row'] & {
   prompts: Database['public']['Tables']['prompts']['Row'];
@@ -193,7 +194,10 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
     );
   }
 
-  const allVariables = [...variables, ...includedPrompts.flatMap((ip) => ip.variables)];
+  const allVariables = mergeIncludedVariables({
+    variables,
+    includedPromptVariables: includedPrompts.flatMap((ip) => ip.variables),
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

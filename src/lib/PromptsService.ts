@@ -994,11 +994,7 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     const promptLoader = makePromptLoaderFromDB(promptIncludes);
 
-    const compiledPrompt = await compilePrompt(
-      targetVersion.content,
-      variablesAndContext,
-      promptLoader,
-    );
+    const compiledPrompt = compilePrompt(targetVersion.content, variablesAndContext, promptLoader);
 
     const freeModelsOnlyEnabled = process.env.FREE_MODELS_ONLY === 'true';
 

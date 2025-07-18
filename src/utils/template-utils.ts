@@ -168,6 +168,13 @@ class TemplateVariablesExtractor {
         break;
       }
 
+      case 'Filter':
+      case 'FunCall': {
+        // The filter/function name itself is not a variable, but its arguments can be.
+        this.traverseNode(node.args, ctx);
+        break;
+      }
+
       case 'LookupVal': {
         const path = this.literalPathFromLookup(node);
         if (!path) {
@@ -475,7 +482,7 @@ export const compilePrompt = (
   promptContent: string,
   variables: Record<string, any> & { global: Record<string, any> },
   promptLoader: (slug: string, version: string | null) => string,
-): Promise<string> => {
+): string => {
   ensureSecureAst(promptContent); // Perform security check first
   const processedVariables = processUniqueValues(variables);
   const MyLoader = nunjucks.Loader.extend({
@@ -500,24 +507,9 @@ export const compilePrompt = (
     },
   });
 
-  nunjucks.configure({ autoescape: false });
-  const nunjucksEnv = new nunjucks.Environment(new MyLoader());
+  const nunjucksEnv = new nunjucks.Environment(new MyLoader(), { autoescape: false });
 
-  return new Promise((resolve, reject) => {
-    nunjucksEnv.renderString(
-      promptContent,
-      processedVariables,
-      (err: Error | null, result: string | null) => {
-        if (err) {
-          reject(err);
-        } else if (!result) {
-          reject(new Error('No result from nunjucks renderString'));
-        } else {
-          resolve(result);
-        }
-      },
-    );
-  });
+  return nunjucksEnv.renderString(promptContent, processedVariables);
 };
 
 export const validateVariables = (

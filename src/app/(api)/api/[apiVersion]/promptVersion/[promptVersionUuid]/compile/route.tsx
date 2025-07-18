@@ -3,9 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 import { createJwtClient } from '@/lib/supabase/server-api-key';
 import { exchangeApiKeyForJwt } from '@/lib/supabase/server-api-key';
 import { makePromptLoaderFromDB } from '@/utils/make-prompt-loader';
+import { mergeIncludedVariables } from '@/utils/merge-included-variables';
 import { compilePrompt, validateGlobalContext, validateVariables } from '@/utils/template-utils';
 import { compareSemanticVersions } from '@/utils/versioning';
 import { NextResponse } from 'next/server';
+import { EditorPromptVariable } from '@/types/prompt-editor';
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
@@ -66,8 +68,13 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
+  const allVariables = mergeIncludedVariables({
+    variables,
+    includedPromptVariables,
+  });
+
   const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
-    [...variables, ...includedPromptVariables],
+    allVariables,
     body.variables,
   );
 
@@ -95,7 +102,7 @@ export async function POST(
 
   const promptLoader = makePromptLoaderFromDB(promptVersion.prompt_includes);
 
-  const compiledPrompt = await compilePrompt(
+  const compiledPrompt = compilePrompt(
     promptVersion.content,
     {
       ...variablesWithDefaults,

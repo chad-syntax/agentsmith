@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { EditorPromptVariable, IncludedPrompt } from '@/types/prompt-editor';
 import { JsonEditor } from '../editors/json-editor';
 import { makePromptLoaderFromUI } from '@/utils/make-prompt-loader';
+import { mergeIncludedVariables } from '@/utils/merge-included-variables';
 
 type CompileToClipboardModalProps = {
   isOpen: boolean;
@@ -37,7 +38,12 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const allVariables = [...variables, ...includedPrompts.flatMap((ip) => ip.variables)];
+  const includedPromptVariables = includedPrompts.flatMap((ip) => ip.variables);
+
+  const allVariables = mergeIncludedVariables({
+    variables,
+    includedPromptVariables,
+  });
 
   const handleInputChange = (variableName: string, value: string) => {
     setInputValues((prev) => ({
@@ -89,7 +95,7 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
 
       const promptLoader = makePromptLoaderFromUI(includedPrompts);
 
-      const compiledContent = await compilePrompt(
+      const compiledContent = compilePrompt(
         promptContent,
         finalVariablesForCompilation,
         promptLoader,

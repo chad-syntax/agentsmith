@@ -448,6 +448,33 @@ describe('extractTemplateVariables', () => {
       expect.arrayContaining([expect.objectContaining({ name: 'name', type: 'STRING' })]),
     );
   });
+
+  it('should not count filters as variables', () => {
+    const content = '{{ name | upper }}';
+    const { variables, error } = extract(content);
+    expect(error).toBeUndefined();
+    expect(variables).toHaveLength(1);
+    expect(variables).toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: 'name', type: 'STRING' })]),
+    );
+  });
+
+  it('should not count filters as variables, but should count variables that are used in filters (replace example)', () => {
+    const content = `
+      {% set numbers = 123456 %}
+      {{ numbers | replace(target, ".") }}
+    `;
+    const { variables, error } = extract(content);
+    expect(error).toBeUndefined();
+    // Only 'numbers' and 'target' should be extracted as a variable (from the output expression)
+    expect(variables).toHaveLength(2);
+    expect(variables).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'numbers', type: 'STRING' }),
+        expect.objectContaining({ name: 'target', type: 'STRING' }),
+      ]),
+    );
+  });
 });
 
 describe('extractTemplateIncludes', () => {
@@ -996,61 +1023,113 @@ describe('validateTemplate', () => {
   });
 });
 
-// describe('compilePrompt', () => {
-//   const baseMockVariables = {
-//     name: 'Tester',
-//     myObj: { legitProperty: 'hello' },
-//     global: { version: '1.0' },
-//   };
+describe('compilePrompt', () => {
+  const baseMockVariables = {
+    name: 'Tester',
+    myObj: { legitProperty: 'hello' },
+    global: { version: '1.0' },
+  };
 
-//   it('should compile a valid prompt', async () => {
-//     const template = 'Hello {{ name }}!';
-//     await expect(compilePrompt(template, baseMockVariables)).resolves.toBe('Hello Tester!');
-//   });
+  const noopPromptLoader = () => '';
+  const promptLoader = (slug: string, version: string | null) => {
+    if (slug === 'included-prompt' && version === '0.0.1') {
+      return 'Hello from included prompt!';
+    }
+    if (slug === 'included-prompt' && (version === null || version === 'latest')) {
+      return 'Hello from latest included prompt!';
+    }
+    if (slug === 'support-chat' && version === null) {
+      return 'Hello from support chat!';
+    }
+    throw new Error(`Included prompt ${slug}@${version} not found`);
+  };
 
-//   it("should compile a prompt using 'global' as it was removed from blacklist by user", async () => {
-//     const template = 'Version: {{ global.version }}';
-//     // Ensure the output matches the global.version from baseMockVariables
-//     await expect(compilePrompt(template, baseMockVariables)).resolves.toBe('Version: 1.0');
-//   });
+  it('should compile a valid prompt', () => {
+    const template = 'Hello {{ name }}!';
+    expect(compilePrompt(template, baseMockVariables, noopPromptLoader)).toBe('Hello Tester!');
+  });
 
-//   it('should throw error for disallowed identifiers', async () => {
-//     const template = 'Data: {{ process.env.SECRET }}';
-//     await expect(compilePrompt(template, baseMockVariables)).rejects.toThrow(
-//       "Security: Disallowed identifier 'process' found.",
-//     );
-//   });
+  it("should compile a prompt using 'global' as it was removed from blacklist by user", () => {
+    const template = 'Version: {{ global.version }}';
+    // Ensure the output matches the global.version from baseMockVariables
+    expect(compilePrompt(template, baseMockVariables, noopPromptLoader)).toBe('Version: 1.0');
+  });
 
-//   it('should throw error for disallowed property lookups', async () => {
-//     const template = 'Access: {{ myObj.__proto__ }}';
-//     await expect(compilePrompt(template, baseMockVariables)).rejects.toThrow(
-//       "Security: Disallowed property lookup '__proto__' found.",
-//     );
-//   });
+  it('should throw error for disallowed identifiers', () => {
+    const template = 'Data: {{ process.env.SECRET }}';
+    expect(() => compilePrompt(template, baseMockVariables, noopPromptLoader)).toThrow(
+      "Security: Disallowed identifier 'process' found.",
+    );
+  });
 
-//   it('should throw error for Nunjucks syntax errors which cause parse fail in ensureSecureAst', async () => {
-//     const template = 'Hello {{ name !'; // Invalid Nunjucks syntax
-//     await expect(compilePrompt(template, baseMockVariables)).rejects.toThrow(
-//       'Template parsing failed: expected variable end',
-//     );
-//   });
+  it('should throw error for disallowed property lookups', () => {
+    const template = 'Access: {{ myObj.__proto__ }}';
+    expect(() => compilePrompt(template, baseMockVariables, noopPromptLoader)).toThrow(
+      "Security: Disallowed property lookup '__proto__' found.",
+    );
+  });
 
-//   it("should allow mixed-case identifiers like 'Process' if not explicitly blacklisted (current check is case-sensitive)", async () => {
-//     const template = 'Data: {{ Process.env.SECRET }}'; // 'Process' is not in DISALLOWED_IDENTIFIERS
-//     const result = validateTemplate(template);
-//     expect(result.isValid).toBe(true);
-//     expect(result.error).toBeUndefined();
+  it('should throw error for Nunjucks syntax errors which cause parse fail in ensureSecureAst', () => {
+    const template = 'Hello {{ name !'; // Invalid Nunjucks syntax
+    expect(() => compilePrompt(template, baseMockVariables, noopPromptLoader)).toThrow(
+      'Template parsing failed: expected variable end',
+    );
+  });
 
-//     const specificMockVariables = {
-//       ...baseMockVariables,
-//       Process: { env: { SECRET: 'oops' } },
-//     };
-//     await expect(compilePrompt(template, specificMockVariables)).resolves.toBe('Data: oops');
-//   });
+  it("should allow mixed-case identifiers like 'Process' if not explicitly blacklisted (current check is case-sensitive)", () => {
+    const template = 'Data: {{ Process.env.SECRET }}'; // 'Process' is not in DISALLOWED_IDENTIFIERS
+    const result = validateTemplate(template);
+    expect(result.isValid).toBe(true);
+    expect(result.error).toBeUndefined();
 
-//   it('should allow deeply nested valid lookups', async () => {
-//     const template = 'Deep: {{ a.b.c.d }}';
-//     const vars = { ...baseMockVariables, a: { b: { c: { d: 'value' } } } };
-//     await expect(compilePrompt(template, vars)).resolves.toBe('Deep: value');
-//   });
-// });
+    const specificMockVariables = {
+      ...baseMockVariables,
+      Process: { env: { SECRET: 'oops' } },
+    };
+    expect(compilePrompt(template, specificMockVariables, noopPromptLoader)).toBe('Data: oops');
+  });
+
+  it('should allow deeply nested valid lookups', () => {
+    const template = 'Deep: {{ a.b.c.d }}';
+    const vars = { ...baseMockVariables, a: { b: { c: { d: 'value' } } } };
+    expect(compilePrompt(template, vars, noopPromptLoader)).toBe('Deep: value');
+  });
+
+  it('should compile a prompt with an included prompt with a specific version', () => {
+    const template = '{% include "included-prompt@0.0.1" %}';
+
+    expect(compilePrompt(template, baseMockVariables, promptLoader)).toBe(
+      'Hello from included prompt!',
+    );
+  });
+
+  it('should compile a prompt with an included prompt with the latest version if no version is specified', () => {
+    const template = '{% include "included-prompt" %}';
+
+    expect(compilePrompt(template, baseMockVariables, promptLoader)).toBe(
+      'Hello from latest included prompt!',
+    );
+  });
+
+  it('should compile a prompt with an included prompt with the latest version if the version is "latest"', () => {
+    const template = '{% include "included-prompt@latest" %}';
+    expect(compilePrompt(template, baseMockVariables, promptLoader)).toBe(
+      'Hello from latest included prompt!',
+    );
+  });
+
+  it('should compile a prompt with multiple included prompts', () => {
+    const template = '{% include "included-prompt@0.0.1" %} {% include "support-chat" %}';
+
+    expect(compilePrompt(template, baseMockVariables, promptLoader)).toBe(
+      'Hello from included prompt! Hello from support chat!',
+    );
+  });
+
+  it('should throw an error if an included prompt is not found', () => {
+    const template = '{% include "non-existent-prompt" %}';
+    expect(() => compilePrompt(template, baseMockVariables, promptLoader)).toThrow(
+      '(unknown path)\n  Error: Included prompt non-existent-prompt@null not found',
+    );
+  });
+});

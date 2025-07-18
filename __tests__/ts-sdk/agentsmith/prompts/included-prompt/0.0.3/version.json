@@ -1,0 +1,11 @@
+{
+  "uuid": "b7e2c4a1-5d3f-4a8b-9e2c-6f1a3b7d8c9f",
+  "config": {
+    "models": ["openrouter/auto"],
+    "temperature": 1
+  },
+  "status": "DRAFT",
+  "version": "0.0.3",
+  "created_at": "2025-07-17T17:43:24.015727+00:00",
+  "updated_at": "2025-07-17T17:43:24.015727+00:00"
+}

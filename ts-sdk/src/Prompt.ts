@@ -43,6 +43,7 @@ import { LLMLogsService } from '@/lib/LLMLogsService';
 import { VaultService } from '@/lib/VaultService';
 import { ORGANIZATION_KEYS } from '@/app/constants';
 import { routes } from '@/utils/routes';
+import { mergeIncludedVariables } from '@/utils/merge-included-variables';
 import { OpenrouterStreamEvent, streamToIterator } from '@/utils/stream-to-iterator';
 import merge from 'lodash.merge';
 
@@ -192,6 +193,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     } catch (err) {
       this.client.logger.warn(
         `Could not initialize ${this.slug}@${this.argVersion} from filesystem, falling back to remote.`,
+        err,
       );
       await this._initFromRemote();
       this.client.logger.info(
@@ -335,9 +337,15 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       version,
     });
 
-    const variablesJson = await fs.promises.readFile(variablesJsonPath, 'utf-8');
-
-    return JSON.parse(variablesJson) as PromptVariableFileJSONContent;
+    try {
+      const variablesJson = await fs.promises.readFile(variablesJsonPath, 'utf-8');
+      return JSON.parse(variablesJson) as PromptVariableFileJSONContent;
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        return [];
+      }
+      throw err;
+    }
   }
 
   private async fetchPromptContentFromFileSystem(slug: string, version: string) {
@@ -434,8 +442,13 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
 
     const globals = (await this.client.initializeGlobals()) as Record<string, any>;
 
+    const allVariables = mergeIncludedVariables({
+      variables: this.variables,
+      includedPromptVariables: this.includedPrompts.flatMap((ip) => ip.variables),
+    });
+
     const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
-      [...this.variables, ...this.includedPrompts.flatMap((ip) => ip.variables)],
+      allVariables,
       variables as Record<string, string | number | boolean | any>,
     );
 
@@ -471,7 +484,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       return includedPromptVersion.content;
     };
 
-    const compiledPrompt = await compilePrompt(this.version.content, finalVariables, promptLoader);
+    const compiledPrompt = compilePrompt(this.version.content, finalVariables, promptLoader);
 
     return { compiledPrompt, finalVariables };
   }
