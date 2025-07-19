@@ -151,7 +151,6 @@ const _compilePrompt = (state: PromptPageState) => {
 };
 
 const promptPageReducer = (state: PromptPageState, action: Action): PromptPageState => {
-  console.log('reducing', action);
   switch (action.type) {
     case 'SET_INITIAL_DATA': {
       const { prompt, versions, mode, currentVersionUuid, globalContext } = action.payload;
@@ -655,10 +654,6 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
     updateEditorConfig,
     updateIncludes,
   };
-
-  if (typeof window !== 'undefined') {
-    console.log('state', state);
-  }
 
   return <PromptPageContext.Provider value={value}>{children}</PromptPageContext.Provider>;
 };
