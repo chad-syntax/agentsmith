@@ -13,26 +13,19 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/utils/shadcn';
+import { usePromptPage } from '@/providers/prompt-page';
 
-type CreateVersionModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (version: string) => void;
-  currentVersion: string;
-};
+export const CreateVersionModal = () => {
+  const { state, handleCreateNewVersion, closeCreateVersionModal } = usePromptPage();
+  const { currentVersion, isCreateVersionModalOpen: isOpen, isCreatingVersion } = state;
 
-export const CreateVersionModal = (props: CreateVersionModalProps) => {
-  const { isOpen, onClose, onSubmit, currentVersion } = props;
-  const [versionType, setVersionType] = useState<'major' | 'minor' | 'patch'>(
-    'patch'
-  );
+  const [versionType, setVersionType] = useState<'major' | 'minor' | 'patch'>('patch');
   const [customVersion, setCustomVersion] = useState('');
   const [error, setError] = useState('');
 
-  // Calculate suggested version when version type changes or modal opens
   useEffect(() => {
     if (isOpen) {
-      const suggested = incrementVersion(currentVersion, versionType);
+      const suggested = incrementVersion(currentVersion.version, versionType);
       setCustomVersion(suggested);
       setError('');
     }
@@ -55,11 +48,11 @@ export const CreateVersionModal = (props: CreateVersionModalProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (error) return;
-    onSubmit(customVersion);
+    handleCreateNewVersion(versionType, customVersion);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && closeCreateVersionModal()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New Version</DialogTitle>
@@ -70,7 +63,7 @@ export const CreateVersionModal = (props: CreateVersionModalProps) => {
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label>Current Version: {currentVersion}</Label>
+              <Label>Current Version: {currentVersion.version}</Label>
             </div>
 
             <div className="grid gap-2">
@@ -116,11 +109,11 @@ export const CreateVersionModal = (props: CreateVersionModalProps) => {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={closeCreateVersionModal}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!!error}>
-              Create Version
+            <Button type="submit" disabled={!!error || isCreatingVersion}>
+              {isCreatingVersion ? 'Creating...' : 'Create Version'}
             </Button>
           </DialogFooter>
         </form>

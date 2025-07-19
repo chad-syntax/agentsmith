@@ -411,10 +411,6 @@ export const findMissingGlobalContext = (options: FindMissingGlobalContextOption
   return missingGlobalContext;
 };
 
-const uniqueValues = {
-  'now()': () => new Date().toISOString(),
-};
-
 /**
  * Processes variables by replacing special unique value placeholders with their actual values.
  * This is used to handle dynamic values like timestamps (now()), UUIDs, etc. in prompt variables.
@@ -427,34 +423,10 @@ const uniqueValues = {
 export const processUniqueValues = (
   variables: Record<string, any> & { global: Record<string, any> },
 ) => {
-  const processValue = (value: any): any => {
-    if (value in uniqueValues) {
-      return uniqueValues[value as keyof typeof uniqueValues]();
-    }
-    if (Array.isArray(value)) {
-      return value.map(processValue);
-    }
-    if (typeof value === 'object' && value !== null) {
-      const newObj: Record<string, any> = {};
-      for (const k in value) {
-        if (Object.prototype.hasOwnProperty.call(value, k)) {
-          newObj[k] = processValue(value[k]);
-        }
-      }
-      return newObj;
-    }
-    return value;
+  return {
+    ...variables,
+    now: () => new Date().toISOString(),
   };
-
-  const processedVariables = Object.entries(variables).reduce(
-    (acc, [key, value]) => {
-      acc[key] = processValue(value);
-      return acc;
-    },
-    {} as Record<string, any>,
-  );
-
-  return processedVariables;
 };
 
 export const validateGlobalContext = (

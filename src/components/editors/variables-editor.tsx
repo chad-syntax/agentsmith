@@ -20,6 +20,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/shadcn';
 import { EditorPromptVariable } from '@/types/prompt-editor';
+import { usePromptPage } from '@/providers/prompt-page';
 
 type VariableType = Database['public']['Enums']['variable_type'];
 
@@ -28,26 +29,25 @@ const typeColors: Record<VariableType, string> = {
   NUMBER: 'bg-orange-500',
   BOOLEAN: 'bg-blue-500',
   JSON: 'bg-red-500',
-  // Add other types if they exist and their desired colors
 };
 
 type VariablesEditorProps = {
-  variables: EditorPromptVariable[];
-  onVariablesChange?: (variables: EditorPromptVariable[]) => void;
   readOnly?: boolean;
   className?: string;
 };
 
 export const VariablesEditor = (props: VariablesEditorProps) => {
-  const { variables, onVariablesChange, readOnly = false, className } = props;
+  const { readOnly = false, className } = props;
+
+  const { state, updateEditorVariables } = usePromptPage();
+  const { editorVariables } = state;
 
   const updateVariable = (
     index: number,
     field: keyof EditorPromptVariable,
     value: string | boolean,
   ) => {
-    if (readOnly || !onVariablesChange) return;
-    const newVariables = [...variables];
+    const newVariables = [...editorVariables];
     const variableToUpdate = { ...newVariables[index] };
 
     if (field === 'type' && typeof value === 'string') {
@@ -65,14 +65,14 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
     }
 
     newVariables[index] = variableToUpdate;
-    onVariablesChange(newVariables);
+    updateEditorVariables(newVariables);
   };
 
   const getBadgeColor = (type: VariableType) => {
     return typeColors[type] || 'bg-gray-500 hover:bg-gray-600'; // Default color
   };
 
-  if (variables.length === 0) {
+  if (editorVariables.length === 0) {
     return (
       <p className="text-muted-foreground text-sm text-center py-4">
         No variables found. Add variables to your prompt or edit template to add variables.
@@ -82,7 +82,7 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
 
   return (
     <Accordion type="multiple" className={cn('space-y-1', className)}>
-      {variables.map((variable, index) => (
+      {editorVariables.map((variable, index) => (
         <AccordionItem
           key={variable.id || `var-${index}`}
           value={String(variable.id || `var-${index}`)}
@@ -90,9 +90,8 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
           <AccordionTrigger
             className={cn(
               'flex justify-between items-center rounded-md hover:no-underline cursor-pointer',
-              readOnly && 'cursor-default',
+              readOnly && 'cursor-default pointer-events-none [&>svg]:hidden',
             )}
-            disabled={readOnly}
           >
             <div className="flex items-center gap-2">
               <div className="flex justify-start items-start gap-0.5">
@@ -111,7 +110,9 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
               </Label>
               <Select
                 value={variable.type}
-                onValueChange={(value) => updateVariable(index, 'type', value)}
+                onValueChange={
+                  readOnly ? undefined : (value) => updateVariable(index, 'type', value)
+                }
                 disabled={readOnly}
                 name={`type-${index}`}
               >

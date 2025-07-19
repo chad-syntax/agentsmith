@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { routes } from '@/utils/routes';
 import { H1, H2, P } from '@/components/typography';
 import { Button } from '@/components/ui/button';
@@ -160,6 +160,14 @@ export const LogDetailPage = (props: LogDetailPageProps) => {
               <P className="text-sm text-muted-foreground">Duration</P>
               <div className="mt-2 font-medium">{getDuration(log.start_time, log.end_time)}</div>
             </div>
+            <div>
+              <P className="text-sm text-muted-foreground">Tokens</P>
+              <div className="mt-2 font-medium flex items-center gap-2">
+                <span>{log.prompt_tokens ?? '-'}</span>
+                <span>&rarr;</span>
+                <span>{log.completion_tokens ?? '-'}</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -242,6 +250,14 @@ export const LogDetailPageSkeleton = () => (
             <P className="text-sm text-muted-foreground">Duration</P>
             <div className="mt-2 font-medium">
               <div className="bg-muted rounded w-24 h-6 animate-pulse">&nbsp;</div>
+            </div>
+          </div>
+          <div>
+            <P className="text-sm text-muted-foreground">Tokens</P>
+            <div className="mt-2 font-medium flex items-center gap-2">
+              <div className="bg-muted rounded w-20 h-6 animate-pulse">&nbsp;</div>
+              <span className="text-xs text-muted-foreground">→</span>
+              <div className="bg-muted rounded w-20 h-6 animate-pulse">&nbsp;</div>
             </div>
           </div>
         </div>

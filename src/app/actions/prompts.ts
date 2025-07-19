@@ -13,7 +13,7 @@ import { revalidatePath } from 'next/cache';
 
 export async function updatePromptVersion(
   options: UpdatePromptVersionOptions,
-): Promise<ActionResponse> {
+): Promise<ActionResponse<undefined>> {
   const supabase = await createClient();
   const { services, logger } = new AgentsmithServices({ supabase });
 

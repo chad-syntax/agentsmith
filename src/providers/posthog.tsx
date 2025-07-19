@@ -7,7 +7,7 @@ import { isDev } from '@/utils/is-env';
 const hasPostHogEnvVars =
   process.env.NEXT_PUBLIC_POSTHOG_KEY && process.env.NEXT_PUBLIC_POSTHOG_HOST;
 
-if (typeof window !== 'undefined') {
+if (typeof window !== 'undefined' && !isDev) {
   if (hasPostHogEnvVars) {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST!,
@@ -23,8 +23,6 @@ type PostHogProviderProps = {
 
 export const PostHogProvider = (props: PostHogProviderProps) => {
   const { children } = props;
-
-  if (isDev) return children;
 
   return <PostHogProviderComponent client={posthog}>{children}</PostHogProviderComponent>;
 };

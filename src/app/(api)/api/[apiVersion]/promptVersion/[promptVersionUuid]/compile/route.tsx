@@ -2,12 +2,10 @@ import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
 import { createJwtClient } from '@/lib/supabase/server-api-key';
 import { exchangeApiKeyForJwt } from '@/lib/supabase/server-api-key';
-import { makePromptLoaderFromDB } from '@/utils/make-prompt-loader';
 import { mergeIncludedVariables } from '@/utils/merge-included-variables';
 import { compilePrompt, validateGlobalContext, validateVariables } from '@/utils/template-utils';
-import { compareSemanticVersions } from '@/utils/versioning';
 import { NextResponse } from 'next/server';
-import { EditorPromptVariable } from '@/types/prompt-editor';
+import { makePromptLoader } from '@/utils/make-prompt-loader';
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
@@ -100,7 +98,7 @@ export async function POST(
     );
   }
 
-  const promptLoader = makePromptLoaderFromDB(promptVersion.prompt_includes);
+  const promptLoader = makePromptLoader(promptVersion.prompt_includes);
 
   const compiledPrompt = compilePrompt(
     promptVersion.content,
