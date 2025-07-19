@@ -16,7 +16,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { JsonEditor } from '../editors/json-editor';
+import { VariableInput } from '../variable-input';
 import { usePromptPage } from '@/providers/prompt-page';
 
 export const CompileToClipboardModal = () => {
@@ -75,6 +75,14 @@ export const CompileToClipboardModal = () => {
     setHasClickedCompileOnce(false);
   }, [isOpen, editorVariables]);
 
+  const handleVariableChange = (variableName: string, value: any) => {
+    setInputVariables({
+      ...inputVariables,
+      [variableName]: value,
+    });
+    setError(null);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && closeCompileToClipboardModal()}>
       <DialogContent className="sm:max-w-lg">
@@ -95,28 +103,11 @@ export const CompileToClipboardModal = () => {
                     {variable.required && <span className="text-destructive ml-1">*</span>}
                   </Label>
                   <div className="mx-1">
-                    {variable.type === 'JSON' ? (
-                      <JsonEditor
-                        value={inputVariables[variable.name] as object}
-                        onChange={(value) => {
-                          setInputVariables({
-                            ...inputVariables,
-                            [variable.name]: value,
-                          });
-                        }}
-                        minHeight="100%"
-                      />
-                    ) : (
-                      <Input
-                        id={variable.name}
-                        type={variable.type === 'NUMBER' ? 'number' : 'text'}
-                        value={(inputVariables[variable.name] as string | number) || ''}
-                        placeholder={
-                          variable.default_value ? `Default: ${variable.default_value}` : ''
-                        }
-                        onChange={(e) => handleInputChange(variable.name, e.target.value)}
-                      />
-                    )}
+                    <VariableInput
+                      variable={variable}
+                      value={inputVariables[variable.name]}
+                      onChange={(value) => handleVariableChange(variable.name, value)}
+                    />
                   </div>
                 </div>
               ))}

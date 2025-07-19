@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useReducer, ReactNode } from 'react';
+import { createContext, useContext, useReducer, ReactNode, useMemo } from 'react';
 import { EditorPromptVariable, IncludedPrompt } from '@/types/prompt-editor';
 import { GetAllPromptsDataResult, UpdatePromptVersionOptions } from '@/lib/PromptsService';
 import { useCallback } from 'react';
@@ -63,11 +63,11 @@ type PromptPageState = {
   isPublishConfirmModalOpen: boolean;
 };
 
-type OperationType = 'SAVE' | 'CREATE_VERSION' | 'PUBLISH' | 'SET_TO_DRAFT';
+type OperationType = 'SAVE' | 'CREATE_VERSION' | 'PUBLISH';
 
 // Define specific success payloads for each operation type
 type SaveOperationSuccessPayload = {
-  operationType: 'SAVE' | 'PUBLISH' | 'SET_TO_DRAFT';
+  operationType: 'SAVE' | 'PUBLISH';
 };
 
 type CreateVersionOperationSuccessPayload = {
@@ -77,6 +77,8 @@ type CreateVersionOperationSuccessPayload = {
 
 // Union of all possible success payloads
 type OperationSuccessPayload = SaveOperationSuccessPayload | CreateVersionOperationSuccessPayload;
+
+type ModalType = 'test' | 'compileToClipboard' | 'createVersion' | 'publishConfirm';
 
 type Action =
   | {
@@ -97,7 +99,16 @@ type Action =
   | { type: 'UPDATE_EDITOR_CONTENT'; payload: string }
   | { type: 'UPDATE_EDITOR_CONFIG'; payload: CompletionConfig }
   | { type: 'UPDATE_NOT_EXISTING_INCLUDES'; payload: Set<string> }
-  | { type: 'OPERATION_START'; payload: { operationType: OperationType } }
+  | {
+      type: 'OPERATION_START';
+      payload: {
+        operationType: OperationType;
+        afterAction?: {
+          type: 'OPEN_MODAL';
+          payload: 'test' | 'compileToClipboard' | 'createVersion' | 'publishConfirm';
+        };
+      };
+    }
   | { type: 'OPERATION_SUCCESS'; payload: OperationSuccessPayload }
   | {
       type: 'OPERATION_ERROR';
@@ -105,11 +116,11 @@ type Action =
     }
   | {
       type: 'OPEN_MODAL';
-      payload: 'test' | 'compileToClipboard' | 'createVersion' | 'publishConfirm';
+      payload: { modalType: ModalType };
     }
   | {
       type: 'CLOSE_MODAL';
-      payload: 'test' | 'compileToClipboard' | 'createVersion' | 'publishConfirm';
+      payload: { modalType: ModalType };
     };
 
 const _compilePrompt = (state: PromptPageState) => {
@@ -140,7 +151,7 @@ const _compilePrompt = (state: PromptPageState) => {
 };
 
 const promptPageReducer = (state: PromptPageState, action: Action): PromptPageState => {
-  console.log('reducing', action.type, action.payload);
+  console.log('reducing', action);
   switch (action.type) {
     case 'SET_INITIAL_DATA': {
       const { prompt, versions, mode, currentVersionUuid, globalContext } = action.payload;
@@ -225,17 +236,33 @@ const promptPageReducer = (state: PromptPageState, action: Action): PromptPageSt
     }
     case 'UPDATE_EDITOR_VARIABLES': {
       const compiledPrompt = _compilePrompt({ ...state, editorVariables: action.payload });
+      const mergedIncludedVariables = mergeIncludedVariables({
+        variables: action.payload,
+        includedPromptVariables: state.includedPrompts.flatMap(
+          (ip) => ip.prompt_versions.prompt_variables,
+        ),
+      });
+      const { variablesWithDefaults } = validateVariables(mergedIncludedVariables, {});
       return {
         ...state,
         compiledPrompt,
         editorVariables: action.payload,
-        inputVariables: {},
+        mergedIncludedVariables,
+        inputVariables: variablesWithDefaults,
         hasChanges: true,
       };
     }
     case 'UPDATE_EDITOR_CONTENT': {
       const compiledPrompt = _compilePrompt({ ...state, editorContent: action.payload });
-      return { ...state, compiledPrompt, editorContent: action.payload, hasChanges: true };
+      const { missingGlobalContext } = validateGlobalContext(action.payload, state.globalContext);
+
+      return {
+        ...state,
+        compiledPrompt,
+        editorContent: action.payload,
+        missingGlobals: missingGlobalContext,
+        hasChanges: true,
+      };
     }
     case 'UPDATE_EDITOR_CONFIG': {
       return { ...state, editorConfig: action.payload, hasChanges: true };
@@ -324,19 +351,21 @@ const promptPageReducer = (state: PromptPageState, action: Action): PromptPageSt
       };
     }
     case 'OPEN_MODAL': {
-      const modalName = action.payload;
-      const baseNewState = { ...state, [`is${capitalize(modalName)}ModalOpen`]: true };
-      if (modalName === 'compileToClipboard' || modalName === 'test') {
+      const { modalType } = action.payload;
+      const baseNewState = { ...state, [`is${capitalize(modalType)}ModalOpen`]: true };
+      if (modalType === 'compileToClipboard' || modalType === 'test') {
         const compiledPrompt = _compilePrompt(baseNewState);
-        return { ...baseNewState, inputVariables: {}, compiledPrompt };
+        const { variablesWithDefaults } = validateVariables(state.mergedIncludedVariables, {});
+        return { ...baseNewState, inputVariables: variablesWithDefaults, compiledPrompt };
       }
       return baseNewState;
     }
     case 'CLOSE_MODAL': {
-      const modalName = action.payload;
-      const baseNewState = { ...state, [`is${capitalize(modalName)}ModalOpen`]: false };
-      if (modalName === 'compileToClipboard' || modalName === 'test') {
-        return { ...baseNewState, inputVariables: {} };
+      const { modalType } = action.payload;
+      const baseNewState = { ...state, [`is${capitalize(modalType)}ModalOpen`]: false };
+      if (modalType === 'compileToClipboard' || modalType === 'test') {
+        const { variablesWithDefaults } = validateVariables(state.mergedIncludedVariables, {});
+        return { ...baseNewState, inputVariables: variablesWithDefaults };
       }
       return baseNewState;
     }
@@ -404,6 +433,8 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
     ),
   });
 
+  const { variablesWithDefaults } = validateVariables(mergedIncludedVariables, {});
+
   const initialState: PromptPageState = {
     prompt,
     allVersions: sortedVersions,
@@ -415,7 +446,7 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
     notExistingIncludes: new Set(),
     missingGlobals: [],
     missingRequiredVariables: [],
-    variablesWithDefaults: {},
+    variablesWithDefaults,
     isSaving: false,
     isCreatingVersion: false,
     isPublishing: false,
@@ -427,7 +458,7 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
     isPublishConfirmModalOpen: false,
     globalContext,
     compiledPrompt: '',
-    inputVariables: {},
+    inputVariables: variablesWithDefaults,
     editorVariables: currentVersion.prompt_variables,
     editorContent: currentVersion.content,
     editorConfig: currentVersion.config as CompletionConfig,
@@ -435,16 +466,34 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
 
   const [state, dispatch] = useReducer(promptPageReducer, initialState);
 
-  const openTestModal = () => dispatch({ type: 'OPEN_MODAL', payload: 'test' });
-  const closeTestModal = () => dispatch({ type: 'CLOSE_MODAL', payload: 'test' });
+  const openTestModal = () => {
+    if (state.hasChanges) {
+      if (state.currentVersion.status === 'DRAFT') {
+        handleSave('DRAFT').then(() => {
+          dispatch({ type: 'OPEN_MODAL', payload: { modalType: 'test' } });
+        });
+        return;
+      }
+      if (state.currentVersion.status === 'PUBLISHED') {
+        openPublishConfirm();
+        return;
+      }
+    }
+    dispatch({ type: 'OPEN_MODAL', payload: { modalType: 'test' } });
+  };
+  const closeTestModal = () => dispatch({ type: 'CLOSE_MODAL', payload: { modalType: 'test' } });
   const openCompileToClipboardModal = () =>
-    dispatch({ type: 'OPEN_MODAL', payload: 'compileToClipboard' });
+    dispatch({ type: 'OPEN_MODAL', payload: { modalType: 'compileToClipboard' } });
   const closeCompileToClipboardModal = () =>
-    dispatch({ type: 'CLOSE_MODAL', payload: 'compileToClipboard' });
-  const openCreateVersionModal = () => dispatch({ type: 'OPEN_MODAL', payload: 'createVersion' });
-  const closeCreateVersionModal = () => dispatch({ type: 'CLOSE_MODAL', payload: 'createVersion' });
-  const openPublishConfirm = () => dispatch({ type: 'OPEN_MODAL', payload: 'publishConfirm' });
-  const closePublishConfirm = () => dispatch({ type: 'CLOSE_MODAL', payload: 'publishConfirm' });
+    dispatch({ type: 'CLOSE_MODAL', payload: { modalType: 'compileToClipboard' } });
+  const openCreateVersionModal = () =>
+    dispatch({ type: 'OPEN_MODAL', payload: { modalType: 'createVersion' } });
+  const closeCreateVersionModal = () =>
+    dispatch({ type: 'CLOSE_MODAL', payload: { modalType: 'createVersion' } });
+  const openPublishConfirm = () =>
+    dispatch({ type: 'OPEN_MODAL', payload: { modalType: 'publishConfirm' } });
+  const closePublishConfirm = () =>
+    dispatch({ type: 'CLOSE_MODAL', payload: { modalType: 'publishConfirm' } });
 
   const handleSave = useCallback(
     async (status: 'DRAFT' | 'PUBLISHED') => {

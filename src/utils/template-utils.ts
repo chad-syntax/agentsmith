@@ -435,9 +435,9 @@ export const validateGlobalContext = (
 ): { missingGlobalContext: string[] } => {
   const { variables, error } = extract(content);
 
-  if (error) {
-    throw new Error('Error validating global context: ' + error.message);
-  }
+  // if (error) {
+  //   throw new Error('Error validating global context: ' + error.message);
+  // }
 
   const globalVariable = variables.find((v) => v.name === 'global');
 
@@ -495,10 +495,12 @@ export const validateVariables = (
     .filter((v) => v.required)
     .filter((v) => !(v.name in variablesToCheck));
 
-  const defaultValues = variables.reduce(
-    (acc, v) => (v.default_value ? { ...acc, [v.name]: v.default_value } : acc),
-    {},
-  );
+  const defaultValues = variables.reduce((acc, v) => {
+    if (v.default_value === null && v.type === 'BOOLEAN') {
+      return { ...acc, [v.name]: false };
+    }
+    return v.default_value ? { ...acc, [v.name]: v.default_value } : acc;
+  }, {});
 
   const variablesWithDefaults = merge(defaultValues, variablesToCheck);
 

@@ -51,7 +51,10 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className={cn('border-l bg-muted/50 transition-all duration-300', isOpen ? 'w-80' : 'w-12')}
+      className={cn(
+        'border-l bg-muted/50 transition-all duration-300 overflow-scroll pb-12',
+        isOpen ? 'w-80' : 'w-12',
+      )}
     >
       <div className="py-4 px-2 border-b flex items-center justify-between">
         <div className="flex items-center">

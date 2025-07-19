@@ -37,7 +37,7 @@ export const EditPromptVersionPage = () => {
   const {
     state,
     handleSave,
-    handleCreateNewVersion,
+    openCreateVersionModal,
     openTestModal,
     openCompileToClipboardModal,
     openPublishConfirm,
@@ -144,10 +144,7 @@ export const EditPromptVersionPage = () => {
                   <RefreshCw size={16} />
                   {isSaving ? 'Updating...' : 'Update'}
                 </Button>
-                <Button
-                  onClick={() => handleCreateNewVersion('patch')}
-                  disabled={isCreatingVersion || isSaving}
-                >
+                <Button onClick={openCreateVersionModal} disabled={isCreatingVersion || isSaving}>
                   <GitBranchPlus size={16} />
                   {isCreatingVersion ? 'Creating...' : 'New Version'}
                 </Button>

@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
-import { JsonEditor } from '../editors/json-editor';
 import merge from 'lodash.merge';
 import { streamToIterator } from '@/utils/stream-to-iterator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -27,6 +26,8 @@ import { MarkdownRenderer } from '../markdown-renderer';
 import { ExecutePromptResponseError } from '@/types/api-responses';
 import { usePromptPage } from '@/providers/prompt-page';
 import { PromptContentEditor } from '../editors/prompt-editor';
+import { VariableInput } from '../variable-input';
+import { JsonEditor } from '../editors/json-editor';
 
 const TABS = {
   content: 'content',
@@ -168,6 +169,13 @@ export const PromptTestModal = () => {
     setTestError(null);
   };
 
+  const handleVariableChange = (variableName: string, value: any) => {
+    setInputVariables({
+      ...inputVariables,
+      [variableName]: value,
+    });
+  };
+
   // If no OpenRouter key is configured, show the connection UI instead
   if (!hasOpenRouterKey) {
     return (
@@ -235,29 +243,11 @@ export const PromptTestModal = () => {
                   {variable.required && <span className="text-destructive -mt-0.5">*</span>}
                 </Label>
                 <div className="px-1">
-                  {variable.type === 'JSON' ? (
-                    <JsonEditor
-                      value={inputVariables[variable.name] as object}
-                      onChange={(value) => {
-                        setInputVariables({
-                          ...inputVariables,
-                          [variable.name]: value,
-                        });
-                      }}
-                      minHeight="100%"
-                    />
-                  ) : (
-                    <Input
-                      type={variable.type === 'NUMBER' ? 'number' : 'text'}
-                      value={(inputVariables[variable.name] as string) || ''}
-                      onChange={(e) => {
-                        setInputVariables({
-                          ...inputVariables,
-                          [variable.name]: e.target.value,
-                        });
-                      }}
-                    />
-                  )}
+                  <VariableInput
+                    variable={variable}
+                    value={inputVariables[variable.name]}
+                    onChange={(value) => handleVariableChange(variable.name, value)}
+                  />
                 </div>
               </div>
             ))}
