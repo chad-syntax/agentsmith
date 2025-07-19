@@ -556,6 +556,45 @@ export type Database = {
           },
         ]
       }
+      prompt_includes: {
+        Row: {
+          created_at: string
+          id: number
+          included_prompt_version_id: number
+          prompt_version_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          included_prompt_version_id: number
+          prompt_version_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          included_prompt_version_id?: number
+          prompt_version_id?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_includes_included_prompt_version_id_fkey"
+            columns: ["included_prompt_version_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prompt_includes_prompt_version_id_fkey"
+            columns: ["prompt_version_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       prompt_variables: {
         Row: {
           created_at: string

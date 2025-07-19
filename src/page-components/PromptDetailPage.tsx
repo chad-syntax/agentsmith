@@ -1,18 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
 import { Play, ClipboardCopy, GitBranchPlus, ArrowLeft, Pencil } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
 import { PromptContentEditor } from '@/components/editors/prompt-editor';
 import { VariablesSidebar, VariablesSidebarSkeleton } from '@/components/variables-sidebar';
 import { PromptTestModal } from '@/components/modals/test-prompt';
-import { createDraftVersion } from '@/app/actions/prompts';
 import { CreateVersionModal } from '@/components/modals/create-version';
 import { CompileToClipboardModal } from '@/components/modals/compile-to-clipboard';
-import { compareSemanticVersions } from '@/utils/versioning';
 import { Button } from '@/components/ui/button';
 import { H1 } from '@/components/typography';
 import {
@@ -22,73 +18,16 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import {
-  GetPromptByIdResult,
-  GetAllPromptVersionsResult,
-  GetLatestPromptVersionResult,
-} from '@/lib/PromptsService';
 import { cn } from '@/utils/shadcn';
 import { STUDIO_FULL_HEIGHT } from '@/app/constants';
-import { toast } from 'sonner';
+import { usePromptPage } from '@/providers/prompt-page';
 
-type PromptDetailPageProps = {
-  prompt: NonNullable<GetPromptByIdResult>;
-  latestVersion: NonNullable<GetLatestPromptVersionResult>;
-  allVersions: NonNullable<GetAllPromptVersionsResult>;
-};
-
-export const PromptDetailPage = (props: PromptDetailPageProps) => {
-  const { prompt, latestVersion, allVersions } = props;
+export const PromptDetailPage = () => {
+  const { state, openTestModal, openCompileToClipboardModal, openCreateVersionModal } =
+    usePromptPage();
+  const { prompt, latestVersion, allVersions, isCreatingVersion } = state;
 
   const { selectedProjectUuid } = useApp();
-  const router = useRouter();
-  const [isTestModalOpen, setIsTestModalOpen] = useState(false);
-  const [isCreatingVersion, setIsCreatingVersion] = useState(false);
-  const [isCompileModalOpen, setIsCompileModalOpen] = useState(false);
-
-  const handleCreateNewVersion = () => {
-    setIsCreatingVersion(true);
-  };
-
-  const handleVersionSubmit = async (customVersion: string) => {
-    setIsCreatingVersion(false);
-
-    try {
-      const response = await createDraftVersion({
-        promptId: prompt.id,
-        latestVersion: latestVersion.version,
-        customVersion,
-      });
-
-      if (response.success && response.data) {
-        // Redirect to the edit page for the new draft version
-        router.push(
-          routes.studio.editPromptVersion(selectedProjectUuid, response.data.versionUuid),
-        );
-      } else {
-        console.error('Error creating new version:', response.message);
-        toast.error(response.message || 'Failed to create new version. Please try again.');
-      }
-    } catch (error) {
-      console.error('Error creating new version:', error);
-      toast.error('Failed to create new version. Please try again.');
-    }
-  };
-
-  // Find the highest version number across all versions
-  const getHighestVersion = () => {
-    if (!allVersions || allVersions.length === 0) return latestVersion.version;
-
-    return allVersions.reduce((highest, current) => {
-      return compareSemanticVersions(current.version, highest) > 0 ? current.version : highest;
-    }, latestVersion.version);
-  };
-
-  const highestVersion = getHighestVersion();
-
-  const sortedVersions = allVersions.sort((a, b) => {
-    return compareSemanticVersions(b.version, a.version);
-  });
 
   return (
     <div className={cn('flex', STUDIO_FULL_HEIGHT)}>
@@ -112,21 +51,21 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
           </div>
           <div className="flex gap-2 mb-4">
             <Button
-              onClick={() => setIsTestModalOpen(true)}
+              onClick={openTestModal}
               className="bg-green-500 hover:bg-green-600 flex items-center gap-2"
             >
               <Play size={16} />
               Test
             </Button>
             <Button
-              onClick={() => setIsCompileModalOpen(true)}
+              onClick={openCompileToClipboardModal}
               variant="outline"
               className="flex items-center gap-2"
             >
               <ClipboardCopy size={16} />
               Compile to Clipboard
             </Button>
-            <Button onClick={handleCreateNewVersion} disabled={isCreatingVersion}>
+            <Button onClick={openCreateVersionModal} disabled={isCreatingVersion}>
               <GitBranchPlus size={16} />
               {isCreatingVersion ? 'Creating...' : 'New Version'}
             </Button>
@@ -137,10 +76,9 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
               defaultValue={[latestVersion.id.toString()]}
               className="w-full space-y-4"
             >
-              {sortedVersions.map((version) => (
+              {allVersions.map((version) => (
                 <AccordionItem value={version.id.toString()} key={version.id} className="mb-0">
                   <AccordionTrigger className="no-underline hover:no-underline group/accordion-trigger cursor-pointer">
-                    {/* className="w-full px-4 py-3 hover:bg-muted no-underline hover:no-underline focus:outline-none focus-visible:ring-0" */}
                     <div className="flex flex-1 items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="font-medium group-hover/accordion-trigger:underline">
@@ -194,39 +132,10 @@ export const PromptDetailPage = (props: PromptDetailPageProps) => {
         </div>
       </div>
 
-      <VariablesSidebar
-        globalContext={prompt.projects.global_contexts?.content ?? {}}
-        variables={latestVersion.prompt_variables}
-        readOnly
-      />
-
-      <PromptTestModal
-        isOpen={isTestModalOpen}
-        onClose={() => setIsTestModalOpen(false)}
-        variables={latestVersion.prompt_variables}
-        promptVersion={latestVersion}
-      />
-
-      <CreateVersionModal
-        isOpen={isCreatingVersion}
-        onClose={() => setIsCreatingVersion(false)}
-        onSubmit={handleVersionSubmit}
-        currentVersion={highestVersion}
-      />
-
-      <CompileToClipboardModal
-        isOpen={isCompileModalOpen}
-        onClose={() => setIsCompileModalOpen(false)}
-        variables={latestVersion.prompt_variables}
-        promptContent={latestVersion.content}
-        globalContext={
-          typeof prompt.projects.global_contexts?.content === 'object' &&
-          prompt.projects.global_contexts?.content !== null &&
-          !Array.isArray(prompt.projects.global_contexts?.content)
-            ? prompt.projects.global_contexts.content
-            : {}
-        }
-      />
+      <VariablesSidebar readOnly />
+      <PromptTestModal />
+      <CreateVersionModal />
+      <CompileToClipboardModal />
     </div>
   );
 };

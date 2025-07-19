@@ -1,44 +1,43 @@
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
 import { PromptDetailPage } from '@/page-components/PromptDetailPage';
+import { PromptPageProvider } from '@/providers/prompt-page';
 import { notFound } from 'next/navigation';
 
 type PromptDetailProps = {
-  params: Promise<{ promptUuid: string }>;
+  params: Promise<{ projectUuid: string; promptUuid: string }>;
 };
 
 export default async function PromptDetail(props: PromptDetailProps) {
-  const { promptUuid } = await props.params;
+  const { projectUuid, promptUuid } = await props.params;
 
   const supabase = await createClient();
-
   const agentsmith = new AgentsmithServices({ supabase });
+  const project = await agentsmith.services.projects.getProjectDataByUuid(projectUuid);
 
-  // Fetch prompt data from Supabase
-  const prompt = await agentsmith.services.prompts.getPromptByUuid(promptUuid);
-
-  if (!prompt) {
+  if (!project) {
     return notFound();
   }
 
-  // Get all versions
-  const allVersions = await agentsmith.services.prompts.getPromptVersions(
-    prompt.id
-  );
+  const allPrompts = await agentsmith.services.prompts.getAllPromptsData(project.id);
 
-  // Get the latest version
-  const latestVersion =
-    await agentsmith.services.prompts.getLatestPromptVersion(prompt.id);
+  const promptData = allPrompts?.find((p) => p.uuid === promptUuid);
 
-  if (!latestVersion) {
+  if (!promptData) {
     return notFound();
   }
+
+  const versionsData = promptData.prompt_versions;
+  const globalContext = (project.global_contexts?.content as Record<string, any> | null) ?? {};
 
   return (
-    <PromptDetailPage
-      prompt={prompt}
-      latestVersion={latestVersion}
-      allVersions={allVersions}
-    />
+    <PromptPageProvider
+      prompt={promptData}
+      versions={versionsData}
+      mode="view"
+      globalContext={globalContext}
+    >
+      <PromptDetailPage />
+    </PromptPageProvider>
   );
 }

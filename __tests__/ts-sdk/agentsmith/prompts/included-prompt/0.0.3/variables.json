@@ -1,0 +1,20 @@
+[
+  {
+    "name": "bar",
+    "type": "STRING",
+    "uuid": "a3c2f1d4-7b8e-4c9a-8f1e-2d3c4b5a6e7f",
+    "required": true,
+    "created_at": "2025-05-30T20:46:22.898146+00:00",
+    "updated_at": "2025-05-30T20:46:22.898146+00:00",
+    "default_value": null
+  },
+  {
+    "name": "foo",
+    "type": "STRING",
+    "uuid": "b8e2c1a4-5f3d-4c7e-9a2b-1d4e6f7c8b9a",
+    "required": true,
+    "created_at": "2025-05-30T20:46:22.898146+00:00",
+    "updated_at": "2025-05-30T20:46:22.898146+00:00",
+    "default_value": null
+  }
+]

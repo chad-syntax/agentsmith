@@ -2,8 +2,10 @@ import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
 import { createJwtClient } from '@/lib/supabase/server-api-key';
 import { exchangeApiKeyForJwt } from '@/lib/supabase/server-api-key';
+import { mergeIncludedVariables } from '@/utils/merge-included-variables';
 import { compilePrompt, validateGlobalContext, validateVariables } from '@/utils/template-utils';
 import { NextResponse } from 'next/server';
+import { makePromptLoader } from '@/utils/make-prompt-loader';
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
@@ -53,6 +55,8 @@ export async function POST(
   }
 
   const variables = promptVersion.prompt_variables || [];
+  const includedPromptVariables =
+    promptVersion.prompt_includes?.flatMap((pi) => pi.prompt_versions.prompt_variables) || [];
   const globalContext = promptVersion.prompts.projects.global_contexts?.content ?? {};
 
   let body: RequestBody;
@@ -62,8 +66,13 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
+  const allVariables = mergeIncludedVariables({
     variables,
+    includedPromptVariables,
+  });
+
+  const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
+    allVariables,
     body.variables,
   );
 
@@ -89,10 +98,16 @@ export async function POST(
     );
   }
 
-  const compiledPrompt = compilePrompt(promptVersion.content, {
-    ...variablesWithDefaults,
-    global: globalContext as Record<string, any>,
-  });
+  const promptLoader = makePromptLoader(promptVersion.prompt_includes);
+
+  const compiledPrompt = compilePrompt(
+    promptVersion.content,
+    {
+      ...variablesWithDefaults,
+      global: globalContext as Record<string, any>,
+    },
+    promptLoader,
+  );
 
   return NextResponse.json({ compiledPrompt }, { status: 200 });
 }

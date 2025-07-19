@@ -6,7 +6,6 @@ import { useApp } from '@/providers/app';
 import { NonStreamingChoice } from '@/lib/openrouter';
 import { connectOpenrouter } from '@/app/actions/openrouter';
 import { routes } from '@/utils/routes';
-import { ChevronDown, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,42 +17,54 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { JsonEditor } from '../editors/json-editor';
-import { EditorPromptVariable } from '@/types/prompt-editor';
-import { Database } from '@/app/__generated__/supabase.types';
+import { Card, CardContent } from '@/components/ui/card';
 import merge from 'lodash.merge';
 import { streamToIterator } from '@/utils/stream-to-iterator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MarkdownEditor } from '../editors/markdown-editor';
 import { MarkdownRenderer } from '../markdown-renderer';
+import { ExecutePromptResponseError } from '@/types/api-responses';
+import { usePromptPage } from '@/providers/prompt-page';
+import { PromptContentEditor } from '../editors/prompt-editor';
+import { VariableInput } from '../variable-input';
+import { JsonEditor } from '../editors/json-editor';
 
-type PromptVersion = Database['public']['Tables']['prompt_versions']['Row'] & {
-  prompts: Database['public']['Tables']['prompts']['Row'];
-  prompt_variables: Database['public']['Tables']['prompt_variables']['Row'][];
-};
+const TABS = {
+  content: 'content',
+  compiledPrompt: 'compiledPrompt',
+  markdown: 'markdown',
+  response: 'response',
+} as const;
 
-type PromptTestModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  variables: EditorPromptVariable[];
-  promptVersion: PromptVersion;
-};
+const TAB_LABELS = {
+  content: 'Content',
+  compiledPrompt: 'Compiled Prompt',
+  markdown: 'Markdown',
+  response: 'Response',
+} as const;
 
-export const PromptTestModal = (props: PromptTestModalProps) => {
-  const { isOpen, onClose, variables, promptVersion } = props;
+type Tab = keyof typeof TABS;
 
-  const [testVariables, setTestVariables] = useState<Record<string, string>>({});
+export const PromptTestModal = () => {
+  const { state, closeTestModal, setInputVariables } = usePromptPage();
+  const {
+    currentVersion,
+    mergedIncludedVariables,
+    isTestModalOpen: isOpen,
+    inputVariables,
+    compiledPrompt,
+  } = state;
+
   const [isRunning, setIsRunning] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [fullResult, setFullResult] = useState<any | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
-  const [selectedTab, setSelectedTab] = useState('content');
+  const [selectedTab, setSelectedTab] = useState<Tab>(TABS.content);
 
   const { selectedOrganizationUuid, hasOpenRouterKey, isOrganizationAdmin, selectedProjectUuid } =
     useApp();
 
-  const { onboardingChecklist, setOnboardingChecklist } = useApp();
+  const { setOnboardingChecklist } = useApp();
 
   const handleTestPrompt = async () => {
     setIsRunning(true);
@@ -62,18 +73,18 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
     setTestError(null);
 
     try {
-      const response = await fetch(routes.api.v1.executePromptVersion(promptVersion.uuid), {
+      const response = await fetch(routes.api.v1.executePromptVersion(currentVersion.uuid), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          variables: testVariables,
+          variables: inputVariables,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as ExecutePromptResponseError;
 
         if (errorData.missingGlobalContext) {
           setTestError(
@@ -82,10 +93,17 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
           return;
         }
 
+        if (errorData.missingRequiredVariables) {
+          setTestError(
+            `Missing required variables: ${errorData.missingRequiredVariables.map((v) => v.name).join(', ')}`,
+          );
+          return;
+        }
+
         throw new Error(errorData.error || 'Failed to run prompt');
       }
 
-      if ((promptVersion.config as any)?.stream && response.body) {
+      if ((currentVersion.config as any)?.stream && response.body) {
         let fullResult: any = {};
         let content = '';
 
@@ -145,15 +163,23 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
   };
 
   const resetTest = () => {
+    setInputVariables({});
     setTestResult(null);
     setFullResult(null);
     setTestError(null);
   };
 
+  const handleVariableChange = (variableName: string, value: any) => {
+    setInputVariables({
+      ...inputVariables,
+      [variableName]: value,
+    });
+  };
+
   // If no OpenRouter key is configured, show the connection UI instead
   if (!hasOpenRouterKey) {
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Connect OpenRouter</DialogTitle>
@@ -168,14 +194,14 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
               <Button
                 onClick={() => {
                   connectOpenrouter(selectedOrganizationUuid);
-                  onClose();
+                  closeTestModal();
                 }}
                 className="w-full"
               >
                 Connect OpenRouter
               </Button>
             ) : (
-              <Button variant="secondary" onClick={onClose} className="w-full">
+              <Button variant="secondary" onClick={closeTestModal} className="w-full">
                 Dismiss
               </Button>
             )}
@@ -185,14 +211,22 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
     );
   }
 
+  let isContentJson = false;
+  try {
+    JSON.parse(testResult as string);
+    isContentJson = true;
+  } catch (error) {
+    //
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-full max-h-full rounded-none sm:rounded-lg sm:max-w-[calc(95%-2rem)] h-full sm:max-h-[calc(95%-2rem)] flex flex-col flex-start overflow-hidden">
+    <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && closeTestModal()}>
+      <DialogContent className="max-w-full max-h-full rounded-none sm:rounded-lg sm:max-w-[calc(98%-2rem)] h-full sm:max-h-[calc(98%-2rem)] flex flex-col flex-start overflow-hidden">
         <DialogHeader>
           <DialogTitle>
             Test&nbsp;
             <span className="px-2 py-1 bg-muted rounded-md">
-              {promptVersion.prompts.name}@{promptVersion.version}
+              {currentVersion.prompts.name}@{currentVersion.version}
             </span>
           </DialogTitle>
           <DialogDescription>
@@ -202,22 +236,17 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
         <div className="flex-col md:flex-row flex-1 flex gap-4">
           <div className="md:flex-1 space-y-4">
             <h3 className="font-medium text-lg">Input Variables</h3>
-            {variables.map((variable) => (
+            {mergedIncludedVariables.map((variable) => (
               <div key={variable.id || variable.name} className="space-y-2">
                 <Label className="ml-1.5 gap-1 flex items-start">
                   {variable.name}
                   {variable.required && <span className="text-destructive -mt-0.5">*</span>}
                 </Label>
                 <div className="px-1">
-                  <Input
-                    type={variable.type === 'NUMBER' ? 'number' : 'text'}
-                    value={testVariables[variable.name] || ''}
-                    onChange={(e) => {
-                      setTestVariables({
-                        ...testVariables,
-                        [variable.name]: e.target.value,
-                      });
-                    }}
+                  <VariableInput
+                    variable={variable}
+                    value={inputVariables[variable.name]}
+                    onChange={(value) => handleVariableChange(variable.name, value)}
                   />
                 </div>
               </div>
@@ -262,29 +291,41 @@ export const PromptTestModal = (props: PromptTestModalProps) => {
             {testResult ? (
               <Tabs
                 value={selectedTab}
-                onValueChange={setSelectedTab}
+                onValueChange={(value) => setSelectedTab(value as Tab)}
                 className="flex-1 flex flex-col overflow-hidden"
               >
                 <TabsList className="w-full md:w-xl rounded-md">
-                  <TabsTrigger className="cursor-pointer rounded-md" value="content">
-                    Content
-                  </TabsTrigger>
-                  <TabsTrigger className="cursor-pointer rounded-md" value="markdown">
-                    Markdown
-                  </TabsTrigger>
-                  <TabsTrigger className="cursor-pointer rounded-md" value="json">
-                    JSON
-                  </TabsTrigger>
+                  {Object.entries(TABS).map(([key, value]) => (
+                    <TabsTrigger key={key} className="cursor-pointer rounded-md" value={value}>
+                      {TAB_LABELS[value]}
+                    </TabsTrigger>
+                  ))}
                 </TabsList>
-                <TabsContent value="content" className="flex-1 overflow-auto">
-                  <MarkdownEditor value={testResult} readOnly minHeight="100%" />
+                <TabsContent value={TABS.compiledPrompt} className="flex-1 overflow-auto">
+                  <PromptContentEditor
+                    onContentChange={() => {}}
+                    content={compiledPrompt}
+                    readOnly
+                    minHeight="100%"
+                  />
                 </TabsContent>
-                <TabsContent value="markdown" className="flex-1 overflow-auto">
+                <TabsContent value={TABS.content} className="flex-1 overflow-auto">
+                  {isContentJson ? (
+                    <JsonEditor
+                      value={JSON.parse(testResult as string)}
+                      readOnly
+                      minHeight="100%"
+                    />
+                  ) : (
+                    <MarkdownEditor value={testResult} readOnly minHeight="100%" />
+                  )}
+                </TabsContent>
+                <TabsContent value={TABS.markdown} className="flex-1 overflow-auto">
                   <div className="p-4 border rounded-md">
                     <MarkdownRenderer>{testResult}</MarkdownRenderer>
                   </div>
                 </TabsContent>
-                <TabsContent value="json" className="flex-1 overflow-auto">
+                <TabsContent value={TABS.response} className="flex-1 overflow-auto">
                   <JsonEditor value={fullResult} readOnly minHeight="100%" />
                 </TabsContent>
               </Tabs>

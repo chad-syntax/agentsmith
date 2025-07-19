@@ -14,7 +14,7 @@ export async function generateTypes(
     const content = await services.typegen.generateTypes({ projectId });
     return createSuccessResponse({ content, filename: 'agentsmith.types.ts' });
   } catch (error) {
-    logger.error('Failed to generate types', { error });
+    logger.error(error, 'Failed to generate types');
     return createErrorResponse(
       'Failed to generate types',
       error instanceof Error ? { message: [error.message] } : { message: ['Unknown error'] },

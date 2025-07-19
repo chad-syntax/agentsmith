@@ -9,11 +9,12 @@ import { validateGlobalContext, validateVariables } from '@/utils/template-utils
 import merge from 'lodash.merge';
 import { streamToIterator } from '@/utils/stream-to-iterator';
 import { LLMLogsService } from '@/lib/LLMLogsService';
+import { mergeIncludedVariables } from '@/utils/merge-included-variables';
 
 export const maxDuration = 320; // 5m20s minute function timeout
 
 type RequestBody = {
-  variables: Record<string, string | number | boolean>;
+  variables: Record<string, string | number | boolean | object>;
   config?: CompletionConfig;
 };
 
@@ -61,6 +62,8 @@ export async function POST(
   }
 
   const variables = promptVersion.prompt_variables || [];
+  const includedPromptVariables =
+    promptVersion.prompt_includes?.flatMap((pi) => pi.prompt_versions.prompt_variables) || [];
   const globalContext = promptVersion.prompts.projects.global_contexts?.content ?? {};
 
   let body: RequestBody;
@@ -70,8 +73,13 @@ export async function POST(
     return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
   }
 
-  const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
+  const allVariables = mergeIncludedVariables({
     variables,
+    includedPromptVariables,
+  });
+
+  const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
+    allVariables,
     body.variables,
   );
 
@@ -124,6 +132,7 @@ export async function POST(
       config: finalConfig,
       targetVersion: promptVersion,
       variables: variablesWithDefaults,
+      promptIncludes: promptVersion.prompt_includes,
       globalContext: globalContext as Record<string, any>,
     });
 

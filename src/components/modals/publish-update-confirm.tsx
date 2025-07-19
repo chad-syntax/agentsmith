@@ -10,19 +10,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
+import { usePromptPage } from '@/providers/prompt-page';
 
-type PublishUpdateConfirmModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  isUpdating: boolean;
-};
-
-export const PublishUpdateConfirmModal = (props: PublishUpdateConfirmModalProps) => {
-  const { isOpen, onClose, onConfirm, isUpdating } = props;
+export const PublishUpdateConfirmModal = () => {
+  const { state, closePublishConfirm, handleSave } = usePromptPage();
+  const { isPublishConfirmModalOpen: isOpen, isPublishing } = state;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && closePublishConfirm()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Update Published Version</DialogTitle>
@@ -39,16 +34,16 @@ export const PublishUpdateConfirmModal = (props: PublishUpdateConfirmModalProps)
           </p>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isUpdating}>
+          <Button variant="outline" onClick={closePublishConfirm} disabled={isPublishing}>
             Cancel
           </Button>
           <Button
             variant="default"
-            onClick={onConfirm}
-            disabled={isUpdating}
+            onClick={() => handleSave('PUBLISHED')}
+            disabled={isPublishing}
             className="bg-amber-500 hover:bg-amber-600"
           >
-            {isUpdating ? 'Updating...' : 'Update Published Version'}
+            {isPublishing ? 'Updating...' : 'Update Published Version'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -15,78 +15,49 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { validateVariables, validateGlobalContext, compilePrompt } from '@/utils/template-utils'; // Import new utils
 import { toast } from 'sonner';
-import { EditorPromptVariable } from '@/types/prompt-editor';
+import { VariableInput } from '../variable-input';
+import { usePromptPage } from '@/providers/prompt-page';
 
-type CompileToClipboardModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  variables: EditorPromptVariable[];
-  promptContent: string;
-  globalContext: Record<string, any>; // Added globalContext prop
-};
+export const CompileToClipboardModal = () => {
+  const { state, closeCompileToClipboardModal, setInputVariables } = usePromptPage();
+  const {
+    editorVariables,
+    isCompileToClipboardModalOpen: isOpen,
+    missingGlobals,
+    missingRequiredVariables,
+    mergedIncludedVariables,
+    notExistingIncludes,
+    inputVariables,
+    compiledPrompt,
+  } = state;
 
-export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => {
-  const { isOpen, onClose, variables, promptContent, globalContext } = props; // Destructure globalContext
-
-  const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasClickedCompileOnce, setHasClickedCompileOnce] = useState(false);
 
   const handleInputChange = (variableName: string, value: string) => {
-    setInputValues((prev) => ({
-      ...prev,
+    setInputVariables({
+      ...inputVariables,
       [variableName]: value,
-    }));
+    });
     setError(null); // Clear error on input change
   };
 
   const handleSubmit = async () => {
     setIsProcessing(true);
     setError(null);
-
-    // 1. Validate standard variables
-    const { missingRequiredVariables, variablesWithDefaults } = validateVariables(
-      variables,
-      inputValues,
-    );
-
-    let currentErrors: string[] = [];
+    setHasClickedCompileOnce(true);
 
     if (missingRequiredVariables.length > 0) {
-      currentErrors = missingRequiredVariables.map((v) => `Variable '${v.name}' is required.`);
-    }
-
-    // 2. Validate global context
-    try {
-      const { missingGlobalContext } = validateGlobalContext(promptContent, globalContext);
-      if (missingGlobalContext.length > 0) {
-        currentErrors.push(`Missing global context variables: ${missingGlobalContext.join(', ')}`);
-      }
-    } catch (validationError: any) {
-      // This can happen if template parsing itself fails within validateGlobalContext
-      currentErrors.push(`Template validation error: ${validationError.message}`);
-    }
-
-    if (currentErrors.length > 0) {
-      setError(currentErrors.join('\n'));
       setIsProcessing(false);
       return;
     }
 
     try {
-      // 3. Compile the prompt
-      const finalVariablesForCompilation = {
-        ...variablesWithDefaults,
-        global: globalContext,
-      };
-
-      const compiledContent = compilePrompt(promptContent, finalVariablesForCompilation);
-
-      await navigator.clipboard.writeText(compiledContent);
+      await navigator.clipboard.writeText(compiledPrompt);
       toast.success('Compiled prompt copied to clipboard!');
-      onClose(); // Close modal on success
+      closeCompileToClipboardModal(); // Close modal on success
     } catch (compileError: any) {
       console.error('Error compiling prompt or copying to clipboard:', compileError);
       setError(
@@ -99,13 +70,21 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
 
   // Effect to reset state when modal is opened/closed or variables change
   useEffect(() => {
-    setInputValues({});
     setError(null);
     setIsProcessing(false);
-  }, [isOpen, variables]);
+    setHasClickedCompileOnce(false);
+  }, [isOpen, editorVariables]);
+
+  const handleVariableChange = (variableName: string, value: any) => {
+    setInputVariables({
+      ...inputVariables,
+      [variableName]: value,
+    });
+    setError(null);
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && closeCompileToClipboardModal()}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Compile to Clipboard</DialogTitle>
@@ -117,21 +96,17 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
         <ScrollArea className="max-h-[70vh]">
           <div className="space-y-6 py-4">
             <div className="space-y-4">
-              {variables.map((variable) => (
+              {mergedIncludedVariables.map((variable) => (
                 <div key={variable.id || variable.name} className="space-y-2">
                   <Label htmlFor={variable.name}>
                     {variable.name}
                     {variable.required && <span className="text-destructive ml-1">*</span>}
                   </Label>
                   <div className="mx-1">
-                    <Input
-                      id={variable.name}
-                      type={variable.type === 'NUMBER' ? 'number' : 'text'}
-                      value={inputValues[variable.name] || ''}
-                      placeholder={
-                        variable.default_value ? `Default: ${variable.default_value}` : ''
-                      }
-                      onChange={(e) => handleInputChange(variable.name, e.target.value)}
+                    <VariableInput
+                      variable={variable}
+                      value={inputVariables[variable.name]}
+                      onChange={(value) => handleVariableChange(variable.name, value)}
                     />
                   </div>
                 </div>
@@ -140,6 +115,31 @@ export const CompileToClipboardModal = (props: CompileToClipboardModalProps) => 
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {missingRequiredVariables.length > 0 && hasClickedCompileOnce && (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    Missing required variables:{' '}
+                    {missingRequiredVariables.map((v) => v.name).join(', ')}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {missingGlobals.length > 0 && (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    Missing global context variables: {missingGlobals.join(', ')}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {notExistingIncludes.size > 0 && (
+                <Alert variant="destructive">
+                  <AlertDescription>
+                    Not existing includes: {Array.from(notExistingIncludes).join(', ')}
+                  </AlertDescription>
                 </Alert>
               )}
 

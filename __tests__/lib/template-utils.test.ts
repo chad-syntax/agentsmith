@@ -1,10 +1,10 @@
 import {
-  extractTemplateVariables,
+  extract,
   validateVariables,
   validateTemplate,
   compilePrompt,
 } from '../../src/utils/template-utils';
-import { Database } from '@/app/__generated__/supabase.types';
+import { Database } from '../../src/app/__generated__/supabase.types';
 
 type PromptVariable = Database['public']['Tables']['prompt_variables']['Row'];
 
@@ -15,7 +15,7 @@ describe('extractTemplateVariables', () => {
       The weather is {{ weather }}.
     `;
 
-    const { variables, error } = extractTemplateVariables(template);
+    const { variables, error } = extract(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual(
       expect.arrayContaining([
@@ -42,7 +42,7 @@ describe('extractTemplateVariables', () => {
       {% endif %}
     `;
 
-    const { variables, error } = extractTemplateVariables(template);
+    const { variables, error } = extract(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual(
       expect.arrayContaining([
@@ -64,7 +64,7 @@ describe('extractTemplateVariables', () => {
       {{ settings.theme.color }}
     `;
 
-    const { variables, error } = extractTemplateVariables(template);
+    const { variables, error } = extract(template);
     expect(error).toBeUndefined();
     expect(variables).toHaveLength(2);
     expect(variables).toEqual(
@@ -103,7 +103,7 @@ describe('extractTemplateVariables', () => {
       {{ other_var }}
     `;
 
-    const { variables, error } = extractTemplateVariables(template);
+    const { variables, error } = extract(template);
     expect(error).toBeUndefined();
 
     const itemsVar = variables.find((v) => v.name === 'items');
@@ -159,7 +159,7 @@ describe('extractTemplateVariables', () => {
       {% endif %}
     `;
 
-    const { variables, error } = extractTemplateVariables(template);
+    const { variables, error } = extract(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual(
       expect.arrayContaining([
@@ -203,7 +203,7 @@ describe('extractTemplateVariables', () => {
   });
 
   it('should handle empty templates', () => {
-    const { variables, error } = extractTemplateVariables('');
+    const { variables, error } = extract('');
     expect(error).toBeUndefined();
     expect(variables).toEqual([]);
   });
@@ -214,7 +214,7 @@ describe('extractTemplateVariables', () => {
       {{ invalid }}
     `;
 
-    const { variables, error } = extractTemplateVariables(template);
+    const { variables, error } = extract(template);
     expect(error).toBeDefined();
     expect(variables).toEqual([]);
   });
@@ -228,7 +228,7 @@ describe('extractTemplateVariables', () => {
       {% endfor %}
     `;
 
-    const { variables, error } = extractTemplateVariables(template);
+    const { variables, error } = extract(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual(
       expect.arrayContaining([
@@ -267,7 +267,7 @@ describe('extractTemplateVariables', () => {
     `;
     // Nunjucks appears to trim whitespace from symbol names during parsing,
     // so `spaced.  name  ` becomes `spaced.name`.
-    const { variables, error } = extractTemplateVariables(template);
+    const { variables, error } = extract(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual(
       expect.arrayContaining([
@@ -288,7 +288,7 @@ describe('extractTemplateVariables', () => {
       {{ baz | upper }}
     `;
 
-    const { variables, error } = extractTemplateVariables(template);
+    const { variables, error } = extract(template);
     expect(error).toBeUndefined();
     expect(variables).toEqual(
       expect.arrayContaining([
@@ -302,7 +302,7 @@ describe('extractTemplateVariables', () => {
   // New tests moved from PromptService.test.ts and updated
   it('should correctly extract simple variables (new)', () => {
     const content = 'Hello {{ name }} and {{ age }}';
-    const { variables, error } = extractTemplateVariables(content);
+    const { variables, error } = extract(content);
     expect(error).toBeUndefined();
     expect(variables).toHaveLength(2);
     expect(variables).toEqual(
@@ -321,7 +321,7 @@ describe('extractTemplateVariables', () => {
 
   it('should handle nested variables like user.first_name (new)', () => {
     const content = 'Hello {{ user.first_name }}!';
-    const { variables, error } = extractTemplateVariables(content);
+    const { variables, error } = extract(content);
     expect(error).toBeUndefined();
     expect(variables).toHaveLength(1);
     const userVar = variables.find((v) => v.name === 'user');
@@ -339,7 +339,7 @@ describe('extractTemplateVariables', () => {
 
   it('should handle deeper nested variables like account.settings.theme (new)', () => {
     const content = 'Theme: {{ account.settings.theme }}';
-    const { variables, error } = extractTemplateVariables(content);
+    const { variables, error } = extract(content);
     expect(error).toBeUndefined();
     expect(variables).toHaveLength(1);
     const accountVar = variables.find((v) => v.name === 'account');
@@ -363,7 +363,7 @@ describe('extractTemplateVariables', () => {
 
   it('should handle mixed simple and nested variables (new)', () => {
     const content = '{{ greeting }} {{ user.name }} from {{ user.location.city }}';
-    const { variables, error } = extractTemplateVariables(content);
+    const { variables, error } = extract(content);
     expect(error).toBeUndefined();
     expect(variables).toHaveLength(2);
 
@@ -391,7 +391,7 @@ describe('extractTemplateVariables', () => {
   it('should correctly identify array variable in for loop as JSON (new)', () => {
     const content =
       '{% for item_loop_var in items_collection_new %}{{ item_loop_var.name }}{% endfor %}';
-    const { variables, error } = extractTemplateVariables(content);
+    const { variables, error } = extract(content);
     expect(error).toBeUndefined();
 
     const itemsVar = variables.find((v) => v.name === 'items_collection_new');
@@ -419,7 +419,7 @@ describe('extractTemplateVariables', () => {
 
   it('should parse user.first_name and user.last_name into a single user object with two children (new)', () => {
     const content = 'hello {{ user.first_name }} {{ user.last_name }}';
-    const { variables, error } = extractTemplateVariables(content);
+    const { variables, error } = extract(content);
 
     expect(error).toBeUndefined();
     expect(variables).toHaveLength(1);
@@ -438,7 +438,7 @@ describe('extractTemplateVariables', () => {
 
   it('should handle a variable used as both an object and a simple variable (should be JSON) (new)', () => {
     const content = '{{ user.name }} and {{ user }}'; // user is used as object and then directly
-    const { variables, error } = extractTemplateVariables(content);
+    const { variables, error } = extract(content);
     expect(error).toBeUndefined();
     expect(variables).toHaveLength(1);
     const userVar = variables.find((v) => v.name === 'user');
@@ -447,6 +447,184 @@ describe('extractTemplateVariables', () => {
     expect(userVar?.children).toEqual(
       expect.arrayContaining([expect.objectContaining({ name: 'name', type: 'STRING' })]),
     );
+  });
+
+  it('should not count filters as variables', () => {
+    const content = '{{ name | upper }}';
+    const { variables, error } = extract(content);
+    expect(error).toBeUndefined();
+    expect(variables).toHaveLength(1);
+    expect(variables).toEqual(
+      expect.arrayContaining([expect.objectContaining({ name: 'name', type: 'STRING' })]),
+    );
+  });
+
+  it('should not count filters as variables, but should count variables that are used in filters (replace example)', () => {
+    const content = `
+      {% set numbers = 123456 %}
+      {{ numbers | replace(target, ".") }}
+    `;
+    const { variables, error } = extract(content);
+    expect(error).toBeUndefined();
+    // Only 'numbers' and 'target' should be extracted as a variable (from the output expression)
+    expect(variables).toHaveLength(2);
+    expect(variables).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'numbers', type: 'STRING' }),
+        expect.objectContaining({ name: 'target', type: 'STRING' }),
+      ]),
+    );
+  });
+});
+
+describe('extractTemplateIncludes', () => {
+  it('should extract includes', () => {
+    const template = `
+      Hello world!
+      {% include "prompt-1" %}
+    `;
+    const { includes } = extract(template);
+    expect(includes).toEqual([{ arg: 'prompt-1', slug: 'prompt-1', version: null }]);
+  });
+
+  it('should extract includes with version', () => {
+    const template = `
+      Hello world!
+      {% include "prompt-1@1.0.0" %}
+    `;
+    const { includes } = extract(template);
+    expect(includes).toEqual([{ arg: 'prompt-1@1.0.0', slug: 'prompt-1', version: '1.0.0' }]);
+  });
+
+  it('should extract includes with a latest version identifier', () => {
+    const template = `
+      Hello world!
+      {% include "prompt-1@latest" %}
+    `;
+    const { includes } = extract(template);
+    expect(includes).toEqual([{ arg: 'prompt-1@latest', slug: 'prompt-1', version: 'latest' }]);
+  });
+
+  it('should extract multiple includes', () => {
+    const template = `
+      Hello world!
+      {% include "prompt-1@1.0.0" %}
+      {% include "prompt-2@latest" %}
+      {% include "prompt-3" %}
+    `;
+    const { includes } = extract(template);
+    expect(includes).toEqual([
+      { arg: 'prompt-1@1.0.0', slug: 'prompt-1', version: '1.0.0' },
+      { arg: 'prompt-2@latest', slug: 'prompt-2', version: 'latest' },
+      { arg: 'prompt-3', slug: 'prompt-3', version: null },
+    ]);
+  });
+
+  it('should extract duplicate includes with different versions', () => {
+    const template = `
+      {% include "prompt-1@1.0.0" %}
+      {% include "prompt-1@1.0.1" %}
+    `;
+    const { includes } = extract(template);
+    expect(includes).toEqual([
+      { arg: 'prompt-1@1.0.0', slug: 'prompt-1', version: '1.0.0' },
+      { arg: 'prompt-1@1.0.1', slug: 'prompt-1', version: '1.0.1' },
+    ]);
+  });
+
+  it('should throw an error if the include has an invalid semver', () => {
+    const template = `
+      {% include "prompt-1@1.0" %}
+    `;
+    const { includes, error } = extract(template);
+    expect(error).toBeDefined();
+    expect(includes).toEqual([]);
+  });
+
+  it('should throw an error if the include is missing an identifier', () => {
+    const template = `
+      {% include "@1.0.0" %}
+    `;
+    const { includes, error } = extract(template);
+    expect(error).toBeDefined();
+    expect(includes).toEqual([]);
+  });
+
+  it('should throw an error if the include is not a string', () => {
+    const template = `
+      {% include 1 %}
+    `;
+    const { includes, error } = extract(template);
+    expect(error).toBeDefined();
+    expect(includes).toEqual([]);
+  });
+
+  it('should throw an error if the include is missing double quotes', () => {
+    const template = `
+      {% include prompt-1@1.0.0 %}
+    `;
+    const { includes, error } = extract(template);
+    expect(error).toBeDefined();
+    expect(includes).toEqual([]);
+  });
+
+  it('should throw an error if the include is missing a version', () => {
+    const template = `
+      {% include "prompt-1@" %}
+    `;
+    const { includes, error } = extract(template);
+    expect(error).toBeDefined();
+    expect(includes).toEqual([]);
+  });
+
+  it('should throw an error if the include has an invalid semver', () => {
+    const template = `
+      Hello world!
+      {% include "prompt-1@1.0.0.0" %}
+    `;
+    const { includes, error } = extract(template);
+    expect(error).toBeDefined();
+    expect(includes).toEqual([]);
+  });
+
+  it('should throw an error if the include is missing an identifier', () => {
+    const template = `
+      Hello world!
+      {% include %}
+    `;
+    const { includes, error } = extract(template);
+    expect(error).toBeDefined();
+    expect(includes).toEqual([]);
+  });
+
+  it('should throw an error if the include is not a string', () => {
+    const template = `
+      Hello world!
+      {% include 123 %}
+    `;
+    const { includes, error } = extract(template);
+    expect(error).toBeDefined();
+    expect(includes).toEqual([]);
+  });
+
+  it('should throw an error if the include is missing double quotes', () => {
+    const template = `
+      Hello world!
+      {% include prompt-1 %}
+    `;
+    const { includes, error } = extract(template);
+    expect(error).toBeDefined();
+    expect(includes).toEqual([]);
+  });
+
+  it('should throw an error if the include is missing a version', () => {
+    const template = `
+      Hello world!
+      {% include "prompt-1@" %}
+    `;
+    const { includes, error } = extract(template);
+    expect(error).toBeDefined();
+    expect(includes).toEqual([]);
   });
 });
 
@@ -852,36 +1030,48 @@ describe('compilePrompt', () => {
     global: { version: '1.0' },
   };
 
+  const noopPromptLoader = () => '';
+  const promptLoader = (slug: string, version: string | null) => {
+    if (slug === 'included-prompt' && version === '0.0.1') {
+      return 'Hello from included prompt!';
+    }
+    if (slug === 'included-prompt' && (version === null || version === 'latest')) {
+      return 'Hello from latest included prompt!';
+    }
+    if (slug === 'support-chat' && version === null) {
+      return 'Hello from support chat!';
+    }
+    throw new Error(`Included prompt ${slug}@${version} not found`);
+  };
+
   it('should compile a valid prompt', () => {
     const template = 'Hello {{ name }}!';
-    expect(() => compilePrompt(template, baseMockVariables)).not.toThrow();
-    expect(compilePrompt(template, baseMockVariables)).toBe('Hello Tester!');
+    expect(compilePrompt(template, baseMockVariables, noopPromptLoader)).toBe('Hello Tester!');
   });
 
   it("should compile a prompt using 'global' as it was removed from blacklist by user", () => {
     const template = 'Version: {{ global.version }}';
-    expect(() => compilePrompt(template, baseMockVariables)).not.toThrow();
     // Ensure the output matches the global.version from baseMockVariables
-    expect(compilePrompt(template, baseMockVariables)).toBe('Version: 1.0');
+    expect(compilePrompt(template, baseMockVariables, noopPromptLoader)).toBe('Version: 1.0');
   });
 
   it('should throw error for disallowed identifiers', () => {
     const template = 'Data: {{ process.env.SECRET }}';
-    expect(() => compilePrompt(template, baseMockVariables)).toThrow(
+    expect(() => compilePrompt(template, baseMockVariables, noopPromptLoader)).toThrow(
       "Security: Disallowed identifier 'process' found.",
     );
   });
 
   it('should throw error for disallowed property lookups', () => {
     const template = 'Access: {{ myObj.__proto__ }}';
-    expect(() => compilePrompt(template, baseMockVariables)).toThrow(
+    expect(() => compilePrompt(template, baseMockVariables, noopPromptLoader)).toThrow(
       "Security: Disallowed property lookup '__proto__' found.",
     );
   });
 
   it('should throw error for Nunjucks syntax errors which cause parse fail in ensureSecureAst', () => {
     const template = 'Hello {{ name !'; // Invalid Nunjucks syntax
-    expect(() => compilePrompt(template, baseMockVariables)).toThrow(
+    expect(() => compilePrompt(template, baseMockVariables, noopPromptLoader)).toThrow(
       'Template parsing failed: expected variable end',
     );
   });
@@ -896,13 +1086,50 @@ describe('compilePrompt', () => {
       ...baseMockVariables,
       Process: { env: { SECRET: 'oops' } },
     };
-    expect(() => compilePrompt(template, specificMockVariables)).not.toThrow();
-    expect(compilePrompt(template, specificMockVariables)).toBe('Data: oops');
+    expect(compilePrompt(template, specificMockVariables, noopPromptLoader)).toBe('Data: oops');
   });
 
   it('should allow deeply nested valid lookups', () => {
     const template = 'Deep: {{ a.b.c.d }}';
     const vars = { ...baseMockVariables, a: { b: { c: { d: 'value' } } } };
-    expect(compilePrompt(template, vars)).toBe('Deep: value');
+    expect(compilePrompt(template, vars, noopPromptLoader)).toBe('Deep: value');
+  });
+
+  it('should compile a prompt with an included prompt with a specific version', () => {
+    const template = '{% include "included-prompt@0.0.1" %}';
+
+    expect(compilePrompt(template, baseMockVariables, promptLoader)).toBe(
+      'Hello from included prompt!',
+    );
+  });
+
+  it('should compile a prompt with an included prompt with the latest version if no version is specified', () => {
+    const template = '{% include "included-prompt" %}';
+
+    expect(compilePrompt(template, baseMockVariables, promptLoader)).toBe(
+      'Hello from latest included prompt!',
+    );
+  });
+
+  it('should compile a prompt with an included prompt with the latest version if the version is "latest"', () => {
+    const template = '{% include "included-prompt@latest" %}';
+    expect(compilePrompt(template, baseMockVariables, promptLoader)).toBe(
+      'Hello from latest included prompt!',
+    );
+  });
+
+  it('should compile a prompt with multiple included prompts', () => {
+    const template = '{% include "included-prompt@0.0.1" %} {% include "support-chat" %}';
+
+    expect(compilePrompt(template, baseMockVariables, promptLoader)).toBe(
+      'Hello from included prompt! Hello from support chat!',
+    );
+  });
+
+  it('should throw an error if an included prompt is not found', () => {
+    const template = '{% include "non-existent-prompt" %}';
+    expect(() => compilePrompt(template, baseMockVariables, promptLoader)).toThrow(
+      '(unknown path)\n  Error: Included prompt non-existent-prompt@null not found',
+    );
   });
 });

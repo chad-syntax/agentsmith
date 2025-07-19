@@ -14,20 +14,25 @@ import {
 import { routes } from '@/utils/routes';
 import { ORGANIZATION_KEYS, SEMVER_PATTERN } from '@/app/constants';
 import { compareSemanticVersions, incrementVersion } from '@/utils/versioning';
-import { compilePrompt } from '@/utils/template-utils';
+import { compilePrompt, ParsedInclude } from '@/utils/template-utils';
 import { slugify } from '@/utils/slugify';
+import { makePromptLoader } from '@/utils/make-prompt-loader';
+import { IncludedPrompt } from '@/types/prompt-editor';
 
 type PromptVariableBase = Omit<
   Database['public']['Tables']['prompt_variables']['Row'],
   'created_at' | 'prompt_version_id' | 'uuid' | 'updated_at'
 >;
 
-type PromptVariableInput = Omit<PromptVariableBase, 'id'> & { id?: number };
+export type PromptVariableInput = Omit<PromptVariableBase, 'id'> & {
+  id?: number;
+  default_value?: string | null;
+};
 
 type PromptVariableExisting = Pick<
   Database['public']['Tables']['prompt_variables']['Row'],
-  'id' | 'name' | 'type' | 'required' | 'default_value'
->;
+  'id' | 'name' | 'type' | 'required'
+> & { default_value?: string | null };
 
 export type UpdatePromptVersionOptions = {
   projectUuid: string;
@@ -36,6 +41,7 @@ export type UpdatePromptVersionOptions = {
   config: CompletionConfig;
   status: Database['public']['Enums']['prompt_status'];
   variables: Array<PromptVariableInput>;
+  includes: Array<ParsedInclude>;
 };
 
 export type CreatePromptWithDraftVersionOptions = {
@@ -58,7 +64,8 @@ type ExecutePromptOptions = {
   prompt: NonNullable<GetPromptByIdResult>;
   config: CompletionConfig;
   targetVersion: NonNullable<GetPromptVersionByUuidResult>;
-  variables: Record<string, string | number | boolean>;
+  variables: Record<string, string | number | boolean | object>;
+  promptIncludes: NonNullable<GetPromptVersionByUuidResult>['prompt_includes'];
   globalContext: Record<string, any>;
 };
 
@@ -114,6 +121,17 @@ type UpdatePromptVersionContentOptions = {
   contentSha: string;
 };
 
+export type FetchIncludedPromptVersionOptions = {
+  projectUuid: string;
+  slug: string;
+  version: string | 'latest' | null;
+};
+
+type ResolvePromptIncludesOptions = {
+  projectId: number;
+  parsedIncludes: ParsedInclude[];
+};
+
 export class PromptsService extends AgentsmithSupabaseService {
   public services!: AgentsmithServicesDirectory;
 
@@ -125,7 +143,7 @@ export class PromptsService extends AgentsmithSupabaseService {
     const { data, error } = await this.supabase
       .from('prompt_versions')
       .select(
-        '*, prompt_variables(*), prompts(*, projects(id, uuid, global_contexts(content), organizations(id, uuid)))',
+        '*, prompt_variables(*), prompt_includes!prompt_version_id(prompt_versions!included_prompt_version_id(version, uuid, content, prompts(slug), prompt_variables(*))), prompts(*, projects(id, uuid, global_contexts(content), organizations(id, uuid)))',
       )
       .eq('uuid', promptVersionUuid)
       .single();
@@ -188,7 +206,9 @@ export class PromptsService extends AgentsmithSupabaseService {
   async getLatestPromptVersion(promptId: number) {
     const { data, error } = await this.supabase
       .from('prompt_versions')
-      .select('*, prompts(*), prompt_variables(*)')
+      .select(
+        '*, prompts(*), prompt_variables(*), prompt_includes!prompt_version_id(prompt_versions!included_prompt_version_id(version, uuid, content, prompts(slug), prompt_variables(*)))',
+      )
       .eq('prompt_id', promptId);
 
     if (error) {
@@ -240,7 +260,9 @@ export class PromptsService extends AgentsmithSupabaseService {
   public async getAllPromptsData(projectId: number) {
     const { data, error } = await this.supabase
       .from('prompts')
-      .select('*, prompt_versions(*, prompt_variables(*))')
+      .select(
+        '*, prompt_versions(*, prompts(*), prompt_includes!prompt_version_id(prompt_versions!included_prompt_version_id(version, uuid, content, prompts(slug), prompt_variables(*))), prompt_variables(*))',
+      )
       .eq('project_id', projectId);
 
     if (error) {
@@ -530,8 +552,156 @@ export class PromptsService extends AgentsmithSupabaseService {
     }
   }
 
+  public async resolveParsedIncludes(options: ResolvePromptIncludesOptions) {
+    const { projectId, parsedIncludes } = options;
+
+    const includedPrompts: IncludedPrompt[] = [];
+
+    const notExistingIncludes = new Set<string>();
+
+    const results = await Promise.all(
+      parsedIncludes.map(async (parsedInclude) => {
+        try {
+          let query = this.supabase
+            .from('prompts')
+            .select('*, prompt_versions(*, prompt_variables(*))')
+            .eq('slug', parsedInclude.slug)
+            .eq('project_id', projectId);
+
+          if (parsedInclude.version === null || parsedInclude.version === 'latest') {
+            query = query
+              .order('created_at', { ascending: false, referencedTable: 'prompt_versions' })
+              .limit(1, { referencedTable: 'prompt_versions' });
+          } else {
+            query = query.eq('prompt_versions.version', parsedInclude.version);
+          }
+
+          const { data, error } = await query.maybeSingle();
+
+          if (error) {
+            this.logger.error(error, 'Error fetching included prompt');
+            return { error, parsedInclude };
+          }
+
+          if (!data || data.prompt_versions.length === 0) {
+            return { notFound: true, parsedInclude };
+          }
+
+          const includedPrompt: IncludedPrompt = {
+            prompt_versions: {
+              version: data.prompt_versions[0].version,
+              uuid: data.prompt_versions[0].uuid,
+              content: data.prompt_versions[0].content,
+              prompts: {
+                slug: parsedInclude.slug,
+              },
+              prompt_variables: data.prompt_versions[0].prompt_variables,
+            },
+          };
+
+          return { includedPrompt };
+        } catch (error) {
+          this.logger.error(error, 'Unknown Error getting includes');
+          return { error, parsedInclude };
+        }
+      }),
+    );
+
+    for (const result of results) {
+      if (result?.error) {
+        // If any error occurred, return early (mimics original behavior)
+        return;
+      }
+      if (result?.notFound) {
+        notExistingIncludes.add(result.parsedInclude.arg);
+        continue;
+      }
+      if (result?.includedPrompt) {
+        includedPrompts.push(result.includedPrompt);
+      }
+    }
+
+    return { includedPrompts, notExistingIncludes };
+  }
+
+  public async fetchPromptIncludes(promptVersionUuid: string) {
+    const { data, error } = await this.supabase
+      .from('prompt_versions')
+      .select(
+        'prompt_includes!prompt_version_id(id, prompt_versions!included_prompt_version_id(id, version, status, prompts(slug)))',
+      )
+      .eq('uuid', promptVersionUuid)
+      .single();
+
+    if (error) {
+      this.logger.error(
+        error,
+        'Failed to fetch prompt includes for prompt version: ' + promptVersionUuid,
+      );
+      throw new Error('Failed to fetch prompt includes: ' + error.message);
+    }
+
+    const includes: (ParsedInclude & { id: number; isLatest: boolean })[] = (
+      data.prompt_includes || []
+    )
+      .sort((a, b) => compareSemanticVersions(b.prompt_versions.version, a.prompt_versions.version))
+      .map((promptInclude, index) => ({
+        id: promptInclude.id,
+        isLatest: index === 0 && promptInclude.prompt_versions.status === 'PUBLISHED',
+        arg: `${promptInclude.prompt_versions.prompts.slug}@${promptInclude.prompt_versions.version}`,
+        slug: promptInclude.prompt_versions.prompts.slug,
+        version: promptInclude.prompt_versions.version,
+      }));
+
+    return includes;
+  }
+
+  public async fetchIncludedPromptVersion(
+    options: FetchIncludedPromptVersionOptions,
+  ): Promise<{ id: number; content: string }> {
+    const { projectUuid, slug, version } = options;
+
+    let query = this.supabase
+      .from('prompts')
+      .select('projects!inner(uuid), prompt_versions(id, content)')
+      .eq('projects.uuid', projectUuid)
+      .eq('slug', slug);
+
+    if (version === null || version === 'latest') {
+      // TODO: use semver psql extension or something else to make sure we can accurately determine latest version
+      query = query
+        .order('created_at', { ascending: false, referencedTable: 'prompt_versions' })
+        .limit(1, { referencedTable: 'prompt_versions' });
+    } else {
+      query = query.eq('prompt_versions.version', version);
+    }
+
+    const { data: promptVersionData, error: getPromptVersionError } = await query;
+
+    if (getPromptVersionError) {
+      this.logger.error(getPromptVersionError, 'Failed to get prompt version');
+      throw new Error('Failed to get included prompt version: ' + getPromptVersionError.message);
+    }
+
+    const includedPromptVersion = promptVersionData?.[0]?.prompt_versions?.[0];
+
+    if (!includedPromptVersion) {
+      throw new Error(`Failed to find included prompt version for ${slug}@${version}`);
+    }
+
+    return includedPromptVersion;
+  }
+
   public async updatePromptVersion(options: UpdatePromptVersionOptions) {
-    const { promptVersionUuid, content, config, status, variables: incomingVariables } = options;
+    const {
+      projectUuid,
+      promptVersionUuid,
+      content,
+      config,
+      status,
+      variables: incomingVariables,
+      includes: incomingIncludes,
+    } = options;
 
     const { data: versionData, error: getVersionError } = await this.supabase
       .from('prompt_versions')
@@ -550,6 +720,97 @@ export class PromptsService extends AgentsmithSupabaseService {
     const promptVersionId = versionData.id;
 
     const currentVariables: PromptVariableExisting[] = versionData.prompt_variables || [];
+    const currentIncludes = await this.fetchPromptIncludes(promptVersionUuid);
+
+    const includesToAdd: ParsedInclude[] = [];
+    const includeIdsToDelete: number[] = [];
+
+    // if an incoming include does not exist in the db, we need to add it
+    for (const incomingInclude of incomingIncludes) {
+      const currentInclude = currentIncludes.find((ci) => {
+        const slugMatches = ci.slug === incomingInclude.slug;
+        if (!slugMatches) return false;
+
+        const isLatestIncoming =
+          incomingInclude.version === 'latest' || incomingInclude.version === null;
+
+        // Exact match
+        if (ci.version === incomingInclude.version) return true;
+
+        // Match if incoming is latest and current is the latest published
+        if (ci.isLatest && isLatestIncoming) return true;
+
+        // Match if incoming is latest, and it's the only one for that slug
+        const isOnlyVersionForSlug =
+          currentIncludes.filter((c) => c.slug === incomingInclude.slug).length === 1;
+        if (isLatestIncoming && isOnlyVersionForSlug) return true;
+
+        return false;
+      });
+
+      if (!currentInclude) {
+        includesToAdd.push(incomingInclude);
+      }
+    }
+
+    // if a current include does not exist in the incoming, we need to delete it
+    for (const currentInclude of currentIncludes) {
+      const incomingInclude = incomingIncludes.find((ii) => {
+        const slugMatches = ii.slug === currentInclude.slug;
+        if (!slugMatches) return false;
+
+        const isLatestIncoming = ii.version === 'latest' || ii.version === null;
+
+        // Exact match
+        if (ii.version === currentInclude.version) return true;
+
+        // Match if incoming is latest and current is the latest published
+        if (currentInclude.isLatest && isLatestIncoming) return true;
+
+        // Match if incoming is latest, and it's the only one for that slug
+        const isOnlyVersionForSlug =
+          currentIncludes.filter((c) => c.slug === currentInclude.slug).length === 1;
+        if (isLatestIncoming && isOnlyVersionForSlug) return true;
+
+        return false;
+      });
+
+      if (!incomingInclude) {
+        includeIdsToDelete.push(currentInclude.id);
+      }
+    }
+
+    if (includesToAdd.length > 0) {
+      for (const include of includesToAdd) {
+        const includedPromptVersion = await this.fetchIncludedPromptVersion({
+          projectUuid,
+          slug: include.slug,
+          version: include.version,
+        });
+
+        const { error: insertError } = await this.supabase.from('prompt_includes').insert({
+          prompt_version_id: promptVersionId,
+          included_prompt_version_id: includedPromptVersion.id,
+        });
+
+        if (insertError) {
+          this.logger.error(insertError, 'Failed to add includes');
+          throw new Error('Failed to add includes: ' + insertError.message);
+        }
+      }
+    }
+
+    if (includeIdsToDelete.length > 0) {
+      const { error: deleteError } = await this.supabase
+        .from('prompt_includes')
+        .delete()
+        .in('id', includeIdsToDelete);
+
+      if (deleteError) {
+        this.logger.error(deleteError, 'Failed to delete includes');
+        throw new Error('Failed to delete includes: ' + deleteError.message);
+      }
+    }
 
     // 2. Prepare map for efficient comparison
     const currentVariablesMap = new Map(currentVariables.map((v) => [v.name, v]));
@@ -802,14 +1063,16 @@ export class PromptsService extends AgentsmithSupabaseService {
   }
 
   public async executePrompt(options: ExecutePromptOptions) {
-    const { prompt, config, targetVersion, variables, globalContext } = options;
+    const { prompt, config, targetVersion, variables, promptIncludes, globalContext } = options;
 
     const variablesAndContext = {
       ...variables,
       global: globalContext,
     };
 
-    const compiledPrompt = compilePrompt(targetVersion.content, variablesAndContext);
+    const promptLoader = makePromptLoader(promptIncludes);
+
+    const compiledPrompt = compilePrompt(targetVersion.content, variablesAndContext, promptLoader);
 
     const freeModelsOnlyEnabled = process.env.FREE_MODELS_ONLY === 'true';
 

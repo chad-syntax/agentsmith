@@ -1,0 +1,8 @@
+{
+  "uuid": "b2c3d4e5-f6a7-b8c9-d0e1-f2a3b4c5d6e7",
+  "version": "0.0.1",
+  "status": "PUBLISHED",
+  "config": {
+    "model": "gpt-3.5-turbo"
+  }
+}

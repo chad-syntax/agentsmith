@@ -1,0 +1,11 @@
+[
+  {
+    "name": "bar",
+    "type": "STRING",
+    "uuid": "a3c2f1d4-7b8e-4c9a-8f1e-2d3c4b5a6e7f",
+    "required": true,
+    "created_at": "2025-05-30T20:46:22.898146+00:00",
+    "updated_at": "2025-05-30T20:46:22.898146+00:00",
+    "default_value": null
+  }
+]

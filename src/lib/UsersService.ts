@@ -112,6 +112,7 @@ export class UsersService extends AgentsmithSupabaseService {
               key
             ),
             projects (
+              id,
               uuid,
               name
             )

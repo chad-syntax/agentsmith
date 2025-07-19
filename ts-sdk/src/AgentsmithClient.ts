@@ -9,11 +9,27 @@ import { routes } from '@/utils/routes';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { GenericAgency, PromptIdentifier, Logger, LogLevel } from './types';
 import { Prompt } from './Prompt';
-import { wait } from '@/utils/wait';
 
 const defaultAgentsmithDirectory = path.join(process.cwd(), 'agentsmith');
 
 export type FetchStrategy = 'fs-only' | 'remote-fallback' | 'remote-only' | 'fs-fallback';
+type CompletionLogDirTransformer = (options: {
+  logUuid: string;
+  prompt: {
+    name: string;
+    slug: string;
+    uuid: string;
+  };
+  promptVersion: {
+    uuid: string;
+    version: string;
+    config: any;
+    content: string;
+  };
+  variables: Record<string, any>;
+  rawInput: any;
+  rawOutput: any;
+}) => string;
 
 type AgentsmithClientOptions = {
   agentsmithApiRoot?: string;
@@ -24,6 +40,8 @@ type AgentsmithClientOptions = {
   fetchStrategy?: FetchStrategy;
   logger?: Logger;
   logLevel?: LogLevel;
+  completionLogsDirectory?: string;
+  completionLogDirTransformer?: CompletionLogDirTransformer;
 };
 
 export class AgentsmithClient<Agency extends GenericAgency> {
@@ -34,6 +52,8 @@ export class AgentsmithClient<Agency extends GenericAgency> {
   public abortController: AbortController;
   public fetchStrategy: FetchStrategy;
   public logger: Logger;
+  public completionLogsDirectory: string | null;
+  public completionLogDirTransformer: CompletionLogDirTransformer | null;
 
   private sdkApiKey: string;
   private fetchGlobalsPromise: Promise<Agency['globals']> | null = null;
@@ -55,6 +75,8 @@ export class AgentsmithClient<Agency extends GenericAgency> {
     this.fetchStrategy = options.fetchStrategy ?? 'remote-fallback';
     this.logLevel = options.logLevel ?? 'warn';
     this.logger = options.logger ?? this.createDefaultLogger(this.logLevel);
+    this.completionLogsDirectory = options.completionLogsDirectory ?? null;
+    this.completionLogDirTransformer = options.completionLogDirTransformer ?? null;
 
     this.queue = new PQueue({ ...options.queueOptions });
 

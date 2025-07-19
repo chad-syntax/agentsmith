@@ -2,27 +2,50 @@ import { EditPromptVersionPage } from '@/page-components/EditPromptVersionPage';
 import { notFound } from 'next/navigation';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
+import { PromptPageProvider } from '@/providers/prompt-page';
 
 type EditPromptVersionProps = {
   params: Promise<{
+    projectUuid: string;
     promptVersionUuid: string;
   }>;
 };
 
 export default async function EditPromptVersion(props: EditPromptVersionProps) {
-  const { promptVersionUuid } = await props.params;
+  const { projectUuid, promptVersionUuid } = await props.params;
 
   const supabase = await createClient();
 
   const agentsmith = new AgentsmithServices({ supabase });
 
-  // Fetch prompt version data from Supabase
-  const promptVersion =
-    await agentsmith.services.prompts.getPromptVersionByUuid(promptVersionUuid);
+  const project = await agentsmith.services.projects.getProjectDataByUuid(projectUuid);
 
-  if (!promptVersion) {
+  if (!project) {
     return notFound();
   }
 
-  return <EditPromptVersionPage promptVersion={promptVersion} />;
+  const allPrompts = await agentsmith.services.prompts.getAllPromptsData(project.id);
+
+  const promptData = allPrompts?.find((p) =>
+    p.prompt_versions.some((v) => v.uuid === promptVersionUuid),
+  );
+
+  if (!promptData) {
+    return notFound();
+  }
+
+  const versionsData = promptData.prompt_versions;
+  const globalContext = (project.global_contexts?.content as Record<string, any> | null) ?? {};
+
+  return (
+    <PromptPageProvider
+      prompt={promptData}
+      versions={versionsData}
+      mode="edit"
+      currentVersionUuid={promptVersionUuid}
+      globalContext={globalContext}
+    >
+      <EditPromptVersionPage />
+    </PromptPageProvider>
+  );
 }

@@ -6,11 +6,20 @@ import { transform } from 'nunjucks/src/transformer';
 import merge from 'lodash.merge';
 import { EditorPromptVariable } from '@/types/prompt-editor';
 
+export const SEMVER_PATTERN =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+
 export type ParsedVariable = {
   id?: number;
   name: string;
   type: Database['public']['Enums']['variable_type'];
   children?: ParsedVariable[];
+};
+
+export type ParsedInclude = {
+  arg: string;
+  slug: string;
+  version: string | null;
 };
 
 /**
@@ -26,6 +35,7 @@ const createParsedVariable = (
 
 class TemplateVariablesExtractor {
   private variableMap = new Map<string, ParsedVariable>();
+  private includeMap = new Map<string, ParsedInclude>();
   private localVariables = new Set<string>();
 
   /* ---------- Utilities ---------- */
@@ -129,6 +139,42 @@ class TemplateVariablesExtractor {
         break;
       }
 
+      case 'Include': {
+        if (node.template?.typename === 'Literal') {
+          const arg = node.template.value;
+          if (this.includeMap.has(arg)) {
+            break;
+          }
+          const [slug, version] = arg.split('@');
+
+          if (!slug) {
+            throw new Error(`Include is missing an identifier: {% include "${arg}" %}`);
+          }
+          if (arg.includes('@') && !version) {
+            throw new Error(`Include is missing a version: {% include "${arg}" %}`);
+          }
+          if (version && version !== 'latest' && !SEMVER_PATTERN.test(version)) {
+            throw new Error(`Include has an invalid semver: {% include "${arg}" %}`);
+          }
+
+          this.includeMap.set(arg, {
+            arg,
+            slug,
+            version: version || null,
+          });
+        } else {
+          throw new Error('Include must be a string literal');
+        }
+        break;
+      }
+
+      case 'Filter':
+      case 'FunCall': {
+        // The filter/function name itself is not a variable, but its arguments can be.
+        this.traverseNode(node.args, ctx);
+        break;
+      }
+
       case 'LookupVal': {
         const path = this.literalPathFromLookup(node);
         if (!path) {
@@ -197,33 +243,36 @@ class TemplateVariablesExtractor {
   }
 
   /* ---------- Public API ---------- */
-  public extractVariables(ast: any): ParsedVariable[] {
+  public extract(ast: any): { variables: ParsedVariable[]; includes: ParsedInclude[] } {
     this.traverseNode(ast);
-    return Array.from(this.variableMap.values());
+    return {
+      variables: Array.from(this.variableMap.values()),
+      includes: Array.from(this.includeMap.values()),
+    };
   }
 }
 
 /**
  * Walks through the Nunjucks AST and extracts all Symbol nodes
  * @param content Template string to parse
- * @param ignoreGlobals Whether to ignore global variables
  * @returns Array of extracted variable names with detected types
  */
-export const extractTemplateVariables = (
+export const extract = (
   content: string,
-): { variables: ParsedVariable[]; error?: Error } => {
+): { variables: ParsedVariable[]; includes: ParsedInclude[]; error?: Error } => {
   try {
     // Parse the template and build variables using the extractor class
     // @ts-ignore - parser exists but is not in type definitions
     const ast = transform(nunjucks.parser.parse(content));
 
     const extractor = new TemplateVariablesExtractor();
-    const variables = extractor.extractVariables(ast);
+    const { variables, includes } = extractor.extract(ast);
 
-    return { variables };
+    return { variables, includes };
   } catch (error) {
     return {
       variables: [],
+      includes: [],
       error: error instanceof Error ? error : new Error('Unknown error'),
     };
   }
@@ -362,10 +411,6 @@ export const findMissingGlobalContext = (options: FindMissingGlobalContextOption
   return missingGlobalContext;
 };
 
-const uniqueValues = {
-  'now()': () => new Date().toISOString(),
-};
-
 /**
  * Processes variables by replacing special unique value placeholders with their actual values.
  * This is used to handle dynamic values like timestamps (now()), UUIDs, etc. in prompt variables.
@@ -378,45 +423,21 @@ const uniqueValues = {
 export const processUniqueValues = (
   variables: Record<string, any> & { global: Record<string, any> },
 ) => {
-  const processValue = (value: any): any => {
-    if (value in uniqueValues) {
-      return uniqueValues[value as keyof typeof uniqueValues]();
-    }
-    if (Array.isArray(value)) {
-      return value.map(processValue);
-    }
-    if (typeof value === 'object' && value !== null) {
-      const newObj: Record<string, any> = {};
-      for (const k in value) {
-        if (Object.prototype.hasOwnProperty.call(value, k)) {
-          newObj[k] = processValue(value[k]);
-        }
-      }
-      return newObj;
-    }
-    return value;
+  return {
+    ...variables,
+    now: () => new Date().toISOString(),
   };
-
-  const processedVariables = Object.entries(variables).reduce(
-    (acc, [key, value]) => {
-      acc[key] = processValue(value);
-      return acc;
-    },
-    {} as Record<string, any>,
-  );
-
-  return processedVariables;
 };
 
 export const validateGlobalContext = (
   content: string,
   globalContext: Record<string, any>,
 ): { missingGlobalContext: string[] } => {
-  const { variables, error } = extractTemplateVariables(content);
+  const { variables, error } = extract(content);
 
-  if (error) {
-    throw new Error('Error validating global context: ' + error.message);
-  }
+  // if (error) {
+  //   throw new Error('Error validating global context: ' + error.message);
+  // }
 
   const globalVariable = variables.find((v) => v.name === 'global');
 
@@ -432,28 +453,54 @@ export const validateGlobalContext = (
 export const compilePrompt = (
   promptContent: string,
   variables: Record<string, any> & { global: Record<string, any> },
+  promptLoader: (slug: string, version: string | null) => string,
 ): string => {
   ensureSecureAst(promptContent); // Perform security check first
   const processedVariables = processUniqueValues(variables);
-  nunjucks.configure({ autoescape: false });
-  return nunjucks.renderString(promptContent, processedVariables);
+  const MyLoader = nunjucks.Loader.extend({
+    getSource: function (
+      name: string,
+      callback: (
+        err: Error | null,
+        res: { src: string; path: string; noCache: boolean } | null,
+      ) => void,
+    ) {
+      const [slug, version] = name.split('@');
+      if (!slug) {
+        callback(new Error('Invalid template name'), null);
+        return;
+      }
+
+      return {
+        src: promptLoader(slug, version ?? null),
+        path: name,
+        noCache: true,
+      };
+    },
+  });
+
+  const nunjucksEnv = new nunjucks.Environment(new MyLoader(), { autoescape: false });
+
+  return nunjucksEnv.renderString(promptContent, processedVariables);
 };
 
 export const validateVariables = (
   variables: EditorPromptVariable[],
-  variablesToCheck: Record<string, string | number | boolean>,
+  variablesToCheck: Record<string, string | number | boolean | object>,
 ): {
-  missingRequiredVariables: ParsedVariable[];
-  variablesWithDefaults: Record<string, string | number | boolean>;
+  missingRequiredVariables: EditorPromptVariable[];
+  variablesWithDefaults: Record<string, string | number | boolean | object>;
 } => {
   const missingRequiredVariables = variables
     .filter((v) => v.required)
     .filter((v) => !(v.name in variablesToCheck));
 
-  const defaultValues = variables.reduce(
-    (acc, v) => (v.default_value ? { ...acc, [v.name]: v.default_value } : acc),
-    {},
-  );
+  const defaultValues = variables.reduce((acc, v) => {
+    if (v.default_value === null && v.type === 'BOOLEAN') {
+      return { ...acc, [v.name]: false };
+    }
+    return v.default_value ? { ...acc, [v.name]: v.default_value } : acc;
+  }, {});
 
   const variablesWithDefaults = merge(defaultValues, variablesToCheck);
 

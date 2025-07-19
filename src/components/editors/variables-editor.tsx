@@ -20,6 +20,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/shadcn';
 import { EditorPromptVariable } from '@/types/prompt-editor';
+import { usePromptPage } from '@/providers/prompt-page';
+import { VariableInput } from '../variable-input';
 
 type VariableType = Database['public']['Enums']['variable_type'];
 
@@ -28,26 +30,25 @@ const typeColors: Record<VariableType, string> = {
   NUMBER: 'bg-orange-500',
   BOOLEAN: 'bg-blue-500',
   JSON: 'bg-red-500',
-  // Add other types if they exist and their desired colors
 };
 
 type VariablesEditorProps = {
-  variables: EditorPromptVariable[];
-  onVariablesChange?: (variables: EditorPromptVariable[]) => void;
   readOnly?: boolean;
   className?: string;
 };
 
 export const VariablesEditor = (props: VariablesEditorProps) => {
-  const { variables, onVariablesChange, readOnly = false, className } = props;
+  const { readOnly = false, className } = props;
+
+  const { state, updateEditorVariables } = usePromptPage();
+  const { editorVariables } = state;
 
   const updateVariable = (
     index: number,
     field: keyof EditorPromptVariable,
     value: string | boolean,
   ) => {
-    if (readOnly || !onVariablesChange) return;
-    const newVariables = [...variables];
+    const newVariables = [...editorVariables];
     const variableToUpdate = { ...newVariables[index] };
 
     if (field === 'type' && typeof value === 'string') {
@@ -65,24 +66,33 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
     }
 
     newVariables[index] = variableToUpdate;
-    onVariablesChange(newVariables);
+    updateEditorVariables(newVariables);
+  };
+
+  const handleDefaultValueChange = (index: number, value: any) => {
+    const newVariables = [...editorVariables];
+    newVariables[index] = {
+      ...newVariables[index],
+      default_value: value,
+    };
+    updateEditorVariables(newVariables);
   };
 
   const getBadgeColor = (type: VariableType) => {
     return typeColors[type] || 'bg-gray-500 hover:bg-gray-600'; // Default color
   };
 
-  if (variables.length === 0) {
+  if (editorVariables.length === 0) {
     return (
       <p className="text-muted-foreground text-sm text-center py-4">
-        No variables found. Add variables to your prompt or edit template to add variables.
+        No variables found. Add variables to your prompt.
       </p>
     );
   }
 
   return (
     <Accordion type="multiple" className={cn('space-y-1', className)}>
-      {variables.map((variable, index) => (
+      {editorVariables.map((variable, index) => (
         <AccordionItem
           key={variable.id || `var-${index}`}
           value={String(variable.id || `var-${index}`)}
@@ -90,9 +100,7 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
           <AccordionTrigger
             className={cn(
               'flex justify-between items-center rounded-md hover:no-underline cursor-pointer',
-              readOnly && 'cursor-default',
             )}
-            disabled={readOnly}
           >
             <div className="flex items-center gap-2">
               <div className="flex justify-start items-start gap-0.5">
@@ -104,28 +112,34 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
               </Badge>
             </div>
           </AccordionTrigger>
-          <AccordionContent className="p-4 pt-2 space-y-4 border rounded-b-md bg-background">
-            <div className="space-y-2 flex items-center gap-2">
-              <Label className="mb-0" htmlFor={`type-${index}`}>
-                Type
-              </Label>
-              <Select
-                value={variable.type}
-                onValueChange={(value) => updateVariable(index, 'type', value)}
-                disabled={readOnly}
-                name={`type-${index}`}
-              >
-                <SelectTrigger id={`type-${index}`}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="STRING">String</SelectItem>
-                  <SelectItem value="NUMBER">Number</SelectItem>
-                  <SelectItem value="BOOLEAN">Boolean</SelectItem>
-                  <SelectItem value="JSON">JSON</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <AccordionContent
+            className={cn(
+              'p-4 pt-2 space-y-4 border rounded-b-md bg-background mb-4',
+              readOnly && 'pt-4',
+            )}
+          >
+            {!readOnly && (
+              <div className="space-y-2 flex items-center gap-2">
+                <Label className="mb-0" htmlFor={`type-${index}`}>
+                  Type
+                </Label>
+                <Select
+                  value={variable.type}
+                  onValueChange={(value) => updateVariable(index, 'type', value)}
+                  name={`type-${index}`}
+                >
+                  <SelectTrigger id={`type-${index}`}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="STRING">String</SelectItem>
+                    <SelectItem value="NUMBER">Number</SelectItem>
+                    <SelectItem value="BOOLEAN">Boolean</SelectItem>
+                    <SelectItem value="JSON">JSON</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             <div className="flex items-center space-x-2">
               <Checkbox
@@ -140,11 +154,11 @@ export const VariablesEditor = (props: VariablesEditorProps) => {
             {!variable.required && (
               <div className="space-y-2">
                 <Label htmlFor={`default-${index}`}>Default Value</Label>
-                <Input
-                  id={`default-${index}`}
-                  value={variable.default_value ?? ''}
-                  onChange={(e) => updateVariable(index, 'default_value', e.target.value)}
-                  disabled={readOnly}
+                <VariableInput
+                  variable={variable}
+                  value={variable.default_value}
+                  onChange={(value) => handleDefaultValueChange(index, value)}
+                  readOnly={readOnly}
                   placeholder={'Optional default value'}
                 />
               </div>

@@ -14,6 +14,7 @@ export const createMockSupabaseClient = () => {
     builder.gte = chain;
     builder.lte = chain;
     builder.single = jest.fn(async () => response);
+    builder.abortSignal = chain;
     builder.then = (resolve: any, reject: any) => Promise.resolve(response).then(resolve, reject);
     return builder;
   };
