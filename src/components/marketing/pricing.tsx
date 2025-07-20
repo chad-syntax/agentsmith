@@ -30,66 +30,79 @@ type PricingCardData = {
   buttonId?: string;
 };
 
-const handleJoinWaitlistClick = () => {
-  const $emailInput = document.getElementById('EMAIL');
-  if ($emailInput) {
-    setTimeout(() => {
-      $emailInput.focus();
-    }, 1);
-  }
-};
-
 const pricingData: PricingCardData[] = [
   {
-    title: 'Cloud Free',
-    price: 'Coming Soon',
-    description:
-      "The hosted AgentSmith app, live and free. Join our mailing list to be notified when it's ready.",
+    title: 'Free',
+    price: 'Free',
+    description: 'For personal projects and getting started.',
     features: [
-      { text: 'Limited prompt creation' },
-      { text: 'Basic testing tools' },
+      { text: '5 prompts' },
+      { text: '1 User' },
+      { text: '1 Project' },
+      { text: '1K Logs per month' },
+      { text: '7-day log retention' },
       { text: 'Community support' },
     ],
-    buttonText: 'Join Waitlist',
+    buttonText: 'Get Started',
     buttonVariant: 'outline',
     disabled: false,
-    buttonLink: '/#join-waitlist',
-    onClick: handleJoinWaitlistClick,
+    buttonLink: routes.auth.signUp,
+  },
+  {
+    title: 'Hobby',
+    price: '$19.99',
+    discountedPrice: '$9.99',
+    priceDetail: '/seat/mo',
+    description: 'For hobbyists and small projects.',
+    features: [
+      { text: '100 prompts', isPrimary: true },
+      { text: '3 Users', isPrimary: true },
+      { text: '3 Projects', isPrimary: true },
+      { text: '30K Logs per month', isPrimary: true },
+      { text: '30-day log retention', isPrimary: true },
+      { text: 'Metrics & Analytics', isPrimary: true },
+    ],
+    buttonText: 'Get Started',
+    buttonLink: routes.auth.signUp,
+    isDiscounted: true,
   },
   {
     title: 'Pro',
-    price: '$599',
-    priceDetail: '/year',
-    description:
-      'Perfect for individual developers and small teams. Pay now to get immediate Alpha access!',
+    price: '$49.99',
+    discountedPrice: '$24.99',
+    priceDetail: '/seat/mo',
+    description: 'For professional developers and teams.',
     features: [
-      { text: 'Unlimited prompt creation', isPrimary: true },
-      { text: 'Advanced testing tools', isPrimary: true },
-      { text: 'GitHub integration', isPrimary: true },
+      { text: 'Unlimited prompts', isPrimary: true },
+      { text: 'Unlimited users', isPrimary: true },
+      { text: '10 projects', isPrimary: true },
+      { text: '100K Logs per month', isPrimary: true },
+      { text: '90-day log retention', isPrimary: true },
+      { text: 'Metrics & Analytics', isPrimary: true },
       { text: 'Typesafe SDK access', isPrimary: true },
+      { text: 'GitHub integration', isPrimary: true },
       { text: 'Priority support', isPrimary: true },
     ],
-    buttonText: 'Join Alpha Club',
-    buttonLink: routes.external.stripe.checkout.proAlphaClub,
+    buttonText: 'Get Started',
+    buttonLink: routes.auth.signUp,
     isRecommended: true,
     isDiscounted: true,
-    discountedPrice: '$299',
-    highlightText: 'Pay now to receive early access. Join the alpha club! (limited to 100 spots)',
-    buttonId: 'join-alpha-club',
   },
   {
     title: 'Enterprise',
     price: 'Custom',
-    description: 'Tailored solutions for large organizations with specific needs.',
+    description: 'For large-scale applications and businesses.',
     features: [
-      { text: 'Dedicated support', isPrimary: true },
+      { text: 'Everything in Pro, plus...' },
+      { text: '100 projects', isPrimary: true },
+      { text: '1M Logs per month', isPrimary: true },
+      { text: '365-day log retention', isPrimary: true },
+      { text: 'Dedicated support & SLAs', isPrimary: true },
       { text: 'Custom integrations', isPrimary: true },
       { text: 'Single Sign-On (SSO)', isPrimary: true },
-      { text: 'Service Level Agreements (SLA)', isPrimary: true },
-      { text: 'Volume discounts', isPrimary: true },
     ],
-    buttonText: 'Contact Us',
-    buttonLink: `mailto:${routes.emails.enterprise}`,
+    buttonText: 'Get Started',
+    buttonLink: routes.auth.signUp,
     buttonVariant: 'default',
   },
 ];
@@ -194,7 +207,7 @@ const PricingCardItem = (props: PricingCardProps) => {
 
 export const PricingCards = () => {
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
       {pricingData.map((card, index) => (
         <PricingCardItem key={index} card={card} />
       ))}

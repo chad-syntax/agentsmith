@@ -1,9 +1,10 @@
 import { routes } from '@/utils/routes';
-import { H1, H3, P } from '@/components/typography';
+import { H1, P } from '@/components/typography';
 import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { UserNeedsOrgMembership } from '@/components/user-needs-org-membership';
 
 type StudioPageProps = {
   userOrganizationData: NonNullable<GetUserOrganizationDataResult>;
@@ -50,7 +51,7 @@ export const StudioPage = (props: StudioPageProps) => {
       <StudioPageHeader />
       <div className="mt-6">
         {userOrganizationData.organization_users.length === 0 ? (
-          <P>You don't have any organizations yet.</P>
+          <UserNeedsOrgMembership />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {userOrganizationData.organization_users.map((orgUser) => {

@@ -76,6 +76,45 @@ export type Database = {
           },
         ]
       }
+      agentsmith_tiers: {
+        Row: {
+          id: number
+          llm_logs_limit: number
+          llm_logs_retention_days: number
+          metrics_page_access: boolean
+          name: string
+          project_limit: number
+          prompt_limit: number
+          stripe_product_id: string | null
+          tier: Database["public"]["Enums"]["organization_tier"]
+          user_limit: number
+        }
+        Insert: {
+          id?: number
+          llm_logs_limit: number
+          llm_logs_retention_days: number
+          metrics_page_access?: boolean
+          name: string
+          project_limit: number
+          prompt_limit: number
+          stripe_product_id?: string | null
+          tier: Database["public"]["Enums"]["organization_tier"]
+          user_limit: number
+        }
+        Update: {
+          id?: number
+          llm_logs_limit?: number
+          llm_logs_retention_days?: number
+          metrics_page_access?: boolean
+          name?: string
+          project_limit?: number
+          prompt_limit?: number
+          stripe_product_id?: string | null
+          tier?: Database["public"]["Enums"]["organization_tier"]
+          user_limit?: number
+        }
+        Relationships: []
+      }
       agentsmith_users: {
         Row: {
           auth_user_id: string
@@ -399,36 +438,46 @@ export type Database = {
       }
       organizations: {
         Row: {
+          agentsmith_tier_id: number
           created_at: string
           created_by: number
           id: number
           invite_code: string
           name: string
-          tier: Database["public"]["Enums"]["organization_tier"]
+          stripe_customer_id: string | null
           updated_at: string
           uuid: string
         }
         Insert: {
+          agentsmith_tier_id?: number
           created_at?: string
           created_by: number
           id?: number
           invite_code?: string
           name: string
-          tier?: Database["public"]["Enums"]["organization_tier"]
+          stripe_customer_id?: string | null
           updated_at?: string
           uuid?: string
         }
         Update: {
+          agentsmith_tier_id?: number
           created_at?: string
           created_by?: number
           id?: number
           invite_code?: string
           name?: string
-          tier?: Database["public"]["Enums"]["organization_tier"]
+          stripe_customer_id?: string | null
           updated_at?: string
           uuid?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "organizations_agentsmith_tier_id_fkey"
+            columns: ["agentsmith_tier_id"]
+            isOneToOne: false
+            referencedRelation: "agentsmith_tiers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "organizations_created_by_fkey"
             columns: ["created_by"]
@@ -949,6 +998,30 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_under_llm_logs_limit: {
+        Args: {
+          arg_project_id: number
+        }
+        Returns: boolean
+      }
+      is_under_project_limit: {
+        Args: {
+          arg_organization_id: number
+        }
+        Returns: boolean
+      }
+      is_under_prompt_limit: {
+        Args: {
+          arg_project_id: number
+        }
+        Returns: boolean
+      }
+      is_under_user_limit: {
+        Args: {
+          arg_organization_id: number
+        }
+        Returns: boolean
+      }
       join_organization: {
         Args: {
           arg_invite_code: string
@@ -997,7 +1070,7 @@ export type Database = {
         | "SDK"
         | "AGENTSMITH_EVAL"
         | "AGENTSMITH_AI_AUTHOR"
-      organization_tier: "FREE" | "PRO" | "ENTERPRISE"
+      organization_tier: "FREE" | "HOBBY" | "PRO" | "ENTERPRISE"
       organization_user_role: "ADMIN" | "MEMBER"
       prompt_status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
       roadmap_item_state:

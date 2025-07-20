@@ -28,6 +28,7 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
   const { isOpen, onClose, projectId } = props;
   const [name, setName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string[]>>({});
   const router = useRouter();
   const { selectedProjectUuid, onboardingChecklist, setOnboardingChecklist } = useApp();
 
@@ -53,17 +54,23 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
           routes.studio.editPromptVersion(selectedProjectUuid, response.data.versionUuid),
         );
       } else {
-        console.error('Error creating prompt:', response.message);
-        toast.error(response.message || 'Failed to create prompt. Please try again.');
+        if (response.message) {
+          setErrors({
+            'create-prompt': [response.message],
+          });
+        } else if (response.errors) {
+          setErrors(response.errors);
+        }
       }
     } catch (error) {
-      console.error('Error creating prompt:', error);
-      toast.error('Failed to create prompt. Please try again.');
-      setIsCreating(false);
+      setErrors({
+        'create-prompt': ['Failed to create prompt. Please try again.'],
+      });
     } finally {
       if (!onboardingChecklist?.promptCreated) {
         setOnboardingChecklist((prev) => (!prev ? null : { ...prev, promptCreated: true }));
       }
+      setIsCreating(false);
     }
   };
 
@@ -98,6 +105,13 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
             </Button>
           </DialogFooter>
         </form>
+        {errors && (
+          <div className="text-destructive text-sm">
+            {Object.entries(errors).map(([key, value]) => (
+              <div key={key}>{value}</div>
+            ))}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

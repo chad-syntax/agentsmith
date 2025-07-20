@@ -17,17 +17,27 @@ import { usePathname } from 'next/navigation';
 import { useApp } from '@/providers/app';
 
 export const useNavItems = () => {
-  const { selectedOrganizationUuid, selectedProjectUuid } = useApp();
+  const { selectedOrganizationUuid, selectedProjectUuid, userNeedsOrgMembership } = useApp();
   const pathname = usePathname();
 
+  const homeNavItem = {
+    name: 'Home',
+    slug: 'home',
+    href: routes.studio.home,
+    icon: Home,
+    active: pathname === routes.studio.home,
+  };
+
+  const accountNavItem = {
+    name: 'Account',
+    slug: 'account',
+    href: routes.studio.account,
+    icon: User,
+    active: pathname.startsWith(routes.studio.account),
+  };
+
   const navItems = [
-    {
-      name: 'Home',
-      slug: 'home',
-      href: routes.studio.home,
-      icon: Home,
-      active: pathname === routes.studio.home,
-    },
+    homeNavItem,
     {
       name: 'Project',
       slug: 'project',
@@ -78,13 +88,7 @@ export const useNavItems = () => {
       icon: Globe,
       active: pathname.startsWith(routes.studio.projectGlobals(selectedProjectUuid)),
     },
-    {
-      name: 'Account',
-      slug: 'account',
-      href: routes.studio.account,
-      icon: User,
-      active: pathname.startsWith(routes.studio.account),
-    },
+    accountNavItem,
     {
       name: 'Organization',
       slug: 'organization',
@@ -115,7 +119,14 @@ export const useNavItems = () => {
     },
   ];
 
-  const activeItem = navItems.find((item) => item.active) ?? navItems[0];
+  if (userNeedsOrgMembership) {
+    return {
+      navItems: [homeNavItem, accountNavItem],
+      activeItem: homeNavItem,
+    };
+  }
+
+  const activeItem = navItems.find((item) => item.active) ?? homeNavItem;
 
   return { navItems, activeItem };
 };

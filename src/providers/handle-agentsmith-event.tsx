@@ -12,8 +12,10 @@ type Project = Organization['projects'][number];
 type AgentsmithEvent = Database['public']['Tables']['agentsmith_events']['Row'];
 type Payload = RealtimePostgresInsertPayload<AgentsmithEvent>;
 
-export const handleAgentsmithEvent = (selectedProject: Project) => (payload: Payload) => {
+export const handleAgentsmithEvent = (selectedProject: Project | null) => (payload: Payload) => {
   const { new: record } = payload;
+
+  if (!selectedProject) return;
 
   const href = routes.studio.eventDetail(selectedProject?.uuid ?? '', record.uuid);
 

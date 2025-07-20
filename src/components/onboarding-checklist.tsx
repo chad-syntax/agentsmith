@@ -43,11 +43,6 @@ export const OnboardingChecklist = () => {
     ? []
     : [
         {
-          done: onboardingChecklist.organizationRenamed,
-          label: 'Name your organization',
-          href: routes.studio.editOrganization(selectedOrganizationUuid),
-        },
-        {
           done: onboardingChecklist.appInstalled,
           label: 'Install GitHub App',
           onClick: () => installGithubApp(selectedOrganizationUuid),

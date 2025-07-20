@@ -1,14 +1,14 @@
-name: Push Supabase Migrations to Production
+name: Push Supabase Migrations/Functions to Staging
 
 on:
   push:
     branches:
-      - main
+      - staging
   workflow_dispatch:
 
 jobs:
-  push_supabase_migrations_production:
-    environment: Production
+  supabase_deploy_staging:
+    environment: Staging
     runs-on: ubuntu-latest
 
     env:
@@ -25,3 +25,4 @@ jobs:
 
       - run: supabase link --project-ref $SUPABASE_PROJECT_ID
       - run: supabase db push
+      - run: supabase functions deploy --project-ref $PROJECT_ID

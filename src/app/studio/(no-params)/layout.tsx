@@ -33,16 +33,16 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
     const userOrganizationData = await services.users.getUserOrganizationData();
 
-    const firstOrganization = userOrganizationData.organization_users[0].organizations;
+    const firstOrganization = userOrganizationData.organization_users?.[0]?.organizations;
 
-    const firstOrganizationProject = firstOrganization.projects[0];
+    const firstOrganizationProject = firstOrganization?.projects?.[0];
 
     return (
       <StudioApp
         authUser={authUser}
         agentsmithUser={agentsmithUser}
-        selectedProjectUuid={firstOrganizationProject.uuid}
-        selectedOrganizationUuid={firstOrganization.uuid}
+        selectedProjectUuid={firstOrganizationProject?.uuid}
+        selectedOrganizationUuid={firstOrganization?.uuid}
         userOrganizationData={userOrganizationData}
         children={children}
       />
