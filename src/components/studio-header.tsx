@@ -96,7 +96,7 @@ export const StudioHeader = () => {
                   <BreadcrumbSeparator className="hidden md:list-item">
                     <Slash />
                   </BreadcrumbSeparator>
-                  {selectedOrganization?.projects.length > 1 ? (
+                  {(selectedOrganization?.projects?.length ?? 0) > 1 ? (
                     <BreadcrumbItem className="hidden md:list-item">
                       <DropdownMenu>
                         <DropdownMenuTrigger className="cursor-pointer flex items-center gap-1">

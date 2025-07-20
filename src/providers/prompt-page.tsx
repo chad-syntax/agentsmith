@@ -616,6 +616,7 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
   };
 
   const updateIncludes = async (includes: ParsedInclude[]) => {
+    if (!selectedProject) return;
     const supabase = createClient();
 
     const promptsService = new PromptsService({ supabase });
