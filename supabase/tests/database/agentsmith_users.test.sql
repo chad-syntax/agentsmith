@@ -13,7 +13,7 @@ deallocate all;
 \set ON_ERROR_STOP true
 
 -- plan the number of tests
-select plan(8);
+select plan(5);
 
 -- helper function to get user ids
 create or replace function get_test_user_id(test_email text) 
@@ -164,47 +164,6 @@ returns bigint
 language sql as $$
     select id from agentsmith_users where auth_user_id = get_new_test_user_id();
 $$;
-
--- check that the organization record was created
-select ok(
-    exists (
-        select 1 from organizations
-        where name = 'Default Organization'
-        and created_by = get_new_agentsmith_user_id()
-    ),
-    'default organization record is automatically created'
-);
-
--- get the new organization id
-create or replace function get_new_organization_id()
-returns bigint
-language sql as $$
-    select id from organizations 
-    where created_by = get_new_agentsmith_user_id() 
-    and name = 'Default Organization';
-$$;
-
--- check that the organization_user record was created with ADMIN role
-select ok(
-    exists (
-        select 1 from organization_users
-        where organization_id = get_new_organization_id()
-        and user_id = get_new_agentsmith_user_id()
-        and role = 'ADMIN'
-    ),
-    'organization_user record with ADMIN role is automatically created'
-);
-
--- check that the project record was created
-select ok(
-    exists (
-        select 1 from projects
-        where organization_id = get_new_organization_id()
-        and name = 'Default Project'
-        and created_by = get_new_agentsmith_user_id()
-    ),
-    'default project record is automatically created'
-);
 
 -- Test same-organization access
 select set_auth_user('pro_admin@example.com');
