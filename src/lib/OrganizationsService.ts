@@ -93,6 +93,20 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     return data;
   }
 
+  public async removeOrganizationUser(organizationUserId: number) {
+    const { error } = await this.supabase
+      .from('organization_users')
+      .delete()
+      .eq('id', organizationUserId);
+
+    if (error) {
+      this.logger.error(error, 'Error removing user from organization');
+      return { success: false, error: 'Error removing user from organization' };
+    }
+
+    return { success: true };
+  }
+
   public async getOrganizationKeySecret(organizationUuid: string, key: string) {
     const response = await this.services.vault.getOrganizationKeySecret(organizationUuid, key);
 

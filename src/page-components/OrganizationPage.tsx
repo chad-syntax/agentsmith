@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Clipboard, LinkIcon, Pencil } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { Clipboard, LinkIcon, Pencil, X } from 'lucide-react';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,12 @@ import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Grid } from '@/components/layout/grid';
 import { CreateProjectModal } from '@/components/modals/create-project';
 import { useApp } from '@/providers/app';
+import { ConfirmRemoveUserModal } from '@/components/modals/confirm-remove-user';
+import { removeOrganizationUser } from '@/app/actions/organization';
+import { useAuth } from '@/providers/auth';
+import { toast } from 'sonner';
+
+type OrganizationUser = NonNullable<GetOrganizationDataResult>['organization_users'][number];
 
 type OrganizationPageProps = {
   organization: NonNullable<GetOrganizationDataResult>;
@@ -30,7 +36,10 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
   const [isCodeCopied, setIsCodeCopied] = useState(false);
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [createProjectModalOpen, setCreateProjectModalOpen] = useState(false);
+  const [userToRemove, setUserToRemove] = useState<OrganizationUser | null>(null);
   const { isOrganizationAdmin } = useApp();
+  const { agentsmithUser } = useAuth();
+  const [isPending, startTransition] = useTransition();
 
   const handleCopyCode = async () => {
     await navigator.clipboard.writeText(organization.invite_code);
@@ -45,6 +54,20 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
     setTimeout(() => setIsLinkCopied(false), 2000);
   };
 
+  const handleRemoveUser = () => {
+    if (!userToRemove) return;
+    startTransition(async () => {
+      const response = await removeOrganizationUser(userToRemove.id, organization.uuid);
+      if (!response.success) {
+        toast.error(response.message || 'Failed to remove user.');
+      }
+      if (response.success) {
+        toast.success(response.message || 'User removed successfully.');
+      }
+      setUserToRemove(null);
+    });
+  };
+
   return (
     <>
       <CreateProjectModal
@@ -52,6 +75,15 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
         onOpenChange={setCreateProjectModalOpen}
         organizationUuid={organization.uuid}
       />
+      {userToRemove && (
+        <ConfirmRemoveUserModal
+          open={!!userToRemove}
+          onOpenChange={() => setUserToRemove(null)}
+          onConfirm={handleRemoveUser}
+          userEmail={userToRemove.agentsmith_users.email || ''}
+          isPending={isPending}
+        />
+      )}
       <div className="flex-1 w-full flex flex-col gap-12 p-4">
         <div className="flex items-center gap-2">
           <H1>{organization.name}</H1>
@@ -146,6 +178,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
                 <TableHead>Email</TableHead>
                 <TableHead>User ID</TableHead>
                 <TableHead>Created At</TableHead>
+                {isOrganizationAdmin && <TableHead>Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -167,6 +200,13 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
                         ''
                       )}
                     </TableCell>
+                    {isOrganizationAdmin && agentsmithUser?.id !== user.agentsmith_users.id && (
+                      <TableCell>
+                        <Button variant="ghost" size="icon" onClick={() => setUserToRemove(user)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               ) : (
@@ -229,6 +269,7 @@ export const OrganizationPageSkeleton = () => (
             <TableHead>Email</TableHead>
             <TableHead>User ID</TableHead>
             <TableHead>Created At</TableHead>
+            <TableHead>Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -245,6 +286,9 @@ export const OrganizationPageSkeleton = () => (
               </TableCell>
               <TableCell>
                 <div className="bg-muted rounded w-28 h-4 animate-pulse">&nbsp;</div>
+              </TableCell>
+              <TableCell>
+                <div className="bg-muted rounded w-8 h-8 animate-pulse">&nbsp;</div>
               </TableCell>
             </TableRow>
           ))}

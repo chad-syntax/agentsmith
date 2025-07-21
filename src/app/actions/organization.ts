@@ -58,3 +58,21 @@ export const joinOrganization = async (inviteCode: string) => {
 
   return createSuccessResponse<string>(data, 'Organization joined successfully.');
 };
+
+export const removeOrganizationUser = async (
+  organizationUserId: number,
+  organizationUuid: string,
+) => {
+  const supabase = await createClient();
+
+  const { error } = await supabase.from('organization_users').delete().eq('id', organizationUserId);
+
+  if (error) {
+    return createErrorResponse(error.message);
+  }
+
+  const revalidateUrl = routes.studio.organization(organizationUuid);
+  redirect(revalidateUrl);
+
+  return createSuccessResponse(null, 'User removed successfully.');
+};
