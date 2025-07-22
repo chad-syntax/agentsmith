@@ -8,6 +8,7 @@ import { routes } from '@/utils/routes';
 import { ArrowBigUp, Check, Dot, X } from 'lucide-react';
 import { useState } from 'react';
 import { UpgradeOrganizationModal } from '@/components/modals/upgrade-organization';
+import { useApp } from '@/providers/app';
 
 type OrganizationBillingPageProps = {
   organization: NonNullable<GetOrganizationDataResult>;
@@ -16,6 +17,9 @@ type OrganizationBillingPageProps = {
 export const OrganizationBillingPage = (props: OrganizationBillingPageProps) => {
   const { organization } = props;
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const { isOrganizationAdmin } = useApp();
+
+  const isProTier = organization.agentsmith_tiers.tier === 'PRO';
 
   return (
     <>
@@ -33,75 +37,29 @@ export const OrganizationBillingPage = (props: OrganizationBillingPageProps) => 
               {organization.agentsmith_tiers.name}
             </Badge>
             <span>Tier</span>
-            <Dot />
-            {organization.stripe_subscription_id ? (
-              <Button variant="link" asChild className="p-0 text-base">
-                <a
-                  href={routes.external.stripe.portal(organization.uuid)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Manage Subscription
-                </a>
-              </Button>
-            ) : (
-              <Button size="sm" onClick={() => setIsUpgradeModalOpen(true)}>
-                <ArrowBigUp />
-                Upgrade
-              </Button>
-              // <>
-              //   <Button variant="link" asChild className="p-0 text-base">
-              //     <a
-              //       href={routes.external.stripe.checkout(
-              //         organization.uuid,
-              //         STRIPE_PRICE_IDS.HOBBY.YEARLY,
-              //       )}
-              //       target="_blank"
-              //       rel="noopener noreferrer"
-              //     >
-              //       Upgrade To Hobby (Yearly)
-              //     </a>
-              //   </Button>
-              //   <Dot />
-              //   <Button variant="link" asChild className="p-0 text-base">
-              //     <a
-              //       href={routes.external.stripe.checkout(
-              //         organization.uuid,
-              //         STRIPE_PRICE_IDS.HOBBY.MONTHLY,
-              //       )}
-              //       target="_blank"
-              //       rel="noopener noreferrer"
-              //     >
-              //       Upgrade To Hobby (Monthly)
-              //     </a>
-              //   </Button>
-              //   <Dot />
-              //   <Button variant="link" asChild className="p-0 text-base">
-              //     <a
-              //       href={routes.external.stripe.checkout(
-              //         organization.uuid,
-              //         STRIPE_PRICE_IDS.PRO.YEARLY,
-              //       )}
-              //       target="_blank"
-              //       rel="noopener noreferrer"
-              //     >
-              //       Upgrade To Pro (Yearly)
-              //     </a>
-              //   </Button>
-              //   <Dot />
-              //   <Button variant="link" asChild className="p-0 text-base">
-              //     <a
-              //       href={routes.external.stripe.checkout(
-              //         organization.uuid,
-              //         STRIPE_PRICE_IDS.PRO.MONTHLY,
-              //       )}
-              //       target="_blank"
-              //       rel="noopener noreferrer"
-              //     >
-              //       Upgrade To Pro (Monthly)
-              //     </a>
-              //   </Button>
-              // </>
+            {isOrganizationAdmin && (
+              <>
+                <Dot />
+                {organization.stripe_customer_id && (
+                  <Button variant="link" asChild className="p-0 text-base">
+                    <a
+                      href={routes.external.stripe.portal(organization.uuid)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {organization.stripe_subscription_id
+                        ? 'Manage Subscription'
+                        : 'Manage Billing'}
+                    </a>
+                  </Button>
+                )}
+                {!organization.stripe_subscription_id && !isProTier && (
+                  <Button className="ml-2" size="sm" onClick={() => setIsUpgradeModalOpen(true)}>
+                    <ArrowBigUp />
+                    Upgrade
+                  </Button>
+                )}
+              </>
             )}
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">

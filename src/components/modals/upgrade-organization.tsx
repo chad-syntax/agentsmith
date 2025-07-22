@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
 import { Switch } from '../ui/switch';
-import { CheckCircle2, Minus, Plus } from 'lucide-react';
+import { CheckCircle2, Loader2, Minus, Plus } from 'lucide-react';
 import { routes } from '@/utils/routes';
 import Link from 'next/link';
 
@@ -32,6 +32,7 @@ const PricingCard = (props: PricingCardProps) => {
   const currentPlan = billingCycle === 'monthly' ? card.monthly : card.yearly;
 
   const [seats, setSeats] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   if (!currentPlan) {
     return null;
@@ -132,10 +133,20 @@ const PricingCard = (props: PricingCardProps) => {
         </ul>
       </CardContent>
       <CardFooter className="px-4 flex-shrink-0">
-        <Button variant={card.buttonVariant} className="w-full" asChild disabled={card.disabled}>
-          <Link href={checkoutUrl} target="_blank">
-            {card.buttonText}
-          </Link>
+        <Button
+          onClick={() => setIsLoading(true)}
+          variant={card.buttonVariant}
+          className="w-full"
+          asChild
+          disabled={card.disabled}
+        >
+          {isLoading ? (
+            <div>
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+          ) : (
+            <a href={checkoutUrl}>Checkout</a>
+          )}
         </Button>
       </CardFooter>
     </Card>

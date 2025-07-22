@@ -98,7 +98,7 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
           <div>
             <Link href={routes.studio.organizationBilling(organization.uuid)}>
               <Button variant="link" className="p-0" size="sm">
-                View Billing
+                Billing
               </Button>
             </Link>
           </div>

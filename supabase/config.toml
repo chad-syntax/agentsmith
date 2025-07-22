@@ -54,7 +54,8 @@ sql_paths = [
   "./seeds/prompts.sql",
   "./seeds/llm_logs.sql",
   "./seeds/roadmap.sql",
-  "./seeds/agentsmith_env_vars.sql"
+  "./seeds/agentsmith_env_vars.sql",
+  "./seeds/agentsmith_tiers.sql"
 ]
 
 [realtime]
