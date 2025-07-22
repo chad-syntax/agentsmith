@@ -1,8 +1,13 @@
-import { PricingCards } from '@/components/marketing/pricing';
+'use client';
+
 import { H2 } from '@/components/typography';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { GetOrganizationDataResult } from '@/lib/OrganizationsService';
-import { Check, X } from 'lucide-react';
+import { routes } from '@/utils/routes';
+import { ArrowBigUp, Check, Dot, X } from 'lucide-react';
+import { useState } from 'react';
+import { UpgradeOrganizationModal } from '@/components/modals/upgrade-organization';
 
 type OrganizationBillingPageProps = {
   organization: NonNullable<GetOrganizationDataResult>;
@@ -10,60 +15,140 @@ type OrganizationBillingPageProps = {
 
 export const OrganizationBillingPage = (props: OrganizationBillingPageProps) => {
   const { organization } = props;
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
   return (
-    <div className="flex-1 w-full flex flex-col gap-12 p-4">
-      <div className="flex flex-col gap-4">
-        <H2>Plan Info</H2>
-        <div className="flex items-center gap-4">
-          <span className="font-medium">
+    <>
+      <UpgradeOrganizationModal
+        organizationUuid={organization.uuid}
+        open={isUpgradeModalOpen}
+        onOpenChange={setIsUpgradeModalOpen}
+      />
+      <div className="flex-1 w-full flex flex-col gap-12 p-4">
+        <div className="flex flex-col gap-4">
+          <H2>Plan Info</H2>
+
+          <div className="flex items-center gap-2">
             <Badge variant={organization.agentsmith_tiers.tier}>
               {organization.agentsmith_tiers.name}
             </Badge>
-            &nbsp;Tier
-          </span>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">Prompt Limit</span>
-            <span className="font-mono">
-              {organization.agentsmith_tiers.prompt_limit === 9999
-                ? 'Unlimited'
-                : organization.agentsmith_tiers.prompt_limit}
-            </span>
+            <span>Tier</span>
+            <Dot />
+            {organization.stripe_subscription_id ? (
+              <Button variant="link" asChild className="p-0 text-base">
+                <a
+                  href={routes.external.stripe.portal(organization.uuid)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Manage Subscription
+                </a>
+              </Button>
+            ) : (
+              <Button size="sm" onClick={() => setIsUpgradeModalOpen(true)}>
+                <ArrowBigUp />
+                Upgrade
+              </Button>
+              // <>
+              //   <Button variant="link" asChild className="p-0 text-base">
+              //     <a
+              //       href={routes.external.stripe.checkout(
+              //         organization.uuid,
+              //         STRIPE_PRICE_IDS.HOBBY.YEARLY,
+              //       )}
+              //       target="_blank"
+              //       rel="noopener noreferrer"
+              //     >
+              //       Upgrade To Hobby (Yearly)
+              //     </a>
+              //   </Button>
+              //   <Dot />
+              //   <Button variant="link" asChild className="p-0 text-base">
+              //     <a
+              //       href={routes.external.stripe.checkout(
+              //         organization.uuid,
+              //         STRIPE_PRICE_IDS.HOBBY.MONTHLY,
+              //       )}
+              //       target="_blank"
+              //       rel="noopener noreferrer"
+              //     >
+              //       Upgrade To Hobby (Monthly)
+              //     </a>
+              //   </Button>
+              //   <Dot />
+              //   <Button variant="link" asChild className="p-0 text-base">
+              //     <a
+              //       href={routes.external.stripe.checkout(
+              //         organization.uuid,
+              //         STRIPE_PRICE_IDS.PRO.YEARLY,
+              //       )}
+              //       target="_blank"
+              //       rel="noopener noreferrer"
+              //     >
+              //       Upgrade To Pro (Yearly)
+              //     </a>
+              //   </Button>
+              //   <Dot />
+              //   <Button variant="link" asChild className="p-0 text-base">
+              //     <a
+              //       href={routes.external.stripe.checkout(
+              //         organization.uuid,
+              //         STRIPE_PRICE_IDS.PRO.MONTHLY,
+              //       )}
+              //       target="_blank"
+              //       rel="noopener noreferrer"
+              //     >
+              //       Upgrade To Pro (Monthly)
+              //     </a>
+              //   </Button>
+              // </>
+            )}
           </div>
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">User Limit</span>
-            <span className="font-mono">
-              {organization.agentsmith_tiers.user_limit === 9999
-                ? 'Unlimited'
-                : organization.agentsmith_tiers.user_limit}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">Project Limit</span>
-            <span className="font-mono">{organization.agentsmith_tiers.project_limit}</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">LLM Logs Limit</span>
-            <span className="font-mono">{organization.agentsmith_tiers.llm_logs_limit}</span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">LLM Logs Retention (days)</span>
-            <span className="font-mono">
-              {organization.agentsmith_tiers.llm_logs_retention_days}
-            </span>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-xs text-muted-foreground">Metrics Page Access</span>
-            <span className="font-mono">
-              {organization.agentsmith_tiers.metrics_page_access ? <Check /> : <X />}
-            </span>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-2">
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground">Prompt Limit</span>
+              <span className="font-mono">
+                {organization.agentsmith_tiers.prompt_limit === 9999
+                  ? 'Unlimited'
+                  : organization.agentsmith_tiers.prompt_limit}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground">User Limit</span>
+              <span className="font-mono">
+                {organization.agentsmith_tiers.user_limit === 9999
+                  ? 'Unlimited'
+                  : organization.agentsmith_tiers.user_limit}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground">Seat Limit</span>
+              <span className="font-mono">{organization.seat_count}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground">Project Limit</span>
+              <span className="font-mono">{organization.agentsmith_tiers.project_limit}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground">LLM Logs Limit</span>
+              <span className="font-mono">{organization.agentsmith_tiers.llm_logs_limit}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground">LLM Logs Retention (days)</span>
+              <span className="font-mono">
+                {organization.agentsmith_tiers.llm_logs_retention_days}
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground">Metrics Page Access</span>
+              <span className="font-mono">
+                {organization.agentsmith_tiers.metrics_page_access ? <Check /> : <X />}
+              </span>
+            </div>
           </div>
         </div>
       </div>
-      <PricingCards />
-    </div>
+    </>
   );
 };
 

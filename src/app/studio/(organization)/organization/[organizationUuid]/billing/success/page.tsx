@@ -1,14 +1,13 @@
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { createClient } from '@/lib/supabase/server';
-import { OrganizationBillingPage } from '@/page-components/OrganizationBillingPage';
-import { OrganizationPage } from '@/page-components/OrganizationPage';
+import { OrganizationBillingSuccessPage } from '@/page-components/OrganizationBillingSuccessPage';
 import { notFound } from 'next/navigation';
 
-type OrganizationBillingProps = {
+type OrganizationBillingSuccessProps = {
   params: Promise<{ organizationUuid: string }>;
 };
 
-export default async function OrganizationBilling(props: OrganizationBillingProps) {
+export default async function OrganizationBillingSuccess(props: OrganizationBillingSuccessProps) {
   const { organizationUuid } = await props.params;
 
   const supabase = await createClient();
@@ -21,5 +20,5 @@ export default async function OrganizationBilling(props: OrganizationBillingProp
     return notFound();
   }
 
-  return <OrganizationBillingPage organization={organization} />;
+  return <OrganizationBillingSuccessPage organization={organization} />;
 }

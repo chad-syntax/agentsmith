@@ -444,7 +444,10 @@ export type Database = {
           id: number
           invite_code: string
           name: string
+          seat_count: number
           stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          stripe_subscription_item_id: string | null
           updated_at: string
           uuid: string
         }
@@ -455,7 +458,10 @@ export type Database = {
           id?: number
           invite_code?: string
           name: string
+          seat_count?: number
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          stripe_subscription_item_id?: string | null
           updated_at?: string
           uuid?: string
         }
@@ -466,7 +472,10 @@ export type Database = {
           id?: number
           invite_code?: string
           name?: string
+          seat_count?: number
           stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          stripe_subscription_item_id?: string | null
           updated_at?: string
           uuid?: string
         }

@@ -20,6 +20,8 @@ export const routes = {
     editOrganization: (organizationUuid: string) => `/studio/organization/${organizationUuid}/edit`,
     organizationBilling: (organizationUuid: string) =>
       `/studio/organization/${organizationUuid}/billing`,
+    organizationBillingSuccess: (organizationUuid: string) =>
+      `/studio/organization/${organizationUuid}/billing/success`,
     project: (projectUuid: string) => `/studio/project/${projectUuid}`,
     editProject: (projectUuid: string) => `/studio/project/${projectUuid}/edit`,
     prompts: (projectUuid: string) => `/studio/project/${projectUuid}/prompts`,
@@ -78,14 +80,19 @@ export const routes = {
     github: 'https://github.com/chad-syntax/agentsmith',
     npm: 'https://www.npmjs.com/package/@agentsmith-app/sdk',
     stripe: {
-      checkout: {
-        proAlphaClub: isProd
-          ? 'https://buy.stripe.com/dRmfZi8M39K68y92566wE01?prefilled_promo_code=ALPHACLUB'
-          : 'https://buy.stripe.com/test_dRm7sN7Z39LTcII4EO53O01?prefilled_promo_code=ALPHACLUB',
-        hobby: isProd ? 'https://buy.stripe.com/...' : 'https://buy.stripe.com/test_...',
-        pro: isProd ? 'https://buy.stripe.com/...' : 'https://buy.stripe.com/test_...',
-      },
+      checkout: (organizationUuid: string, stripePriceId: string, seats?: number) =>
+        `/stripe/checkout?organizationUuid=${organizationUuid}&stripePriceId=${stripePriceId}${seats ? `&seats=${seats}` : ''}`,
+      portal: (organizationUuid: string) => `/stripe/portal?organizationUuid=${organizationUuid}`,
     },
+    // stripe: {
+    //   checkout: {
+    //     proAlphaClub: isProd
+    //       ? 'https://buy.stripe.com/dRmfZi8M39K68y92566wE01?prefilled_promo_code=ALPHACLUB'
+    //       : 'https://buy.stripe.com/test_dRm7sN7Z39LTcII4EO53O01?prefilled_promo_code=ALPHACLUB',
+    //     hobby: isProd ? 'https://buy.stripe.com/...' : 'https://buy.stripe.com/test_...',
+    //     pro: isProd ? 'https://buy.stripe.com/...' : 'https://buy.stripe.com/test_...',
+    //   },
+    // },
   },
   emails: {
     enterprise: 'mailto:enterprise@agentsmith.app',

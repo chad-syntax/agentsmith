@@ -10,7 +10,7 @@ with user_ids as (
 ),
 -- Insert one organization per tier
 orgs as (
-    insert into organizations (name, created_by, agentsmith_tier_id)
+    insert into organizations (name, created_by, agentsmith_tier_id, seat_count)
     select
         t.name || ' Organization',
         (select id from user_ids where email = 
@@ -21,7 +21,13 @@ orgs as (
                 when t.tier = 'HOBBY' then 'hobby_admin@example.com'
             end
         ),
-        t.id
+        t.id,
+        case
+            when t.tier = 'FREE' then 1
+            when t.tier = 'HOBBY' then 3
+            when t.tier = 'PRO' then 10
+            when t.tier = 'ENTERPRISE' then 1000
+        end
     from agentsmith_tiers t
     returning id, name
 )

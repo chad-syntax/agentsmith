@@ -297,7 +297,7 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 [functions.stripe-webhook]
 enabled = true
 verify_jwt = false
-import_map = "./functions/stripe-webhook/deno.json"
+import_map = "./functions/import_map.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
 entrypoint = "./functions/stripe-webhook/index.ts"
