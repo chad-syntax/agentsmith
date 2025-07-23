@@ -21,6 +21,13 @@ create table if not exists agentsmith_tiers (
 create index on agentsmith_tiers(tier);
 create index on agentsmith_tiers(stripe_product_id);
 
+insert into agentsmith_tiers (tier, name, prompt_limit, user_limit, project_limit, llm_logs_limit, llm_logs_retention_days, metrics_page_access)
+values
+  ('FREE', 'Free', 5, 1, 1, 1000, 7, false),
+  ('HOBBY', 'Hobby', 100, 3, 3, 30000, 90, true),
+  ('PRO', 'Pro', 9999, 9999, 10, 100000, 365, true),
+  ('ENTERPRISE', 'Enterprise', 9999, 9999, 100, 1000000, 999999, true);
+
 -- Add the 'agentsmith_tier_id' column referencing agentsmith_tiers(id)
 alter table organizations
     add column if not exists agentsmith_tier_id bigint references agentsmith_tiers(id) not null default 1,
@@ -33,13 +40,6 @@ create index on organizations(agentsmith_tier_id);
 create index on organizations(stripe_customer_id);
 create index on organizations(stripe_subscription_id);
 create index on organizations(stripe_subscription_item_id);
-
-insert into agentsmith_tiers (tier, name, prompt_limit, user_limit, project_limit, llm_logs_limit, llm_logs_retention_days, metrics_page_access)
-values
-  ('FREE', 'Free', 5, 1, 1, 1000, 7, false),
-  ('HOBBY', 'Hobby', 100, 3, 3, 30000, 90, true),
-  ('PRO', 'Pro', 9999, 9999, 10, 100000, 365, true),
-  ('ENTERPRISE', 'Enterprise', 9999, 9999, 100, 1000000, 999999, true);
 
 -- add or update RLS policies to enforce the new constraints
 
