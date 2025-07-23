@@ -15,12 +15,12 @@ const sandboxPriceIds = {
 
 const prodPriceIds = {
   HOBBY: {
-    MONTHLY: '',
-    YEARLY: '',
+    MONTHLY: 'price_1Ro2GNJI5Oiq6NLc5WI5DIn9',
+    YEARLY: 'price_1Ro2HYJI5Oiq6NLc3Ma9SLXp',
   },
   PRO: {
-    MONTHLY: '',
-    YEARLY: '',
+    MONTHLY: 'price_1Ro2KlJI5Oiq6NLcZAZgvI9m',
+    YEARLY: 'price_1Ro2KlJI5Oiq6NLcxI8tBQM0',
   },
 } as const;
 
@@ -29,7 +29,7 @@ const sandboxCouponCodes = {
 } as const;
 
 const prodCouponCodes = {
-  AGENTSMITH50: '',
+  AGENTSMITH50: 'K4xZuanN',
 } as const;
 
 export const STRIPE_PRICE_IDS = isProd ? prodPriceIds : sandboxPriceIds;

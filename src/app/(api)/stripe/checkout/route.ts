@@ -56,8 +56,7 @@ const handler = async (req: NextRequest) => {
 
   const successUrl = new URL(routes.studio.organizationBillingSuccess(organizationUuid), req.url);
 
-  // should get this from url params via a pricing modal or something so it's more clear
-  // quantity == number of seats
+  // TODO: should get these price ids from the db instead of hardcoding them
   const maxQuantity =
     stripePriceId === STRIPE_PRICE_IDS.HOBBY.MONTHLY ||
     stripePriceId === STRIPE_PRICE_IDS.HOBBY.YEARLY
@@ -70,6 +69,7 @@ const handler = async (req: NextRequest) => {
     authUserId: authUser.id,
   };
 
+  // quantity == number of seats
   const quantity = seats !== null && !isNaN(Number(seats)) ? Number(seats) : 1;
 
   try {
