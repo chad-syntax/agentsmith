@@ -5,12 +5,13 @@ description: Learn how Agentsmith works
 
 ## Architecture
 
-Agentsmith is a platform that consists of four main components:
+Agentsmith is a platform that consists of five main components:
 
 1. **Agentsmith Studio** - A Next.js application that provides a visual interface for creating and managing prompts
-2. **Git Sync Engine** - A system that syncs prompts from the studio to a GitHub repository as files
-3. **Agentsmith SDK** - A TypeScript SDK for fetching and executing prompts from the file system (and/or studio)
-4. **OpenRouter** - All AI calls are made through OpenRouter to achieve maximum flexibility and cost-efficiency
+2. **Supabase** - A PostgreSQL database service that stores the prompts and other data
+3. **Git Sync Engine** - A system that syncs prompts from the studio to a GitHub repository as files
+4. **Agentsmith SDK** - A TypeScript SDK for fetching and executing prompts from the file system (and/or studio)
+5. **OpenRouter** - All AI calls are made through OpenRouter to achieve maximum flexibility and cost-efficiency
 
 ## OpenRouter
 

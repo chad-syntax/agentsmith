@@ -154,15 +154,10 @@ export const PricingSection = () => {
 
         <div className="mt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            Looking for a self-hosted option? Check out our{' '}
-            <a
-              href={routes.external.github}
-              className="text-primary hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              free Community Edition on GitHub
-            </a>
+            Looking for a self-hosted option? Check out our docs on{' '}
+            <Link href={routes.docs.selfHosting} className="text-primary hover:underline">
+              self hosting
+            </Link>
             .
           </p>
         </div>

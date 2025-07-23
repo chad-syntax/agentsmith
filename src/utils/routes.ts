@@ -12,6 +12,7 @@ export const routes = {
   },
   docs: {
     home: '/docs',
+    selfHosting: '/docs/self-hosting',
   },
   studio: {
     home: '/studio',

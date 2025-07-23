@@ -223,6 +223,7 @@ Configure the following repository permissions:
 - **Contents**: Read & Write
 - **Metadata**: Read-only
 - **Pull requests**: Read & Write
+- **Issues**: Read & Write
 - **Account Permissions**: Read-only (for email address)
 
 ### 3. Subscribe to Events
