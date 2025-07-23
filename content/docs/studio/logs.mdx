@@ -1,6 +1,23 @@
 ---
-title: Logs Page
+title: Logs
 description: An overview of the Logs page in the Agentsmith Studio.
 ---
 
-This page is currently a placeholder. Content coming soon!
+The Logs page provides a detailed, real-time stream of all your LLM API calls made through the Agentsmith SDK. It's an essential tool for debugging and monitoring your application's interactions with large language models.
+
+![Logs Page Screenshot](/studio-screenshots/logs.png)
+
+Key features of the Logs page include:
+
+- **Comprehensive Filtering**: You can filter logs by a variety of criteria to quickly find what you're looking for:
+
+  - **Status**: Filter by `success` or `failure`.
+  - **Source**: Filter by the source of the API call (e.g., `API`, `Test`).
+  - **Prompt**: Filter by a specific prompt.
+  - **Model**: Filter by the LLM used.
+  - **Provider**: Filter by the LLM provider (e.g., `OpenAI`, `Anthropic`).
+  - **Date Range**: Select a custom date range.
+
+- **Detailed Log Entries**: Each log entry provides a wealth of information, including the date, status, source, prompt name and version, model, provider, and the duration of the API call. You can click on any log entry to view the full details of the request and response.
+
+- **Data Export**: Download the filtered log data as a CSV file for offline analysis or reporting.
