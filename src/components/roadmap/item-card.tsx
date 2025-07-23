@@ -46,7 +46,7 @@ export const RoadmapItemCard = (props: RoadmapItemCardProps) => {
         <div className="text-xs text-muted-foreground">
           {item.created_at ? (
             <>
-              Added <DisplayTime dateTime={item.created_at} />
+              Added <DisplayTime formatString="MMM d, yyyy" dateTime={item.created_at} />
             </>
           ) : (
             'Date not available'

@@ -33,7 +33,7 @@ export const OnboardingChecklist = () => {
   const handleConnectOpenrouter = async () => {
     const response = await connectOpenrouter(selectedOrganizationUuid);
 
-    if (!response.success) {
+    if (response && !response.success) {
       toast.error('Failed to connect OpenRouter, please try again or contact support.');
       return;
     }

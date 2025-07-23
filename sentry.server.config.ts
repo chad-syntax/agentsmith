@@ -12,4 +12,7 @@ Sentry.init({
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
+
+  // only enable on actual environments, not local
+  enabled: Boolean(process.env.NEXT_PUBLIC_VERCEL_ENV || process.env.VERCEL_ENV),
 });

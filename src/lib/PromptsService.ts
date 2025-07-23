@@ -1106,6 +1106,7 @@ export class PromptsService extends AgentsmithSupabaseService {
     });
 
     if (!logEntry) {
+      // TODO: this should not break the whole thing, should create an alert instead and continue
       throw new Error('Failed to create log entry, please check your plan limits and try again.');
     }
 

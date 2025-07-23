@@ -15,6 +15,7 @@ import { routes } from '@/utils/routes';
 import { Notebook, Plus } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 type SettingsPageProps = {
   organization: NonNullable<GetOrganizationDataResult>;
@@ -29,6 +30,15 @@ export const SettingsPage = (props: SettingsPageProps) => {
 
   const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(false);
   const [targetRepositoryId, setTargetRepositoryId] = useState<number | undefined>(undefined);
+
+  const handleConnectOpenrouter = async () => {
+    const response = await connectOpenrouter(organization.uuid);
+
+    if (response && !response.success) {
+      toast.error('Failed to connect OpenRouter, please try again or contact support.');
+      return;
+    }
+  };
 
   return (
     <div className="p-4 flex flex-col gap-8">
@@ -156,7 +166,7 @@ export const SettingsPage = (props: SettingsPageProps) => {
             </a>
           </Button>
         ) : (
-          <Button onClick={() => connectOpenrouter(organization.uuid)}>Connect Openrouter</Button>
+          <Button onClick={handleConnectOpenrouter}>Connect Openrouter</Button>
         )}
       </div>
       <div>
