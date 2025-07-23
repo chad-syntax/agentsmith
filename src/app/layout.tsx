@@ -15,8 +15,9 @@ const defaultUrl =
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: 'Agentsmith - AI Agent Development Platform',
-  description: 'Agentsmith is the fastest way to build and iterate on LLM-powered apps',
+  title: 'Agentsmith - Open Source Prompt CMS',
+  description:
+    'Agentsmith is the ultimate Prompt CMS. Build, refine, and ship AI agents faster than the other guys.',
 };
 
 const ibmPlexMono = IBM_Plex_Mono({

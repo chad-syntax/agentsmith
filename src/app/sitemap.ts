@@ -1,8 +1,20 @@
+import { source } from '@/lib/docs/source';
 import type { MetadataRoute } from 'next';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agentsmith.app';
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const docsPages = source.getPages();
+  const docsSitemap = docsPages.map(
+    (page) =>
+      ({
+        url: `${baseUrl}${page.url}`,
+        lastModified: new Date(),
+        changeFrequency: 'monthly',
+        priority: 0.8,
+      }) as const,
+  );
+
   return [
     {
       url: `${baseUrl}`,
@@ -34,5 +46,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'yearly',
       priority: 0.5,
     },
+    ...docsSitemap,
   ];
 }

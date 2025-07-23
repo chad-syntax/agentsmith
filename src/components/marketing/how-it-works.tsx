@@ -37,8 +37,8 @@ export const HowItWorksSection = () => {
           <h3 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">
             How It Works
           </h3>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Get started with Agentsmith in three simple steps
+          <p className="text-xl text-muted-foreground mx-auto">
+            Start using Agentsmith to streamline your prompt authoring and deployment.
           </p>
         </div>
 

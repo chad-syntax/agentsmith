@@ -1,0 +1,15 @@
+{
+  "title": "Studio",
+  "pages": [
+    "project",
+    "prompts",
+    "logs",
+    "metrics",
+    "sync-events",
+    "globals",
+    "account",
+    "organization",
+    "alerts",
+    "settings"
+  ]
+}

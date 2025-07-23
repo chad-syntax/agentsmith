@@ -1,0 +1,229 @@
+---
+title: SDK API Reference
+description: Comprehensive API reference for the Agentsmith SDK.
+---
+
+import { TypeTable } from 'fumadocs-ui/components/type-table';
+
+This page provides a detailed reference for all the classes, methods, and options available in the Agentsmith SDK.
+
+## `AgentsmithClient`
+
+The main client for interacting with the Agentsmith API.
+
+### Constructor
+
+`new AgentsmithClient<T>(apiKey, projectId, options)`
+
+**Parameters:**
+
+- `apiKey: string` (required)
+- `projectId: string` (required)
+- `options: AgentsmithClientOptions` (optional)
+
+### `AgentsmithClientOptions`
+
+<TypeTable
+  type={{
+    agentsmithApiRoot: {
+      description:
+        'The root URL for the Agentsmith API. Can be overridden for self-hosting purposes.',
+      type: 'string',
+      default: 'https://agentsmith.app',
+    },
+    supabaseUrl: {
+      description:
+        'The Supabase URL for your project. Can be overridden for self-hosting purposes.',
+      type: 'string',
+      default: '',
+    },
+    supabaseAnonKey: {
+      description:
+        'The Supabase anonymous key for your project. Can be overridden for self-hosting purposes.',
+      type: 'string',
+      default: '',
+    },
+    agentsmithDirectory: {
+      description:
+        'Path to your agentsmith folder. Note: The Studio only writes to the root `agentsmith` folder. Allowing a custom path for the Studio to write to is planned in future updates.',
+      type: 'string',
+      default: './agentsmith',
+    },
+    queueOptions: {
+      description:
+        'We use p-queue to queue up saving logs in the background. You can limit the concurrency and other options. See [p-queue docs](https://www.npmjs.com/package/p-queue) for details.',
+      type: 'PQueueOptions',
+    },
+    fetchStrategy: {
+      description:
+        "Controls how prompts and globals are fetched. Can be 'remote-fallback', 'fs-fallback', 'remote-only', or 'fs-only'.",
+      type: 'FetchStrategy',
+      default: 'remote-fallback',
+    },
+    logger: {
+      description:
+        'Specify a `logger` to have the Agentsmith SDK output logs how you want. If not provided, a default console logger is created based on `logLevel`.',
+      type: 'Logger',
+    },
+    logLevel: {
+      description:
+        "Specify a `logLevel` to have the Agentsmith SDK output logs how you want. Can be 'debug', 'info', 'warn', 'error', or 'silent'.",
+      type: 'LogLevel',
+      default: 'warn',
+    },
+    completionLogsDirectory: {
+      description:
+        'Specify a log directory to save all completions to your local file system for easy debugging.',
+      type: 'string | null',
+    },
+    completionLogDirTransformer: {
+      description:
+        'Specify a log directory transformer to use parameters from an execution to structure your log directory for easier navigation.',
+      type: '(options: object) => string',
+    },
+  }}
+/>
+
+### Methods
+
+#### `getPrompt(arg)`
+
+Fetches a prompt from Agentsmith.
+
+- `arg: PromptIdentifier<Agency>` (required): The identifier for the prompt, e.g., `'my-prompt'` or `'my-prompt@1.2.3'`.
+
+**Returns:** `Promise<Prompt<Agency, PromptArg>>`
+
+#### `shutdown()`
+
+Gracefully shuts down the client, ensuring all background operations complete. This is crucial for allowing scripts and serverless functions to exit cleanly.
+
+---
+
+## `Prompt`
+
+Represents a single, versioned prompt fetched from Agentsmith. It is not constructed directly, but rather returned from `agentsmithClient.getPrompt`.
+
+### Methods
+
+#### `compile(variables, options)`
+
+Compiles the prompt with the given variables.
+
+##### `CompileOptions`
+
+<TypeTable
+  type={{
+    globals: {
+      description: 'Override global context variables during compilation.',
+      type: "Partial<Agency['globals']>",
+    },
+  }}
+/>
+
+##### `CompileResult`
+
+<TypeTable
+  type={{
+    compiledPrompt: {
+      description: 'The compiled prompt content.',
+      type: 'string',
+    },
+    finalVariables: {
+      description: 'The final variables used for compilation, including defaults and globals.',
+      type: 'any',
+    },
+  }}
+/>
+
+#### `execute(variables, options)`
+
+Executes the prompt with the given variables. The `execute` method returns an object with different fields depending on whether streaming is enabled.
+
+##### `ExecuteOptions`
+
+<TypeTable
+  type={{
+    globals: {
+      description: 'Override global context variables during execution.',
+      type: "Partial<Agency['globals']>",
+    },
+    config: {
+      description:
+        "Override the prompt's model configuration. See [OpenRouter's API docs](https://openrouter.ai/docs/api-reference/overview).",
+      type: 'CompletionConfig',
+    },
+  }}
+/>
+
+##### `ExecuteNonStreamingResult`
+
+<TypeTable
+  type={{
+    content: {
+      description:
+        'The AI response content, equivalent to `completion.choices[0].message.content`.',
+      type: 'string | null',
+    },
+    completion: {
+      description: 'The full OpenRouter completion object.',
+      type: 'OpenrouterNonStreamingResponse',
+    },
+    response: {
+      description: 'The raw HTTP Response object.',
+      type: 'Response',
+    },
+    logUuid: {
+      description: 'The UUID of the log entry created for this execution.',
+      type: 'string',
+    },
+    compiledPrompt: {
+      description: 'The compiled prompt content sent to the LLM.',
+      type: 'string',
+    },
+    finalVariables: {
+      description: 'The final variables used for compilation, including defaults and globals.',
+      type: 'any',
+    },
+  }}
+/>
+
+##### `ExecuteStreamingResult`
+
+<TypeTable
+  type={{
+    tokens: {
+      description: 'An async generator that yields content tokens as strings.',
+      type: 'AsyncGenerator<string | undefined, void, unknown>',
+    },
+    toolCalls: {
+      description: 'An async generator that yields tool calls as they arrive.',
+      type: 'AsyncGenerator<ToolCall, void, unknown>',
+    },
+    stream: {
+      description: 'The raw SSE stream as an AsyncIterable of parsed events for more control.',
+      type: 'ReadableStream<Uint8Array>',
+    },
+    completion: {
+      description:
+        'A promise that resolves with the full completion object once the stream is finished.',
+      type: 'Promise<OpenrouterNonStreamingResponse>',
+    },
+    response: {
+      description: 'The raw HTTP Response object.',
+      type: 'Response',
+    },
+    logUuid: {
+      description: 'The UUID of the log entry created for this execution.',
+      type: 'string',
+    },
+    compiledPrompt: {
+      description: 'The compiled prompt content sent to the LLM.',
+      type: 'string',
+    },
+    finalVariables: {
+      description: 'The final variables used for compilation, including defaults and globals.',
+      type: 'any',
+    },
+  }}
+/>

@@ -55,6 +55,14 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const nextConfig: NextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: '/docs/:path*.mdx',
+        destination: '/llms.mdx/:path*',
+      },
+    ];
+  },
   async headers() {
     const cspHeader = [
       `default-src ${self}`,

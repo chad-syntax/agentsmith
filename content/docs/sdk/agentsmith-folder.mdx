@@ -1,0 +1,41 @@
+---
+title: The Agentsmith Folder
+description: Understand the files and structure of the agentsmith directory in your repository.
+---
+
+When you sync your prompts from the Agentsmith Studio to your GitHub repository, a folder named `agentsmith` is created at the root of your project. This folder is the local source of truth for your prompts and their types.
+
+### Directory Structure
+
+The `agentsmith` directory has a specific structure that the SDK relies on to find and interpret your prompts.
+
+```
+agentsmith/
+├── agentsmith.types.ts   # Auto-generated TypeScript types
+├── globals.json          # Global variables for all prompts
+└── prompts/
+    └── hello-world/      # A folder for each prompt slug
+        ├── 0.0.1/
+        │   ├── content.j2        # The Jinja2 template content
+        │   ├── variables.json    # Variable definitions
+        │   └── version.json      # Version metadata
+        ├── 0.0.2/
+        │   └── ...
+        └── prompt.json           # Core prompt metadata
+```
+
+### Key Files Explained
+
+- **`agentsmith.types.ts`**: This is one of the most important files. It's auto-generated every time you sync, and it contains the TypeScript types for your entire collection of prompts (the `Agency` type). This file is what powers the SDK's type-safety and autocompletion in your IDE. You should not edit this file manually.
+
+- **`globals.json`**: This file stores the key-value pairs for your **Global Variables**, which are accessible in all prompts via `{{ global.variable_name }}`.
+
+- **`prompts/[slug]/prompt.json`**: Contains metadata about a specific prompt, such as its name, description, and UUID.
+
+- **`prompts/[slug]/[version]/content.j2`**: The raw Jinja2 template for a specific version of a prompt.
+
+- **`prompts/[slug]/[version]/variables.json`**: Defines the variables (name, type, default value) that the `content.j2` template expects.
+
+- **`prompts/[slug]/[version]/version.json`**: Contains metadata for a specific version, including its publication status (`DRAFT` or `PUBLISHED`) and the model configuration.
+
+By understanding this structure, you can confidently work with your prompts as version-controlled artifacts, and even make changes directly in your repository before syncing them back to the Studio.

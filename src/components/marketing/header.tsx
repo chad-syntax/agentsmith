@@ -7,24 +7,16 @@ import { routes } from '@/utils/routes';
 import { usePostHog } from 'posthog-js/react';
 import { useEffect, useState } from 'react';
 import { cn } from '@/utils/shadcn';
+import { useIsLoggedIn } from '@/hooks/use-is-logged-in';
 
 export const Header = () => {
   const posthog = usePostHog();
 
   const [scrolledDown, setScrolledDown] = useState(false);
+  const { isLoggedIn, isLoading } = useIsLoggedIn();
 
   const handleStudioClick = () => {
     posthog.capture('header_studio_cta_clicked');
-  };
-
-  const handleAccessClick = () => {
-    posthog.capture('header_early_access_cta_clicked');
-    const $button = document.getElementById('join-alpha-club');
-    if ($button) {
-      setTimeout(() => {
-        $button.focus();
-      }, 1);
-    }
   };
 
   useEffect(() => {
@@ -80,17 +72,15 @@ export const Header = () => {
             <ThemeSwitcher />
             <Button
               onClick={handleStudioClick}
-              variant="outline"
-              className="hidden md:inline-flex"
-              asChild
+              variant={isLoading || isLoggedIn ? 'outline' : 'default'}
+              disabled={isLoading}
             >
-              <Link href={routes.studio.home}>Studio</Link>
-            </Button>
-            <Button className="hidden xs:inline-flex" onClick={handleAccessClick} asChild>
-              <a href="/#pricing">Early Access</a>
-            </Button>
-            <Button className="inline-flex xs:hidden" onClick={handleAccessClick} asChild>
-              <a href="/#pricing">Alpha</a>
+              <Link href={isLoading || isLoggedIn ? routes.studio.home : routes.auth.signIn}>
+                <span className="hidden xs:inline-flex">
+                  {isLoading || !isLoggedIn ? 'Get Started' : 'Studio'}
+                </span>
+                <span className="xs:hidden">{isLoading || !isLoggedIn ? 'Start' : 'Studio'}</span>
+              </Link>
             </Button>
           </div>
         </div>

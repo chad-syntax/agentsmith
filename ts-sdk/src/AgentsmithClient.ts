@@ -31,7 +31,7 @@ type CompletionLogDirTransformer = (options: {
   rawOutput: any;
 }) => string;
 
-type AgentsmithClientOptions = {
+export type AgentsmithClientOptions = {
   agentsmithApiRoot?: string;
   supabaseUrl?: string;
   supabaseAnonKey?: string;

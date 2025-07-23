@@ -13,7 +13,6 @@ import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
 import { Switch } from '../ui/switch';
 import { CheckCircle2, Loader2, Minus, Plus } from 'lucide-react';
 import { routes } from '@/utils/routes';
-import Link from 'next/link';
 
 type UpgradeOrganizationModalProps = {
   open: boolean;

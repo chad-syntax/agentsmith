@@ -1,0 +1,67 @@
+---
+title: Basic Usage
+description: Learn the essential steps to get started with the Agentsmith SDK.
+---
+
+This guide covers the fundamental workflow for using the Agentsmith SDK: installing, initializing, fetching, and executing prompts.
+
+### 1. Installation
+
+First, add the SDK to your project:
+
+```sh
+npm install @agentsmith-app/sdk
+```
+
+### 2. Initialize the Client
+
+The `AgentsmithClient` is the main entry point to the SDK. You'll need your Project ID and an SDK API Key, which you can find in your project settings in the Agentsmith Studio.
+
+```ts
+import { AgentsmithClient } from '@agentsmith-app/sdk';
+// The 'Agency' type is generated for you when you sync your prompts.
+import { Agency } from './agentsmith/agentsmith.types';
+
+const client = new AgentsmithClient<Agency>(
+  process.env.AGENTSMI_API_KEY!,
+  process.env.AGENTSMI_PROJECT_ID!,
+);
+```
+
+The `Agency` type provides full TypeScript autocompletion and type-checking for your prompts and their variables. It's generated automatically when you sync your prompts to your repository. Learn more about it in the [Agentsmith Folder](/docs/sdk/agentsmith-folder) guide.
+
+### 3. Fetch a Prompt
+
+You can retrieve any prompt from your project using its slug. By default, this will fetch the version tagged as `latest`.
+
+```ts
+const helloWorldPrompt = await client.getPrompt('hello-world');
+
+// You can also fetch a specific version
+const helloWorldV1 = await client.getPrompt('hello-world@1.0.0');
+```
+
+### 4. Execute a Prompt
+
+The `.execute()` method compiles your prompt with the provided variables and sends it to the language model. The SDK enforces that you provide the correct variables defined in the Studio.
+
+```ts
+const { content, logUuid } = await helloWorldPrompt.execute({
+  // Type-safe variables based on your prompt's definition
+  firstName: 'John',
+  lastName: 'Doe',
+});
+
+console.log('AI Response:', content);
+console.log('Execution Log ID:', logUuid); // Useful for debugging in the Studio.
+```
+
+### 5. Graceful Shutdown
+
+It's important to shut down the client when your application or script is finished. This ensures all background processes, like sending logs, complete successfully.
+
+```ts
+await client.shutdown();
+```
+
+This is especially critical in serverless functions or short-lived scripts to prevent them from hanging.

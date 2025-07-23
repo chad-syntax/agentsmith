@@ -1,0 +1,13 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "quick-start",
+    "---",
+    "prompt-authoring",
+    "syncing",
+    "core-concepts",
+    "studio",
+    "sdk"
+  ]
+}

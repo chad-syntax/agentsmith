@@ -72,16 +72,16 @@ export const OrganizationBillingPage = (props: OrganizationBillingPageProps) => 
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-xs text-muted-foreground">User Limit</span>
+              <span className="text-xs text-muted-foreground">Seats</span>
+              <span className="font-mono">{organization.seat_count}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground">Max Seats</span>
               <span className="font-mono">
                 {organization.agentsmith_tiers.user_limit === 9999
                   ? 'Unlimited'
                   : organization.agentsmith_tiers.user_limit}
               </span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs text-muted-foreground">Seat Limit</span>
-              <span className="font-mono">{organization.seat_count}</span>
             </div>
             <div className="flex flex-col">
               <span className="text-xs text-muted-foreground">Project Limit</span>
