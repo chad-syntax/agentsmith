@@ -134,9 +134,9 @@ export const PricingSection = () => {
     <section id="pricing" className="bg-background scroll-mt-40">
       <div className="container px-4 md:px-6 mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">
+          <h3 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">
             Pricing Plans
-          </h2>
+          </h3>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Choose the plan that&apos;s right for you and your team
           </p>

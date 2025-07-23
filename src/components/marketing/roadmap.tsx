@@ -15,9 +15,9 @@ export const RoadmapSection = (props: RoadmapSectionProps) => {
     <section id="roadmap" className="bg-background scroll-mt-40">
       <div className="container px-4 md:px-6 relative mx-auto">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">
+          <h3 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">
             Roadmap
-          </h2>
+          </h3>
           <P>See what we're working on, vote for features, and suggest new ideas.</P>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">

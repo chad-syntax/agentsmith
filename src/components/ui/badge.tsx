@@ -28,7 +28,7 @@ const badgeVariants = cva(
         SDK: 'bg-yellow-600/10 text-yellow-600 border-yellow-600/20',
         AGENTSMITH_EVAL: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
         AGENTSMITH_AI_AUTHOR: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-        FREE: 'bg-gray-500/10 text-gray-500 border-gray-500/20',
+        FREE: 'bg-gray-500/10 text-gray-700 border-gray-500/40 dark:bg-gray-700/30 dark:text-white dark:border-gray-400/60',
         HOBBY: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
         PRO: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
         ENTERPRISE: 'bg-red-500/10 text-red-400 border-red-500/20',

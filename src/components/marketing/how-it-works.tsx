@@ -34,9 +34,9 @@ export const HowItWorksSection = () => {
     <section id="how-it-works" className="bg-background scroll-mt-40">
       <div className="container px-4 md:px-6 relative mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">
+          <h3 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">
             How It Works
-          </h2>
+          </h3>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Get started with Agentsmith in three simple steps
           </p>

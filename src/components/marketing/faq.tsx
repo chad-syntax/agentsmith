@@ -10,6 +10,12 @@ import { usePostHog } from 'posthog-js/react';
 
 const faqData = [
   {
+    value: 'prompt-cms',
+    trigger: 'What is a Prompt CMS?',
+    content:
+      'A Prompt CMS (Content Management System) is a specialized platform for creating, organizing, versioning, and managing AI prompts at scale. Think of it like a Git repository for your prompts, but with additional features like testing, collaboration, and deployment tools. It helps teams maintain consistency, track changes, and ensure quality across all their AI applications.',
+  },
+  {
     value: 'improve-ai-development',
     trigger: 'How does Agentsmith improve my AI agent development process?',
     content:
@@ -25,7 +31,7 @@ const faqData = [
     value: 'integration-workflow',
     trigger: 'How does Agentsmith fit into my existing development workflow?',
     content:
-      'Agentsmith integrates smoothly with your current setup. You can synchronize prompt versions directly to your Git repository via Pull Requests, ensuring version control and team collaboration. Our typesafe SDKs for TypeScript and Python allow for confident integration into your applications.',
+      'Agentsmith integrates smoothly with your current setup. You can synchronize prompt versions directly to your Git repository via Pull Requests, ensuring total control by your engineering team. You have the option to use our SDKs to execute prompts, just compile the prompts and execute them yourself, or import the jinja files and compile the prompts yourself.',
   },
   {
     value: 'model-flexibility',
@@ -37,7 +43,7 @@ const faqData = [
     value: 'plans-and-access',
     trigger: 'What are the available plans and how can I get access?',
     content:
-      'We offer a Pro plan at $599/year (currently 50% off during our alpha phase) for advanced features and priority support. A free Community plan is also available for open-source contributors and hobbyists. Join our waitlist to be notified about cloud availability and get early access!',
+      'We offer multiple plans to suit different needs: a Free plan for personal projects, a Hobby plan at $9.99/month or $99.99/year (50% off during alpha), a Pro plan at $24.99/month or $249.99/year (50% off during alpha) for professional teams, and an Enterprise plan for large-scale applications. All plans include our core features with varying limits on prompts, users, projects, and logs.',
   },
   {
     value: 'open-source-benefits',

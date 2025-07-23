@@ -120,10 +120,10 @@ export const HeroSection = () => {
                 </div>
               </h1>
               <div id="join-waitlist" />
-              <p className="text-muted-foreground md:text-xl pt-2">
-                Author templatized prompts, refine your AI agents, and seamlessly sync everything to
-                your codebase with strict type-safety and deploy with confidence.
-              </p>
+              <h2 className="text-muted-foreground md:text-xl pt-2">
+                Unleash your prompt engineers. Unshackle your developers. Agentsmith is the ultimate
+                Prompt CMS. Build, refine, and ship AI agents faster than the other guys.
+              </h2>
             </div>
             {/* Replace form with BrevoEmailSubscribe */}
             <BrevoEmailSubscribe trackingLocation="hero" form="agentsmithInitialLanding" />
