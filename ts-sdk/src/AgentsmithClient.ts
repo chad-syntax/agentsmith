@@ -14,7 +14,7 @@ const defaultAgentsmithDirectory = path.join(process.cwd(), 'agentsmith');
 
 export type FetchStrategy = 'fs-only' | 'remote-fallback' | 'remote-only' | 'fs-fallback';
 type CompletionLogDirTransformer = (options: {
-  logUuid: string;
+  logUuid?: string;
   prompt: {
     name: string;
     slug: string;
@@ -53,6 +53,7 @@ export class AgentsmithClient<Agency extends GenericAgency> {
   public fetchStrategy: FetchStrategy;
   public logger: Logger;
   public completionLogsDirectory: string | null;
+  public organizationUuid: string | null = null;
   public completionLogDirTransformer: CompletionLogDirTransformer | null;
 
   private sdkApiKey: string;
@@ -247,7 +248,7 @@ export class AgentsmithClient<Agency extends GenericAgency> {
     try {
       const { data, error } = await this.supabase
         .from('global_contexts')
-        .select('*, projects(uuid)')
+        .select('*, projects(uuid, organizations(uuid))')
         .eq('projects.uuid', this.projectUuid)
         .abortSignal(this.abortController.signal)
         .single();
@@ -263,6 +264,7 @@ export class AgentsmithClient<Agency extends GenericAgency> {
       }
 
       this.projectGlobals = data.content as Agency['globals'];
+      this.organizationUuid = data.projects.organizations.uuid;
 
       return this.projectGlobals;
     } catch (err) {

@@ -73,8 +73,9 @@ export const ConnectProjectModal = (props: ConnectProjectModalProps) => {
 
   useEffect(() => {
     if (initialProjectRepositories) return;
+    if (!selectedOrganization) return;
     const supabase = createClient();
-    // const { services } = new AgentsmithServices({ supabase });
+
     const organizationsService = new OrganizationsService({ supabase });
     const initialize = async () => {
       const projectRepositories = await organizationsService.getProjectRepositoriesForOrganization(

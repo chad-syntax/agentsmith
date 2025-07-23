@@ -177,6 +177,32 @@ export class ProjectsService extends AgentsmithSupabaseService {
       throw new Error('Error updating project globals sha');
     }
   }
+
+  async isUnderPromptLimit(projectId: number) {
+    const { data, error } = await this.supabase.rpc('is_under_prompt_limit', {
+      arg_project_id: projectId,
+    });
+
+    if (error) {
+      this.logger.error(error, 'Error checking prompt limit:');
+      throw new Error('Error checking prompt limit');
+    }
+
+    return data;
+  }
+
+  async isUnderLLMLogsLimit(projectId: number) {
+    const { data, error } = await this.supabase.rpc('is_under_llm_logs_limit', {
+      arg_project_id: projectId,
+    });
+
+    if (error) {
+      this.logger.error(error, 'Error checking llm logs limit:');
+      throw new Error('Error checking llm logs limit');
+    }
+
+    return data;
+  }
 }
 
 export type GetProjectDataResult = Awaited<

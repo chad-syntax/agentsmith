@@ -111,6 +111,15 @@ export class UsersService extends AgentsmithSupabaseService {
               id,
               key
             ),
+            agentsmith_tiers (
+              tier,
+              name,
+              prompt_limit,
+              user_limit,
+              project_limit,
+              llm_logs_limit,
+              metrics_page_access
+            ),
             projects (
               id,
               uuid,
@@ -185,11 +194,8 @@ export class UsersService extends AgentsmithSupabaseService {
         const promptCreated = projects?.[0]?.prompts?.length > 0;
         const promptTested = projects?.[0]?.llm_logs?.length > 0;
 
-        const organizationRenamed = data.name !== 'Default Organization';
-
         return {
           organizationUuid: orgUser.organizations.uuid,
-          organizationRenamed,
           appInstalled,
           repoConnected,
           openrouterConnected,
@@ -216,5 +222,4 @@ export type GetOnboardingChecklistResult = ({
   promptCreated: boolean;
   promptTested: boolean;
   repoSynced: boolean;
-  organizationRenamed: boolean;
 } | null)[];

@@ -124,11 +124,11 @@ $$;
 
 -- update organization tiers to match test requirements
 update organizations
-set tier = 'FREE'
+set agentsmith_tier_id = (select id from agentsmith_tiers where name = 'Free')
 where id = get_free_user_org_id();
 
 update organizations
-set tier = 'PRO'
+set agentsmith_tier_id = (select id from agentsmith_tiers where name = 'Pro')
 where id = get_pro_admin_org_id();
 
 -- ensure pro_member is part of pro_admin's organization with member role

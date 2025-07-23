@@ -64,14 +64,14 @@ type PromptConstructorOptions<
 };
 
 type LogCompletionToFileOptions = {
-  logUuid: string;
+  logUuid?: string;
   rawInput: any;
   rawOutput: any;
   variables: any;
 };
 
 export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdentifier<Agency>> {
-  private client: AgentsmithClient<Agency>;
+  public client: AgentsmithClient<Agency>;
   private slug: string;
   private argVersion: string;
   public meta!: {
@@ -578,18 +578,27 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     });
 
     if (error) {
-      throw error;
+      console.error(error);
+      console.error(
+        'Failed to create LLM log entry in Agentsmith, but continuing execution without logging.',
+      );
     }
 
     const { log_uuid, organization_uuid } = data as {
-      log_uuid: string;
-      organization_uuid: string;
+      log_uuid?: string;
+      organization_uuid?: string;
     };
+
+    const organizationUuid = organization_uuid ?? this.client.organizationUuid;
+
+    if (!organizationUuid) {
+      throw new Error('No organization UUID found, cannot fetch OpenRouter API key');
+    }
 
     try {
       const { value: openrouterApiKey, error } =
         await organizationsService.getOrganizationKeySecret(
-          organization_uuid,
+          organizationUuid,
           ORGANIZATION_KEYS.OPENROUTER_API_KEY,
         );
 
@@ -687,7 +696,9 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
             rawOutput: fullCompletion,
             variables: finalVariables,
           });
-          await llmLogsService.updateLogWithCompletion(log_uuid, fullCompletion as Json);
+          if (log_uuid) {
+            await llmLogsService.updateLogWithCompletion(log_uuid, fullCompletion as Json);
+          }
         });
 
         return {
@@ -707,7 +718,9 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       const content = completion?.choices?.[0]?.message?.content ?? null;
 
       this.client.queue.add(async () => {
-        await llmLogsService.updateLogWithCompletion(log_uuid, completion as Json);
+        if (log_uuid) {
+          await llmLogsService.updateLogWithCompletion(log_uuid, completion as Json);
+        }
       });
 
       this.logCompletionToFile({
@@ -728,9 +741,11 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     } catch (error) {
       this.client.logger.error(error);
 
-      await llmLogsService.updateLogWithCompletion(log_uuid, {
-        error: String(error),
-      });
+      if (log_uuid) {
+        await llmLogsService.updateLogWithCompletion(log_uuid, {
+          error: String(error),
+        });
+      }
 
       throw new Error('Error calling OpenRouter API');
     }

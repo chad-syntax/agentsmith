@@ -26,7 +26,12 @@ export async function GET(
 
   if (error) {
     logger.error(error);
-    return NextResponse.redirect(new URL(routes.error('Failed to join organization'), request.url));
+    return NextResponse.redirect(
+      new URL(
+        routes.error('Failed to join organization, please check your invite code and try again'),
+        request.url,
+      ),
+    );
   }
 
   return NextResponse.redirect(new URL(routes.studio.organization(organizationUuid), request.url));

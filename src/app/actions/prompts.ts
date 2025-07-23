@@ -45,6 +45,20 @@ export async function createPromptWithDraftVersion(
   const supabase = await createClient();
   const { services, logger } = new AgentsmithServices({ supabase });
 
+  const { data: isUnderPromptLimit, error } = await supabase.rpc('is_under_prompt_limit', {
+    arg_project_id: options.projectId,
+  });
+
+  if (error) {
+    return createErrorResponse(error.message);
+  }
+
+  if (!isUnderPromptLimit) {
+    return createErrorResponse(
+      'You have reached the maximum number of prompts for your tier, upgrade to create more prompts',
+    );
+  }
+
   try {
     const result = await services.prompts.createPromptWithDraftVersion(options);
     return createSuccessResponse(result, 'Prompt with draft version created successfully.');

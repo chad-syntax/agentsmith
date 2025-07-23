@@ -47,12 +47,29 @@ export class OrganizationsService extends AgentsmithSupabaseService {
   public async getOrganizationData(organizationUuid: string) {
     const { data, error } = await this.supabase
       .from('organizations')
-      .select('*, projects(*), organization_users(id, role, agentsmith_users(*))')
+      .select(
+        '*, agentsmith_tiers(*), projects(*), organization_users(id, role, agentsmith_users(*))',
+      )
       .eq('uuid', organizationUuid)
       .single();
 
     if (error) {
       this.logger.error(error, 'Error fetching organization data');
+      return null;
+    }
+
+    return data;
+  }
+
+  public async getOrganizationTierData(organizationUuid: string) {
+    const { data, error } = await this.supabase
+      .from('agentsmith_tiers')
+      .select('*, organizations!inner(uuid)')
+      .eq('organizations.uuid', organizationUuid)
+      .single();
+
+    if (error) {
+      this.logger.error(error, 'Error fetching organization tier data');
       return null;
     }
 
@@ -74,6 +91,20 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     }
 
     return data;
+  }
+
+  public async removeOrganizationUser(organizationUserId: number) {
+    const { error } = await this.supabase
+      .from('organization_users')
+      .delete()
+      .eq('id', organizationUserId);
+
+    if (error) {
+      this.logger.error(error, 'Error removing user from organization');
+      return { success: false, error: 'Error removing user from organization' };
+    }
+
+    return { success: true };
   }
 
   public async getOrganizationKeySecret(organizationUuid: string, key: string) {
@@ -135,6 +166,32 @@ export class OrganizationsService extends AgentsmithSupabaseService {
       codeVerifier: newCodeVerifier,
     };
   }
+
+  async isUnderUserLimit(organizationId: number) {
+    const { data, error } = await this.supabase.rpc('is_under_user_limit', {
+      arg_organization_id: organizationId,
+    });
+
+    if (error) {
+      this.logger.error(error, 'Error checking user limit:');
+      throw new Error('Error checking user limit');
+    }
+
+    return data;
+  }
+
+  async isUnderProjectLimit(organizationId: number) {
+    const { data, error } = await this.supabase.rpc('is_under_project_limit', {
+      arg_organization_id: organizationId,
+    });
+
+    if (error) {
+      this.logger.error(error, 'Error checking project limit:');
+      throw new Error('Error checking project limit');
+    }
+
+    return data;
+  }
 }
 
 export type GetOrganizationDataResult = Awaited<
@@ -143,4 +200,8 @@ export type GetOrganizationDataResult = Awaited<
 
 export type GetProjectRepositoriesForOrganizationResult = Awaited<
   ReturnType<typeof OrganizationsService.prototype.getProjectRepositoriesForOrganization>
+>;
+
+export type GetOrganizationTierDataResult = Awaited<
+  ReturnType<typeof OrganizationsService.prototype.getOrganizationTierData>
 >;

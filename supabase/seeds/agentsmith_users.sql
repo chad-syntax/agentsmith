@@ -2,6 +2,8 @@ with test_emails as (
     select email from (
         values 
             ('free@example.com'),
+            ('hobby_member@example.com'),
+            ('hobby_admin@example.com'),
             ('pro_member@example.com'),
             ('pro_admin@example.com'),
             ('ee_admin@example.com'),

@@ -1106,7 +1106,7 @@ export class PromptsService extends AgentsmithSupabaseService {
     });
 
     if (!logEntry) {
-      throw new Error('Failed to create log entry');
+      throw new Error('Failed to create log entry, please check your plan limits and try again.');
     }
 
     try {

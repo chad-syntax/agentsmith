@@ -25,17 +25,20 @@ import { UsersService } from '@/lib/UsersService';
 
 type Organization = GetUserOrganizationDataResult['organization_users'][number]['organizations'];
 type Project = Organization['projects'][number];
+type OrgTierInfo = Organization['agentsmith_tiers'];
 
 type AppContextType = {
   selectedOrganizationUuid: string;
   selectedProjectUuid: string;
   setSelectedOrganizationUuid: (uuid: string) => void;
   setSelectedProjectUuid: (uuid: string) => void;
-  selectedOrganization: Organization;
-  selectedProject: Project;
+  selectedOrganization: Organization | null;
+  selectedProject: Project | null;
   userOrganizationData: GetUserOrganizationDataResult;
   hasOpenRouterKey: boolean;
   isOrganizationAdmin: boolean;
+  userNeedsOrgMembership: boolean;
+  orgTierInfo: OrgTierInfo | null;
   showSyncTooltip: () => void;
   isSyncTooltipVisible: boolean;
   unreadAlertsCount: number;
@@ -49,11 +52,13 @@ const AppContext = createContext<AppContextType>({
   selectedProjectUuid: '',
   setSelectedOrganizationUuid: () => {},
   setSelectedProjectUuid: () => {},
-  selectedOrganization: {} as Organization,
-  selectedProject: {} as Project,
+  selectedOrganization: null,
+  selectedProject: null,
   userOrganizationData: {} as GetUserOrganizationDataResult,
   hasOpenRouterKey: false,
   isOrganizationAdmin: false,
+  userNeedsOrgMembership: false,
+  orgTierInfo: null,
   showSyncTooltip: () => {},
   isSyncTooltipVisible: false,
   unreadAlertsCount: 0,
@@ -91,33 +96,44 @@ export const AppProvider = (props: AppProviderProps) => {
   const [onboardingChecklist, setOnboardingChecklist] = useState<
     GetOnboardingChecklistResult[number] | null
   >(null);
-  const initialSelectedOrganization =
-    userOrganizationData.organization_users.find(
+  const initialSelectedOrganization: Organization | null =
+    userOrganizationData.organization_users?.find(
       (orgUser) => orgUser.organizations.uuid === initialSelectedOrganizationUuid,
-    )?.organizations ?? userOrganizationData.organization_users[0].organizations;
+    )?.organizations ??
+    userOrganizationData.organization_users?.[0]?.organizations ??
+    null;
 
   const initialSelectedProject =
     initialSelectedOrganization?.projects.find(
       (project) => project.uuid === initialSelectedProjectUuid,
-    ) ?? initialSelectedOrganization?.projects[0];
+    ) ??
+    initialSelectedOrganization?.projects[0] ??
+    null;
 
-  const [selectedOrganization, setSelectedOrganization] = useState<Organization>(
+  const [selectedOrganization, setSelectedOrganization] = useState<Organization | null>(
     initialSelectedOrganization,
   );
-  const [selectedProject, setSelectedProject] = useState<Project>(initialSelectedProject);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(initialSelectedProject);
 
   const hasOpenRouterKey =
     selectedOrganization?.organization_keys.some(
       (key) => key.key === ORGANIZATION_KEYS.OPENROUTER_API_KEY,
     ) ?? false;
 
-  const initialIsOrganizationAdmin = userOrganizationData.organization_users.some(
+  const initialIsOrganizationAdmin = userOrganizationData.organization_users?.some(
     (orgUser) =>
       orgUser.organizations.uuid === selectedOrganizationUuid && orgUser.role === 'ADMIN',
   );
 
+  const initialUserNeedsOrgMembership = userOrganizationData.organization_users.length === 0;
+
   const [isOrganizationAdmin, setIsOrganizationAdmin] = useState(initialIsOrganizationAdmin);
   const [unreadAlertsCount, setUnreadAlertsCount] = useState(0);
+  const [userNeedsOrgMembership, setUserNeedsOrgMembership] = useState(
+    initialUserNeedsOrgMembership,
+  );
+
+  const orgTierInfo = selectedOrganization?.agentsmith_tiers ?? null;
 
   const getOnboardingChecklist = async () => {
     const usersService = new UsersService({ supabase });
@@ -172,15 +188,16 @@ export const AppProvider = (props: AppProviderProps) => {
     _setSelectedOrganizationUuid(uuid);
 
     const targetOrganization =
-      userOrganizationData.organization_users.find((orgUser) => orgUser.organizations.uuid === uuid)
-        ?.organizations ?? null;
+      userOrganizationData?.organization_users?.find(
+        (orgUser) => orgUser.organizations.uuid === uuid,
+      )?.organizations ?? null;
 
     if (!targetOrganization) {
       redirect(routes.error('Cannot select organization, user is not a member.'));
     }
 
     setIsOrganizationAdmin(
-      userOrganizationData.organization_users.some(
+      userOrganizationData?.organization_users?.some(
         (orgUser) => orgUser.organizations.uuid === uuid && orgUser.role === 'ADMIN',
       ),
     );
@@ -236,6 +253,8 @@ export const AppProvider = (props: AppProviderProps) => {
       setUnreadAlertsCount,
       onboardingChecklist,
       setOnboardingChecklist,
+      userNeedsOrgMembership,
+      orgTierInfo,
     }),
     [
       selectedOrganizationUuid,
@@ -251,6 +270,8 @@ export const AppProvider = (props: AppProviderProps) => {
       setUnreadAlertsCount,
       onboardingChecklist,
       setOnboardingChecklist,
+      userNeedsOrgMembership,
+      orgTierInfo,
     ],
   );
 

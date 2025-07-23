@@ -33,6 +33,7 @@ export const StudioHeader = () => {
     selectedProject,
     setSelectedProjectUuid,
     userOrganizationData,
+    userNeedsOrgMembership,
   } = useApp();
 
   const { navItems, activeItem } = useNavItems();
@@ -50,7 +51,8 @@ export const StudioHeader = () => {
     activeItem.slug !== 'edit-organization' &&
     activeItem.slug !== 'organization' &&
     activeItem.slug !== 'settings' &&
-    activeItem.slug !== 'account';
+    activeItem.slug !== 'account' &&
+    !userNeedsOrgMembership;
 
   return (
     <header className="w-full py-2 pl-[1px] pr-3 border-b sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -82,19 +84,19 @@ export const StudioHeader = () => {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </BreadcrumbItem>
-              ) : (
+              ) : organizations.length === 1 ? (
                 <BreadcrumbItem className="hidden md:list-item">
                   <BreadcrumbLink href={routes.studio.organization(selectedOrganizationUuid)}>
                     {selectedOrganization?.name}
                   </BreadcrumbLink>
                 </BreadcrumbItem>
-              )}
+              ) : null}
               {showMiddleBreadcrumb && (
                 <>
                   <BreadcrumbSeparator className="hidden md:list-item">
                     <Slash />
                   </BreadcrumbSeparator>
-                  {selectedOrganization?.projects.length > 1 ? (
+                  {(selectedOrganization?.projects?.length ?? 0) > 1 ? (
                     <BreadcrumbItem className="hidden md:list-item">
                       <DropdownMenu>
                         <DropdownMenuTrigger className="cursor-pointer flex items-center gap-1">
@@ -125,9 +127,11 @@ export const StudioHeader = () => {
               )}
               {activeItem.slug !== 'organization' && (
                 <>
-                  <BreadcrumbSeparator className="hidden md:list-item">
-                    <Slash />
-                  </BreadcrumbSeparator>
+                  {!userNeedsOrgMembership && (
+                    <BreadcrumbSeparator className="hidden md:list-item">
+                      <Slash />
+                    </BreadcrumbSeparator>
+                  )}
                   <BreadcrumbItem>
                     <DropdownMenu>
                       <DropdownMenuTrigger className="cursor-pointer flex items-center gap-1">
@@ -157,9 +161,11 @@ export const StudioHeader = () => {
           </Breadcrumb>
         </div>
         <div className="flex items-center gap-2">
-          <SyncProjectButton size="icon">
-            <RefreshCcw className="size-4" />
-          </SyncProjectButton>
+          {!userNeedsOrgMembership && (
+            <SyncProjectButton size="icon">
+              <RefreshCcw className="size-4" />
+            </SyncProjectButton>
+          )}
           <ThemeSwitcher />
           <Link href={routes.studio.account}>
             <CurrentUserAvatar />

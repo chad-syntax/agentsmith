@@ -40,16 +40,6 @@ export const StudioApp = (props: StudioAppProps) => {
           <DesktopStudioSidebar />
           <main className="pl-0 md:pl-12 flex-1 overflow-auto">{children}</main>
           <StudioGiveFeedback />
-
-          {/* {orgUser.role === 'ADMIN' && onboardingChecklistItem && !onboardingComplete && (
-                    <CardContent>
-                      <OnboardingChecklist
-                        defaultProjectUuid={orgUser.organizations.projects[0]?.uuid}
-                        onboardingChecklistItem={onboardingChecklistItem}
-                      />
-                    </CardContent>
-                  )} */}
-
           <OnboardingChecklist />
         </div>
       </AppProvider>

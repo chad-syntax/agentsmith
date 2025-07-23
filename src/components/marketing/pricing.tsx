@@ -6,100 +6,17 @@ import { CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { usePostHog } from 'posthog-js/react';
-
-type PricingCardFeature = {
-  text: string;
-  isPrimary?: boolean;
-};
-
-type PricingCardData = {
-  title: string;
-  price: string;
-  discountedPrice?: string;
-  priceDetail?: string;
-  description: string;
-  features: PricingCardFeature[];
-  buttonText: string;
-  buttonLink?: string;
-  buttonVariant?: 'default' | 'outline' | 'secondary' | 'ghost' | 'link' | null | undefined;
-  isRecommended?: boolean;
-  isDiscounted?: boolean;
-  highlightText?: string;
-  disabled?: boolean;
-  onClick?: () => void;
-  buttonId?: string;
-};
-
-const handleJoinWaitlistClick = () => {
-  const $emailInput = document.getElementById('EMAIL');
-  if ($emailInput) {
-    setTimeout(() => {
-      $emailInput.focus();
-    }, 1);
-  }
-};
-
-const pricingData: PricingCardData[] = [
-  {
-    title: 'Cloud Free',
-    price: 'Coming Soon',
-    description:
-      "The hosted AgentSmith app, live and free. Join our mailing list to be notified when it's ready.",
-    features: [
-      { text: 'Limited prompt creation' },
-      { text: 'Basic testing tools' },
-      { text: 'Community support' },
-    ],
-    buttonText: 'Join Waitlist',
-    buttonVariant: 'outline',
-    disabled: false,
-    buttonLink: '/#join-waitlist',
-    onClick: handleJoinWaitlistClick,
-  },
-  {
-    title: 'Pro',
-    price: '$599',
-    priceDetail: '/year',
-    description:
-      'Perfect for individual developers and small teams. Pay now to get immediate Alpha access!',
-    features: [
-      { text: 'Unlimited prompt creation', isPrimary: true },
-      { text: 'Advanced testing tools', isPrimary: true },
-      { text: 'GitHub integration', isPrimary: true },
-      { text: 'Typesafe SDK access', isPrimary: true },
-      { text: 'Priority support', isPrimary: true },
-    ],
-    buttonText: 'Join Alpha Club',
-    buttonLink: routes.external.stripe.checkout.proAlphaClub,
-    isRecommended: true,
-    isDiscounted: true,
-    discountedPrice: '$299',
-    highlightText: 'Pay now to receive early access. Join the alpha club! (limited to 100 spots)',
-    buttonId: 'join-alpha-club',
-  },
-  {
-    title: 'Enterprise',
-    price: 'Custom',
-    description: 'Tailored solutions for large organizations with specific needs.',
-    features: [
-      { text: 'Dedicated support', isPrimary: true },
-      { text: 'Custom integrations', isPrimary: true },
-      { text: 'Single Sign-On (SSO)', isPrimary: true },
-      { text: 'Service Level Agreements (SLA)', isPrimary: true },
-      { text: 'Volume discounts', isPrimary: true },
-    ],
-    buttonText: 'Contact Us',
-    buttonLink: `mailto:${routes.emails.enterprise}`,
-    buttonVariant: 'default',
-  },
-];
+import { pricingPlans, PricingPlan } from '@/constants/pricing';
+import { useState } from 'react';
+import { Switch } from '../ui/switch';
 
 type PricingCardProps = {
-  card: PricingCardData;
+  card: PricingPlan;
+  billingCycle: 'monthly' | 'yearly';
 };
 
 const PricingCardItem = (props: PricingCardProps) => {
-  const { card } = props;
+  const { card, billingCycle } = props;
   const posthog = usePostHog();
 
   const handleCtaClick = () => {
@@ -112,9 +29,14 @@ const PricingCardItem = (props: PricingCardProps) => {
     if (card.onClick) card.onClick();
   };
 
+  const currentPlan = billingCycle === 'monthly' ? card.monthly : card.yearly;
+  const displayPrice = currentPlan?.discountedPrice ?? currentPlan?.price ?? card.price;
+  const originalPrice = currentPlan?.price;
+  const priceDetail = currentPlan?.priceDetail;
+
   return (
-    <Card className="bg-card border-border rounded-lg overflow-hidden relative">
-      <CardHeader>
+    <Card className="bg-card border-border rounded-lg overflow-hidden relative flex flex-col h-full">
+      <CardHeader className="flex-shrink-0">
         <div className="flex items-center justify-between">
           <h3 className="text-xl font-bold text-card-foreground">{card.title}</h3>
           {card.isRecommended && (
@@ -125,25 +47,23 @@ const PricingCardItem = (props: PricingCardProps) => {
         </div>
 
         <div className="mt-4 text-4xl font-bold">
-          {card.isDiscounted ? (
+          {card.isDiscounted && originalPrice && displayPrice !== originalPrice ? (
             <>
-              <span className="line-through text-muted-foreground text-sm">{card.price}</span>
-              <span className="ml-1 text-accent">{card.discountedPrice}</span>
+              <span className="line-through text-muted-foreground text-sm">{originalPrice}</span>
+              <span className="ml-1 text-accent">{displayPrice}</span>
             </>
           ) : (
-            <span>{card.price}</span>
+            <span>{displayPrice}</span>
           )}
-          {card.priceDetail && (
-            <span className="ml-1 text-sm font-normal text-muted-foreground">
-              {card.priceDetail}
-            </span>
+          {priceDetail && (
+            <span className="ml-1 text-sm font-normal text-muted-foreground">{priceDetail}</span>
           )}
         </div>
         {card.highlightText && (
           <p className="text-sm text-accent font-medium mt-2">{card.highlightText}</p>
         )}
       </CardHeader>
-      <CardContent className="mt-2">
+      <CardContent className="mt-2 flex-grow">
         <p className="text-muted-foreground mb-6">{card.description}</p>
         <ul className="space-y-2 text-muted-foreground">
           {card.features.map((feature, index) => (
@@ -156,7 +76,7 @@ const PricingCardItem = (props: PricingCardProps) => {
           ))}
         </ul>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex-shrink-0">
         {card.buttonLink ? (
           <Button
             id={card.buttonId}
@@ -192,17 +112,24 @@ const PricingCardItem = (props: PricingCardProps) => {
   );
 };
 
-export const PricingCards = () => {
+type PricingCardsProps = {
+  billingCycle: 'monthly' | 'yearly';
+};
+
+export const PricingCards = (props: PricingCardsProps) => {
+  const { billingCycle } = props;
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-      {pricingData.map((card, index) => (
-        <PricingCardItem key={index} card={card} />
+    <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8 max-w-7xl mx-auto">
+      {pricingPlans.map((card, index) => (
+        <PricingCardItem key={index} card={card} billingCycle={billingCycle} />
       ))}
     </div>
   );
 };
 
 export const PricingSection = () => {
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+
   return (
     <section id="pricing" className="bg-background scroll-mt-40">
       <div className="container px-4 md:px-6 mx-auto">
@@ -213,21 +140,24 @@ export const PricingSection = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Choose the plan that&apos;s right for you and your team
           </p>
+          <div className="flex items-center justify-center mt-8 space-x-4">
+            <span>Monthly</span>
+            <Switch
+              checked={billingCycle === 'yearly'}
+              onCheckedChange={(checked) => setBillingCycle(checked ? 'yearly' : 'monthly')}
+            />
+            <span>Yearly</span>
+          </div>
         </div>
 
-        <PricingCards />
+        <PricingCards billingCycle={billingCycle} />
 
         <div className="mt-8 text-center">
           <p className="text-sm text-muted-foreground">
-            Looking for a self-hosted option? Check out our{' '}
-            <a
-              href={routes.external.github}
-              className="text-primary hover:underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              free Community Edition on GitHub
-            </a>
+            Looking for a self-hosted option? Check out our docs on{' '}
+            <Link href={routes.docs.selfHosting} className="text-primary hover:underline">
+              self hosting
+            </Link>
             .
           </p>
         </div>

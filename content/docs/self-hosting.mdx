@@ -1,0 +1,216 @@
+---
+title: Self-Hosting
+description: Deploy Agentsmith on your own infrastructure
+---
+
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { TriangleAlert, Info } from 'lucide-react';
+
+## Overview
+
+Agentsmith can be self-hosted on your own infrastructure, giving you complete control over your AI agent development platform. This guide will walk you through the process of deploying Agentsmith using Next.js and Supabase.
+
+<Alert variant="warning">
+  <TriangleAlert />
+  <AlertTitle>Alpha Status</AlertTitle>
+  <AlertDescription>
+    Agentsmith is currently in alpha. Self-hosting documentation and support will be more
+    comprehensive as we move out of the alpha phase. Railway template support is planned for easier
+    deployment. If you encounter any issues, please reach out to support@agentsmith.app for
+    assistance.
+  </AlertDescription>
+</Alert>
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- A Supabase account and project
+- A GitHub account (for GitHub App setup)
+- A deployment platform (Vercel, Railway, Render, or similar)
+- Node.js 22+ and npm (for local development)
+- Docker (for local development)
+
+## Deployment Steps
+
+### 1. Fork the Repository
+
+First, fork the Agentsmith repository to your GitHub account:
+
+1. Go to [https://github.com/chad-syntax/agentsmith](https://github.com/chad-syntax/agentsmith)
+2. Click the "Fork" button in the top-right corner
+3. Clone your forked repository:
+   ```bash
+   git clone https://github.com/your-username/agentsmith.git
+   cd agentsmith
+   ```
+
+### 2. Set Up Supabase
+
+#### Create a Supabase Project
+
+1. Go to [supabase.com](https://supabase.com) and create a new project
+2. Wait for the project to be fully initialized
+
+#### Get API Keys
+
+1. Navigate to Settings > API in your Supabase dashboard
+2. Copy the Project URL and anon/public key (you'll need these for environment variables)
+3. Copy the JWT secret (used for the `github_webhook` service role)
+
+#### Apply Database Schema
+
+The project includes migration files in `/supabase/migrations/`. Apply them using the Supabase CLI:
+
+```bash
+# Install Supabase CLI
+npm install -g supabase
+
+# Login to Supabase
+supabase login
+
+# Link your project
+supabase link --project-ref your-project-ref
+
+# Push migrations
+supabase db push
+```
+
+#### Configure Authentication
+
+1. In Supabase Dashboard > Authentication > Settings
+2. Add your site URL to "Site URL" field
+3. Add redirect URLs for OAuth (see GitHub App Setup section)
+
+### 3. Set Up GitHub App
+
+Agentsmith requires a GitHub App for repository synchronization and OAuth authentication.
+
+#### Create a GitHub App
+
+1. Go to GitHub > Settings > Developer settings > GitHub Apps
+2. Click "New GitHub App"
+3. Fill in the following:
+   - **GitHub App name**: Choose a unique name
+   - **Homepage URL**: `https://your-domain.com`
+   - **Setup URL**: `https://your-domain.com/github/setup`
+   - **Webhook URL**: `https://your-domain.com/api/github/webhook`
+   - **Webhook secret**: Generate a secure random string
+
+#### Set Permissions
+
+Configure the following repository permissions:
+
+- **Contents**: Read & Write
+- **Metadata**: Read-only
+- **Pull requests**: Read & Write
+- **Issues**: Read & Write
+- **Account Permissions**: Read-only (for email address)
+
+#### Subscribe to Events
+
+- Push
+- Pull request
+
+#### Generate Private Key
+
+1. Scroll down to "Private keys" section
+2. Click "Generate a private key"
+3. Download the `.pem` file
+4. Convert to base64: `base64 -i path/to/your-key.pem`
+5. Save this base64 string for your environment variables
+
+#### Configure OAuth Credentials
+
+1. In your GitHub App's settings page, navigate to the OAuth settings
+2. Generate a new client secret
+3. Copy the "Client ID" and the newly generated "Client Secret"
+4. Add these to your Supabase project's GitHub auth provider settings
+5. Ensure the "Authorization callback URL" points to your Supabase callback URL: `https://your-supabase-project-ref.supabase.co/auth/v1/callback`
+
+### 4. Configure Environment Variables
+
+Set up the following environment variables in your deployment platform:
+
+```bash
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_JWT_SECRET=your_supabase_jwt_secret
+
+# GitHub App Configuration
+GITHUB_APP_ID=your_github_app_id
+GITHUB_APP_PRIVATE_KEY=your_github_app_private_key_base64
+GITHUB_APP_WEBHOOK_SECRET=your_github_app_webhook_secret
+GITHUB_APP_NAME=your_github_app_name
+
+# GitHub OAuth (for Supabase Auth)
+SUPABASE_AUTH_GITHUB_CLIENT_ID=your_github_oauth_client_id
+SUPABASE_AUTH_GITHUB_SECRET=your_github_oauth_client_secret
+
+# Site Configuration
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
+
+# Optional: Analytics
+NEXT_PUBLIC_POSTHOG_KEY=your_posthog_key
+NEXT_PUBLIC_POSTHOG_HOST=your_posthog_host
+
+# Optional: Cloudflare Turnstile (for anonymous email submission)
+NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY=your_cloudflare_turnstile_site_key
+CLOUDFLARE_TURNSTILE_SECRET_KEY=your_cloudflare_turnstile_secret_key
+```
+
+#### Required Environment Variables
+
+| Variable                         | Description                             | Where to Get                                         |
+| -------------------------------- | --------------------------------------- | ---------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`       | Your Supabase project URL               | Supabase Dashboard > Settings > API                  |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`  | Supabase anonymous/public key           | Supabase Dashboard > Settings > API                  |
+| `SUPABASE_JWT_SECRET`            | Supabase JWT secret for signing tokens  | Supabase Dashboard > Settings > API > JWT Secret     |
+| `GITHUB_APP_ID`                  | GitHub App ID                           | GitHub > Settings > Developer settings > GitHub Apps |
+| `GITHUB_APP_PRIVATE_KEY`         | GitHub App private key (base64 encoded) | Generated when creating GitHub App                   |
+| `GITHUB_APP_WEBHOOK_SECRET`      | GitHub App webhook secret               | Set when creating GitHub App                         |
+| `GITHUB_APP_NAME`                | GitHub App name/slug                    | GitHub App settings                                  |
+| `SUPABASE_AUTH_GITHUB_CLIENT_ID` | GitHub OAuth App Client ID              | GitHub App settings                                  |
+| `SUPABASE_AUTH_GITHUB_SECRET`    | GitHub OAuth App Client Secret          | GitHub App settings                                  |
+| `NEXT_PUBLIC_SITE_URL`           | Your site URL                           | Your deployment URL                                  |
+
+#### Optional Environment Variables
+
+| Variable                                    | Description                     | Where to Get                     |
+| ------------------------------------------- | ------------------------------- | -------------------------------- |
+| `NEXT_PUBLIC_POSTHOG_KEY`                   | PostHog key for analytics       | PostHog Project Settings         |
+| `NEXT_PUBLIC_POSTHOG_HOST`                  | PostHog host for analytics      | PostHog Project Settings         |
+| `NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY` | Cloudflare Turnstile Site Key   | Cloudflare Dashboard > Turnstile |
+| `CLOUDFLARE_TURNSTILE_SECRET_KEY`           | Cloudflare Turnstile Secret Key | Cloudflare Dashboard > Turnstile |
+
+### 5. Deploy the Application
+
+Connect your forked repository to your preferred deployment platform and configure the environment variables listed above. The application is a standard Next.js app and can be deployed to any platform that supports Node.js applications.
+
+**Popular deployment options:**
+
+- [Vercel](https://vercel.com) - Optimized for Next.js applications
+- [Railway](https://railway.app) - Simple deployment with database integration
+- [Render](https://render.com) - Full-stack platform with free tier
+
+### 6. Verify Deployment
+
+After deployment, verify that:
+
+1. Your application is accessible at your domain
+2. Authentication is working properly
+3. GitHub App integration is functional
+4. Database migrations have been applied successfully
+
+<Alert variant="default">
+  <Info />
+  <AlertTitle>Need Support?</AlertTitle>
+  <AlertDescription>
+    If you encounter issues with self-hosting, please reach out to our support team at{' '}
+    <a href="mailto:support@agentsmith.app" className="underline">
+      support@agentsmith.app
+    </a>
+    . We're here to help!
+  </AlertDescription>
+</Alert>
