@@ -1,5 +1,5 @@
 > [!WARNING]
-> Agentsmith is currently in alpha. Changes are pushed frequently and may include breaking changes. If you encounter any issues, please reach out to support@agentsmith.app for assistance.
+> Agentsmith is currently in alpha. Changes are pushed frequently and may include breaking changes. If you encounter any issues, please reach out to support@agentsmith.dev for assistance.
 
 # @agentsmith-app/sdk
 

@@ -96,9 +96,9 @@ export const routes = {
     // },
   },
   emails: {
-    enterprise: 'mailto:enterprise@agentsmith.app',
-    support: 'mailto:support@agentsmith.app',
-    team: 'mailto:team@agentsmith.app',
-    alex: 'mailto:alex@agentsmith.app',
+    enterprise: 'mailto:enterprise@agentsmith.dev',
+    support: 'mailto:support@agentsmith.dev',
+    team: 'mailto:team@agentsmith.dev',
+    alex: 'mailto:alex@agentsmith.dev',
   },
 } as const;

@@ -15,7 +15,7 @@ export const PrivacyPolicyPage = () => {
               &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) collects, uses, and discloses your
               personal information when you visit, use our services, or make a purchase from&nbsp;
               <a href="https://agentsmith.app/" className="underline hover:text-gray-600">
-                https://agentsmith.app
+                https://agentsmith.dev
               </a>{' '}
               (the &quot;Site&quot;) or otherwise communicate with us (collectively, the
               &quot;Services&quot;). For purposes of this Privacy Policy, &quot;you&quot; and
@@ -388,8 +388,8 @@ export const PrivacyPolicyPage = () => {
               </P>
               <P>
                 Email:{' '}
-                <a href="mailto:privacy@agentsmith.app" className="underline hover:text-gray-600">
-                  privacy@agentsmith.app
+                <a href="mailto:privacy@agentsmith.dev" className="underline hover:text-gray-600">
+                  privacy@agentsmith.dev
                 </a>
               </P>
             </section>

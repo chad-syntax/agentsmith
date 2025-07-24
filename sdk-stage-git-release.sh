@@ -4,7 +4,7 @@
 source ./sdk-release-base.sh
 
 # Environment-specific configuration
-NEXT_PUBLIC_SITE_URL="https://staging.agentsmith.app"
+NEXT_PUBLIC_SITE_URL="https://staging.agentsmith.dev"
 NEXT_PUBLIC_SUPABASE_URL="https://ehpaperavkeicrwhvsbx.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVocGFwZXJhdmtlaWNyd2h2c2J4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3NTA3NTQsImV4cCI6MjA2MzMyNjc1NH0.rntsQRcyVBb9UTahY4LSq5o4vuUSYfZS6h4NUK8qme0"
 

@@ -4,7 +4,7 @@
 source ./sdk-release-base.sh
 
 # Environment-specific configuration
-NEXT_PUBLIC_SITE_URL="https://agentsmith.app"
+NEXT_PUBLIC_SITE_URL="https://agentsmith.dev"
 NEXT_PUBLIC_SUPABASE_URL="https://jcnpgqhjaoppfhbkcnpv.supabase.co"
 NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjbnBncWhqYW9wcGZoYmtjbnB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwMzA2OTUsImV4cCI6MjA1MzYwNjY5NX0.n_gN9QTv9qY7FlA8wyoww8Nd4PFv9EMiXiDgGOQ2Axw"
 

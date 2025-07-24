@@ -443,7 +443,7 @@ export type OpenrouterModel = {
 };
 
 export const OPENROUTER_HEADERS = {
-  'HTTP-Referer': 'https://agentsmith.app',
+  'HTTP-Referer': 'https://agentsmith.dev',
   'X-Title': 'Agentsmith',
   'Content-Type': 'application/json',
 };
