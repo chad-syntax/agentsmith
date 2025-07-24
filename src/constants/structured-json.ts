@@ -4,7 +4,7 @@ import packageJson from '../../package.json';
 // @ts-ignore
 import gitHandoffScreenshot from '@/assets/landing-page-video-covers/git-handoff.jpg';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://agentsmith.app';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://agentsmith.dev';
 
 const offersFromPricing = pricingPlans.flatMap((plan) => {
   const planOffers = [];

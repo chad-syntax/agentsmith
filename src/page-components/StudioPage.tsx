@@ -36,7 +36,7 @@ const StudioPageHeader = () => (
           Making this app as bitchin' as possible is my top priority. Click the Feedback button at
           the bottom-right corner at any time, or reach out to{' '}
           <a className="underline" href={routes.emails.alex}>
-            alex@agentsmith.app
+            alex@agentsmith.dev
           </a>{' '}
           <br />
           Also make sure to ⭐️ the repo on{' '}

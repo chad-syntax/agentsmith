@@ -1,7 +1,7 @@
 import { source } from '@/lib/docs/source';
 import type { MetadataRoute } from 'next';
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agentsmith.app';
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://agentsmith.dev';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const docsPages = source.getPages();

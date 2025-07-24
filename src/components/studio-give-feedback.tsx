@@ -34,7 +34,7 @@ export const StudioGiveFeedback = () => {
             If your feedback is more suited to a private conversation or not appropriate for the
             public roadmap, please email{' '}
             <a className="underline" href={routes.emails.alex}>
-              alex@agentsmith.app
+              alex@agentsmith.dev
             </a>
             .
           </AlertDialogDescription>
