@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: '/',
         disallow: '/studio',
       },
-      sitemap: 'https://agentsmith.app/sitemap.xml',
+      sitemap: 'https://agentsmith.dev/sitemap.xml',
     };
   }
 

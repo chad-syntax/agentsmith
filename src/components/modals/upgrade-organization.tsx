@@ -187,7 +187,7 @@ export const UpgradeOrganizationModal = (props: UpgradeOrganizationModalProps) =
           <p className="w-full text-center text-sm text-muted-foreground">
             Interested in higher limits? Become an enterprise customer by emailing{' '}
             <Button variant="link" asChild className="p-0 h-auto text-sm font-normal underline">
-              <a href={routes.emails.enterprise}>enterprise@agentsmith.app</a>
+              <a href={routes.emails.enterprise}>enterprise@agentsmith.dev</a>
             </Button>
             .
           </p>

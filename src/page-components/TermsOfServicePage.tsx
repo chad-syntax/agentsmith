@@ -14,7 +14,7 @@ export const TermsOfServicePage = () => {
               Welcome to AgentSmith! These Terms of Service (&quot;Terms&quot;) govern your access
               to and use of the services provided by Chad Syntax LLC (&quot;we&quot;,
               &quot;us&quot;, or &quot;our&quot;), including our website{' '}
-              <a href="https://agentsmith.app/" className="underline hover:text-gray-600">
+              <a href="https://agentsmith.dev/" className="underline hover:text-gray-600">
                 https://agentsmith.dev
               </a>{' '}
               (the &quot;Site&quot;), and any related software, applications, and services

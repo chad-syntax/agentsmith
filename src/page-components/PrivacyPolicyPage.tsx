@@ -14,7 +14,7 @@ export const PrivacyPolicyPage = () => {
               This Privacy Policy describes how Chad Syntax LLC (the &quot;Site&quot;,
               &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) collects, uses, and discloses your
               personal information when you visit, use our services, or make a purchase from&nbsp;
-              <a href="https://agentsmith.app/" className="underline hover:text-gray-600">
+              <a href="https://agentsmith.dev/" className="underline hover:text-gray-600">
                 https://agentsmith.dev
               </a>{' '}
               (the &quot;Site&quot;) or otherwise communicate with us (collectively, the
