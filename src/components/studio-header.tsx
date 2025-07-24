@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronDown, RefreshCcw, Settings, Slash } from 'lucide-react';
+import { ChevronDown, RefreshCcw, Slash } from 'lucide-react';
 
 import {
   Breadcrumb,

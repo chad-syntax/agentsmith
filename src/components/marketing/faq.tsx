@@ -55,7 +55,7 @@ const faqData = [
     value: 'support-options',
     trigger: 'How do I get support?',
     content:
-      'Pro plan users receive priority support via email. All users, including those on the Community plan, can access community support through our GitHub repository and participate in discussions.',
+      'Send an email to support@agentsmith.dev. All users, including those on the Community plan, can access community support through our GitHub repository and participate in discussions.',
   },
 ];
 

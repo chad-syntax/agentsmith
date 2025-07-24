@@ -7,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
 
 export type OrganizationSelectorProps = {
   userOrganizationData: GetUserOrganizationDataResult;
@@ -30,14 +29,13 @@ export const OrganizationSelector = (props: OrganizationSelectorProps) => {
     ) || [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       <div className="space-y-2">
-        <Label>Organization</Label>
         <Select
           value={selectedOrganizationUuid ?? 'choose-organization'}
           onValueChange={setSelectedOrganizationUuid}
         >
-          <SelectTrigger>
+          <SelectTrigger className="truncate w-full">
             <SelectValue placeholder="Choose Organization" />
           </SelectTrigger>
           <SelectContent>
@@ -51,18 +49,17 @@ export const OrganizationSelector = (props: OrganizationSelectorProps) => {
       </div>
 
       <div className="space-y-2">
-        <Label>Project</Label>
         <Select
           value={selectedProjectUuid ?? 'choose-project'}
           onValueChange={setSelectedProjectUuid}
         >
-          <SelectTrigger>
+          <SelectTrigger className="truncate w-full">
             <SelectValue placeholder="Choose Project" />
           </SelectTrigger>
           <SelectContent>
             {selectedOrganization?.projects.map((project: any) => (
               <SelectItem key={project.uuid} value={project.uuid}>
-                {`Project ${project.name}`}
+                {project.name}
               </SelectItem>
             ))}
           </SelectContent>

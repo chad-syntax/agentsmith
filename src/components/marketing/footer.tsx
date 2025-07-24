@@ -42,6 +42,10 @@ const footerData: FooterColumn[] = [
         href: '/sitemap.xml',
         label: 'Sitemap',
       },
+      {
+        href: routes.emails.support,
+        label: 'Support',
+      },
     ],
   },
   {

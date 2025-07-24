@@ -12,6 +12,8 @@ import {
   Box,
   Bell,
   BarChart3,
+  LifeBuoy,
+  Book,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useApp } from '@/providers/app';
@@ -34,6 +36,22 @@ export const useNavItems = () => {
     href: routes.studio.account,
     icon: User,
     active: pathname.startsWith(routes.studio.account),
+  };
+
+  const supportNavItem = {
+    name: 'Support',
+    slug: 'support',
+    href: routes.emails.support,
+    icon: LifeBuoy,
+    active: pathname === routes.emails.support,
+  };
+
+  const docsNavItem = {
+    name: 'Docs',
+    slug: 'docs',
+    href: routes.docs.home,
+    icon: Book,
+    active: pathname === routes.docs.home,
   };
 
   const navItems = [
@@ -88,6 +106,8 @@ export const useNavItems = () => {
       icon: Globe,
       active: pathname.startsWith(routes.studio.projectGlobals(selectedProjectUuid)),
     },
+    docsNavItem,
+    supportNavItem,
     accountNavItem,
     {
       name: 'Organization',
@@ -121,7 +141,7 @@ export const useNavItems = () => {
 
   if (userNeedsOrgMembership) {
     return {
-      navItems: [homeNavItem, accountNavItem],
+      navItems: [homeNavItem, docsNavItem, supportNavItem, accountNavItem],
       activeItem: homeNavItem,
     };
   }

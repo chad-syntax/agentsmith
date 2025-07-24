@@ -31,7 +31,9 @@ const StudioMenu = () => {
         item.slug === 'organization' ||
         item.slug === 'account' ||
         item.slug === 'settings' ||
-        item.slug === 'alerts'
+        item.slug === 'alerts' ||
+        item.slug === 'support' ||
+        item.slug === 'docs'
       ) {
         return [acc[0], [...acc[1], item]];
       }
@@ -43,7 +45,7 @@ const StudioMenu = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <nav className="flex-1 px-1 overflow-hidden flex flex-col justify-between pb-4">
+      <nav className="flex-1 px-1 overflow-hidden flex flex-col justify-between pb-2">
         {groups.map((group, groupIndex) => (
           <div key={groupIndex}>
             {group.map((item) => (
@@ -52,7 +54,7 @@ const StudioMenu = () => {
                 variant="ghost"
                 asChild
                 className={cn(
-                  'p-0 has-[>svg]:px-0 mx-0.5 mt-2 flex justify-start',
+                  'p-0 has-[>svg]:px-0 mx-0.5 mt-1 flex justify-start',
                   item.active && 'bg-muted-foreground/20',
                 )}
               >
@@ -73,7 +75,7 @@ const StudioMenu = () => {
         ))}
       </nav>
       <Separator className="block md:hidden" />
-      <div className="block md:hidden p-4 space-y-4 overflow-hidden">
+      <div className="block md:hidden p-2 space-y-4 overflow-hidden">
         <OrganizationSelector userOrganizationData={userOrganizationData} />
       </div>
     </div>
