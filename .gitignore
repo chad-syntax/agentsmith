@@ -48,4 +48,4 @@ ts-sdk/node_modules
 .env.sentry-build-plugin
 
 # Docs Build artifacts
-# .source
+.source
