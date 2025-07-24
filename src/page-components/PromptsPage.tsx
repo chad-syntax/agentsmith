@@ -11,6 +11,7 @@ import { H1, H2, H3, P } from '@/components/typography';
 import { GetPromptsByProjectIdResult } from '@/lib/PromptsService';
 import { DisplayTime } from '@/components/display-time';
 import { useRouter } from 'next/navigation';
+import { Plus } from 'lucide-react';
 
 type PromptsPageProps = {
   prompts: NonNullable<GetPromptsByProjectIdResult>;
@@ -35,10 +36,13 @@ export const PromptsPage = (props: PromptsPageProps) => {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex max-md:flex-wrap max-md:gap-4 justify-between items-center mb-6">
         <H1>Prompts Library</H1>
         <div className="space-x-4">
-          <Button onClick={() => setIsCreateModalOpen(true)}>Create New Prompt</Button>
+          <Button onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="h-4 w-4" />
+            New Prompt
+          </Button>
         </div>
       </div>
 

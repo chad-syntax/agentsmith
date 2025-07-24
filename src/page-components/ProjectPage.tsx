@@ -170,10 +170,6 @@ export const ProjectPage = (props: ProjectPageProps) => {
             <Info size={16} />
             <AlertTitle>1. Installation</AlertTitle>
             <AlertDescription>
-              <div className="text-xs">
-                During alpha phase we are only building the SDK to github branches, npm registry
-                coming soon!
-              </div>
               Install the Agentsmith SDK via npm:
               <div className="flex items-center gap-1 mt-2">
                 <div className="font-mono bg-muted p-2 rounded-md flex items-center gap-2">
@@ -197,7 +193,7 @@ export const ProjectPage = (props: ProjectPageProps) => {
           <Alert variant="default" className="mt-4">
             <Info size={16} />
             <AlertTitle>2. Get Your API Key and Project ID</AlertTitle>
-            <AlertDescription>
+            <AlertDescription className="max-md:overflow-x-scroll">
               Get your API key from below or the organization settings page:
               <div className="my-2">
                 <ApiKeyReveal
@@ -226,7 +222,7 @@ export const ProjectPage = (props: ProjectPageProps) => {
           <Alert variant="default" className="mt-4">
             <Info size={16} />
             <AlertTitle>3. Usage</AlertTitle>
-            <AlertDescription>
+            <AlertDescription className="max-md:overflow-x-scroll">
               Initialize the SDK with your API key and project ID:
               <div className="relative w-full">
                 <div className="absolute top-0 right-0 z-10">

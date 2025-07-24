@@ -62,7 +62,7 @@ const PricingCard = (props: PricingCardProps) => {
   );
 
   return (
-    <Card className="bg-card border-border rounded-lg overflow-hidden relative flex-1 min-w-0 flex flex-col">
+    <Card className="bg-card border-border rounded-lg flex-1 min-w-0 flex flex-col">
       <CardHeader className="pb-4 flex-shrink-0">
         <div className="flex items-center justify-between">
           <h3 className="text-lg sm:text-xl font-bold text-card-foreground">{card.title}</h3>
@@ -131,7 +131,7 @@ const PricingCard = (props: PricingCardProps) => {
           ))}
         </ul>
       </CardContent>
-      <CardFooter className="px-4 flex-shrink-0">
+      <CardFooter className="px-4">
         <Button
           onClick={() => setIsLoading(true)}
           variant={card.buttonVariant}

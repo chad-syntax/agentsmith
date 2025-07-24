@@ -25,18 +25,16 @@ export const RoadmapProposeCta = (props: RoadmapProposeCtaProps) => {
       Propose Feature
     </Button>
   ) : isWaitlisted ? (
-    <Link href={routes.marketing.waitlisted} passHref legacyBehavior>
-      <Button
-        asChild
-        onClick={() => toast.info('You must have studio access to propose a feature')}
-        className={cn('gap-0', className)}
-      >
-        <div>
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Propose Feature
-        </div>
-      </Button>
-    </Link>
+    <Button
+      asChild
+      onClick={() => toast.info('You must have studio access to propose a feature')}
+      className={cn('gap-0', className)}
+    >
+      <Link href={routes.marketing.waitlisted}>
+        <PlusCircle className="h-4 w-4 mr-2" />
+        Propose Feature
+      </Link>
+    </Button>
   ) : currentUserId ? (
     <Button onClick={() => setIsProposeModalOpen(true)} className={cn('gap-0', className)}>
       <PlusCircle className="h-4 w-4 mr-2" />

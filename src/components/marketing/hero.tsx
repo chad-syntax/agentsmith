@@ -121,7 +121,7 @@ export const HeroSection = () => {
             </div>
             <div className="flex gap-2 justify-center lg:justify-start">
               <Button size="lg" asChild>
-                <Link href={routes.auth.signIn}>Get Started</Link>
+                <Link href={routes.auth.signUp}>Get Started</Link>
               </Button>
               <Button variant="outline" size="lg" asChild>
                 <Link href={routes.docs.home}>Docs</Link>

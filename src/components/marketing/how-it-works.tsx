@@ -19,13 +19,13 @@ const steps: HowItWorksStep[] = [
     icon: FlaskConical,
     title: 'Test & Refine',
     description:
-      'Test your prompts with different models and inputs, refining them for optimal performance and reliability.',
+      'Test your prompts with different models and inputs in the Studio, refining them for optimal performance.',
   },
   {
     icon: Rocket,
-    title: 'Sync & Deploy',
+    title: 'Sync, Deploy, and Observe',
     description:
-      'Sync your prompts to your repository, and deploy your AI agents. Easily scale as your needs grow.',
+      'Sync your prompts to your repository, integrate them into your codebase, and monitor your usage in the Studio.',
   },
 ];
 

@@ -59,9 +59,6 @@ export const SignInForm = ({ className, requiredTos = true, ...props }: SignInFo
   return (
     <div className={cn('flex flex-col gap-6', className)} {...props}>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">Welcome!</CardTitle>
-        </CardHeader>
         <CardContent>
           <div>
             <form onSubmit={handleSocialLogin}>
@@ -143,10 +140,12 @@ export const SignInForm = ({ className, requiredTos = true, ...props }: SignInFo
                     className="cursor-pointer w-4 h-4 border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                   />
                   <Label htmlFor="tos-agree" className="text-sm">
-                    I agree to the{' '}
-                    <Link href={routes.marketing.terms} className="underline">
-                      Terms of Service
-                    </Link>
+                    <span>
+                      I agree to the{' '}
+                      <Link href={routes.marketing.terms} className="underline">
+                        Terms of Service
+                      </Link>
+                    </span>
                   </Label>
                 </div>
                 {mustAgreeTos && (

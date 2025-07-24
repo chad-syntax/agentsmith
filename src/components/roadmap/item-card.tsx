@@ -16,6 +16,8 @@ type RoadmapItemCardProps = {
 export const RoadmapItemCard = (props: RoadmapItemCardProps) => {
   const { item, onUpvote } = props;
 
+  const isVotingEnabled = item.state !== 'COMPLETED' && item.state !== 'REJECTED';
+
   return (
     <Card className="flex flex-col">
       <CardHeader>
@@ -29,7 +31,7 @@ export const RoadmapItemCard = (props: RoadmapItemCardProps) => {
               Avg. Rating: {item.avg_score}
             </Badge>
           </div>
-          {onUpvote && <RoadmapVoteCta item={item} onUpvote={onUpvote} />}
+          {isVotingEnabled && onUpvote && <RoadmapVoteCta item={item} onUpvote={onUpvote} />}
         </div>
         <Link className="hover:text-primary" href={routes.marketing.roadmapItem(item.slug)}>
           <h3 className="text-xl font-semibold line-clamp-2" title={item.title}>

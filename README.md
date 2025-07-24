@@ -7,9 +7,8 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Website](https://img.shields.io/badge/agentsmith.app-brightgreen)](https://agentsmith.app)
-[![Alpha Club](https://img.shields.io/badge/Join%20Alpha%20Club-blueviolet)](https://agentsmith.app/#pricing)
+[![Plans & Pricing](https://img.shields.io/badge/Join%20Alpha%20Club-blueviolet)](https://agentsmith.app/#pricing)
 [![Roadmap](https://img.shields.io/badge/Roadmap-blue)](https://agentsmith.app/roadmap)
-[![Join Waitlist](https://img.shields.io/badge/Join%20Waitlist-ff69b4)](https://agentsmith.app/#join-waitlist)
 
 ## Overview
 

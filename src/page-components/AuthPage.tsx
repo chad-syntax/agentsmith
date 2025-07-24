@@ -10,7 +10,7 @@ type AuthPageProps = {
 export const AuthPage = ({ pageType }: AuthPageProps) => (
   <div className="container mt-16 md:mt-32 mx-auto flex flex-col items-center">
     <H1 className="text-center mb-12">Agentsmith</H1>
-    <div className="max-w-lg w-full px-4 md:px-8">
+    <div className="max-w-lg w-full">
       <SignInForm requiredTos={pageType === 'sign-up'} />
     </div>
     <div>

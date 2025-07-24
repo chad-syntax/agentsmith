@@ -18,7 +18,7 @@ import { GetOnboardingChecklistResult } from '@/lib/UsersService';
 
 export const OnboardingChecklist = () => {
   const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(false);
-  const [listExpanded, setListExpanded] = useState(true);
+  const [listExpanded, setListExpanded] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const prevAllItemsCompletedRef = useRef(false);
   const onboardingChecklistRef = useRef<GetOnboardingChecklistResult[number] | null>(null);
@@ -115,6 +115,14 @@ export const OnboardingChecklist = () => {
     prevAllItemsCompletedRef.current = allItemsCompleted;
   }, [allItemsCompleted, onboardingChecklist]);
 
+  useEffect(() => {
+    // use media query js to check if the screen is not mobile breakpoint, if not, set list expanded to true
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    if (mediaQuery.matches) {
+      setListExpanded(true);
+    }
+  }, []);
+
   if (onboardingCompleted || !onboardingChecklist) {
     return null;
   }
@@ -133,13 +141,18 @@ export const OnboardingChecklist = () => {
           setOnboardingChecklist((prev) => (!prev ? null : { ...prev, repoConnected: true }))
         }
       />
-      <Card className="fixed w-[calc(100%-16px)] md:w-auto bottom-2 right-2 z-50 gap-0 py-4 shadow-xl">
+      <Card className="max-sm:rounded-none max-sm:border-b-0 max-sm:border-l-0 max-sm:border-r-0 fixed max-sm:w-full w-[calc(100%-16px)] sm:w-auto bottom-0 right-0 sm:bottom-2 sm:right-2 z-50 gap-0 py-2 sm:py-4 shadow-xl">
         <CardHeader className="px-4 gap-2" onClick={() => setListExpanded(!listExpanded)}>
           <div className="flex items-center justify-between cursor-pointer">
-            <H4 className="text-lg">Get Started</H4>
-            <ChevronDown className={cn('transition-transform', listExpanded ? '' : '-rotate-90')} />
+            <H4 className="text-md sm:text-lg">Get Started</H4>
+            <ChevronDown
+              className={cn('max-sm:size-5 transition-transform', listExpanded ? '' : '-rotate-90')}
+            />
           </div>
-          <Progress value={percentageComplete} />
+          <Progress
+            className={cn('hidden sm:block', listExpanded && 'block')}
+            value={percentageComplete}
+          />
         </CardHeader>
         <div
           className={cn(
@@ -148,9 +161,9 @@ export const OnboardingChecklist = () => {
           )}
         >
           <CardContent className="px-4 overflow-hidden mr-4">
-            <ul className="flex flex-col gap-4 pt-4">
-              {items.map((item, idx) => (
-                <li key={item.label} className="flex items-end gap-3">
+            <ul className="flex flex-col gap-2 sm:gap-4 pt-4 mb-2 sm:mb-0">
+              {items.map((item) => (
+                <li key={item.label} className="flex items-end gap-3 text-sm sm:text-base">
                   {item.done ? (
                     <CheckIcon className="text-green-500 w-5 h-5" />
                   ) : (
@@ -163,7 +176,7 @@ export const OnboardingChecklist = () => {
                   ) : !item.done && item.onClick && !item.disabled ? (
                     <Button
                       variant="link"
-                      className="p-0 text-base h-auto font-normal underline"
+                      className="p-0 text-md sm:text-base h-auto font-normal underline"
                       onClick={item.onClick}
                     >
                       {item.label}
