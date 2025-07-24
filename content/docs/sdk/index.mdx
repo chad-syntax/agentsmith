@@ -1,0 +1,25 @@
+---
+title: Introduction to the SDK
+description: An overview of the Agentsmith TypeScript SDK for integrating prompts into your application.
+---
+
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { InfoIcon } from 'lucide-react';
+
+The Agentsmith SDK is the bridge between your version-controlled prompts and your application code. It's a type-safe TypeScript library designed for reliability, performance, and ease of use.
+
+### Key Features
+
+- **Type Safety**: The SDK automatically generates TypeScript types from your prompt definitions, ensuring you use the correct variables and preventing runtime errors.
+- **Git-Native**: It's designed to read prompts directly from the files in your local repository, making your Git history the single source of truth.
+- **Flexible Fetching**: While it prioritizes local files, the SDK can fall back to fetching from the Agentsmith API, ensuring your application can always get the latest prompts.
+- **Detailed Observability**: Every execution is logged, providing a `logUuid` that you can use to trace and debug prompt behavior in the Studio.
+
+<Alert variant="info">
+  <InfoIcon className="h-4 w-4" />
+  <AlertTitle>Ready to dive in?</AlertTitle>
+  <AlertDescription>
+    Check out the [Basic Usage](/docs/sdk/basic-usage) guide to get the SDK up and running in
+    minutes.
+  </AlertDescription>
+</Alert>

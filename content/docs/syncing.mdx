@@ -1,0 +1,71 @@
+---
+title: Syncing
+description: Understand how Agentsmith synchronizes prompts with your GitHub repository.
+---
+
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
+import { Mermaid } from '@/components/docs/mermaid';
+
+Agentsmith's Git Sync feature is the bridge between the intuitive authoring experience in the Studio and the rigorous, version-controlled environment of your codebase. It ensures that your prompts are treated as first-class citizens in your development workflow.
+
+## How Synchronization Works
+
+The sync process is bi-directional, meaning changes can originate from either the Studio or your Git repository.
+
+<Mermaid chart="
+sequenceDiagram
+    participant Studio
+    participant Agentsmith DB
+    participant Sync Engine
+    participant GitHub Repo
+
+    Studio->>Agentsmith DB: Save Prompt Changes
+    alt User Clicks 'Sync' in Studio
+        Studio->>Sync Engine: Trigger Sync
+        Sync Engine->>Agentsmith DB: Get Latest State
+        Sync Engine->>GitHub Repo: Get Current State
+        Sync Engine->>Sync Engine: Compare & Diff
+        Sync Engine->>GitHub Repo: Push Changes (Commit/PR)
+    end
+
+    alt Developer Pushes to Repo
+        GitHub Repo->>Sync Engine: Webhook Notification
+        Sync Engine->>GitHub Repo: Get Latest State
+        Sync Engine->>Agentsmith DB: Get Current State
+        Sync Engine->>Sync Engine: Compare & Diff
+        Sync Engine->>Agentsmith DB: Update Prompts
+    end
+
+" />
+
+### Triggering a Sync from the Studio
+
+You can initiate a sync at any time by clicking the **Sync** button in the Studio. This process will:
+
+1.  Compare the state of your prompts in the Studio with the corresponding files in your connected GitHub repository.
+2.  Generate a set of changes (creations, updates, deletions).
+3.  Commit these changes to a new branch and open a pull request, allowing for team review.
+
+### Syncing Changes from GitHub
+
+When you push changes to the prompt files in your connected repository, a webhook automatically notifies the Sync Engine. The engine then runs the same comparison process and updates the prompts in the Studio to reflect the changes from Git.
+
+<Alert variant="default">
+  <Info />
+  <AlertTitle>Publishing on Default Branch</AlertTitle>
+  <AlertDescription>
+    To prevent accidental publishing of works-in-progress, Agentsmith will only mark prompts as
+    "published" when the changes are pushed to your repository's **default branch** (e.g., `main` or
+    `master`). Changes pushed to other branches will create `DRAFT` versions in the Studio.
+  </AlertDescription>
+</Alert>
+
+## Reviewing Sync History
+
+To see a full audit trail of all synchronization events, navigate to the **Sync Events** tab in the Studio. Here you will find:
+
+- A log of all syncs, whether triggered from the Studio or GitHub.
+- The status of each sync (e.g., success, failure).
+- A detailed view of the changes (diff) for each sync.
+- A link to the corresponding pull request in GitHub.

@@ -35,13 +35,12 @@ const getBadgeColor = (type: VariableType) => {
 
 type VariablesSidebarProps = {
   readOnly?: boolean;
-  defaultOpen?: boolean;
 };
 
 export const VariablesSidebar = (props: VariablesSidebarProps) => {
-  const { readOnly = false, defaultOpen = true } = props;
+  const { readOnly = false } = props;
 
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [isOpen, setIsOpen] = useState(true);
 
   const { selectedProjectUuid } = useApp();
   const { state } = usePromptPage();

@@ -20,6 +20,7 @@ import { useAuth } from '@/providers/auth';
 import { VALID_ROADMAP_SCORES } from '@/app/constants';
 import { CreateRoadmapItemPayload } from '@/lib/RoadmapService';
 import { RoadmapService } from '@/lib/RoadmapService';
+import { revalidateRoadmapAction } from '@/app/actions/roadmap';
 
 type ProposeRoadmapItemModalProps = {
   isOpen: boolean;
@@ -77,6 +78,7 @@ export const ProposeRoadmapItemModal = (props: ProposeRoadmapItemModalProps) => 
       setImpactScore(VALID_ROADMAP_SCORES[2] || 3);
       onOpenChange(false);
       onSuggestionAdded();
+      await revalidateRoadmapAction();
     } catch (error: any) {
       console.error('Error proposing roadmap item:', error);
       toast.error(error.message || 'Failed to submit suggestion. Please try again.');

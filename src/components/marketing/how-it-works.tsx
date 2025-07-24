@@ -19,13 +19,13 @@ const steps: HowItWorksStep[] = [
     icon: FlaskConical,
     title: 'Test & Refine',
     description:
-      'Test your prompts with different models and inputs, refining them for optimal performance and reliability.',
+      'Test your prompts with different models and inputs in the Studio, refining them for optimal performance.',
   },
   {
     icon: Rocket,
-    title: 'Sync & Deploy',
+    title: 'Sync, Deploy, and Observe',
     description:
-      'Sync your prompts to your repository, and deploy your AI agents. Easily scale as your needs grow.',
+      'Sync your prompts to your repository, integrate them into your codebase, and monitor your usage in the Studio.',
   },
 ];
 
@@ -37,8 +37,8 @@ export const HowItWorksSection = () => {
           <h3 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">
             How It Works
           </h3>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Get started with Agentsmith in three simple steps
+          <p className="text-xl text-muted-foreground mx-auto">
+            Start using Agentsmith to streamline your prompt authoring and deployment.
           </p>
         </div>
 

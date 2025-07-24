@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { usePostHog } from 'posthog-js/react';
 import { pricingPlans, PricingPlan } from '@/constants/pricing';
+import { productSchema } from '@/constants/structured-json';
 import { useState } from 'react';
 import { Switch } from '../ui/switch';
 
@@ -132,6 +133,10 @@ export const PricingSection = () => {
 
   return (
     <section id="pricing" className="bg-background scroll-mt-40">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
       <div className="container px-4 md:px-6 mx-auto">
         <div className="text-center mb-16">
           <h3 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-4 text-foreground">

@@ -7,7 +7,6 @@ import { NonStreamingChoice } from '@/lib/openrouter';
 import { connectOpenrouter } from '@/app/actions/openrouter';
 import { routes } from '@/utils/routes';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Dialog,
@@ -28,6 +27,8 @@ import { usePromptPage } from '@/providers/prompt-page';
 import { PromptContentEditor } from '../editors/prompt-editor';
 import { VariableInput } from '../variable-input';
 import { JsonEditor } from '../editors/json-editor';
+import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const TABS = {
   content: 'content',
@@ -49,6 +50,7 @@ export const PromptTestModal = () => {
   const { state, closeTestModal, setInputVariables } = usePromptPage();
   const {
     currentVersion,
+    editorConfig,
     mergedIncludedVariables,
     isTestModalOpen: isOpen,
     inputVariables,
@@ -103,7 +105,7 @@ export const PromptTestModal = () => {
         throw new Error(errorData.error || 'Failed to run prompt');
       }
 
-      if ((currentVersion.config as any)?.stream && response.body) {
+      if (editorConfig.stream && response.body) {
         let fullResult: any = {};
         let content = '';
 
@@ -176,6 +178,16 @@ export const PromptTestModal = () => {
     });
   };
 
+  const handleConnectOpenrouter = async () => {
+    closeTestModal();
+    const response = await connectOpenrouter(selectedOrganizationUuid);
+
+    if (response && !response.success) {
+      toast.error('Failed to connect OpenRouter, please try again or contact support.');
+      return;
+    }
+  };
+
   // If no OpenRouter key is configured, show the connection UI instead
   if (!hasOpenRouterKey) {
     return (
@@ -191,13 +203,7 @@ export const PromptTestModal = () => {
           </DialogHeader>
           <div className="space-y-4">
             {isOrganizationAdmin ? (
-              <Button
-                onClick={() => {
-                  connectOpenrouter(selectedOrganizationUuid);
-                  closeTestModal();
-                }}
-                className="w-full"
-              >
+              <Button onClick={handleConnectOpenrouter} className="w-full">
                 Connect OpenRouter
               </Button>
             ) : (
@@ -326,7 +332,13 @@ export const PromptTestModal = () => {
                   </div>
                 </TabsContent>
                 <TabsContent value={TABS.response} className="flex-1 overflow-auto">
-                  <JsonEditor value={fullResult} readOnly minHeight="100%" />
+                  {isRunning ? (
+                    <div className="flex items-center justify-center h-full">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    </div>
+                  ) : (
+                    <JsonEditor value={fullResult} readOnly minHeight="100%" />
+                  )}
                 </TabsContent>
               </Tabs>
             ) : (

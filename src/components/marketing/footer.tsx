@@ -34,6 +34,14 @@ const footerData: FooterColumn[] = [
         label: 'NPM',
         external: true,
       },
+      {
+        href: '/llms.txt',
+        label: 'llms.txt',
+      },
+      {
+        href: '/sitemap.xml',
+        label: 'Sitemap',
+      },
     ],
   },
   {

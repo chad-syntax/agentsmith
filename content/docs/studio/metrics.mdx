@@ -1,0 +1,30 @@
+---
+title: Metrics
+description: An overview of the Metrics page in the Agentsmith Studio.
+---
+
+The Metrics page provides detailed analytics about your prompt executions. You can visualize data for token usage, latency, cost, and duration over time.
+
+![Metrics Page Screenshot](/studio-screenshots/metrics.png)
+
+Key features of the Metrics page include:
+
+- **Metric Tabs**: Switch between different metrics:
+
+  - **Tokens**: The number of tokens processed.
+  - **Latency**: The time it took for the LLM to respond in milliseconds.
+  - **Cost**: The cost of the LLM execution in USD.
+  - **Duration**: The total time for the prompt execution to complete in milliseconds.
+
+- **Date Range Picker**: Select a custom date range to view metrics for a specific period.
+
+- **Grouping and Filtering**:
+
+  - **Group by**: Group the data by `prompt`, `version`, or `model` to see how each contributes to the overall metrics.
+  - **Filters**: Filter the data by specific prompts, prompt versions, or models to narrow down your analysis.
+
+- **Interactive Chart**: The main chart visualizes the selected metric over the chosen time period. If you group the data, the chart will display a stacked area chart showing the breakdown by group.
+
+- **Data Export**: Download the raw chart data as a CSV file for further analysis.
+
+- **Total Metrics**: A card displays the total (or average, for duration) for the selected metric over the specified period.

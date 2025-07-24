@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { UserNeedsOrgMembership } from '@/components/user-needs-org-membership';
+import packageJson from '../../package.json';
 
 type StudioPageProps = {
   userOrganizationData: NonNullable<GetUserOrganizationDataResult>;
@@ -13,8 +14,18 @@ type StudioPageProps = {
 const StudioPageHeader = () => (
   <>
     <div className="flex justify-start items-start gap-2">
-      <H1 className="mb-6 relative">Agentsmith Studio</H1>
-      <span className="text-xs tracking-wider font-light">ALPHA</span>
+      <H1 className="mb-6 max-w-full">
+        <span>Agentsmith</span>
+        <br className="inline sm:hidden" />
+        <span className="hidden sm:inline">&nbsp;</span>
+        <span className="relative">
+          Studio
+          <span className="absolute top-2 text-xs font-light ml-2">
+            <span className="tracking-wider">ALPHA</span>
+            &nbsp;v{packageJson.version}
+          </span>
+        </span>
+      </H1>
     </div>
     <Alert>
       <AlertTitle className="text-lg font-semibold">
@@ -58,7 +69,7 @@ export const StudioPage = (props: StudioPageProps) => {
               return (
                 <Card
                   key={orgUser.organizations.uuid}
-                  className="transition-shadow hover:shadow-lg group"
+                  className="transition-shadow hover:shadow-lg group gap-4"
                 >
                   <CardHeader>
                     <CardTitle className="text-xl font-semibold">

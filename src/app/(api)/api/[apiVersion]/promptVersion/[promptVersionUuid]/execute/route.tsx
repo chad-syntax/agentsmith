@@ -210,7 +210,16 @@ export async function POST(
     if ((error as Error)?.message === 'Request timed out') {
       return NextResponse.json({ error: 'Request timed out' }, { status: 504 });
     }
+    if (error instanceof Error && error.message.includes('Failed to create log entry')) {
+      return NextResponse.json(
+        { error: 'Failed to create log entry, please check your plan limits and try again.' },
+        { status: 403 },
+      );
+    }
     agentsmith.logger.error(error, 'Error running prompt');
-    return NextResponse.json({ error: 'Error running prompt' }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Error running prompt' },
+      { status: 500 },
+    );
   }
 }

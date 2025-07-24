@@ -1,0 +1,87 @@
+---
+title: Advanced Usage
+description: Explore advanced features of the Agentsmith SDK like streaming, overrides, and multi-turn conversations.
+---
+
+Once you've mastered the basics, the Agentsmith SDK offers several advanced features to handle more complex use cases.
+
+### Streaming Responses
+
+For real-time applications like chatbots, you can stream the response from the model as it's being generated. This provides a much better user experience than waiting for the full response to complete.
+
+```ts
+const { tokens } = await helloWorldPrompt.execute(
+  { firstName: 'Jane', lastName: 'Doe' },
+  { config: { stream: true } },
+);
+
+console.log('Streaming response:');
+for await (const token of tokens) {
+  process.stdout.write(token);
+}
+console.log(''); // Newline at the end
+
+await client.shutdown();
+```
+
+### Overriding Model Configuration
+
+You can override the default model configuration set in the Studio on a per-call basis. This is useful for A/B testing different models, adjusting parameters for specific users, or dynamically changing behavior.
+
+```ts
+const { content } = await helloWorldPrompt.execute(
+  { firstName: 'Test', lastName: 'User' },
+  {
+    config: {
+      model: 'google/gemini-flash-1.5', // Try a different model
+      temperature: 0.8,
+      max_tokens: 50,
+    },
+  },
+);
+```
+
+### Custom Fetch Strategies
+
+The SDK can fetch prompts from your local filesystem or from the Agentsmith API. You can control this behavior with the `fetchStrategy` option during client initialization.
+
+```ts
+const client = new AgentsmithClient<Agency>(
+  process.env.AGENTSMI_API_KEY!,
+  process.env.AGENTSMI_PROJECT_ID!,
+  {
+    fetchStrategy: 'remote-fallback', // (default) Filesystem first, then remote
+    // 'fs-fallback':     Remote first, then filesystem
+    // 'fs-only':         Only use local files. Best for stability.
+    // 'remote-only':     Only use the API. Ensures you always have the latest version.
+  },
+);
+```
+
+### Multi-Turn Conversations
+
+While `execute()` is great for single-turn prompts, you can build complex, multi-turn conversations by compiling a prompt first and then using it within a custom message array. This gives you full control over the conversation history sent to the model.
+
+```ts
+// First, compile the prompt to get its content
+const { compiledPrompt } = await helloWorldPrompt.compile({
+  firstName: 'John',
+  lastName: 'Doe',
+});
+
+// Then, construct your own message history
+const messages = [
+  { role: 'system', content: 'You are a helpful assistant.' },
+  { role: 'user', content: 'Can you greet my user for me?' },
+  { role: 'assistant', content: 'Certainly! What is their name?' },
+  { role: 'user', content: compiledPrompt },
+];
+
+// Finally, execute with the custom messages array
+const { content } = await helloWorldPrompt.execute(
+  {}, // Variables were already used in the compile step
+  { config: { messages } }, // Override the default message
+);
+
+console.log(content);
+```

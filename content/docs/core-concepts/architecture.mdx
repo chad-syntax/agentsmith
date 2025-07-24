@@ -1,0 +1,69 @@
+---
+title: Architecture
+description: Learn how Agentsmith works
+---
+
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
+import { Mermaid } from '@/components/docs/mermaid';
+
+At its core, Agentsmith is a platform designed to bridge the gap between prompt engineering and production-ready code. It provides a structured, version-controlled, and type-safe workflow for developing and deploying AI agents.
+
+Agentsmith consists of several key components that work together to provide a seamless experience from authoring to execution.
+
+<Mermaid
+  chart={`
+graph TD
+    A["<div style='font-weight:bold'>Agentsmith Studio</div><div style='font-size: smaller'>Visual prompt authoring</div>"]
+    subgraph " "
+        direction LR
+        B["<div style='font-weight:bold'>Your Application</div><div style='font-size: smaller'>Code using the Agentsmith SDK</div>"]
+        E["LLM execution"]
+        D["<div style='font-weight:bold'>OpenRouter</div><div style='font-size: smaller'>LLM gateway</div>"]
+    end
+    C["<div style='font-weight:bold'>GitHub Repository</div>"]
+    A -- "Syncs Button" --> C
+    C -- "Git Webhooks" --> A
+    C -- "git pull" --> B
+    A -- "Studio Executions" --> E
+    B -- "SDK Executions" --> E
+    E --> D
+    E -- "LLM Response Logged to Agentsmith" --> A
+    style A fill:#E3E7F1,stroke:#4A5568
+    style B fill:#D4EDEA,stroke:#4A5568
+    style C fill:#f5f5f5,stroke:#4A5568
+    style D fill:#fff0e6,stroke:#4A5568
+    style E fill:#fff0e6,stroke:#4A5568
+`}
+/>
+
+1.  **Agentsmith Studio**: A web-based interface for authoring, testing, and managing your prompts. This is where non-technical team members can collaborate with developers.
+2.  **GitHub**: Your Git repository acts as the single source of truth for all versioned prompts.
+3.  **Your Application**: The codebase where you install the Agentsmith SDK to consume and execute prompts.
+4.  **OpenRouter**: The gateway we use for all LLM calls. This provides flexibility, allowing you to switch between models from different providers without changing your code.
+
+<Alert variant="default">
+  <Info />
+  <AlertTitle>What is OpenRouter?</AlertTitle>
+  <AlertDescription>
+    We use [OpenRouter](https://openrouter.ai/) to provide a unified API for a vast range of LLMs.
+    This means you can experiment with different models, find the most cost-effective one for your
+    needs, and switch seamlessly, all without being locked into a single provider.
+  </AlertDescription>
+</Alert>
+
+## The Development Workflow
+
+The core philosophy of Agentsmith revolves around a "Git-as-source-of-truth" workflow that combines the best of visual editing and code-based reliability.
+
+- **Author & Test**: Prompts are created and tested in the visual Studio.
+- **Sync & Version**: Prompts are synced to your Git repository as versioned files. This creates a durable, reviewable history of all changes.
+- **Develop & Execute**: The type-safe SDK consumes these files in your application, ensuring that the prompts you execute match what's in your repository.
+
+This workflow ensures that changes to prompts can be reviewed, tested, and deployed with the same rigor as any other code change in your project.
+
+To learn more about the details, explore the following sections:
+
+- **[Prompt Authoring](/docs/prompt-authoring)**
+- **[Git Sync](/docs/git-sync)**
+- **[Using the SDK](/docs/sdk)**

@@ -8,6 +8,8 @@ import { useEffect, useRef } from 'react';
 import FWord from '@/assets/f-word.svg';
 import { AspectRatio } from '../ui/aspect-ratio';
 import { LandingHeroVideos } from './landing-hero-videos';
+import { routes } from '@/utils/routes';
+import Link from 'next/link';
 
 export const HeroSection = () => {
   const posthog = usePostHog();
@@ -93,16 +95,8 @@ export const HeroSection = () => {
         <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
           <div className="flex flex-col justify-center space-y-4">
             <div className="space-y-2">
-              <Button
-                asChild
-                size="sm"
-                className="mt-4 md:mt-0 rounded-full bg-primary/10 hover:bg-primary/20 text-xs font-medium text-primary mb-4"
-              >
-                <a href="#pricing" onClick={handleAccessClick}>
-                  Alpha Access Available
-                </a>
-              </Button>
-              <h1 className="font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-foreground">
+              <div className="h-[32px] mt-4 md:mt-0 rounded-full text-xs mb-4">&nbsp;</div>
+              <h2 className="font-bold tracking-tighter sm:text-5xl xl:text-6xl/none text-foreground">
                 <div className="text-[26px] 2xs:text-[30px] xs:text-[35px] sm:text-[56px] md:text-[66px] lg:text-[44px] xl:text-[56px] 2xl:text-6xl 3xl:text-[62px] text-center">
                   DEVELOP AGENTS WITH
                 </div>
@@ -118,18 +112,21 @@ export const HeroSection = () => {
                 <div className="-mt-30 2xs:-mt-38 max-sm:-mb-12 xs:-mt-44 sm:-mt-44 md:-mt-50 lg:-mt-34 xl:-mt-48 3xl:-mt-56 text-center text-[120px] 2xs:text-[144px] xs:text-[158px] sm:text-[256px] md:text-[296px] lg:text-[196px] xl:text-[248px] 2xl:text-[272px] 3xl:text-[277px]">
                   MIND
                 </div>
-              </h1>
+              </h2>
               <div id="join-waitlist" />
-              <h2 className="text-muted-foreground md:text-xl pt-2">
+              <h1 className="text-muted-foreground md:text-xl pt-2">
                 Unleash your prompt engineers. Unshackle your developers. Agentsmith is the ultimate
                 Prompt CMS. Build, refine, and ship AI agents faster than the other guys.
-              </h2>
+              </h1>
             </div>
-            {/* Replace form with BrevoEmailSubscribe */}
-            <BrevoEmailSubscribe trackingLocation="hero" form="agentsmithInitialLanding" />
-            <p className="text-primary font-medium hover:underline">
-              <a href="#pricing">🎉 Pay now to receive early access. Join the alpha club!</a>
-            </p>
+            <div className="flex gap-2 justify-center lg:justify-start">
+              <Button size="lg" asChild>
+                <Link href={routes.auth.signUp}>Get Started</Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link href={routes.docs.home}>Docs</Link>
+              </Button>
+            </div>
           </div>
           <div>
             <div className="hidden lg:block">&nbsp;</div>

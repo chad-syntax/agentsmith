@@ -1,69 +1,156 @@
 ---
 title: Prompt Authoring
-description: Author prompts with ease
+description: Author prompts with ease using Jinja templating and structured variables.
 ---
 
-## Jinja
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
-All prompts should follow the Jinja2 template syntax, more specifically, the [nunjucks](https://mozilla.github.io/nunjucks/templating.html) syntax.
+Authoring prompts in Agentsmith is designed to be both powerful and straightforward. We use the Jinja2 templating syntax, which allows you to create dynamic, reusable prompts with variables, logic, and even composition.
 
-## Versioning
+## Templating with Jinja
 
-When first creating a prompt, it will be in DRAFT status. This means it will not be available under the "latest" tag when fetching via the SDK.
-However, you can still fetch the prompt by using the `version` parameter. (e.g. `hello-world@0.0.1`)
+All prompts in Agentsmith are powered by [Nunjucks](https://mozilla.github.io/nunjucks/templating.html), a rich and powerful templating language for JavaScript that is a port of Jinja2. This allows you to go beyond simple variable substitution and implement logic directly within your prompts.
 
-You can publish a prompt by clicking the "Publish" button in the studio.
-That version will then be the "latest" version of the prompt and available for fetching via the SDK via the slug (`hello-world`) or the latest tag (`hello-world@latest`).
+### Basic Variables
 
-You can then create a new version of the prompt by clicking the "Create New Version" button in the studio.
-We make sure you follow the [semver](https://semver.org/) convention for versioning which quick access for patch, minor, and major version bumps.
+You can define variables in your prompt using the `{{ variable_name }}` syntax. In the Studio, you can define these variables, set their types (e.g., `string`, `number`, `boolean`), and provide default values.
 
-### Updating a published version
+**Example:**
 
-Once your prompt is published, it is generally advised to create a new version for any changes you make.
-However, you can also update a version that is already published by clicking the "Update Published Version" button in the studio.
-You will be met with a modal asking you to confirm, as this may affect any systems you have that are using that version expecting different variables or configuration.
-
-## Variables
-
-You can define variables in your prompt by using the `{{ variable_name }}` syntax.
-You have the option to define the type of the variable, and the default value.
+```jinja
+The customer's name is {{ customer_name }} and their account number is {{ account_id }}.
+```
 
 ### Global Variables
 
-Under the "Globals" tab in the studio, you can define global variables that are available to all prompts.
+For values that need to be accessible across all prompts in a project, you can define **Global Variables** under the "Globals" tab in the Studio. These are perfect for constants like your company name, brand voice guidelines, or system-wide instructions.
 
-These variables are available to all prompts, and can be used by calling `{{ global.variable_name }}` in your prompt.
+You can access them in any prompt using the `{{ global.variable_name }}` syntax.
 
-### Advanced Templating
-
-You can use the same features as nunjucks allows to use all kinds of logic in your prompts.
-
-For example, you can use the `{% if %}` tag to conditionally include content in your prompt.
+**Example:**
 
 ```jinja
-{% if condition %}
-This will be included in your prompt.
+As a support agent for {{ global.company_name }}, you must always be polite.
+```
+
+### Provided Variables
+
+Agentsmith also injects a few built-in variables for your convenience:
+
+- `{{ now() }}`: Returns the current UTC date and time in ISO 8601 format (e.g., `2025-07-23T12:00:00.000Z`).
+
+## Prompt Composition
+
+To keep your prompts organized and reusable, you can include one prompt within another using the `{% include %}` tag. This is a powerful feature for building complex agents from smaller, manageable parts.
+
+You can include a prompt by its slug, which will use the latest published version, or by a specific version string.
+
+**Example:**
+
+Let's say you have a prompt with the slug `emoji-instruction`:
+
+```jinja
+You must include a single {{ color }} colored emoji in your response.
+```
+
+You can include it in another prompt like this:
+
+```jinja
+{% include "emoji-instruction" %}
+
+Respond with your name {{ agent_name }}
+```
+
+You can also specify a version:
+
+```jinja
+{% include "emoji-instruction@0.1.0" %}
+```
+
+<Alert variant="default">
+  <Info />
+  <AlertTitle>Limitations on Includes</AlertTitle>
+  <AlertDescription>
+    Currently, prompt inclusion is not recursive (a prompt can't include a prompt that includes
+    another prompt) and is limited to prompts within the same project.
+  </AlertDescription>
+</Alert>
+
+## Advanced Templating
+
+Jinja offers powerful control flow structures like conditionals and loops. This allows you to build highly dynamic prompts that can adapt to different inputs.
+
+### Conditionals
+
+Use `if`/`elif`/`else` blocks to conditionally render content.
+
+```jinja
+{% if user_tier == "premium" %}
+Thank you for being a valued premium member.
+{% else %}
+Consider upgrading to our premium plan for more features.
 {% endif %}
 ```
 
-You can also use the `{% for %}` tag to loop through a list of items.
+### Loops
+
+Use `for` loops to iterate over arrays. This is useful for formatting lists of items, generating examples, or processing structured data.
 
 ```jinja
-{% for item in list %}
-{{ item }}
+Please review the following items:
+{% for item in item_list %}
+- {{ item.name }}: {{ item.description }}
 {% endfor %}
 ```
 
-See all the available tags and filters [here](https://mozilla.github.io/nunjucks/templating.html).
+For more advanced templating features, refer to the [official Nunjucks documentation](https://mozilla.github.io/nunjucks/templating.html).
 
-## Configuration
+## Making Changes from Your Repository
 
-Each prompt comes with configuration that will be passed to OpenRouter when executed.
-You can provide a list of up to three models for OpenRouter to choose at random, or specify "openrouter/auto" to let OpenRouter choose the best model for your prompt.
+While the Studio provides a great visual editor, you can also embrace a "Git-first" workflow by making changes directly to the prompt files in your local repository. When you push these changes, Agentsmith's Sync Engine will automatically detect them and update the Studio.
 
-You can find a full list of all available models [here](https://openrouter.ai/models).
+### Updating an Existing Prompt
 
-Models have a wide range of support for different features. Such as web search, tools, and more. You can view all available configuration [here](https://openrouter.ai/docs/api-reference/overview).
+To update a prompt, simply edit the relevant files (e.g., `content.j2` or `variables.json`) for the version you wish to change and push your commit. The sync process will update the corresponding prompt in the Studio.
 
-You can further override the configuration when you execute a prompt via the [SDK](/docs/sdk).
+### Adding a New Prompt
+
+You can also create a new prompt directly from your filesystem.
+
+1.  Create a new directory under `agentsmith/prompts/` with the desired slug for your new prompt (e.g., `my-new-prompt`).
+2.  Inside that directory, create a `prompt.json` file.
+3.  Create a version directory (e.g., `0.0.1/`) and add the necessary `content.j2`, `variables.json`, and `version.json` files.
+
+<Alert variant="warning">
+  <AlertTitle>Logging Caveat for New Prompts</AlertTitle>
+  <AlertDescription>
+    When you create a new prompt directly via Git, the Agentsmith Studio is not aware of it until
+    after the first sync. Therefore, the very first execution of this new prompt via the SDK may not
+    be logged correctly, as the system has not yet assigned it a persistent ID. All subsequent
+    executions will be logged as expected.
+  </AlertDescription>
+</Alert>
+
+### Publishing via Git: Branches and the `status` Key
+
+Agentsmith uses a combination of your Git branch and a `status` key in `version.json` to determine whether a prompt version should be published.
+
+- **Feature Branches**: When you push changes to any non-default branch (e.g., a feature branch), new prompt versions will always be created in `DRAFT` status in the Studio. This allows you to safely test changes without affecting your production prompts.
+- **Default Branch (e.g., `main`)**: When you push changes to your repository's default branch, Agentsmith will look at the `status` field in the `version.json` file.
+  - If `"status": "PUBLISHED"`, the prompt version will be published.
+  - If `"status": "DRAFT"`, the version will remain a draft.
+
+This system gives you fine-grained control, allowing you to prepare and review prompt changes in a feature branch and then publish them declaratively by merging to main.
+
+## Model Configuration
+
+Each prompt version has a **Configuration** section in the Studio where you can set parameters that will be passed to the AI model during execution. This includes settings like:
+
+- **Model**: The specific LLM to use (e.g., `openai/gpt-4o`, `google/gemini-flash-1.5`). You can also specify `openrouter/auto` to let OpenRouter select the best model.
+- **Temperature**: Controls the randomness of the output.
+- **Max Tokens**: The maximum length of the generated response.
+
+You can find a full list of available models on [OpenRouter](https://openrouter.ai/models) and all supported configuration options in their [API reference](https://openrouter.ai/docs/api-reference/overview).
+
+These settings can be overridden at runtime via the [SDK](/docs/sdk), giving you maximum flexibility.

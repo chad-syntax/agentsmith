@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "npm:@supabase/supabase-js": "npm:@supabase/supabase-js@2.44.4",
+    "npm:stripe": "npm:stripe@16.2.0"
+  }
+}

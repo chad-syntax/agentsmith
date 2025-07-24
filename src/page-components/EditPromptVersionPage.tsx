@@ -92,13 +92,13 @@ export const EditPromptVersionPage = () => {
           </Link>
         </div>
 
-        <div className="flex items-end justify-start mb-4 gap-2">
+        <div className="flex max-md:flex-wrap max-md:gap-4 items-end justify-start mb-4 gap-2">
           <H1>{currentVersion.prompts.name}</H1>
           <Badge className="mb-1" variant={currentVersion.status}>
             {currentVersion.status}
           </Badge>
         </div>
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex max-md:flex-wrap max-md:gap-4 items-center justify-between mb-4">
           <div className="flex items-center justify-start gap-0.5">
             <span className="py-1 px-2 bg-muted rounded-sm text-sm">
               {currentVersion.prompts.slug}@{currentVersion.version}

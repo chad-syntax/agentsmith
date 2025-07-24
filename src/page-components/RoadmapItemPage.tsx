@@ -114,6 +114,8 @@ export const RoadmapItemPage = (props: RoadmapItemPageProps) => {
     return <div>Loading roadmap item...</div>; // Or some other loading state
   }
 
+  const isVotingEnabled = roadmapItem.state !== 'COMPLETED' && roadmapItem.state !== 'REJECTED';
+
   return (
     <div className="container py-10 mx-auto max-w-3xl px-4 lg:px-6">
       <div className="mb-8">
@@ -133,10 +135,12 @@ export const RoadmapItemPage = (props: RoadmapItemPageProps) => {
               Avg. Rating: {roadmapItem.avg_score}
             </Badge>
           </div>
-          <RoadmapVoteCta
-            item={roadmapItem}
-            onUpvote={(_item, score) => handleUpvoteInternal(score)}
-          />
+          {isVotingEnabled && (
+            <RoadmapVoteCta
+              item={roadmapItem}
+              onUpvote={(_item, score) => handleUpvoteInternal(score)}
+            />
+          )}
         </div>
         <h1 className="text-4xl font-bold tracking-tight mb-3">{roadmapItem.title}</h1>
         {roadmapItem.created_at && (

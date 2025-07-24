@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs';
 import type { NextConfig } from 'next';
 import { createMDX } from 'fumadocs-mdx/next';
 
@@ -44,6 +45,9 @@ const vercelVitals = 'vitals.vercel-insights.com';
 const vercelLive = 'vercel.live'; // For Vercel live feedback/preview tools
 const vercelBlob = '*.public.blob.vercel-storage.com';
 
+// Sentry
+const sentryIngest = 'o447951.ingest.sentry.io';
+
 // Other known services
 const unpkg = 'unpkg.com';
 const githubAvatars = 'avatars.githubusercontent.com';
@@ -55,6 +59,14 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 });
 
 const nextConfig: NextConfig = {
+  async rewrites() {
+    return [
+      {
+        source: '/docs/:path*.mdx',
+        destination: '/llms.mdx/:path*',
+      },
+    ];
+  },
   async headers() {
     const cspHeader = [
       `default-src ${self}`,
@@ -65,7 +77,7 @@ const nextConfig: NextConfig = {
       `media-src ${self} ${vercelBlob}`,
       `worker-src ${self} ${blob}`,
       `frame-src ${self} ${cfChallenges} ${sibforms} ${stripeFrame} td.doubleclick.net ${googleTagManager} ${vercelLive}`,
-      `connect-src ${self} ${supabaseWildcard} ${supabaseWsWildcard} ${localhostWildcard} ${localhostWsWildcard} ${cfChallenges} ${posthogHosts} ${googleAnalytics} ${googleTagManager} ${googleAds} ${googleAdServices} ${googleConnect} ${sibforms} ${stripeApi} ${openrouter} ${vercelVitals} ${vercelLive} wss://${vercelLive}`,
+      `connect-src ${self} ${supabaseWildcard} ${supabaseWsWildcard} ${localhostWildcard} ${localhostWsWildcard} ${cfChallenges} ${posthogHosts} ${googleAnalytics} ${googleTagManager} ${googleAds} ${googleAdServices} ${googleConnect} ${sibforms} ${stripeApi} ${openrouter} ${vercelVitals} ${vercelLive} wss://${vercelLive} ${sentryIngest}`,
       `object-src 'none'`, // Note: 'none' should be quoted
       `base-uri ${self}`,
       `form-action ${self} ${githubCom} ${openrouter} ${sibforms}`,
@@ -87,4 +99,34 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
 };
 
-export default withBundleAnalyzer(withMDX(nextConfig));
+export default withSentryConfig(withBundleAnalyzer(withMDX(nextConfig)), {
+  // For all available options, see:
+  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+
+  org: 'agentsmith',
+  project: 'javascript-nextjs',
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // For all available options, see:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  // This can increase your server load as well as your hosting bill.
+  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+  // side errors will fail.
+  tunnelRoute: '/monitoring',
+
+  // Automatically tree-shake Sentry logger statements to reduce bundle size
+  disableLogger: true,
+
+  // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+  // See the following for more information:
+  // https://docs.sentry.io/product/crons/
+  // https://vercel.com/docs/cron-jobs
+  automaticVercelMonitors: true,
+});

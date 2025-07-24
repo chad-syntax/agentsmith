@@ -1,0 +1,10 @@
+---
+title: Globals
+description: An overview of the Globals page in the Agentsmith Studio.
+---
+
+The Project Globals page allows you to define a set of global variables that can be used across all prompts within a project. This is useful for defining values that are shared, such as a persona or a set of rules.
+
+![Globals Page Screenshot](/studio-screenshots/globals.png)
+
+Globals are defined as a JSON object. You can add, edit, or remove key-value pairs in the editor and then save your changes. Once saved, these globals can be referenced in your prompts using Jinja2 templating syntax. For example, if you have a global variable named `persona`, you can include it in your prompt like this: `{{ global.persona }}`.

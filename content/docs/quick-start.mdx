@@ -1,0 +1,115 @@
+---
+title: Quickstart
+description: Build and execute your first AI prompt with Agentsmith in 5 minutes.
+---
+
+import { RefreshCcw } from 'lucide-react';
+
+This guide will walk you through creating, syncing, and executing your first prompt with Agentsmith. By the end, you'll have a simple "Hello, World!" prompt running in your local development environment.
+
+### 1. Prerequisites
+
+Before you begin, make sure you have the following:
+
+1. **Agentsmith Account** – [Sign up here](https://app.agentsmith.app/sign-up) if you don't have one.
+2. **GitHub Account & Repository** – You'll need a GitHub account and a repository where your prompts will be stored.
+3. **OpenRouter Account** – [Sign up for OpenRouter](https://openrouter.ai/) to enable LLM access.
+
+### 2. Connect to GitHub & OpenRouter
+
+Before you can create and sync prompts, you need to connect your Agentsmith project to a GitHub repository.
+
+1.  When you first enter the [Agentsmith Studio](https://app.agentsmith.app/studio), you should see an onboarding popup at the bottom right corner.
+2.  Click the **Install GitHub App** button and follow the instructions to authorize Agentsmith.
+3.  Once the app is installed, click the **Connect a Repository** button in the popup and choose the repository where your prompts will be stored.
+4.  Click the **Connect OpenRouter** button in the popup and authorize Agentsmith.
+
+### 2. Create a Prompt in the Studio
+
+Now, let's create a prompt in the Studio.
+
+1.  Navigate to the **Prompts** section in the sidebar.
+2.  Click **New Prompt** and give it a name, for example `Hello World`.
+3.  In the prompt editor, enter the following content:
+
+    ```jinja
+    Hello, {{ name }}!
+    ```
+
+4.  In the **Variables** sidebar, you should see that Agentsmith has automatically detected a new variable called `name` with a type of `string`.
+5.  Click **Publish** to make this version available as the `latest`.
+
+### 3. Sync to GitHub
+
+Now, let's get that prompt into your connected Git repository.
+
+1.  Click the <RefreshCcw className="w-4 h-4 inline-block" /> **Sync** button in the Studio header.
+2.  Agentsmith will open a pull request in your repository. This PR will contain the new prompt files.
+3.  Merge the pull request.
+
+### 4. Set Up Your Local Project
+
+Now that your prompt files are in your repository, let's get your local environment ready to use them.
+
+1.  Navigate to your project's directory on your local machine.
+2.  Pull the latest changes from GitHub to bring down the prompt files you just synced.
+    ```bash
+    git pull
+    ```
+    You should now see the `agentsmith` directory in your project.
+3.  Install the Agentsmith SDK as a dependency in your project.
+    ```bash
+    npm install @agentsmith-app/sdk
+    ```
+
+### 5. Execute the Prompt
+
+Create a file named `index.ts` and add the following code. This script will initialize the SDK, fetch the prompt from your local filesystem, and execute it.
+
+```ts
+import { AgentsmithClient } from '@agentsmith-app/sdk';
+import { Agency } from './agentsmith/agentsmith.types';
+
+// Get these from your Agentsmith project page in the Studio
+const sdkApiKey = process.env.AGENTSMITH_API_KEY!;
+const projectId = process.env.AGENTSMITH_PROJECT_ID!;
+
+async function main() {
+  const client = new AgentsmithClient<Agency>(sdkApiKey, projectId);
+
+  console.log("Fetching prompt 'hello-world'...");
+  const helloWorldPrompt = await client.getPrompt('hello-world');
+
+  console.log("Executing prompt with name: 'World'");
+  const { content } = await helloWorldPrompt.execute({
+    name: 'World',
+  });
+
+  console.log('✅ AI Response:', content);
+
+  await client.shutdown();
+}
+
+main().catch(console.error);
+```
+
+### 6. Run it!
+
+Set your environment variables and run the script.
+
+```bash
+export AGENTSMITH_API_KEY="sdk_..."
+export AGENTSMITH_PROJECT_ID="..."
+
+npx ts-node index.ts
+```
+
+You should see an output like this:
+
+```
+Fetching prompt 'hello-world'...
+Executing prompt with name: 'World'
+✅ AI Response: Hello, World!
+```
+
+Congratulations! You've successfully created, synced, and executed your first prompt with Agentsmith, leveraging a type-safe, Git-based workflow.

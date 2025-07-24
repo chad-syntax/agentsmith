@@ -1,28 +1,66 @@
 ---
 title: Welcome to Agentsmith
-description: Build AI agents with peace of mind
+description: Build, test, and deploy AI agents with a production-grade, Git-based workflow.
 ---
 
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { TriangleAlert } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { BookOpen, Rocket, Code, Box } from 'lucide-react';
 
-Agentsmith is an open-source AI agent development platform that makes building, testing, and deploying AI agents accessible to both technical and non-technical users. Our intuitive prompt authoring tools, seamless GitHub synchronization, and type-safe SDK ensure reliability and maintainability in production environments.
+Agentsmith is an open-source platform that brings the rigor of software development to AI prompt engineering. Move beyond messy text files and chaotic prompt management with a system built for reliability, versioning, and collaboration.
 
-## What is Agentsmith?
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+  <a href="/docs/quick-start" className="h-full no-underline group">
+    <Card className="h-full transition-shadow duration-200 group-hover:shadow-lg">
+      <CardHeader>
+        <Rocket className="h-8 w-8 mb-2 text-primary" />
+        <CardTitle className="underline">Quickstart</CardTitle>
+        <CardDescription>
+          Deploy your first prompt in 5 minutes. A hands-on tutorial for the impatient developer.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  </a>
+  <a href="/docs/core-concepts/architecture" className="h-full no-underline group">
+    <Card className="h-full transition-shadow duration-200 group-hover:shadow-lg">
+      <CardHeader>
+        <Box className="h-8 w-8 mb-2 text-primary" />
+        <CardTitle className="underline">Core Concepts</CardTitle>
+        <CardDescription>
+          Understand the architecture and philosophy behind Agentsmith's production-grade workflow.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  </a>
+  <a href="/docs/studio/project" className="h-full no-underline group">
+    <Card className="h-full transition-shadow duration-200 group-hover:shadow-lg">
+      <CardHeader>
+        <BookOpen className="h-8 w-8 mb-2 text-primary" />
+        <CardTitle className="underline">Studio Guide</CardTitle>
+        <CardDescription>
+          Learn how to use the visual editor to author, test, and manage your prompts.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  </a>
+  <a href="/docs/sdk" className="h-full no-underline group">
+    <Card className="h-full transition-shadow duration-200 group-hover:shadow-lg">
+      <CardHeader>
+        <Code className="h-8 w-8 mb-2 text-primary" />
+        <CardTitle className="underline">SDK Reference</CardTitle>
+        <CardDescription>
+          Integrate your prompts into any application with our type-safe TypeScript SDK.
+        </CardDescription>
+      </CardHeader>
+    </Card>
+  </a>
+</div>
 
-Agentsmith is a comprehensive platform for AI agent development that bridges the gap between prompt engineering and production deployment. It provides:
+## The Agentsmith Workflow
 
-- **Intuitive Prompt Authoring** - Visual tools for creating and managing AI prompts with variables and versioning
-- **GitHub Integration** - Automatic synchronization of your prompts to GitHub repositories with version control
-- **Type-Safe Development** - Fully-typed TypeScript SDK that prevents runtime errors and ensures reliability
-- **Observability** - Built-in logging for debugging, monitoring, and cost tracking
-- **Multi-Provider Support** - Switch between AI providers seamlessly using OpenRouter integration
+Agentsmith is built around a simple, powerful, Git-native workflow:
 
-<Alert variant="warning">
-  <TriangleAlert />
-  <AlertTitle>Alpha Release</AlertTitle>
-  <AlertDescription>
-    Agentsmith is currently in alpha. Changes are pushed frequently and may include breaking
-    changes. If you encounter any issues, please reach out to support@agentsmith.app for assistance.
-  </AlertDescription>
-</Alert>
+1.  **Author in the Studio**: Use our web-based UI to create, test, and version your prompts with features like variables, model configuration, and prompt composition.
+2.  **Sync to Git**: Your prompts are saved as structured files (`.j2`, `.json`) in your GitHub repository, creating a version-controlled source of truth.
+3.  **Execute with the SDK**: Our type-safe SDK reads these files directly from your codebase, ensuring that what you test is what you deploy. No more silent failures from out-of-sync prompts.
+
+This approach bridges the gap between prompt engineers and developers, allowing for seamless collaboration and rock-solid reliability in production.

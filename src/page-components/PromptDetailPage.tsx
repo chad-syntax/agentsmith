@@ -49,7 +49,7 @@ export const PromptDetailPage = () => {
               </Button>
             </Link>
           </div>
-          <div className="flex gap-2 mb-4">
+          <div className="flex max-md:flex-wrap gap-2 mb-4">
             <Button
               onClick={openTestModal}
               className="bg-green-500 hover:bg-green-600 flex items-center gap-2"

@@ -43,3 +43,6 @@ next-env.d.ts
 # SDK output
 ts-sdk/dist
 ts-sdk/node_modules
+
+# Sentry Config File
+.env.sentry-build-plugin
