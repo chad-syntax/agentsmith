@@ -50,10 +50,10 @@ const client = new AgentsmithClient<Agency>(
   process.env.AGENTSMI_API_KEY!,
   process.env.AGENTSMI_PROJECT_ID!,
   {
-    // 'remote-fallback': Filesystem first, then API (default). Best for development.
+    fetchStrategy: 'remote-fallback', // (default) Filesystem first, then remote
+    // 'fs-fallback':     Remote first, then filesystem
     // 'fs-only':         Only use local files. Best for stability.
     // 'remote-only':     Only use the API. Ensures you always have the latest version.
-    fetchStrategy: 'fs-only',
   },
 );
 ```
