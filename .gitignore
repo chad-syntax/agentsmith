@@ -46,3 +46,6 @@ ts-sdk/node_modules
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Docs Build artifacts
+# .source
