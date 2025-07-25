@@ -58,7 +58,8 @@ export const PromptTestModal = () => {
   } = state;
 
   const [isRunning, setIsRunning] = useState(false);
-  const [testResult, setTestResult] = useState<string | null>(null);
+  const [completionContent, setCompletionContent] = useState<string | null>(null);
+  const [reasoningContent, setReasoningContent] = useState<string | null>(null);
   const [fullResult, setFullResult] = useState<any | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<Tab>(TABS.content);
@@ -70,7 +71,7 @@ export const PromptTestModal = () => {
 
   const handleTestPrompt = async () => {
     setIsRunning(true);
-    setTestResult(null);
+    setCompletionContent(null);
     setFullResult(null);
     setTestError(null);
 
@@ -108,6 +109,7 @@ export const PromptTestModal = () => {
       if (editorConfig.stream && response.body) {
         let fullResult: any = {};
         let content = '';
+        let reasoning = '';
 
         try {
           const stream = streamToIterator(response.body);
@@ -123,7 +125,11 @@ export const PromptTestModal = () => {
                 fullResult.completion.usage = merge(fullResult.completion.usage, chunk.usage);
               } else if (chunk.choices) {
                 content += chunk.choices[0].delta.content ?? '';
-                setTestResult(content);
+                if (chunk.choices[0].delta.reasoning) {
+                  reasoning += chunk.choices[0].delta.reasoning;
+                }
+                setCompletionContent(content);
+                setReasoningContent(reasoning);
               }
               fullResult.completion = merge(fullResult.completion, chunk);
             }
@@ -134,6 +140,7 @@ export const PromptTestModal = () => {
             fullResult.completion.choices[0].message = {
               role: 'assistant',
               content,
+              reasoning,
             };
           }
 
@@ -150,10 +157,17 @@ export const PromptTestModal = () => {
 
       const data = await response.json();
 
-      const result =
-        (data.completion.choices[0] as NonStreamingChoice).message.content || 'No response content';
+      const choice = data.completion.choices[0] as NonStreamingChoice;
 
-      setTestResult(result);
+      const result = choice.message.content || 'No response content';
+      const reasoning = choice.message.reasoning;
+
+      setCompletionContent(result);
+
+      if (reasoning) {
+        setReasoningContent(reasoning);
+      }
+
       setFullResult(data);
     } catch (error) {
       console.error('Error testing prompt:', error);
@@ -166,7 +180,8 @@ export const PromptTestModal = () => {
 
   const resetTest = () => {
     setInputVariables({});
-    setTestResult(null);
+    setCompletionContent(null);
+    setReasoningContent(null);
     setFullResult(null);
     setTestError(null);
   };
@@ -219,8 +234,8 @@ export const PromptTestModal = () => {
 
   let isContentJson = false;
   try {
-    JSON.parse(testResult as string);
-    isContentJson = true;
+    const parsed = JSON.parse(completionContent as string);
+    if (parsed !== null && parsed !== undefined) isContentJson = true;
   } catch (error) {
     //
   }
@@ -271,7 +286,7 @@ export const PromptTestModal = () => {
               >
                 {isRunning ? 'Running...' : 'Run Test'}
               </Button>
-              {testResult && (
+              {completionContent && (
                 <Button onClick={resetTest} variant="outline">
                   Reset
                 </Button>
@@ -294,7 +309,7 @@ export const PromptTestModal = () => {
               )}
             </div>
 
-            {testResult ? (
+            {completionContent || reasoningContent ? (
               <Tabs
                 value={selectedTab}
                 onValueChange={(value) => setSelectedTab(value as Tab)}
@@ -316,19 +331,43 @@ export const PromptTestModal = () => {
                   />
                 </TabsContent>
                 <TabsContent value={TABS.content} className="flex-1 overflow-auto">
+                  {reasoningContent && (
+                    <>
+                      <h3 className="font-medium text-lg">Reasoning</h3>
+                      <MarkdownEditor
+                        className="mb-4"
+                        value={reasoningContent}
+                        readOnly
+                        minHeight="100%"
+                      />
+                    </>
+                  )}
+                  {completionContent && reasoningContent && (
+                    <h3 className="font-medium text-lg">Completion</h3>
+                  )}
                   {isContentJson ? (
                     <JsonEditor
-                      value={JSON.parse(testResult as string)}
+                      value={JSON.parse(completionContent as string)}
                       readOnly
                       minHeight="100%"
                     />
+                  ) : completionContent ? (
+                    <MarkdownEditor value={completionContent} readOnly minHeight="100%" />
                   ) : (
-                    <MarkdownEditor value={testResult} readOnly minHeight="100%" />
+                    <div className="flex items-center justify-center h-full">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    </div>
                   )}
                 </TabsContent>
                 <TabsContent value={TABS.markdown} className="flex-1 overflow-auto">
                   <div className="p-4 border rounded-md">
-                    <MarkdownRenderer>{testResult}</MarkdownRenderer>
+                    {completionContent ? (
+                      <MarkdownRenderer>{completionContent}</MarkdownRenderer>
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
                 <TabsContent value={TABS.response} className="flex-1 overflow-auto">

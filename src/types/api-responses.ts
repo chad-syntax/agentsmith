@@ -4,6 +4,7 @@ import { EditorPromptVariable } from './prompt-editor';
 export type SdkExchangeResponseSuccess = {
   jwt: string;
   expiresAt: number;
+  organizationUuid: string;
 };
 
 export type SdkExchangeResponseError = {

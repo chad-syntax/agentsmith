@@ -145,9 +145,11 @@ export async function POST(
     if (response.stream) {
       const [streamForClient, streamForLogging] = response.stream.tee();
 
+      // TODO: consolidate this with the one in Prompt.ts
       const logStreamedCompletion = async () => {
         let fullCompletion: any = {};
         let content = '';
+        let reasoning = '';
 
         try {
           const stream = streamToIterator(streamForLogging);
@@ -161,6 +163,9 @@ export async function POST(
                 fullCompletion.usage = merge(fullCompletion.usage, chunk.usage);
               } else if (chunk.choices) {
                 content += chunk.choices[0].delta.content ?? '';
+                if (chunk.choices[0].delta.reasoning) {
+                  reasoning += chunk.choices[0].delta.reasoning;
+                }
                 fullCompletion = merge(fullCompletion, chunk);
               }
             }
@@ -169,7 +174,7 @@ export async function POST(
           // rewrite delta to message
           if (fullCompletion.choices?.[0]) {
             delete fullCompletion.choices[0].delta;
-            fullCompletion.choices[0].message = { role: 'assistant', content };
+            fullCompletion.choices[0].message = { role: 'assistant', content, reasoning };
           }
 
           await agentsmith.services.llmLogs.updateLogWithCompletion(

@@ -577,19 +577,19 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       arg_raw_input: rawInput as Json,
     });
 
+    const llmLogEntryData = data as {
+      log_uuid?: string;
+      organization_uuid?: string;
+    } | null;
+
     if (error) {
-      console.error(error);
-      console.error(
-        'Failed to create LLM log entry in Agentsmith, but continuing execution without logging.',
+      this.client.logger.error(
+        `Failed to create LLM log entry in Agentsmith, but continuing execution without logging. Error: ${error.message}`,
       );
     }
 
-    const { log_uuid, organization_uuid } = data as {
-      log_uuid?: string;
-      organization_uuid?: string;
-    };
-
-    const organizationUuid = organization_uuid ?? this.client.organizationUuid;
+    const organizationUuid = llmLogEntryData?.organization_uuid ?? this.client.organizationUuid;
+    const logUuid = llmLogEntryData?.log_uuid;
 
     if (!organizationUuid) {
       throw new Error('No organization UUID found, cannot fetch OpenRouter API key');
@@ -634,6 +634,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       ) => {
         let fullCompletion: any = {};
         let content = '';
+        let reasoning = '';
 
         for await (const event of stream) {
           const chunk = event.data;
@@ -642,6 +643,9 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
             fullCompletion.usage = merge(fullCompletion.usage, chunk.usage);
           } else if (chunk.choices) {
             content += chunk.choices[0].delta.content ?? '';
+            if (chunk.choices[0].delta.reasoning) {
+              reasoning += chunk.choices[0].delta.reasoning;
+            }
             fullCompletion = merge(fullCompletion, chunk);
           }
         }
@@ -650,7 +654,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         if (fullCompletion.choices?.[0]) {
           const final_tool_calls = fullCompletion.choices[0].delta.tool_calls;
           delete fullCompletion.choices[0].delta;
-          fullCompletion.choices[0].message = { role: 'assistant', content };
+          fullCompletion.choices[0].message = { role: 'assistant', content, reasoning };
           if (final_tool_calls) {
             fullCompletion.choices[0].message.tool_calls = final_tool_calls;
           }
@@ -662,11 +666,21 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         const [streamForClient, streamForLogging] = response.body.tee();
         const [streamA, streamB] = streamForClient.tee();
         const [streamForTokens, streamForToolCalls] = streamA.tee();
-        const [streamForCompletion, streamForStream] = streamB.tee();
+        const [streamC, streamForReasoning] = streamB.tee();
+        const [streamForCompletion, streamForStream] = streamC.tee();
 
         const tokens = async function* () {
           for await (const chunk of streamToIterator<OpenrouterStreamEvent>(streamForTokens)) {
             const str = chunk.data?.choices?.[0]?.delta?.content;
+            if (str) {
+              yield str;
+            }
+          }
+        };
+
+        const reasoningTokens = async function* () {
+          for await (const chunk of streamToIterator<OpenrouterStreamEvent>(streamForReasoning)) {
+            const str = chunk.data?.choices?.[0]?.delta?.reasoning;
             if (str) {
               yield str;
             }
@@ -691,22 +705,23 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
             streamToIterator<OpenrouterStreamEvent>(streamForLogging),
           );
           this.logCompletionToFile({
-            logUuid: log_uuid,
+            logUuid,
             rawInput,
             rawOutput: fullCompletion,
             variables: finalVariables,
           });
-          if (log_uuid) {
-            await llmLogsService.updateLogWithCompletion(log_uuid, fullCompletion as Json);
+          if (logUuid) {
+            await llmLogsService.updateLogWithCompletion(logUuid, fullCompletion as Json);
           }
         });
 
         return {
           tokens: tokens(),
+          reasoningTokens: reasoningTokens(),
           stream: streamToIterator<OpenrouterStreamEvent>(streamForStream),
           completion: completion(),
           toolCalls: toolCalls(),
-          logUuid: log_uuid,
+          logUuid,
           response,
           compiledPrompt,
           finalVariables,
@@ -718,13 +733,13 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       const content = completion?.choices?.[0]?.message?.content ?? null;
 
       this.client.queue.add(async () => {
-        if (log_uuid) {
-          await llmLogsService.updateLogWithCompletion(log_uuid, completion as Json);
+        if (logUuid) {
+          await llmLogsService.updateLogWithCompletion(logUuid, completion as Json);
         }
       });
 
       this.logCompletionToFile({
-        logUuid: log_uuid,
+        logUuid,
         rawInput,
         rawOutput: completion,
         variables: finalVariables,
@@ -732,7 +747,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
 
       return {
         completion,
-        logUuid: log_uuid,
+        logUuid,
         response,
         content,
         compiledPrompt,
@@ -741,8 +756,8 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     } catch (error) {
       this.client.logger.error(error);
 
-      if (log_uuid) {
-        await llmLogsService.updateLogWithCompletion(log_uuid, {
+      if (logUuid) {
+        await llmLogsService.updateLogWithCompletion(logUuid, {
           error: String(error),
         });
       }

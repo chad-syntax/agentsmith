@@ -366,6 +366,8 @@ export type StreamingChoice = {
   delta: {
     content: string | null;
     role?: 'user' | 'assistant' | 'system' | 'tool';
+    reasoning?: string;
+    reasoning_details?: any[];
     tool_calls?: ToolCall[];
   };
   error?: ErrorResponse;

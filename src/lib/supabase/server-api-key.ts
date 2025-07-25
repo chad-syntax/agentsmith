@@ -91,7 +91,7 @@ export const exchangeApiKeyForJwt = async (
     authUserId: result.auth_user_id,
   });
 
-  return { jwt, expiresAt };
+  return { jwt, expiresAt, organizationUuid: result.organization_uuid };
 };
 
 export const getGithubWebhookUserJwt = () => {
