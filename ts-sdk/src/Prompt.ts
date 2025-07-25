@@ -705,6 +705,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
 
       const content = completion?.choices?.[0]?.message?.content ?? null;
       const reasoning = completion?.choices?.[0]?.message?.reasoning ?? null;
+      const toolCalls = completion?.choices?.[0]?.message?.tool_calls ?? null;
 
       this.client.queue.add(async () => {
         if (logUuid) {
@@ -727,6 +728,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         reasoning,
         compiledPrompt,
         finalVariables,
+        toolCalls,
       } as unknown as ExecuteImplementationResult<Agency, PromptArg>;
     } catch (error) {
       this.client.logger.error(error);

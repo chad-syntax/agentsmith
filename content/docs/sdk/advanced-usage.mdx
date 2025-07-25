@@ -47,9 +47,11 @@ for await (const toolCall of toolCalls) {
 await client.shutdown();
 ```
 
-### Overriding Model Configuration
+### Overriding Configuration
 
-You can override the default model configuration set in the Studio on a per-call basis. This is useful for A/B testing different models, adjusting parameters for specific users, or dynamically changing behavior.
+You can override the default configuration set in the Studio on a per-call basis. This is useful for A/B testing different models, adjusting parameters for specific users, or dynamically changing behavior.
+
+You can find all the available configuration options in the [OpenRouter API Reference](https://openrouter.ai/docs/api-reference/overview).
 
 ```ts
 const { content } = await helloWorldPrompt.execute(

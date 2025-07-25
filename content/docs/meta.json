@@ -8,6 +8,8 @@
     "syncing",
     "core-concepts",
     "studio",
-    "sdk"
+    "sdk",
+    "self-hosting",
+    "local-development"
   ]
 }

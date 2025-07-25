@@ -28,8 +28,6 @@ Before you begin, ensure you have:
 - A Supabase account and project
 - A GitHub account (for GitHub App setup)
 - A deployment platform (Vercel, Railway, Render, or similar)
-- Node.js 22+ and npm (for local development)
-- Docker (for local development)
 
 ## Deployment Steps
 
@@ -128,6 +126,14 @@ Configure the following repository permissions:
 4. Add these to your Supabase project's GitHub auth provider settings
 5. Ensure the "Authorization callback URL" points to your Supabase callback URL: `https://your-supabase-project-ref.supabase.co/auth/v1/callback`
 
+#### Create a Service User
+
+1. run the `agentsmith_utils.create_user('github_webhook@agentsmith.app', 'some_long_password')` function in the Supabase SQL Editor
+2. Copy the UUID of the new user
+3. Add this to your environment variables: `GITHUB_WEBHOOK_SERVICE_USER_ID`
+
+This user id is used to generate a JWT for the Github Webhook service user instead of using the service role. This helps limit the scope of the service role to only the necessary permissions.
+
 ### 4. Configure Environment Variables
 
 Set up the following environment variables in your deployment platform:
@@ -143,6 +149,7 @@ GITHUB_APP_ID=your_github_app_id
 GITHUB_APP_PRIVATE_KEY=your_github_app_private_key_base64
 GITHUB_APP_WEBHOOK_SECRET=your_github_app_webhook_secret
 GITHUB_APP_NAME=your_github_app_name
+GITHUB_WEBHOOK_SERVICE_USER_ID=your_github_webhook_service_user_id
 
 # GitHub OAuth (for Supabase Auth)
 SUPABASE_AUTH_GITHUB_CLIENT_ID=your_github_oauth_client_id
@@ -162,18 +169,19 @@ CLOUDFLARE_TURNSTILE_SECRET_KEY=your_cloudflare_turnstile_secret_key
 
 #### Required Environment Variables
 
-| Variable                         | Description                             | Where to Get                                         |
-| -------------------------------- | --------------------------------------- | ---------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`       | Your Supabase project URL               | Supabase Dashboard > Settings > API                  |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY`  | Supabase anonymous/public key           | Supabase Dashboard > Settings > API                  |
-| `SUPABASE_JWT_SECRET`            | Supabase JWT secret for signing tokens  | Supabase Dashboard > Settings > API > JWT Secret     |
-| `GITHUB_APP_ID`                  | GitHub App ID                           | GitHub > Settings > Developer settings > GitHub Apps |
-| `GITHUB_APP_PRIVATE_KEY`         | GitHub App private key (base64 encoded) | Generated when creating GitHub App                   |
-| `GITHUB_APP_WEBHOOK_SECRET`      | GitHub App webhook secret               | Set when creating GitHub App                         |
-| `GITHUB_APP_NAME`                | GitHub App name/slug                    | GitHub App settings                                  |
-| `SUPABASE_AUTH_GITHUB_CLIENT_ID` | GitHub OAuth App Client ID              | GitHub App settings                                  |
-| `SUPABASE_AUTH_GITHUB_SECRET`    | GitHub OAuth App Client Secret          | GitHub App settings                                  |
-| `NEXT_PUBLIC_SITE_URL`           | Your site URL                           | Your deployment URL                                  |
+| Variable                         | Description                             | Where to Get                                          |
+| -------------------------------- | --------------------------------------- | ----------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`       | Your Supabase project URL               | Supabase Dashboard > Settings > API                   |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY`  | Supabase anonymous/public key           | Supabase Dashboard > Settings > API                   |
+| `SUPABASE_JWT_SECRET`            | Supabase JWT secret for signing tokens  | Supabase Dashboard > Settings > API > JWT Secret      |
+| `GITHUB_APP_ID`                  | GitHub App ID                           | GitHub > Settings > Developer settings > GitHub Apps  |
+| `GITHUB_APP_PRIVATE_KEY`         | GitHub App private key (base64 encoded) | Generated when creating GitHub App                    |
+| `GITHUB_APP_WEBHOOK_SECRET`      | GitHub App webhook secret               | Set when creating GitHub App                          |
+| `GITHUB_APP_NAME`                | GitHub App name/slug                    | GitHub App settings                                   |
+| `GITHUB_WEBHOOK_SERVICE_USER_ID` | Github Sync Service User UUID           | Supabase Auth Dashboard (after creating the svc user) |
+| `SUPABASE_AUTH_GITHUB_CLIENT_ID` | GitHub OAuth App Client ID              | GitHub App settings                                   |
+| `SUPABASE_AUTH_GITHUB_SECRET`    | GitHub OAuth App Client Secret          | GitHub App settings                                   |
+| `NEXT_PUBLIC_SITE_URL`           | Your site URL                           | Your deployment URL                                   |
 
 #### Optional Environment Variables
 

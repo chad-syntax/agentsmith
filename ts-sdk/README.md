@@ -350,6 +350,8 @@ This is particularly useful for:
 **Non-streaming execution** returns:
 
 - `content` - The AI response content (shortcut for `completion.choices[0].message.content`)
+- `reasoning` - The AI response reasoning content (shortcut for `completion.choices[0].message.reasoning`)
+- `toolCalls` - The AI response tool calls
 - `completion` - Full OpenRouter completion object with choices, usage, etc.
 - `response` - Raw HTTP Response object
 - `compiledPrompt` - The final prompt sent to the LLM
@@ -359,6 +361,9 @@ This is particularly useful for:
 **Streaming execution** returns:
 
 - `tokens` - AsyncGenerator that yields content tokens as strings
+- `reasoningTokens` - AsyncGenerator that yields reasoning tokens as strings
+- `toolCalls` - AsyncGenerator that yields tool calls
+- `completion` - A Promise of the final completion data in NonStreamingResponse format
 - `stream` - Raw SSE stream as an AsyncIterable of parsed events
 - `response` - Raw HTTP Response object
 - `compiledPrompt` - The final prompt sent to the LLM

@@ -217,6 +217,7 @@ export type ExecuteNonStreamingResult = {
   content: string | null;
   reasoning: string | null;
   compiledPrompt: string;
+  toolCalls: ToolCall[] | null;
   finalVariables: any;
 };
 

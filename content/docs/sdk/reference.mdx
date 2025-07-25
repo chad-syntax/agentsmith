@@ -170,6 +170,11 @@ Executes the prompt with the given variables. The `execute` method returns an ob
         'The AI response reasoning, equivalent to `completion.choices[0].message.reasoning`.',
       type: 'string | null',
     },
+    toolCalls: {
+      description:
+        'The AI response tool calls, equivalent to `completion.choices[0].message.tool_calls`.',
+      type: 'ToolCall[] | null',
+    },
     completion: {
       description: 'The full OpenRouter completion object.',
       type: 'OpenrouterNonStreamingResponse',
