@@ -200,6 +200,7 @@ export type GetPromptContent<
 
 export type ExecuteStreamingResult = {
   tokens: AsyncGenerator<string | undefined, void, unknown>;
+  reasoningTokens: AsyncGenerator<string | undefined, void, unknown>;
   toolCalls: AsyncGenerator<ToolCall, void, unknown>;
   completion: Promise<OpenrouterNonStreamingResponse>;
   stream: ReadableStream<Uint8Array>;
@@ -214,6 +215,7 @@ export type ExecuteNonStreamingResult = {
   logUuid: string;
   response: Response;
   content: string | null;
+  reasoning: string | null;
   compiledPrompt: string;
   finalVariables: any;
 };

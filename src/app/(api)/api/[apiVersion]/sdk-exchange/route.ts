@@ -26,11 +26,13 @@ export async function POST(request: Request) {
 
   let jwt: string | null = null;
   let expiresAt: number | null = null;
+  let organizationUuid: string | null = null;
 
   try {
     const exchangeResult = await exchangeApiKeyForJwt(apiKey);
     jwt = exchangeResult.jwt;
     expiresAt = exchangeResult.expiresAt;
+    organizationUuid = exchangeResult.organizationUuid;
   } catch (error) {
     logger.error(error, 'Failed to exchange API key for JWT');
     return NextResponse.json(
@@ -44,6 +46,7 @@ export async function POST(request: Request) {
   const response: SdkExchangeResponse = {
     jwt,
     expiresAt,
+    organizationUuid,
   };
 
   return NextResponse.json(response);

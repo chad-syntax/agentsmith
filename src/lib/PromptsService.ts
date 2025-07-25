@@ -10,6 +10,7 @@ import {
   MAX_OPENROUTER_MODELS,
   OPENROUTER_HEADERS,
   DEFAULT_OPENROUTER_CONFIG,
+  OpenrouterNonStreamingResponse,
 } from './openrouter';
 import { routes } from '@/utils/routes';
 import { ORGANIZATION_KEYS, SEMVER_PATTERN } from '@/app/constants';
@@ -1146,16 +1147,16 @@ export class PromptsService extends AgentsmithSupabaseService {
         };
       }
 
-      const completion = (await response.json()) as OpenrouterRequestBody;
+      const completion = (await response.json()) as OpenrouterNonStreamingResponse;
 
-      await this.services.llmLogs.updateLogWithCompletion(logEntry.uuid, completion as any);
+      await this.services.llmLogs.updateLogWithCompletion(logEntry.uuid, completion);
 
       return { completion, logUuid: logEntry.uuid };
     } catch (error) {
       this.logger.error(error, 'Error calling OpenRouter API');
 
       await this.services.llmLogs.updateLogWithCompletion(logEntry.uuid, {
-        error: String(error),
+        error: `Error calling OpenRouter API: ${error instanceof Error ? error.message : 'Unknown error'}`,
       });
 
       throw new Error('Error calling OpenRouter API');

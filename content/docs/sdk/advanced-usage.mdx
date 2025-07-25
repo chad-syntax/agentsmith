@@ -24,6 +24,29 @@ console.log(''); // Newline at the end
 await client.shutdown();
 ```
 
+You can also access the reasoning tokens and tool calls as they arrive.
+
+```ts
+const { reasoningTokens, toolCalls } = await helloWorldPrompt.execute(
+  { firstName: 'Jane', lastName: 'Doe' },
+  { config: { stream: true } },
+);
+
+console.log('Streaming reasoning:');
+for await (const reasoningToken of reasoningTokens) {
+  process.stdout.write(reasoningToken);
+}
+
+console.log(''); // Newline at the end
+
+console.log('Streaming tool calls:');
+for await (const toolCall of toolCalls) {
+  console.log(toolCall);
+}
+
+await client.shutdown();
+```
+
 ### Overriding Model Configuration
 
 You can override the default model configuration set in the Studio on a per-call basis. This is useful for A/B testing different models, adjusting parameters for specific users, or dynamically changing behavior.

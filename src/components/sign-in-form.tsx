@@ -145,12 +145,17 @@ export const SignInForm = ({ className, requiredTos = true, ...props }: SignInFo
                       <Link href={routes.marketing.terms} className="underline">
                         Terms of Service
                       </Link>
+                      and the{' '}
+                      <Link href={routes.marketing.privacy} className="underline">
+                        Privacy Policy
+                      </Link>
+                      .
                     </span>
                   </Label>
                 </div>
                 {mustAgreeTos && (
                   <p className="text-sm text-destructive mt-2 text-center">
-                    You must agree to the Terms of Service.
+                    You must agree to the Terms of Service and Privacy Policy.
                   </p>
                 )}
               </div>

@@ -165,6 +165,11 @@ Executes the prompt with the given variables. The `execute` method returns an ob
         'The AI response content, equivalent to `completion.choices[0].message.content`.',
       type: 'string | null',
     },
+    reasoning: {
+      description:
+        'The AI response reasoning, equivalent to `completion.choices[0].message.reasoning`.',
+      type: 'string | null',
+    },
     completion: {
       description: 'The full OpenRouter completion object.',
       type: 'OpenrouterNonStreamingResponse',
@@ -194,6 +199,10 @@ Executes the prompt with the given variables. The `execute` method returns an ob
   type={{
     tokens: {
       description: 'An async generator that yields content tokens as strings.',
+      type: 'AsyncGenerator<string | undefined, void, unknown>',
+    },
+    reasoningTokens: {
+      description: 'An async generator that yields reasoning tokens as strings.',
       type: 'AsyncGenerator<string | undefined, void, unknown>',
     },
     toolCalls: {

@@ -7,9 +7,10 @@ import { CompletionConfig } from '@/lib/openrouter';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { validateGlobalContext, validateVariables } from '@/utils/template-utils';
 import merge from 'lodash.merge';
-import { streamToIterator } from '@/utils/stream-to-iterator';
+import { OpenrouterStreamEvent, streamToIterator } from '@/utils/stream-to-iterator';
 import { LLMLogsService } from '@/lib/LLMLogsService';
 import { mergeIncludedVariables } from '@/utils/merge-included-variables';
+import { accumulateStreamToCompletion } from '@/utils/accumulate-stream';
 
 export const maxDuration = 320; // 5m20s minute function timeout
 
@@ -146,31 +147,10 @@ export async function POST(
       const [streamForClient, streamForLogging] = response.stream.tee();
 
       const logStreamedCompletion = async () => {
-        let fullCompletion: any = {};
-        let content = '';
-
         try {
-          const stream = streamToIterator(streamForLogging);
-          for await (const event of stream) {
-            if (event.type === 'logUuid') {
-              response.logUuid = event.data.logUuid;
-            } else {
-              const chunk = event.data;
-              // usage chunk contains null stop values we don't want to merge
-              if (chunk.usage) {
-                fullCompletion.usage = merge(fullCompletion.usage, chunk.usage);
-              } else if (chunk.choices) {
-                content += chunk.choices[0].delta.content ?? '';
-                fullCompletion = merge(fullCompletion, chunk);
-              }
-            }
-          }
-
-          // rewrite delta to message
-          if (fullCompletion.choices?.[0]) {
-            delete fullCompletion.choices[0].delta;
-            fullCompletion.choices[0].message = { role: 'assistant', content };
-          }
+          const fullCompletion = await accumulateStreamToCompletion(
+            streamToIterator<OpenrouterStreamEvent>(streamForLogging),
+          );
 
           await agentsmith.services.llmLogs.updateLogWithCompletion(
             response.logUuid,
@@ -179,7 +159,7 @@ export async function POST(
         } catch (error) {
           agentsmith.logger.error(error, 'Error logging streamed completion');
           await agentsmith.services.llmLogs.updateLogWithCompletion(response.logUuid, {
-            error: 'Failed to log stream',
+            error: `Failed to log stream: ${error instanceof Error ? error.message : 'Unknown error'}`,
           });
         }
       };

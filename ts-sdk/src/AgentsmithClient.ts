@@ -153,6 +153,8 @@ export class AgentsmithClient<Agency extends GenericAgency> {
         this.initialize();
       }, refreshJwtTimeout);
 
+      this.organizationUuid = data.organizationUuid;
+
       return data.jwt;
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return '';
