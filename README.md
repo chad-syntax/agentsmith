@@ -6,9 +6,9 @@
 **Develop AI agents with peace of mind**
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-lightgrey.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Website](https://img.shields.io/badge/agentsmith.app-brightgreen)](https://agentsmith.app)
-[![Plans & Pricing](https://img.shields.io/badge/Join%20Alpha%20Club-blueviolet)](https://agentsmith.app/#pricing)
-[![Roadmap](https://img.shields.io/badge/Roadmap-blue)](https://agentsmith.app/roadmap)
+[![Website](https://img.shields.io/badge/agentsmith.dev-brightgreen)](https://agentsmith.dev)
+[![Plans & Pricing](https://img.shields.io/badge/Join%20Alpha%20Club-blueviolet)](https://agentsmith.dev/#pricing)
+[![Roadmap](https://img.shields.io/badge/Roadmap-blue)](https://agentsmith.dev/roadmap)
 
 ## Overview
 
@@ -204,7 +204,7 @@ Agentsmith requires a GitHub App for repository synchronization and OAuth authen
 2. Click "New GitHub App"
 3. Fill in the following:
    - **GitHub App name**: Choose a unique name
-   - **Homepage URL**: `https://agentsmith.app` (or your domain)
+   - **Homepage URL**: `https://agentsmith.dev` (or your domain)
    - **Setup URL**: `https://your-domain.com/github/setup` (use `http://localhost:3000/github/setup` for local development)
    - **Webhook URL**:
      - For **production**: `https://your-domain.com/api/github/webhook`
@@ -308,14 +308,14 @@ Join our Alpha Club to receive early access to new features and provide feedback
 - 🗣️ Direct feedback channel with our team
 - ⭐ Priority support and feature requests
 
-[Join the Alpha Club ✨](https://agentsmith.app/#pricing)
+[Join the Alpha Club ✨](https://agentsmith.dev/#pricing)
 
 ## Support
 
-- **General Questions**: [team@agentsmith.app](mailto:team@agentsmith.app)
-- **Technical Support**: [support@agentsmith.app](mailto:support@agentsmith.app)
+- **General Questions**: [team@agentsmith.dev](mailto:team@agentsmith.dev)
+- **Technical Support**: [support@agentsmith.dev](mailto:support@agentsmith.dev)
 - **Bug Reports**: [GitHub Issues](https://github.com/your-username/agentsmith/issues)
-- **Feature Requests**: [Agentsmith Roadmap](https://agentsmith.app/roadmap)
+- **Feature Requests**: [Agentsmith Roadmap](https://agentsmith.dev/roadmap)
 
 ## License
 
@@ -325,4 +325,4 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 
 We're constantly improving Agentsmith! Check out our public roadmap to see what's coming next and vote on features you'd like to see.
 
-[View Roadmap 🗓](https://agentsmith.app/roadmap)
+[View Roadmap 🗓](https://agentsmith.dev/roadmap)
