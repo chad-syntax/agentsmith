@@ -17,6 +17,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ApiKeyReveal } from '@/components/api-key-reveal';
 import { TypescriptEditor } from '@/components/editors/typescript-editor';
 import { installSdk, sdkUsage } from '@/constants/sdk-documentation';
+import { isDev } from '@/utils/is-env';
 
 export type ProjectPageProps = {
   projectData: NonNullable<GetProjectDataResult>;
@@ -37,18 +38,20 @@ export const ProjectPage = (props: ProjectPageProps) => {
           type: 'text/typescript',
         });
 
-        const pre = document.createElement('pre');
-        pre.style.position = 'fixed';
-        pre.style.top = '30%';
-        pre.style.left = '0';
-        pre.style.width = '100%';
-        pre.style.height = '70%';
-        pre.style.overflow = 'auto';
-        pre.style.backgroundColor = 'black';
-        pre.style.color = 'white';
-        pre.style.zIndex = '1000';
-        pre.textContent = response.data.content;
-        document.body.appendChild(pre);
+        if (isDev) {
+          const pre = document.createElement('pre');
+          pre.style.position = 'fixed';
+          pre.style.top = '30%';
+          pre.style.left = '0';
+          pre.style.width = '100%';
+          pre.style.height = '70%';
+          pre.style.overflow = 'auto';
+          pre.style.backgroundColor = 'black';
+          pre.style.color = 'white';
+          pre.style.zIndex = '1000';
+          pre.textContent = response.data.content;
+          document.body.appendChild(pre);
+        }
       } catch (error) {
         console.error(error);
         toast.error('Failed to download types, please try again or contact support.');

@@ -97,7 +97,7 @@ export class TypegenService extends AgentsmithSupabaseService {
           isExported: true,
           type: (writer) => {
             if (version.prompt_variables.length === 0) {
-              writer.write('{}');
+              writer.write('never');
               return;
             }
             writer.block(() => {
@@ -155,7 +155,7 @@ export class TypegenService extends AgentsmithSupabaseService {
 
               if (version.prompt_includes && version.prompt_includes.length > 0) {
                 for (const include of version.prompt_includes) {
-                  if (include.prompt_versions) {
+                  if (include.prompt_versions.prompt_variables.length > 0) {
                     const includedVariablesTypeName = this._normalizeTypeName(
                       'PromptVariables',
                       include.prompt_versions.prompts.slug,

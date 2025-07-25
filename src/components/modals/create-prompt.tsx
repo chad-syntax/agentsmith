@@ -54,6 +54,7 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
           routes.studio.editPromptVersion(selectedProjectUuid, response.data.versionUuid),
         );
       } else {
+        setIsCreating(false);
         if (response.message) {
           setErrors({
             'create-prompt': [response.message],
@@ -70,7 +71,6 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
       if (!onboardingChecklist?.promptCreated) {
         setOnboardingChecklist((prev) => (!prev ? null : { ...prev, promptCreated: true }));
       }
-      setIsCreating(false);
     }
   };
 
