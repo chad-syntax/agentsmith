@@ -4,7 +4,7 @@ import {
   AgentsmithSupabaseServiceConstructorOptions,
 } from './AgentsmithSupabaseService';
 import { AgentsmithServicesDirectory } from './AgentsmithServices';
-import { OpenrouterRequestBody } from './openrouter';
+import { OpenrouterNonStreamingResponse, OpenrouterRequestBody } from './openrouter';
 
 type CreateLogEntryOptions = {
   projectId: number;
@@ -45,11 +45,14 @@ export class LLMLogsService extends AgentsmithSupabaseService {
     return data;
   }
 
-  public async updateLogWithCompletion(uuid: string, rawOutput: Json) {
+  public async updateLogWithCompletion(
+    uuid: string,
+    rawOutput: OpenrouterNonStreamingResponse | { error: string },
+  ) {
     const { data, error } = await this.supabase
       .from('llm_logs')
       .update({
-        raw_output: rawOutput,
+        raw_output: rawOutput as Json,
         end_time: new Date().toISOString(),
       })
       .eq('uuid', uuid)

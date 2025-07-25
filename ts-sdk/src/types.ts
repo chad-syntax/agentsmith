@@ -215,6 +215,7 @@ export type ExecuteNonStreamingResult = {
   logUuid: string;
   response: Response;
   content: string | null;
+  reasoning: string | null;
   compiledPrompt: string;
   finalVariables: any;
 };

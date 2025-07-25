@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/providers/app';
-import { NonStreamingChoice } from '@/lib/openrouter';
+import { NonStreamingChoice, OpenrouterNonStreamingResponse } from '@/lib/openrouter';
 import { connectOpenrouter } from '@/app/actions/openrouter';
 import { routes } from '@/utils/routes';
 import { Button } from '@/components/ui/button';
@@ -17,8 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
-import merge from 'lodash.merge';
-import { streamToIterator } from '@/utils/stream-to-iterator';
+import { OpenrouterStreamEvent, StreamEvent, streamToIterator } from '@/utils/stream-to-iterator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MarkdownEditor } from '../editors/markdown-editor';
 import { MarkdownRenderer } from '../markdown-renderer';
@@ -29,6 +28,7 @@ import { VariableInput } from '../variable-input';
 import { JsonEditor } from '../editors/json-editor';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { accumulateStreamToCompletion } from '@/utils/accumulate-stream';
 
 const TABS = {
   content: 'content',
@@ -60,7 +60,10 @@ export const PromptTestModal = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [completionContent, setCompletionContent] = useState<string | null>(null);
   const [reasoningContent, setReasoningContent] = useState<string | null>(null);
-  const [fullResult, setFullResult] = useState<any | null>(null);
+  const [fullResult, setFullResult] = useState<{
+    completion?: OpenrouterNonStreamingResponse;
+    logUuid?: string;
+  } | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState<Tab>(TABS.content);
 
@@ -107,44 +110,34 @@ export const PromptTestModal = () => {
       }
 
       if (editorConfig.stream && response.body) {
-        let fullResult: any = {};
-        let content = '';
-        let reasoning = '';
-
         try {
-          const stream = streamToIterator(response.body);
-          for await (const event of stream) {
+          const [streamA, streamB] = response.body.tee();
+
+          const iterator = streamToIterator<StreamEvent>(streamA);
+
+          for await (const event of iterator) {
             if (event.type === 'logUuid') {
               if (event.data.logUuid) {
-                fullResult.logUuid = event.data.logUuid;
+                setFullResult((prev) => ({ ...prev, logUuid: event.data.logUuid }));
               }
-            } else {
-              const chunk = event.data;
-              // usage chunk contains null stop values we don't want to merge
-              if (chunk.usage) {
-                fullResult.completion.usage = merge(fullResult.completion.usage, chunk.usage);
-              } else if (chunk.choices) {
-                content += chunk.choices[0].delta.content ?? '';
-                if (chunk.choices[0].delta.reasoning) {
-                  reasoning += chunk.choices[0].delta.reasoning;
-                }
-                setCompletionContent(content);
-                setReasoningContent(reasoning);
-              }
-              fullResult.completion = merge(fullResult.completion, chunk);
+            }
+            if (event.type === 'message' && event.data.choices?.[0]?.delta?.content) {
+              setCompletionContent(
+                (prev) => (prev ?? '') + (event.data.choices[0].delta.content ?? ''),
+              );
+            }
+            if (event.type === 'message' && event.data.choices?.[0]?.delta?.reasoning) {
+              setReasoningContent(
+                (prev) => (prev ?? '') + (event.data.choices[0].delta.reasoning ?? ''),
+              );
             }
           }
 
-          if (fullResult.completion.choices?.[0]) {
-            delete fullResult.completion.choices[0].delta;
-            fullResult.completion.choices[0].message = {
-              role: 'assistant',
-              content,
-              reasoning,
-            };
-          }
+          const completion = await accumulateStreamToCompletion(
+            streamToIterator<OpenrouterStreamEvent>(streamB),
+          );
 
-          setFullResult(fullResult);
+          setFullResult((prev) => ({ ...prev, completion }));
         } catch (error) {
           console.error('Error testing prompt:', error);
           setTestError(error instanceof Error ? error.message : 'Unknown error occurred');
@@ -375,9 +368,9 @@ export const PromptTestModal = () => {
                     <div className="flex items-center justify-center h-full">
                       <Loader2 className="w-4 h-4 animate-spin" />
                     </div>
-                  ) : (
+                  ) : fullResult ? (
                     <JsonEditor value={fullResult} readOnly minHeight="100%" />
-                  )}
+                  ) : null}
                 </TabsContent>
               </Tabs>
             ) : (

@@ -196,6 +196,10 @@ Executes the prompt with the given variables. The `execute` method returns an ob
       description: 'An async generator that yields content tokens as strings.',
       type: 'AsyncGenerator<string | undefined, void, unknown>',
     },
+    reasoningTokens: {
+      description: 'An async generator that yields reasoning tokens as strings.',
+      type: 'AsyncGenerator<string | undefined, void, unknown>',
+    },
     toolCalls: {
       description: 'An async generator that yields tool calls as they arrive.',
       type: 'AsyncGenerator<ToolCall, void, unknown>',

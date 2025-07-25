@@ -412,6 +412,7 @@ export type OpenrouterNonStreamingResponse = {
   choices: NonStreamingChoice[];
   created: number;
   model: string;
+  provider: string;
   object: 'chat.completion';
   usage?: ResponseUsage;
 };
@@ -421,6 +422,7 @@ export type OpenrouterStreamingResponse = {
   choices: StreamingChoice[];
   created: number;
   model: string;
+  provider: string;
   object: 'chat.completion.chunk';
   usage?: ResponseUsage;
 };

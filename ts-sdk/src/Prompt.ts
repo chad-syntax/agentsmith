@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import type { AgentsmithClient } from './AgentsmithClient';
-import { Database, Json } from '@/app/__generated__/supabase.types';
+import { Json } from '@/app/__generated__/supabase.types';
 import {
   PromptJSONFileContent,
   PromptVersionFileJSONContent,
@@ -45,6 +45,7 @@ import { ORGANIZATION_KEYS } from '@/app/constants';
 import { routes } from '@/utils/routes';
 import { mergeIncludedVariables } from '@/utils/merge-included-variables';
 import { OpenrouterStreamEvent, streamToIterator } from '@/utils/stream-to-iterator';
+import { accumulateStreamToCompletion } from '@/utils/accumulate-stream';
 import merge from 'lodash.merge';
 
 type FetchedPromptFromFileSystem = {
@@ -629,40 +630,12 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         throw new Error('No body present in response from OpenRouter');
       }
 
-      const accumulateStreamAndCreateFinalCompletion = async (
-        stream: AsyncIterable<OpenrouterStreamEvent>,
-      ) => {
-        let fullCompletion: any = {};
-        let content = '';
-        let reasoning = '';
+      const streamEnabled =
+        typeof configOverrides?.stream !== 'undefined'
+          ? configOverrides.stream
+          : this.version.config.stream;
 
-        for await (const event of stream) {
-          const chunk = event.data;
-          // usage chunk contains null stop values we don't want to merge
-          if (chunk.usage) {
-            fullCompletion.usage = merge(fullCompletion.usage, chunk.usage);
-          } else if (chunk.choices) {
-            content += chunk.choices[0].delta.content ?? '';
-            if (chunk.choices[0].delta.reasoning) {
-              reasoning += chunk.choices[0].delta.reasoning;
-            }
-            fullCompletion = merge(fullCompletion, chunk);
-          }
-        }
-
-        // rewrite delta to message
-        if (fullCompletion.choices?.[0]) {
-          const final_tool_calls = fullCompletion.choices[0].delta.tool_calls;
-          delete fullCompletion.choices[0].delta;
-          fullCompletion.choices[0].message = { role: 'assistant', content, reasoning };
-          if (final_tool_calls) {
-            fullCompletion.choices[0].message.tool_calls = final_tool_calls;
-          }
-        }
-        return fullCompletion as OpenrouterNonStreamingResponse;
-      };
-
-      if (this.version.config.stream || 'stream' in (configOverrides ?? {})) {
+      if (streamEnabled) {
         const [streamForClient, streamForLogging] = response.body.tee();
         const [streamA, streamB] = streamForClient.tee();
         const [streamForTokens, streamForToolCalls] = streamA.tee();
@@ -697,11 +670,11 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
 
         const completion = async () => {
           const stream = streamToIterator<OpenrouterStreamEvent>(streamForCompletion);
-          return accumulateStreamAndCreateFinalCompletion(stream);
+          return accumulateStreamToCompletion(stream);
         };
 
         this.client.queue.add(async () => {
-          const fullCompletion = await accumulateStreamAndCreateFinalCompletion(
+          const fullCompletion = await accumulateStreamToCompletion(
             streamToIterator<OpenrouterStreamEvent>(streamForLogging),
           );
           this.logCompletionToFile({
@@ -711,7 +684,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
             variables: finalVariables,
           });
           if (logUuid) {
-            await llmLogsService.updateLogWithCompletion(logUuid, fullCompletion as Json);
+            await llmLogsService.updateLogWithCompletion(logUuid, fullCompletion);
           }
         });
 
@@ -731,10 +704,11 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       const completion = (await response.json()) as OpenrouterNonStreamingResponse;
 
       const content = completion?.choices?.[0]?.message?.content ?? null;
+      const reasoning = completion?.choices?.[0]?.message?.reasoning ?? null;
 
       this.client.queue.add(async () => {
         if (logUuid) {
-          await llmLogsService.updateLogWithCompletion(logUuid, completion as Json);
+          await llmLogsService.updateLogWithCompletion(logUuid, completion);
         }
       });
 
@@ -750,6 +724,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         logUuid,
         response,
         content,
+        reasoning,
         compiledPrompt,
         finalVariables,
       } as unknown as ExecuteImplementationResult<Agency, PromptArg>;
@@ -758,8 +733,8 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
 
       if (logUuid) {
         await llmLogsService.updateLogWithCompletion(logUuid, {
-          error: String(error),
-        });
+          error: `Error calling OpenRouter API: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        } as any);
       }
 
       throw new Error('Error calling OpenRouter API');
