@@ -46,6 +46,11 @@ const footerData: FooterColumn[] = [
         href: routes.emails.support,
         label: 'Support',
       },
+      {
+        href: routes.external.discord,
+        label: 'Discord',
+        external: true,
+      },
     ],
   },
   {

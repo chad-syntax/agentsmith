@@ -67,6 +67,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: '/discord',
+        destination: 'https://discord.gg/FbdSJZCK2h',
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     const cspHeader = [
       `default-src ${self}`,
