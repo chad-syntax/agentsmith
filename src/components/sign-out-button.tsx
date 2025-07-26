@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import posthog from 'posthog-js';
 
 export const SignOutButton = () => {
   const router = useRouter();
@@ -15,6 +16,7 @@ export const SignOutButton = () => {
     setLoading(true);
     const supabase = createClient();
     await supabase.auth.signOut();
+    posthog.reset();
     router.push(routes.auth.signIn);
   };
 
