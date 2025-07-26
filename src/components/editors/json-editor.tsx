@@ -36,6 +36,7 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
 
   const [jsonText, setJsonText] = useState<string>(JSON.stringify(value, null, 2));
   const [jsonError, setJsonError] = useState<string | null>(null);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleJsonChange = (text: string) => {
     setJsonText(text);
@@ -56,6 +57,7 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
           'rounded-md border bg-background',
           jsonError && 'border-destructive',
           innerClassName,
+          isFocused && 'border-ring ring-ring/50 ring-[1px]',
         )}
       >
         <Editor
@@ -65,11 +67,14 @@ export const JsonEditor = <T extends object>(props: JsonEditorProps<T>) => {
           disabled={readOnly}
           padding={16}
           placeholder={placeholder}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           style={{
             fontSize: 14,
             minHeight,
           }}
           className="w-full"
+          textareaClassName="outline-none"
         />
       </div>
       {jsonError && (

@@ -1,8 +1,6 @@
 'use client';
 
-import { BrevoEmailSubscribe } from '@/components/brevo-email-subscribe/brevo-email-subscribe';
 import { Button } from '../ui/button';
-import { usePostHog } from 'posthog-js/react';
 import Vivus from 'vivus';
 import { useEffect, useRef } from 'react';
 import FWord from '@/assets/f-word.svg';
@@ -12,19 +10,8 @@ import { routes } from '@/utils/routes';
 import Link from 'next/link';
 
 export const HeroSection = () => {
-  const posthog = usePostHog();
   const vivusRef = useRef<HTMLDivElement | null>(null);
   const mountedRef = useRef(false);
-
-  const handleAccessClick = () => {
-    posthog.capture('hero_early_access_cta_clicked');
-    const $button = document.getElementById('join-alpha-club');
-    if ($button) {
-      setTimeout(() => {
-        $button.focus();
-      }, 1);
-    }
-  };
 
   useEffect(() => {
     if (mountedRef.current) return;

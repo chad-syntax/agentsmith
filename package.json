@@ -70,7 +70,7 @@
     "nunjucks": "^3.2.4",
     "octokit": "^4.1.2",
     "pino": "^9.7.0",
-    "posthog-js": "^1.215.1",
+    "posthog-js": "^1.258.2",
     "prettier": "^3.3.3",
     "prismjs": "^1.29.0",
     "react": "19.0.0",

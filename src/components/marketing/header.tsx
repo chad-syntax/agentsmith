@@ -4,14 +4,12 @@ import Link from 'next/link';
 import { ThemeSwitcher } from '@/components/theme-switcher';
 import { Button } from '@/components/ui/button';
 import { routes } from '@/utils/routes';
-import { usePostHog } from 'posthog-js/react';
+import posthog from 'posthog-js';
 import { useEffect, useState } from 'react';
 import { cn } from '@/utils/shadcn';
 import { useIsLoggedIn } from '@/hooks/use-is-logged-in';
 
 export const Header = () => {
-  const posthog = usePostHog();
-
   const [scrolledDown, setScrolledDown] = useState(false);
   const { isLoggedIn, isLoading } = useIsLoggedIn();
 

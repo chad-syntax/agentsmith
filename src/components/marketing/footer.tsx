@@ -35,16 +35,21 @@ const footerData: FooterColumn[] = [
         external: true,
       },
       {
+        href: routes.emails.support,
+        label: 'Support',
+      },
+      {
+        href: routes.external.discord,
+        label: 'Discord',
+        external: true,
+      },
+      {
         href: '/llms.txt',
         label: 'llms.txt',
       },
       {
         href: '/sitemap.xml',
         label: 'Sitemap',
-      },
-      {
-        href: routes.emails.support,
-        label: 'Support',
       },
     ],
   },

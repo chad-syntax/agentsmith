@@ -85,15 +85,7 @@ export const routes = {
         `/stripe/checkout?organizationUuid=${organizationUuid}&stripePriceId=${stripePriceId}${seats ? `&seats=${seats}` : ''}`,
       portal: (organizationUuid: string) => `/stripe/portal?organizationUuid=${organizationUuid}`,
     },
-    // stripe: {
-    //   checkout: {
-    //     proAlphaClub: isProd
-    //       ? 'https://buy.stripe.com/dRmfZi8M39K68y92566wE01?prefilled_promo_code=ALPHACLUB'
-    //       : 'https://buy.stripe.com/test_dRm7sN7Z39LTcII4EO53O01?prefilled_promo_code=ALPHACLUB',
-    //     hobby: isProd ? 'https://buy.stripe.com/...' : 'https://buy.stripe.com/test_...',
-    //     pro: isProd ? 'https://buy.stripe.com/...' : 'https://buy.stripe.com/test_...',
-    //   },
-    // },
+    discord: '/discord',
   },
   emails: {
     enterprise: 'mailto:enterprise@agentsmith.dev',

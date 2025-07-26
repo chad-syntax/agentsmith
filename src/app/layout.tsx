@@ -3,8 +3,8 @@ import { IBM_Plex_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Toaster } from '@/components/ui/sonner';
-import { PostHogProvider } from '@/providers/posthog';
 import { isDev, isProd } from '@/utils/is-env';
+import { PostHogIdentify } from './posthog-identify';
 
 const defaultUrl =
   isProd && process.env.NEXT_PUBLIC_SITE_URL
@@ -40,20 +40,19 @@ export default function RootLayout(props: RootLayoutProps) {
           <script src="https://unpkg.com/react-scan/dist/auto.global.js" />
         </head>
       )}
-      <PostHogProvider>
-        <GoogleAnalytics gaId="G-PZG86YG9ZZ" />
-        <body className="bg-background text-foreground">
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Toaster expand visibleToasts={9} />
-            {children}
-          </ThemeProvider>
-        </body>
-      </PostHogProvider>
+      <PostHogIdentify />
+      <GoogleAnalytics gaId="G-PZG86YG9ZZ" />
+      <body className="bg-background text-foreground">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <Toaster expand visibleToasts={9} />
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

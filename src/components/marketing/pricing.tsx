@@ -5,11 +5,11 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
-import { usePostHog } from 'posthog-js/react';
 import { pricingPlans, PricingPlan } from '@/constants/pricing';
 import { productSchema } from '@/constants/structured-json';
 import { useState } from 'react';
 import { Switch } from '../ui/switch';
+import posthog from 'posthog-js';
 
 type PricingCardProps = {
   card: PricingPlan;
@@ -18,7 +18,6 @@ type PricingCardProps = {
 
 const PricingCardItem = (props: PricingCardProps) => {
   const { card, billingCycle } = props;
-  const posthog = usePostHog();
 
   const handleCtaClick = () => {
     posthog.capture('pricing_card_cta_clicked', {
