@@ -9,10 +9,10 @@ import './brevo-email-subscribe.css';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import { usePostHog } from 'posthog-js/react';
+import posthog from 'posthog-js';
 
 declare global {
   interface Window {
@@ -52,8 +52,6 @@ type BrevoEmailSubscribeProps = {
 };
 
 export const BrevoEmailSubscribe = (props: BrevoEmailSubscribeProps) => {
-  const posthog = usePostHog();
-
   const { form, trackingLocation } = props;
   const formSubmitUrl = BrevoForms[form];
 

@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { usePostHog } from 'posthog-js/react';
+import posthog from 'posthog-js';
 
 const faqData = [
   {
@@ -60,8 +60,6 @@ const faqData = [
 ];
 
 export const FAQSection = () => {
-  const posthog = usePostHog();
-
   const handleAccordionTriggerClick = (faqItem: (typeof faqData)[number]) => {
     posthog.capture('faq_accordion_trigger_clicked', {
       value: faqItem.value,
