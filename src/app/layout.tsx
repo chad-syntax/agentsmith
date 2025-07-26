@@ -4,6 +4,7 @@ import { ThemeProvider } from 'next-themes';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Toaster } from '@/components/ui/sonner';
 import { isDev, isProd } from '@/utils/is-env';
+import { PostHogIdentify } from './posthog-identify';
 
 const defaultUrl =
   isProd && process.env.NEXT_PUBLIC_SITE_URL
@@ -39,7 +40,7 @@ export default function RootLayout(props: RootLayoutProps) {
           <script src="https://unpkg.com/react-scan/dist/auto.global.js" />
         </head>
       )}
-
+      <PostHogIdentify />
       <GoogleAnalytics gaId="G-PZG86YG9ZZ" />
       <body className="bg-background text-foreground">
         <ThemeProvider
