@@ -178,8 +178,19 @@ export const EditPromptVersionPage = () => {
 
         <div className="space-y-6">
           <div>
-            <Label className="pb-2 justify-between">
-              <span>Config</span>
+            <div className="pb-2 flex justify-between">
+              <div className="flex items-center gap-2">
+                Config
+                <a
+                  className="text-xs flex items-center gap-1 underline text-primary"
+                  href="https://openrouter.ai/docs/api-reference/overview"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Config Reference
+                  <ExternalLink size={12} />
+                </a>
+              </div>
               <a
                 className="text-xs flex items-center gap-1 underline text-primary"
                 href="https://openrouter.ai/models"
@@ -189,7 +200,7 @@ export const EditPromptVersionPage = () => {
                 View Available Models on OpenRouter
                 <ExternalLink size={12} />
               </a>
-            </Label>
+            </div>
             <JsonEditor
               value={(editorConfig as object) || {}}
               onChange={(value) => {
@@ -200,7 +211,18 @@ export const EditPromptVersionPage = () => {
 
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Label>Content</Label>
+              <div className="flex items-center gap-2">
+                Content
+                <a
+                  className="text-xs flex items-center gap-1 underline text-primary"
+                  href="https://mozilla.github.io/nunjucks/templating.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Templating Reference
+                  <ExternalLink size={12} />
+                </a>
+              </div>
               {/* <EmojiModeButton onEnabledChange={() => {}} onEmojiListLoaded={() => {}} /> */}
             </div>
             {missingGlobals.length > 0 && (

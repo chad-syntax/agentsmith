@@ -63,6 +63,7 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const detectedVariablesRef = useRef<ParsedVariable[]>([]);
   const detectedIncludesRef = useRef<ParsedInclude[]>([]);
+  const [isFocused, setIsFocused] = useState(false);
 
   // Effect to detect variables when content changes
   useEffect(() => {
@@ -94,18 +95,22 @@ export const PromptContentEditor = (props: PromptContentEditorProps) => {
           'rounded-md border bg-background',
           templateError && 'border-destructive',
           readOnly && 'opacity-70',
+          isFocused && 'border-ring ring-ring/50 ring-[1px]',
         )}
       >
         <Editor
           value={content}
           onValueChange={readOnly ? () => {} : onContentChange}
           highlight={(code) => highlight(code, languages.django, 'django')}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           padding={16}
           disabled={readOnly}
           style={{
             minHeight,
           }}
           className="w-full"
+          textareaClassName="outline-none"
         />
       </div>
 

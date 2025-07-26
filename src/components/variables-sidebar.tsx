@@ -114,21 +114,21 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
                               </li>
                             ))}
                           </ul>
-                          <div className="mt-2">
-                            <Link
-                              href={routes.studio.editPromptVersion(
-                                selectedProjectUuid,
-                                ip.prompt_versions.uuid,
-                              )}
-                              className="text-xs text-primary hover:underline flex items-center gap-1 ml-4"
-                            >
-                              Edit
-                            </Link>
-                          </div>
                         </>
                       ) : (
-                        <div className="text-xs text-muted-foreground ml-1">No variables</div>
+                        <div className="text-xs text-muted-foreground ml-4">No variables</div>
                       )}
+                      <div className="mt-2">
+                        <Link
+                          href={routes.studio.editPromptVersion(
+                            selectedProjectUuid,
+                            ip.prompt_versions.uuid,
+                          )}
+                          className="text-xs text-primary hover:underline flex items-center gap-1 ml-4"
+                        >
+                          Edit
+                        </Link>
+                      </div>
                     </AccordionContent>
                   </AccordionItem>
                 );
