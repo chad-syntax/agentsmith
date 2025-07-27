@@ -1,8 +1,13 @@
 import { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import { HomeIcon, PencilRuler, Map } from 'lucide-react';
+import { GithubInfo } from 'fumadocs-ui/components/github-info';
 
-export const baseOptions: BaseLayoutProps = {
+export const options: BaseLayoutProps = {
   links: [
+    {
+      type: 'custom',
+      children: <GithubInfo owner="chad-syntax" repo="agentsmith" className="mb-4" />,
+    },
     {
       icon: <HomeIcon />,
       text: 'Home Page',
