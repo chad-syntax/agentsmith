@@ -11,7 +11,7 @@ This guide will walk you through creating, syncing, and executing your first pro
 
 Before you begin, make sure you have the following:
 
-1. **Agentsmith Account** – [Sign up here](https://app.agentsmith.dev/sign-up) if you don't have one.
+1. **Agentsmith Account** – [Sign up here](https://agentsmith.dev/sign-up) if you don't have one.
 2. **GitHub Account & Repository** – You'll need a GitHub account and a repository where your prompts will be stored.
 3. **OpenRouter Account** – [Sign up for OpenRouter](https://openrouter.ai/) to enable LLM access.
 
@@ -19,7 +19,7 @@ Before you begin, make sure you have the following:
 
 Before you can create and sync prompts, you need to connect your Agentsmith project to a GitHub repository.
 
-1.  When you first enter the [Agentsmith Studio](https://app.agentsmith.dev/studio), you should see an onboarding popup at the bottom right corner.
+1.  When you first enter the [Agentsmith Studio](https://agentsmith.dev/studio), you should see an onboarding popup at the bottom right corner.
 2.  Click the **Install GitHub App** button and follow the instructions to authorize Agentsmith.
 3.  Once the app is installed, click the **Connect a Repository** button in the popup and choose the repository where your prompts will be stored.
 4.  Click the **Connect OpenRouter** button in the popup and authorize Agentsmith.
@@ -33,7 +33,8 @@ Now, let's create a prompt in the Studio.
 3.  In the prompt editor, enter the following content:
 
     ```jinja
-    Hello, {{ name }}!
+    Only respond with the following text, no other responses are allowed:
+    "Hello, {{ name }}!"
     ```
 
 4.  In the **Variables** sidebar, you should see that Agentsmith has automatically detected a new variable called `name` with a type of `string`.

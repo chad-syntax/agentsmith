@@ -7,7 +7,7 @@ import { P } from '../typography';
 
 export const LandingHeroVideos = () => {
   const [selectedVideoSlug, setSelectedVideoSlug] =
-    useState<keyof typeof LANDING_VIDEOS>('typedPrompts');
+    useState<keyof typeof LANDING_VIDEOS>('robustAuthoring');
 
   const selectedVideo = LANDING_VIDEOS[selectedVideoSlug];
   const selectedVideoRef = useRef<typeof selectedVideoSlug>(selectedVideoSlug);
@@ -35,7 +35,7 @@ export const LandingHeroVideos = () => {
   return (
     <div className="static container px-4 md:px-6 mx-auto lg:absolute lg:max-w-auto lg:px-0 lg:mx-0 lg:w-1/2 h-full right-0 top-0 flex flex-col justify-center">
       <div className="lg:pl-6 lg:pr-4">
-        <div className="flex gap-2 justify-center flex-wrap pb-4 lg:pb-2">
+        <div className="flex gap-2 justify-center flex-wrap pb-4 lg:pb-2 4xl:pt-24">
           {Object.entries(LANDING_VIDEOS).map(([key, value]) => (
             <ShadowButton
               key={key}
@@ -54,7 +54,7 @@ export const LandingHeroVideos = () => {
             loop
             muted
             playsInline
-            className="aspect-video w-full rounded-sm border border-muted"
+            className="w-full rounded-sm border border-muted"
             poster={selectedVideo.cover.src}
             ref={videoRef}
             onMouseEnter={handleMouseEnter}

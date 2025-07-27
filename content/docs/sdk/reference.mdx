@@ -25,45 +25,15 @@ The main client for interacting with the Agentsmith API.
 
 <TypeTable
   type={{
-    agentsmithApiRoot: {
+    completionLogDirTransformer: {
       description:
-        'The root URL for the Agentsmith API. Can be overridden for self-hosting purposes.',
-      type: 'string',
-      default: 'https://agentsmith.dev',
+        'Specify a log directory transformer to use parameters from an execution to structure your log directory for easier navigation.',
+      type: '(options: object) => string',
     },
-    supabaseUrl: {
+    completionLogsDirectory: {
       description:
-        'The Supabase URL for your project. Can be overridden for self-hosting purposes.',
-      type: 'string',
-      default: '',
-    },
-    supabaseAnonKey: {
-      description:
-        'The Supabase anonymous key for your project. Can be overridden for self-hosting purposes.',
-      type: 'string',
-      default: '',
-    },
-    agentsmithDirectory: {
-      description:
-        'Path to your agentsmith folder. Note: The Studio only writes to the root `agentsmith` folder. Allowing a custom path for the Studio to write to is planned in future updates.',
-      type: 'string',
-      default: './agentsmith',
-    },
-    queueOptions: {
-      description:
-        'We use p-queue to queue up saving logs in the background. You can limit the concurrency and other options. See [p-queue docs](https://www.npmjs.com/package/p-queue) for details.',
-      type: 'PQueueOptions',
-    },
-    fetchStrategy: {
-      description:
-        "Controls how prompts and globals are fetched. Can be 'remote-fallback', 'fs-fallback', 'remote-only', or 'fs-only'.",
-      type: 'FetchStrategy',
-      default: 'remote-fallback',
-    },
-    logger: {
-      description:
-        'Specify a `logger` to have the Agentsmith SDK output logs how you want. If not provided, a default console logger is created based on `logLevel`.',
-      type: 'Logger',
+        'Specify a log directory to save all completions to your local file system for easy debugging.',
+      type: 'string | null',
     },
     logLevel: {
       description:
@@ -71,15 +41,45 @@ The main client for interacting with the Agentsmith API.
       type: 'LogLevel',
       default: 'warn',
     },
-    completionLogsDirectory: {
+    logger: {
       description:
-        'Specify a log directory to save all completions to your local file system for easy debugging.',
-      type: 'string | null',
+        'Specify a `logger` to have the Agentsmith SDK output logs how you want. If not provided, a default console logger is created based on `logLevel`.',
+      type: 'Logger',
     },
-    completionLogDirTransformer: {
+    fetchStrategy: {
       description:
-        'Specify a log directory transformer to use parameters from an execution to structure your log directory for easier navigation.',
-      type: '(options: object) => string',
+        "Controls how prompts and globals are fetched. Can be 'remote-fallback', 'fs-fallback', 'remote-only', or 'fs-only'.",
+      type: 'FetchStrategy',
+      default: 'remote-fallback',
+    },
+    queueOptions: {
+      description:
+        'We use p-queue to queue up saving logs in the background. You can limit the concurrency and other options. See [p-queue docs](https://www.npmjs.com/package/p-queue) for details.',
+      type: 'PQueueOptions',
+    },
+    agentsmithDirectory: {
+      description:
+        'Path to your agentsmith folder. Note: The Studio only writes to the root `agentsmith` folder. Allowing a custom path for the Studio to write to is planned in future updates.',
+      type: 'string',
+      default: './agentsmith',
+    },
+    supabaseAnonKey: {
+      description:
+        'The Supabase anonymous key for your project. Can be overridden for self-hosting purposes.',
+      type: 'string',
+      default: '',
+    },
+    supabaseUrl: {
+      description:
+        'The Supabase URL for your project. Can be overridden for self-hosting purposes.',
+      type: 'string',
+      default: '',
+    },
+    agentsmithApiRoot: {
+      description:
+        'The root URL for the Agentsmith API. Can be overridden for self-hosting purposes.',
+      type: 'string',
+      default: 'https://agentsmith.dev',
     },
   }}
 />
@@ -160,40 +160,40 @@ Executes the prompt with the given variables. The `execute` method returns an ob
 
 <TypeTable
   type={{
-    content: {
-      description:
-        'The AI response content, equivalent to `completion.choices[0].message.content`.',
-      type: 'string | null',
+    finalVariables: {
+      description: 'The final variables used for compilation, including defaults and globals.',
+      type: 'any',
     },
-    reasoning: {
-      description:
-        'The AI response reasoning, equivalent to `completion.choices[0].message.reasoning`.',
-      type: 'string | null',
+    compiledPrompt: {
+      description: 'The compiled prompt content sent to the LLM.',
+      type: 'string',
+    },
+    logUuid: {
+      description: 'The UUID of the log entry created for this execution.',
+      type: 'string',
+    },
+    response: {
+      description: 'The raw HTTP Response object.',
+      type: 'Response',
+    },
+    completion: {
+      description: 'The full OpenRouter completion object.',
+      type: 'OpenrouterNonStreamingResponse',
     },
     toolCalls: {
       description:
         'The AI response tool calls, equivalent to `completion.choices[0].message.tool_calls`.',
       type: 'ToolCall[] | null',
     },
-    completion: {
-      description: 'The full OpenRouter completion object.',
-      type: 'OpenrouterNonStreamingResponse',
+    reasoning: {
+      description:
+        'The AI response reasoning, equivalent to `completion.choices[0].message.reasoning`.',
+      type: 'string | null',
     },
-    response: {
-      description: 'The raw HTTP Response object.',
-      type: 'Response',
-    },
-    logUuid: {
-      description: 'The UUID of the log entry created for this execution.',
-      type: 'string',
-    },
-    compiledPrompt: {
-      description: 'The compiled prompt content sent to the LLM.',
-      type: 'string',
-    },
-    finalVariables: {
-      description: 'The final variables used for compilation, including defaults and globals.',
-      type: 'any',
+    content: {
+      description:
+        'The AI response content, equivalent to `completion.choices[0].message.content`.',
+      type: 'string | null',
     },
   }}
 />
@@ -202,42 +202,74 @@ Executes the prompt with the given variables. The `execute` method returns an ob
 
 <TypeTable
   type={{
-    tokens: {
-      description: 'An async generator that yields content tokens as strings.',
-      type: 'AsyncGenerator<string | undefined, void, unknown>',
+    finalVariables: {
+      description: 'The final variables used for compilation, including defaults and globals.',
+      type: 'any',
     },
-    reasoningTokens: {
-      description: 'An async generator that yields reasoning tokens as strings.',
-      type: 'AsyncGenerator<string | undefined, void, unknown>',
+    compiledPrompt: {
+      description: 'The compiled prompt content sent to the LLM.',
+      type: 'string',
     },
-    toolCalls: {
-      description: 'An async generator that yields tool calls as they arrive.',
-      type: 'AsyncGenerator<ToolCall, void, unknown>',
+    logUuid: {
+      description: 'The UUID of the log entry created for this execution.',
+      type: 'string',
     },
-    stream: {
-      description: 'The raw SSE stream as an AsyncIterable of parsed events for more control.',
-      type: 'ReadableStream<Uint8Array>',
+    response: {
+      description: 'The raw HTTP Response object.',
+      type: 'Response',
     },
     completion: {
       description:
         'A promise that resolves with the full completion object once the stream is finished.',
       type: 'Promise<OpenrouterNonStreamingResponse>',
     },
-    response: {
-      description: 'The raw HTTP Response object.',
-      type: 'Response',
+    stream: {
+      description: 'The raw SSE stream as an AsyncIterable of parsed events for more control.',
+      type: 'ReadableStream<Uint8Array>',
+    },
+    toolCalls: {
+      description: 'An async generator that yields tool calls as they arrive.',
+      type: 'AsyncGenerator<ToolCall, void, unknown>',
+    },
+    reasoningTokens: {
+      description: 'An async generator that yields reasoning tokens as strings.',
+      type: 'AsyncGenerator<string | undefined, void, unknown>',
+    },
+    tokens: {
+      description: 'An async generator that yields content tokens as strings.',
+      type: 'AsyncGenerator<string | undefined, void, unknown>',
+    },
+  }}
+/>
+
+##### `CompletionLogDirTransformerOptions`
+
+<TypeTable
+  type={{
+    rawOutput: {
+      description: 'The raw output returned from the LLM or completion endpoint.',
+      type: 'any',
+    },
+    rawInput: {
+      description: 'The raw input sent to the LLM or completion endpoint.',
+      type: 'any',
+    },
+    variables: {
+      description: 'The variables used for the prompt execution.',
+      type: 'Record<string, any>',
+    },
+    promptVersion: {
+      description:
+        'Information about the prompt version, including uuid, version, config, and content.',
+      type: '{ uuid: string; version: string; config: any; content: string; }',
+    },
+    prompt: {
+      description: 'Metadata about the prompt, including name, slug, and uuid.',
+      type: '{ name: string; slug: string; uuid: string; }',
     },
     logUuid: {
-      description: 'The UUID of the log entry created for this execution.',
+      description: 'The UUID of the log entry for this completion.',
       type: 'string',
-    },
-    compiledPrompt: {
-      description: 'The compiled prompt content sent to the LLM.',
-      type: 'string',
-    },
-    finalVariables: {
-      description: 'The final variables used for compilation, including defaults and globals.',
-      type: 'any',
     },
   }}
 />

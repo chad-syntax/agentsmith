@@ -6,6 +6,21 @@ description: Understand how Agentsmith synchronizes prompts with your GitHub rep
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 import { Mermaid } from '@/components/docs/mermaid';
+import { LANDING_VIDEOS } from '@/app/constants';
+
+<video
+  autoPlay
+  loop
+  muted
+  playsInline
+  className="w-full rounded-sm border border-muted"
+  poster={LANDING_VIDEOS.gitHandoff.cover.src}
+  controls
+>
+  <source src={LANDING_VIDEOS.gitHandoff.webm} type="video/webm" />
+  <source src={LANDING_VIDEOS.gitHandoff.mp4} type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 Agentsmith's Git Sync feature is the bridge between the intuitive authoring experience in the Studio and the rigorous, version-controlled environment of your codebase. It ensures that your prompts are treated as first-class citizens in your development workflow.
 

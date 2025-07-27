@@ -5,14 +5,30 @@ description: An overview of the Agentsmith TypeScript SDK for integrating prompt
 
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { InfoIcon } from 'lucide-react';
+import { LANDING_VIDEOS } from '@/app/constants';
 
-The Agentsmith SDK is the bridge between your version-controlled prompts and your application code. It's a type-safe TypeScript library designed for reliability, performance, and ease of use.
+<video
+  autoPlay
+  loop
+  muted
+  playsInline
+  className="w-full rounded-sm border border-muted"
+  poster={LANDING_VIDEOS.typedPrompts.cover.src}
+  controls
+>
+  <source src={LANDING_VIDEOS.typedPrompts.webm} type="video/webm" />
+  <source src={LANDING_VIDEOS.typedPrompts.mp4} type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
+
+The Agentsmith SDK is a TypeScript library designed for reliability, and ease of use. It utilizes the agentsmith folder to enforce type safety and versioning when compiling and executing prompts.
 
 ### Key Features
 
-- **Type Safety**: The SDK automatically generates TypeScript types from your prompt definitions, ensuring you use the correct variables and preventing runtime errors.
-- **Git-Native**: It's designed to read prompts directly from the files in your local repository, making your Git history the single source of truth.
+- **Type Safety**: The SDK uses generated TypeScript types from your prompt definitions, ensuring you use the correct variables and preventing runtime errors.
+- **File-Native**: It's designed to read prompts directly from the files in your local repository, limiting network requests to the cloud.
 - **Flexible Fetching**: While it prioritizes local files, the SDK can fall back to fetching from the Agentsmith API, ensuring your application can always get the latest prompts.
+- **DX**: The SDK provides easy shortcuts for common use-cases such as streaming or logging completions to local files.
 - **Detailed Observability**: Every execution is logged, providing a `logUuid` that you can use to trace and debug prompt behavior in the Studio.
 
 <Alert variant="info">

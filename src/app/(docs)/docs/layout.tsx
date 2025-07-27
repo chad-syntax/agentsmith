@@ -1,14 +1,13 @@
 import { RootProvider } from 'fumadocs-ui/provider';
 import type { ReactNode } from 'react';
-
-import { source } from '@/lib/docs/source';
 import { DocsLayout } from 'fumadocs-ui/layouts/docs';
-import { baseOptions } from './layout.config';
+import { options } from './layout.config';
+import { source } from '@/lib/docs/source';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <RootProvider>
-      <DocsLayout tree={source.pageTree} {...baseOptions}>
+      <DocsLayout tree={source.pageTree} {...options}>
         {children}
       </DocsLayout>
     </RootProvider>

@@ -13,7 +13,7 @@ import { Prompt } from './Prompt';
 const defaultAgentsmithDirectory = path.join(process.cwd(), 'agentsmith');
 
 export type FetchStrategy = 'fs-only' | 'remote-fallback' | 'remote-only' | 'fs-fallback';
-type CompletionLogDirTransformer = (options: {
+type CompletionLogDirTransformerOptions = {
   logUuid?: string;
   prompt: {
     name: string;
@@ -29,7 +29,8 @@ type CompletionLogDirTransformer = (options: {
   variables: Record<string, any>;
   rawInput: any;
   rawOutput: any;
-}) => string;
+};
+type CompletionLogDirTransformer = (options: CompletionLogDirTransformerOptions) => string;
 
 export type AgentsmithClientOptions = {
   agentsmithApiRoot?: string;

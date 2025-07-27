@@ -84,6 +84,7 @@
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1400px;
   --breakpoint-3xl: 1920px;
+  --breakpoint-4xl: 2560px;
 
   /* Transitions */
   --ease-fluid: cubic-bezier(0.3, 0, 0, 1);
