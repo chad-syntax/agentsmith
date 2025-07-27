@@ -5,6 +5,21 @@ description: Author prompts with ease using Jinja templating and structured vari
 
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import { LANDING_VIDEOS } from '@/app/constants';
+
+<video
+  autoPlay
+  loop
+  muted
+  playsInline
+  className="w-full rounded-sm border border-muted"
+  poster={LANDING_VIDEOS.robustAuthoring.cover.src}
+  controls
+>
+  <source src={LANDING_VIDEOS.robustAuthoring.webm} type="video/webm" />
+  <source src={LANDING_VIDEOS.robustAuthoring.mp4} type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 Authoring prompts in Agentsmith is designed to be both powerful and straightforward. We use the Jinja2 templating syntax, which allows you to create dynamic, reusable prompts with variables, logic, and even composition.
 
@@ -126,9 +141,8 @@ You can also create a new prompt directly from your filesystem.
   <AlertTitle>Logging Caveat for New Prompts</AlertTitle>
   <AlertDescription>
     When you create a new prompt directly via Git, the Agentsmith Studio is not aware of it until
-    after the first sync. Therefore, the very first execution of this new prompt via the SDK may not
-    be logged correctly, as the system has not yet assigned it a persistent ID. All subsequent
-    executions will be logged as expected.
+    after it is synced. The SDK will log a "prompt version not found" error, but will continue with
+    the execution.
   </AlertDescription>
 </Alert>
 
@@ -143,7 +157,21 @@ Agentsmith uses a combination of your Git branch and a `status` key in `version.
 
 This system gives you fine-grained control, allowing you to prepare and review prompt changes in a feature branch and then publish them declaratively by merging to main.
 
-## Model Configuration
+## Configuration
+
+<video
+  autoPlay
+  loop
+  muted
+  playsInline
+  className="w-full rounded-sm border border-muted"
+  poster={LANDING_VIDEOS.unifiedApi.cover.src}
+  controls
+>
+  <source src={LANDING_VIDEOS.unifiedApi.webm} type="video/webm" />
+  <source src={LANDING_VIDEOS.unifiedApi.mp4} type="video/mp4" />
+  Your browser does not support the video tag.
+</video>
 
 Each prompt version has a **Configuration** section in the Studio where you can set parameters that will be passed to the AI model during execution. This includes settings like:
 

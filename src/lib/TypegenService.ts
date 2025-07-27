@@ -80,13 +80,19 @@ export class TypegenService extends AgentsmithSupabaseService {
     ]);
 
     // Fetch prompts from Supabase
-    const prompts = await this.services.prompts.getAllPromptsData(projectId);
+    const allPromptsData = await this.services.prompts.getAllPromptsData(projectId);
 
     const projectGlobals = await this.services.projects.getProjectGlobalsByProjectId(projectId);
 
+    const prompts = allPromptsData.sort((a, b) => a.slug.localeCompare(b.slug));
+
     // First pass: Generate all variable types
     for (const prompt of prompts) {
-      for (const version of prompt.prompt_versions) {
+      const promptVersions = prompt.prompt_versions.sort((a, b) =>
+        compareSemanticVersions(b.version, a.version),
+      );
+
+      for (const version of promptVersions) {
         const variablesTypeName = this._normalizeTypeName(
           'PromptVariables',
           prompt.slug,
@@ -117,7 +123,11 @@ export class TypegenService extends AgentsmithSupabaseService {
 
     // Second pass: Generate all other types
     for (const prompt of prompts) {
-      for (const version of prompt.prompt_versions) {
+      const promptVersions = prompt.prompt_versions.sort((a, b) =>
+        compareSemanticVersions(b.version, a.version),
+      );
+
+      for (const version of promptVersions) {
         // Create a dedicated type for the config
         const configTypeName = this._normalizeTypeName(
           'PromptConfig',

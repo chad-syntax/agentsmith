@@ -83,6 +83,59 @@ const client = new AgentsmithClient<Agency>(
 );
 ```
 
+### Logging Completions Locally
+
+It can be useful while developing locally to save all completion information to a local directory.
+
+```ts
+const client = new AgentsmithClient<Agency>(
+  process.env.AGENTSMI_API_KEY!,
+  process.env.AGENTSMI_PROJECT_ID!,
+  { completionLogsDirectory: './logs' },
+);
+```
+
+This will create the following directory structure for each completion:
+
+```
+logs/
+├── 1753564651325-85e05ba9-501e-4d1c-8ad6-05c905f6539f/
+│   ├── raw_input.json
+│   ├── raw_output.json
+│   └── variables.json
+```
+
+The default directory structure is `[timestamp]-[log_uuid]`, but you can customize it by providing a `completionLogDirTransformer` function.
+
+```ts
+const client = new AgentsmithClient<Agency>(
+  process.env.AGENTSMI_API_KEY!,
+  process.env.AGENTSMI_PROJECT_ID!,
+  {
+    completionLogDirTransformer: (options) =>
+      path.join(Date.now(), options.prompt.slug, options.variable.name),
+  },
+);
+```
+
+This will create the following directory structure for each completion:
+
+```
+logs/
+├── 1753564651325/
+│   └── example-prompt-slug/
+│       ├── john-doe/
+│       │   ├── raw_input.json
+│       │   ├── raw_output.json
+│       │   └── variables.json
+│       └── jane-doe/
+│           ├── raw_input.json
+│           ├── raw_output.json
+│           └── variables.json
+```
+
+This can be useful to group completions by a specific variable. See the [reference](/docs/sdk/reference#completionlogdirtransformeroptions) for more details.
+
 ### Multi-Turn Conversations
 
 While `execute()` is great for single-turn prompts, you can build complex, multi-turn conversations by compiling a prompt first and then using it within a custom message array. This gives you full control over the conversation history sent to the model.
