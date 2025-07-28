@@ -6,6 +6,19 @@ import gitHandoffScreenshot from '@/assets/landing-page-video-covers/git-handoff
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://agentsmith.dev';
 
+const currentYear = new Date().getFullYear();
+const priceValidUntil = `${currentYear}-12-31`;
+
+const merchantReturnPolicy = {
+  '@type': 'MerchantReturnPolicy',
+  returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+  merchantReturnDays: 60,
+  name: '60-Day Money-Back Guarantee',
+  description:
+    'We offer a 60-day money-back guarantee on all our plans. If you are not satisfied with our service, you can request a full refund within 60 days of your purchase.',
+  url: `${siteUrl}${routes.marketing.terms}`,
+};
+
 const offersFromPricing = pricingPlans.flatMap((plan) => {
   const planOffers = [];
 
@@ -15,9 +28,12 @@ const offersFromPricing = pricingPlans.flatMap((plan) => {
       '@type': 'Offer',
       name: `${plan.title} Plan`,
       description: plan.description,
-      price: '0',
+      price: 0,
       priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
+      priceValidUntil,
+      hasMerchantReturnPolicy: merchantReturnPolicy,
+      availableDeliveryMethod: 'http://purl.org/goodrelations/v1#DeliveryModeDirectDownload',
     });
   }
 
@@ -31,6 +47,9 @@ const offersFromPricing = pricingPlans.flatMap((plan) => {
       priceCurrency: 'USD',
       billingIncrement: 'Month',
       availability: 'https://schema.org/InStock',
+      priceValidUntil,
+      hasMerchantReturnPolicy: merchantReturnPolicy,
+      availableDeliveryMethod: 'http://purl.org/goodrelations/v1#DeliveryModeDirectDownload',
     });
   }
 
@@ -43,6 +62,9 @@ const offersFromPricing = pricingPlans.flatMap((plan) => {
       priceCurrency: 'USD',
       billingIncrement: 'Year',
       availability: 'https://schema.org/InStock',
+      priceValidUntil,
+      hasMerchantReturnPolicy: merchantReturnPolicy,
+      availableDeliveryMethod: 'http://purl.org/goodrelations/v1#DeliveryModeDirectDownload',
     });
   }
 
@@ -52,12 +74,10 @@ const offersFromPricing = pricingPlans.flatMap((plan) => {
       '@type': 'Offer',
       name: `${plan.title} Plan`,
       description: plan.description,
-      priceSpecification: {
-        '@type': 'PriceSpecification',
-        price: 'Custom',
-        priceCurrency: 'USD',
-      },
       availability: 'https://schema.org/InStock',
+      priceValidUntil,
+      hasMerchantReturnPolicy: merchantReturnPolicy,
+      availableDeliveryMethod: 'http://purl.org/goodrelations/v1#DeliveryModeDirectDownload',
     });
   }
 
@@ -114,6 +134,11 @@ export const softwareApplicationSchema = {
   ],
   downloadUrl: routes.external.npm,
   screenshot: `${siteUrl}${gitHandoffScreenshot.src || gitHandoffScreenshot}`,
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingCount: '0',
+  },
+  review: [],
 };
 
 export const productSchema = {
@@ -130,6 +155,11 @@ export const productSchema = {
   offers: offersFromPricing,
   image: `${siteUrl}${gitHandoffScreenshot.src || gitHandoffScreenshot}`,
   url: `${siteUrl}/#pricing`,
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingCount: '0',
+  },
+  review: [],
   manufacturer: {
     '@type': 'Organization',
     name: 'Agentsmith',
