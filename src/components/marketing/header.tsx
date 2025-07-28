@@ -43,7 +43,7 @@ export const Header = () => {
           </div>
           <nav className="hidden md:flex items-center gap-x-2 lg:gap-x-4 flex-1 justify-center rounded-md p-1">
             <Link
-              href="/#benefits"
+              href="/#how-it-works"
               className="text-sm font-medium text-foreground/70 hover:text-foreground"
             >
               Product
@@ -68,7 +68,7 @@ export const Header = () => {
             </Link>
           </nav>
           <div className="flex items-center justify-end gap-1 2xs:gap-2 lg:gap-4">
-            <div>
+            <div className="flex items-center">
               <Button variant="ghost" asChild>
                 <a href={routes.external.github} target="_blank" rel="noopener noreferrer">
                   <GithubIcon />

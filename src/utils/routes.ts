@@ -1,5 +1,3 @@
-import { isProd } from './is-env';
-
 export const routes = {
   marketing: {
     home: '/',
@@ -9,6 +7,7 @@ export const routes = {
     checkoutLanding: '/checkout-landing',
     roadmap: (proposeModal?: boolean) => `/roadmap${proposeModal ? '?proposeModal=true' : ''}`,
     roadmapItem: (itemSlug: string) => `/roadmap/${itemSlug}`,
+    demo: '/demo',
   },
   docs: {
     home: '/docs',

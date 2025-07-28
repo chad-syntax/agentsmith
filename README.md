@@ -10,6 +10,9 @@
 [![Plans & Pricing](https://img.shields.io/badge/Purchase-blueviolet)](https://agentsmith.dev/#pricing)
 [![Roadmap](https://img.shields.io/badge/Roadmap-blue)](https://agentsmith.dev/roadmap)
 [![Docs](https://img.shields.io/badge/Docs-white)](https://agentsmith.dev/docs)
+[![Demo](https://img.shields.io/badge/Demo-purple)](https://agentsmith.dev/demo)
+
+[![Agentsmith Product Demo](public/robust-authoring-480-gif.gif)](https://agentsmith.dev/demo)
 
 ## Documentation
 

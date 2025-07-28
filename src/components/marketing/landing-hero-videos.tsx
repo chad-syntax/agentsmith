@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import { ShadowButton } from '../shadow-button';
 import { LANDING_VIDEOS } from '@/app/constants';
 import { P } from '../typography';
+import { Button } from '../ui/button';
+import Link from 'next/link';
+import { routes } from '@/utils/routes';
 
 export const LandingHeroVideos = () => {
   const [selectedVideoSlug, setSelectedVideoSlug] =
@@ -64,7 +67,13 @@ export const LandingHeroVideos = () => {
             Your browser does not support the video tag.
           </video>
 
-          <P className="text-center lg:text-left min-h-[100px]">{selectedVideo.copy}</P>
+          <P className="text-center lg:text-left min-h-[100px]">
+            {selectedVideo.copy}
+            <br />
+            <Button className="px-0 text-base" variant="link" size="sm" asChild>
+              <Link href={routes.marketing.demo}>Watch the full demo &rarr;</Link>
+            </Button>
+          </P>
         </div>
       </div>
     </div>
