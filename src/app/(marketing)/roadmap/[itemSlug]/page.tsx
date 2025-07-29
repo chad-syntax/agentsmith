@@ -12,6 +12,28 @@ export const revalidate = 604800;
 
 export const dynamicParams = true;
 
+export async function generateMetadata({ params }: { params: { itemSlug: string } }) {
+  const supabase = createClient();
+  const { services } = new AgentsmithServices({ supabase, initialize: false });
+
+  const roadmapItem = await services.roadmap.getRoadmapItemBySlug(params.itemSlug);
+
+  if (!roadmapItem) {
+    return {
+      title: 'Roadmap Item Not Found',
+      description: 'This roadmap item does not exist.',
+    };
+  }
+
+  return {
+    title: roadmapItem.title,
+    description: `See roadmap details about ${roadmapItem.title}`,
+    alternates: {
+      canonical: `/roadmap/${roadmapItem.slug}`,
+    },
+  };
+}
+
 export async function generateStaticParams() {
   const supabase = createClient();
   const { services } = new AgentsmithServices({ supabase, initialize: false });

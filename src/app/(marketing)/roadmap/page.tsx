@@ -6,6 +6,14 @@ import { AuthProvider } from '@/providers/auth';
 import { Suspense } from 'react';
 import { IS_WAITLIST_REDIRECT_ENABLED } from '@/app/constants';
 
+export const metadata = {
+  title: 'Roadmap',
+  description: 'The Agentsmith Roadmap. See what we are working on and what is coming soon.',
+  alternates: {
+    canonical: '/roadmap',
+  },
+};
+
 export const revalidate = 43200;
 
 export default async function RoadmapServerPage() {

@@ -15,9 +15,26 @@ const defaultUrl =
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: 'Agentsmith - Open Source Prompt CMS',
+  title: {
+    template: '%s | Agentsmith',
+    default: 'Open Source Prompt CMS',
+  },
   description:
     'Agentsmith is the ultimate Prompt CMS. Build, refine, and ship AI agents faster than the other guys.',
+  alternates: {
+    canonical: '/',
+  },
+  generator: 'Next.js',
+  applicationName: 'Agentsmith',
+  keywords: [
+    'Prompt CMS',
+    'Open Source',
+    'AI Agents',
+    'AI Agents CMS',
+    'LLM Tools',
+    'Content Management System',
+  ],
+  manifest: '/manifest.json',
 };
 
 const ibmPlexMono = IBM_Plex_Mono({

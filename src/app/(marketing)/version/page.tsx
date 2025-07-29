@@ -1,5 +1,13 @@
 import packageJson from '../../../../package.json';
 
+export const metadata = {
+  title: 'Version',
+  description: 'The Agentsmith Website Version.',
+  alternates: {
+    canonical: '/version',
+  },
+};
+
 export default function VersionPage() {
   const version = packageJson.version;
   const gitSha = process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA;

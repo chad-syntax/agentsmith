@@ -52,10 +52,20 @@ export async function generateStaticParams() {
 export async function generateMetadata(props: { params: Promise<{ slug?: string[] }> }) {
   const params = await props.params;
   const page = source.getPage(params.slug);
+
   if (!page) notFound();
 
+  const canonical =
+    params.slug && params.slug.length > 0 ? `/docs/${params.slug.join('/')}` : '/docs';
+
   return {
-    title: page.data.title,
+    title: `${page.data.title} - Docs`,
     description: page.data.description,
+    alternates: {
+      canonical,
+    },
+    authors: [{ name: 'Chad Syntax' }],
+    creator: 'Chad Syntax',
+    publisher: 'Agentsmith Team',
   };
 }
