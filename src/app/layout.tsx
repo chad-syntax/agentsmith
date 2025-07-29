@@ -18,6 +18,9 @@ export const metadata = {
   title: 'Agentsmith - Open Source Prompt CMS',
   description:
     'Agentsmith is the ultimate Prompt CMS. Build, refine, and ship AI agents faster than the other guys.',
+  alternates: {
+    canonical: '/',
+  },
 };
 
 const ibmPlexMono = IBM_Plex_Mono({
