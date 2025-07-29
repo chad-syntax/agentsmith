@@ -13,7 +13,7 @@ import {
   OpenrouterNonStreamingResponse,
 } from './openrouter';
 import { routes } from '@/utils/routes';
-import { ORGANIZATION_KEYS, SEMVER_PATTERN } from '@/app/constants';
+import { ORGANIZATION_KEYS, SEMVER_PATTERN, VersionType } from '@/app/constants';
 import { compareSemanticVersions, incrementVersion } from '@/utils/versioning';
 import { compilePrompt, ParsedInclude } from '@/utils/template-utils';
 import { slugify } from '@/utils/slugify';
@@ -54,7 +54,7 @@ export type CreateDraftVersionOptions = {
   promptId: number;
   latestVersion: string;
   customVersion?: string;
-  versionType?: 'major' | 'minor' | 'patch';
+  versionType?: VersionType;
 };
 
 type PromptsServiceConstructorOptions = {

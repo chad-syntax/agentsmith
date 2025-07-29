@@ -21,6 +21,7 @@ import { makePromptLoader } from '@/utils/make-prompt-loader';
 import { useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
 import { CompletionConfig } from '@/lib/openrouter';
+import { VersionType } from '@/app/constants';
 
 type PromptData = NonNullable<GetAllPromptsDataResult>[0];
 type PromptVersion = PromptData['prompt_versions'][0];
@@ -389,10 +390,7 @@ type PromptPageContextType = {
 
   // Action handlers
   handleSave: (status: 'DRAFT' | 'PUBLISHED') => Promise<void>;
-  handleCreateNewVersion: (
-    versionType: 'major' | 'minor' | 'patch',
-    customVersion?: string,
-  ) => Promise<void>;
+  handleCreateNewVersion: (versionType: VersionType, customVersion?: string) => Promise<void>;
   setInputVariables: (variables: Record<string, string | number | boolean | object>) => void;
   updateIncludes: (includes: ParsedInclude[]) => void;
   updateEditorVariables: (variables: EditorPromptVariable[]) => void;
@@ -548,7 +546,7 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
   );
 
   const handleCreateNewVersion = useCallback(
-    async (versionType: 'major' | 'minor' | 'patch', customVersion?: string) => {
+    async (versionType: VersionType, customVersion?: string) => {
       dispatch({ type: 'OPERATION_START', payload: { operationType: 'CREATE_VERSION' } });
 
       try {
