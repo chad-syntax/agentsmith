@@ -3,11 +3,11 @@ import { IBM_Plex_Mono } from 'next/font/google';
 import { ThemeProvider } from 'next-themes';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import { Toaster } from '@/components/ui/sonner';
-import { isDev, isProd } from '@/utils/is-env';
+import { isDev, isProd, isStage } from '@/utils/is-env';
 import { PostHogIdentify } from './posthog-identify';
 
 const defaultUrl =
-  isProd && process.env.NEXT_PUBLIC_SITE_URL
+  (isProd || isStage) && process.env.NEXT_PUBLIC_SITE_URL
     ? process.env.NEXT_PUBLIC_SITE_URL
     : process.env.VERCEL_URL
       ? `https://${process.env.VERCEL_URL}`
