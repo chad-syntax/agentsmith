@@ -53,7 +53,7 @@ export const OrganizationBillingPage = (props: OrganizationBillingPageProps) => 
                     </a>
                   </Button>
                 )}
-                {!organization.stripe_subscription_id && !isProTier && (
+                {(!organization.stripe_subscription_id || !isProTier) && (
                   <Button className="ml-2" size="sm" onClick={() => setIsUpgradeModalOpen(true)}>
                     <ArrowBigUp />
                     Upgrade
