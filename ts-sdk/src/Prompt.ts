@@ -45,7 +45,7 @@ import { ORGANIZATION_KEYS } from '@/app/constants';
 import { routes } from '@/utils/routes';
 import { mergeIncludedVariables } from '@/utils/merge-included-variables';
 import { OpenrouterStreamEvent, streamToIterator } from '@/utils/stream-to-iterator';
-import { accumulateStreamToCompletion } from '@/utils/accumulate-stream';
+import { accumulateChatStreamToCompletion } from '@/utils/accumulate-stream';
 import merge from 'lodash.merge';
 
 type FetchedPromptFromFileSystem = {
@@ -670,11 +670,11 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
 
         const completion = async () => {
           const stream = streamToIterator<OpenrouterStreamEvent>(streamForCompletion);
-          return accumulateStreamToCompletion(stream);
+          return accumulateChatStreamToCompletion(stream);
         };
 
         this.client.queue.add(async () => {
-          const fullCompletion = await accumulateStreamToCompletion(
+          const fullCompletion = await accumulateChatStreamToCompletion(
             streamToIterator<OpenrouterStreamEvent>(streamForLogging),
           );
           this.logCompletionToFile({

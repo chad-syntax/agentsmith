@@ -1086,6 +1086,7 @@ export class PromptsService extends AgentsmithSupabaseService {
     // Create a log entry before making the API call
     const rawInput: OpenrouterRequestBody = {
       messages: [{ role: 'user', content: compiledPrompt }],
+      // prompt: compiledPrompt, // TODO: add support for this, but it will have a different shape and we need ot make sure to return a different ytpye
       ...config,
       models: freeModelsOnlyEnabled
         ? (await fetchFreeOpenrouterModels())

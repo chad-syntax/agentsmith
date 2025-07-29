@@ -10,7 +10,7 @@ import merge from 'lodash.merge';
 import { OpenrouterStreamEvent, streamToIterator } from '@/utils/stream-to-iterator';
 import { LLMLogsService } from '@/lib/LLMLogsService';
 import { mergeIncludedVariables } from '@/utils/merge-included-variables';
-import { accumulateStreamToCompletion } from '@/utils/accumulate-stream';
+import { accumulateChatStreamToCompletion } from '@/utils/accumulate-stream';
 
 export const maxDuration = 320; // 5m20s minute function timeout
 
@@ -148,7 +148,7 @@ export async function POST(
 
       const logStreamedCompletion = async () => {
         try {
-          const fullCompletion = await accumulateStreamToCompletion(
+          const fullCompletion = await accumulateChatStreamToCompletion(
             streamToIterator<OpenrouterStreamEvent>(streamForLogging),
           );
 
