@@ -190,8 +190,23 @@ export class GitHubAppService extends AgentsmithSupabaseService {
 
   async getInstallationRepositories(installationId: number) {
     const octokit = await this.app.getInstallationOctokit(installationId);
-    const response = await octokit.request('GET /installation/repositories');
-    return response.data.repositories;
+    try {
+      const startTime = performance.now();
+      const allRepos = await octokit.paginate(octokit.rest.apps.listReposAccessibleToInstallation, {
+        per_page: 100,
+      });
+      const endTime = performance.now();
+      this.logger.info(
+        `Time taken to get all ${allRepos.length} installation repositories for installation ID ${installationId}: ${endTime - startTime} milliseconds`,
+      );
+      return allRepos;
+    } catch (error: any) {
+      this.logger.error(
+        error,
+        `Failed to get all installation repositories for installation ID ${installationId}`,
+      );
+      throw error;
+    }
   }
 
   async createInstallationRepositories(options: CreateInstallationRepositoriesOptions) {
@@ -203,10 +218,9 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       throw new Error('Organization not found, cannot create repository records');
     }
 
-    const octokit = await this.app.getInstallationOctokit(installationId);
-    const { data: installationRepos } = await octokit.request('GET /installation/repositories');
+    const installationRepos = await this.getInstallationRepositories(installationId);
 
-    const repositoriesToInsert = installationRepos.repositories.map((repo) => ({
+    const repositoriesToInsert = installationRepos.map((repo) => ({
       github_app_installation_id: githubAppInstallationRecordId,
       repository_id: repo.id,
       repository_name: repo.name,
