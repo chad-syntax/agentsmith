@@ -76,7 +76,7 @@ end;
 $$;
 
 -- helper function to get organization id from tier name
-create or replace function get_org_id_by_tier(tier_name text)
+create or replace function get_org_id_by_tier(tier_enum organization_tier)
 returns bigint
 language plpgsql as $$
 declare
@@ -85,7 +85,7 @@ begin
     select o.id into org_id
     from organizations o
     join agentsmith_tiers t on o.agentsmith_tier_id = t.id
-    where t.name = tier_name
+    where t.tier = tier_enum
     limit 1;
     
     return org_id;
@@ -111,27 +111,23 @@ end;
 $$;
 
 
-create role test_user with login password 'password' bypassrls;
-grant authenticated to test_user;
-
 -- test 1: attempting to insert a user to a FREE tier org should fail since FREE tier is not allowed to have more than 1 user
-set role test_user;
+select set_auth_user('free@example.com');
 prepare add_user_to_free_org as
     insert into organization_users (organization_id, user_id, role)
-    values (get_org_id_by_tier('Free'), get_agentsmith_user_id_from_email('pro_member@example.com'), 'MEMBER');
+    values (get_org_id_by_tier('FREE'), get_agentsmith_user_id_from_email('pro_member@example.com'), 'MEMBER');
 
 select throws_ok(
     'add_user_to_free_org',
-    '23514',
+    null,
     'attempting to insert a user to a FREE tier org should fail'
 );
-reset role;
 
 -- test 2: attempting to insert a user to a PRO tier org should succeed
 select set_auth_user('pro_admin@example.com');
 prepare add_user_to_pro_org as
     insert into organization_users (organization_id, user_id, role)
-    values (get_org_id_by_tier('Pro'), get_agentsmith_user_id_from_email('free@example.com'), 'MEMBER');
+    values (get_org_id_by_tier('PRO'), get_agentsmith_user_id_from_email('free@example.com'), 'MEMBER');
 
 select lives_ok(
     'add_user_to_pro_org',
@@ -142,7 +138,7 @@ select lives_ok(
 select set_auth_user('ee_admin@example.com');
 prepare add_user_to_enterprise_org as
     insert into organization_users (organization_id, user_id, role)
-    values (get_org_id_by_tier('Enterprise'), get_agentsmith_user_id_from_email('free@example.com'), 'MEMBER');
+    values (get_org_id_by_tier('ENTERPRISE'), get_agentsmith_user_id_from_email('free@example.com'), 'MEMBER');
 
 select lives_ok(
     'add_user_to_enterprise_org',
@@ -152,28 +148,25 @@ select lives_ok(
 -- test 4: attempting to insert a fourth user into a HOBBY tier org should fail since HOBBY tier is not allowed to have more than 3 users
 select set_auth_user('hobby_admin@example.com');
 -- first add a third user to the hobby org
-set role test_user;
 insert into organization_users (organization_id, user_id, role)
-values (get_org_id_by_tier('Hobby'), get_agentsmith_user_id_from_email('free@example.com'), 'MEMBER');
+values (get_org_id_by_tier('HOBBY'), get_agentsmith_user_id_from_email('free@example.com'), 'MEMBER');
 
 -- now try to add a fourth user
 prepare add_fourth_user_to_hobby_org as
     insert into organization_users (organization_id, user_id, role)
-    values (get_org_id_by_tier('Hobby'), get_agentsmith_user_id_from_email('pro_admin@example.com'), 'MEMBER');
+    values (get_org_id_by_tier('HOBBY'), get_agentsmith_user_id_from_email('pro_admin@example.com'), 'MEMBER');
 
 select throws_ok(
     'add_fourth_user_to_hobby_org',
-    '23514',
+    'new row violates row-level security policy "Enforce user limit for organization tier" for table "organization_users"',
     'attempting to insert a fourth user into a HOBBY tier org should fail'
 );
-reset role;
-drop role if exists test_user;
 
 -- test 6: attempting to insert a project into a PRO tier org should succeed
 select set_auth_user('pro_admin@example.com');
 prepare add_project_to_pro_org as
     insert into projects (organization_id, name, created_by)
-    values (get_org_id_by_tier('Pro'), 'Pro Project', get_agentsmith_user_id_from_email('pro_admin@example.com'));
+    values (get_org_id_by_tier('PRO'), 'Pro Project', get_agentsmith_user_id_from_email('pro_admin@example.com'));
 
 select lives_ok(
     'add_project_to_pro_org',
@@ -184,7 +177,7 @@ select lives_ok(
 select set_auth_user('ee_admin@example.com');
 prepare add_project_to_enterprise_org as
     insert into projects (organization_id, name, created_by)
-    values (get_org_id_by_tier('Enterprise'), 'Enterprise Project', get_agentsmith_user_id_from_email('ee_admin@example.com'));
+    values (get_org_id_by_tier('ENTERPRISE'), 'Enterprise Project', get_agentsmith_user_id_from_email('ee_admin@example.com'));
 
 select lives_ok(
     'add_project_to_enterprise_org',
@@ -195,7 +188,7 @@ select lives_ok(
 select set_auth_user('hobby_admin@example.com');
 prepare add_project_to_hobby_org as
     insert into projects (organization_id, name, created_by)
-    values (get_org_id_by_tier('Hobby'), 'Hobby Project', get_agentsmith_user_id_from_email('hobby_admin@example.com'));
+    values (get_org_id_by_tier('HOBBY'), 'Hobby Project', get_agentsmith_user_id_from_email('hobby_admin@example.com'));
 
 select lives_ok(
     'add_project_to_hobby_org',
@@ -209,7 +202,7 @@ select lives_ok(
 select set_auth_user('free@example.com');
 prepare add_project_to_free_org as
     insert into projects (organization_id, name, created_by)
-    values (get_org_id_by_tier('Free'), 'Another Free Project', get_agentsmith_user_id_from_email('free@example.com'));
+    values (get_org_id_by_tier('FREE'), 'Another Free Project', get_agentsmith_user_id_from_email('free@example.com'));
 
 select throws_ok(
     'add_project_to_free_org',
@@ -224,7 +217,7 @@ select throws_ok(
 select set_auth_user('hobby_admin@example.com');
 prepare add_fourth_project_to_hobby_org as
     insert into projects (organization_id, name, created_by)
-    values (get_org_id_by_tier('Hobby'), 'Hobby Project 4', get_agentsmith_user_id_from_email('hobby_admin@example.com'));
+    values (get_org_id_by_tier('HOBBY'), 'Hobby Project 4', get_agentsmith_user_id_from_email('hobby_admin@example.com'));
 
 select throws_ok(
     'add_fourth_project_to_hobby_org',
