@@ -13,7 +13,7 @@ deallocate all;
 \set ON_ERROR_STOP true
 
 -- plan the number of tests
-select plan(9);
+select plan(11);
 
 -- helper function to get user ids
 create or replace function get_test_user_id(test_email text) 
@@ -233,13 +233,13 @@ select lives_ok(
     'pro admin can create repositories'
 );
 
--- test 5: github_webhook role can view repositories
+-- test 5: github_webhook role can view project_repositories
 select reset_session();
 set role github_webhook;
 
 select isnt_empty(
     'select * from project_repositories',
-    'github_webhook role can view repositories'
+    'github_webhook role can view project_repositories'
 );
 
 -- test 6: github_webhook role can update repositories
@@ -250,10 +250,10 @@ where organization_id = get_pro_admin_org_id();
 
 select lives_ok(
     'webhook_update_repository',
-    'github_webhook role can update repositories'
+    'github_webhook role can update project_repositories'
 );
 
--- test 7: github_webhook role cannot create repositories
+-- test 7: github_webhook role can create project_repositories
 prepare webhook_create_repository as
 insert into project_repositories (
     project_id,
@@ -273,10 +273,9 @@ select
     'org/webhook-repo',
     'main';
 
-select throws_ok(
+select lives_ok(
     'webhook_create_repository',
-    null,
-    'github_webhook role cannot create repositories'
+    'github_webhook role can create repositories'
 );
 
 -- test 8: github_webhook role can delete repositories
@@ -290,7 +289,42 @@ select lives_ok(
     'github_webhook role can delete repositories'
 );
 
--- test 9: cannot create duplicate repository entries
+-- test 9: github_webhook cannot create duplicate project_repository that has the same repository_id and github_app_installation_id
+prepare webhook_duplicate_repository as
+insert into project_repositories (
+    project_id,
+    organization_id,
+    github_app_installation_id,
+    repository_id,
+    repository_name,
+    repository_full_name,
+    repository_default_branch
+)
+select 
+    get_pro_project_id(),
+    get_pro_admin_org_id(),
+    get_test_installation_id(),
+    54321,
+    'test-repo',
+    'org/test-repo',
+    'main';
+
+select throws_ok(
+    'webhook_duplicate_repository',
+    '23505', -- unique violation error code
+    'duplicate key value violates unique constraint "project_repositories_github_app_installation_id_project_id__key"',
+    'cannot create duplicate repository entry with same installation, project, and repository IDs'
+);
+
+-- test 10: github_webhook can read organization records
+select set_auth_user('pro_admin@example.com');
+
+select isnt_empty(
+    'select * from organizations',
+    'github_webhook can read organization records'
+);
+
+-- test 11: cannot create duplicate repository entries
 select set_auth_user('pro_admin@example.com');
 
 prepare duplicate_repository as
@@ -318,6 +352,7 @@ select throws_ok(
     'duplicate key value violates unique constraint "project_repositories_github_app_installation_id_project_id__key"',
     'cannot create duplicate repository entry with same installation, project, and repository IDs'
 );
+
 
 -- finish the tests
 select * from finish();

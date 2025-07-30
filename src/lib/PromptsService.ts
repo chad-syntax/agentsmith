@@ -13,7 +13,7 @@ import {
   OpenrouterNonStreamingResponse,
 } from './openrouter';
 import { routes } from '@/utils/routes';
-import { ORGANIZATION_KEYS, SEMVER_PATTERN } from '@/app/constants';
+import { ORGANIZATION_KEYS, SEMVER_PATTERN, VersionType } from '@/app/constants';
 import { compareSemanticVersions, incrementVersion } from '@/utils/versioning';
 import { compilePrompt, ParsedInclude } from '@/utils/template-utils';
 import { slugify } from '@/utils/slugify';
@@ -54,7 +54,7 @@ export type CreateDraftVersionOptions = {
   promptId: number;
   latestVersion: string;
   customVersion?: string;
-  versionType?: 'major' | 'minor' | 'patch';
+  versionType?: VersionType;
 };
 
 type PromptsServiceConstructorOptions = {
@@ -1086,6 +1086,7 @@ export class PromptsService extends AgentsmithSupabaseService {
     // Create a log entry before making the API call
     const rawInput: OpenrouterRequestBody = {
       messages: [{ role: 'user', content: compiledPrompt }],
+      // prompt: compiledPrompt, // TODO: add support for this, but it will have a different shape and we need ot make sure to return a different ytpye
       ...config,
       models: freeModelsOnlyEnabled
         ? (await fetchFreeOpenrouterModels())

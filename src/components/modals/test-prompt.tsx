@@ -28,7 +28,7 @@ import { VariableInput } from '../variable-input';
 import { JsonEditor } from '../editors/json-editor';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { accumulateStreamToCompletion } from '@/utils/accumulate-stream';
+import { accumulateChatStreamToCompletion } from '@/utils/accumulate-stream';
 
 const TABS = {
   content: 'content',
@@ -45,6 +45,8 @@ const TAB_LABELS = {
 } as const;
 
 type Tab = keyof typeof TABS;
+
+// Add a "thread" mode so the user can set the prompt as the system or user message.
 
 export const PromptTestModal = () => {
   const { state, closeTestModal, setInputVariables } = usePromptPage();
@@ -123,17 +125,17 @@ export const PromptTestModal = () => {
             }
             if (event.type === 'message' && event.data.choices?.[0]?.delta?.content) {
               setCompletionContent(
-                (prev) => (prev ?? '') + (event.data.choices[0].delta.content ?? ''),
+                (prev) => (prev ?? '') + (event.data.choices[0]?.delta?.content ?? ''),
               );
             }
             if (event.type === 'message' && event.data.choices?.[0]?.delta?.reasoning) {
               setReasoningContent(
-                (prev) => (prev ?? '') + (event.data.choices[0].delta.reasoning ?? ''),
+                (prev) => (prev ?? '') + (event.data.choices[0]?.delta?.reasoning ?? ''),
               );
             }
           }
 
-          const completion = await accumulateStreamToCompletion(
+          const completion = await accumulateChatStreamToCompletion(
             streamToIterator<OpenrouterStreamEvent>(streamB),
           );
 

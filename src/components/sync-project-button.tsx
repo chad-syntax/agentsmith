@@ -31,6 +31,11 @@ export const SyncProjectButton = (props: SyncProjectButtonProps) => {
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
+    if (!onboardingChecklist?.repoConnected) {
+      toast.error('You must connect your GitHub repository first before syncing!');
+      return;
+    }
+
     setLoading(true);
     try {
       const result = await syncProject(targetProjectUuid);

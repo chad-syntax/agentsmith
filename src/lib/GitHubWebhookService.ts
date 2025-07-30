@@ -1,8 +1,11 @@
+import { Database } from '@/app/__generated__/supabase.types';
 import {
   AgentsmithSupabaseService,
   AgentsmithSupabaseServiceConstructorOptions,
 } from './AgentsmithSupabaseService';
 import { EmitterWebhookEvent } from '@octokit/webhooks';
+
+type ProjectRepositoryInsert = Database['public']['Tables']['project_repositories']['Insert'];
 
 export class GitHubWebhookService extends AgentsmithSupabaseService {
   constructor(options: AgentsmithSupabaseServiceConstructorOptions) {
@@ -63,14 +66,34 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
     payload: EmitterWebhookEvent<'installation.deleted'>['payload'],
   ) {
     try {
-      const { error } = await this.supabase
+      const { data: installationRecord, error } = await this.supabase
         .from('github_app_installations')
         .update({ status: 'DELETED' })
-        .eq('installation_id', payload.installation.id);
+        .eq('installation_id', payload.installation.id)
+        .select('id')
+        .single();
 
       if (error) {
         this.logger.error(error, 'Failed to update installation status to DELETED:');
         throw error;
+      }
+
+      if (!installationRecord) {
+        this.logger.error(
+          `No installation record found for installation ID ${payload.installation.id}, cannot disconnect project repositories`,
+        );
+        return;
+      }
+
+      // disconnect all project repositories from the installation so they may be re-connected with a new installation
+      const { error: disconnectError } = await this.supabase
+        .from('project_repositories')
+        .update({ project_id: null })
+        .eq('github_app_installation_id', installationRecord.id);
+
+      if (disconnectError) {
+        this.logger.error(disconnectError, 'Failed to disconnect project repositories:');
+        throw disconnectError;
       }
     } catch (e) {
       this.logger.error(e, 'installation.deleted handler failed with error');
@@ -117,42 +140,58 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
   ) {
     try {
       const { repositories_added, installation } = payload;
-      if (!repositories_added?.length) return;
 
-      const { data: installationRecord } = await this.supabase
-        .from('github_app_installations')
-        .select('id, organizations(id)')
-        .eq('installation_id', installation.id)
-        .single();
+      const installationId = installation.id;
 
-      if (!installationRecord) {
-        throw new Error(`No installation record found for installation ID ${installation.id}`);
+      if (repositories_added.length === 0) {
+        this.logger.warn(
+          `No repositories added in installation_repositories.added event for installation ID ${installationId}, skipping.`,
+        );
+        return;
       }
 
-      // Fetch full repository data to get accurate default branch info
-      const octokit = await this.services.githubApp.app.getInstallationOctokit(installation.id);
-      const fullRepoData = await Promise.all(
-        repositories_added.map(async (repoAdded) => {
-          const [owner, repo] = repoAdded.full_name.split('/');
+      const { data: installationRecord, error: getInstallationError } = await this.supabase
+        .from('github_app_installations')
+        .select('id, organizations(id)')
+        .eq('installation_id', installationId)
+        .single();
 
-          const { data } = await octokit.request('GET /repos/{owner}/{repo}', {
-            owner,
-            repo,
-          });
-          return data;
-        }),
-      );
+      if (getInstallationError) {
+        this.logger.error(getInstallationError, 'Failed to get installation record:');
+        throw getInstallationError;
+      }
 
-      const { error } = await this.supabase.from('project_repositories').insert(
-        fullRepoData.map((repo) => ({
-          github_app_installation_id: installationRecord.id,
-          organization_id: installationRecord.organizations.id,
-          repository_id: repo.id,
-          repository_name: repo.name,
-          repository_full_name: repo.full_name,
-          repository_default_branch: repo.default_branch,
-        })),
-      );
+      if (!installationRecord) {
+        const msg = `No installation record found for installation ID ${installationId}`;
+        this.logger.error(msg);
+        throw new Error(msg);
+      }
+
+      const allRepos = await this.services.githubApp.getInstallationRepositories(installationId);
+
+      const newRecords = repositories_added.reduce<ProjectRepositoryInsert[]>((acc, repo) => {
+        const fullRepoData = allRepos.find((r) => r.id === repo.id);
+        if (!fullRepoData) {
+          this.logger.warn(`No full repository data found for repository ID ${repo.id}, skipping.`);
+          return acc;
+        }
+        return [
+          ...acc,
+          {
+            github_app_installation_id: installationRecord.id,
+            organization_id: installationRecord.organizations.id,
+            repository_id: repo.id,
+            repository_name: repo.name,
+            repository_full_name: repo.full_name,
+            repository_default_branch: fullRepoData.default_branch,
+          },
+        ];
+      }, []);
+
+      const { error } = await this.supabase.from('project_repositories').upsert(newRecords, {
+        onConflict: 'repository_id, github_app_installation_id',
+        ignoreDuplicates: true,
+      });
 
       if (error) {
         this.logger.error(error, 'Failed to insert repository records:');
@@ -167,16 +206,35 @@ export class GitHubWebhookService extends AgentsmithSupabaseService {
     payload: EmitterWebhookEvent<'installation_repositories.removed'>['payload'],
   ) {
     try {
-      const { repositories_removed } = payload;
-      if (!repositories_removed?.length) return;
+      const { repositories_removed, installation } = payload;
+      if (repositories_removed.length === 0) return;
 
+      const { data: installationRecord, error: getInstallationError } = await this.supabase
+        .from('github_app_installations')
+        .select('id')
+        .eq('installation_id', installation.id)
+        .single();
+
+      if (getInstallationError) {
+        this.logger.error(getInstallationError, 'Failed to get installation record:');
+        throw getInstallationError;
+      }
+
+      if (!installationRecord) {
+        this.logger.error(
+          `No installation record found for installation ID ${installation.id}, cannot delete project repositories`,
+        );
+        return;
+      }
+
+      const recordIdsToDelete = repositories_removed.map((repo) => repo.id);
+
+      // Only remove project_repository records that are part of the installation as well
       const { error } = await this.supabase
         .from('project_repositories')
         .delete()
-        .in(
-          'repository_id',
-          repositories_removed.map((repo) => repo.id),
-        );
+        .in('repository_id', recordIdsToDelete)
+        .eq('github_app_installation_id', installationRecord.id);
 
       if (error) {
         this.logger.error(error, 'Failed to delete repository records:');

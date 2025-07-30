@@ -164,6 +164,7 @@ export class UsersService extends AgentsmithSupabaseService {
           )
           .eq('uuid', orgUser.organizations.uuid)
           .eq('projects.agentsmith_events.type', 'SYNC_COMPLETE')
+          .eq('github_app_installations.status', 'ACTIVE')
           .limit(1, { referencedTable: 'projects' })
           .limit(1, { referencedTable: 'projects.llm_logs' })
           .limit(1, { referencedTable: 'projects.agentsmith_events' })

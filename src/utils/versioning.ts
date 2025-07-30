@@ -1,13 +1,12 @@
+import { VersionType } from '@/app/constants';
+
 /**
  * Compare two semantic versions and return:
  * - 1 if version1 > version2
  * - 0 if version1 === version2
  * - -1 if version1 < version2
  */
-export const compareSemanticVersions = (
-  version1: string,
-  version2: string
-): number => {
+export const compareSemanticVersions = (version1: string, version2: string): number => {
   const v1Parts = version1.split('.').map(Number);
   const v2Parts = version2.split('.').map(Number);
 
@@ -33,10 +32,7 @@ export const compareSemanticVersions = (
 /**
  * Increment a semantic version based on the version type
  */
-export const incrementVersion = (
-  version: string,
-  type: 'major' | 'minor' | 'patch'
-): string => {
+export const incrementVersion = (version: string, type: VersionType): string => {
   const parts = version.split('.').map(Number);
 
   if (type === 'major') {

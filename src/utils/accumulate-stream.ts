@@ -6,7 +6,9 @@ import {
   ToolCall,
 } from '@/lib/openrouter';
 
-export const accumulateStreamToCompletion = async (
+// need to add non-chat stream suppport
+
+export const accumulateChatStreamToCompletion = async (
   stream: AsyncIterable<OpenrouterStreamEvent>,
 ) => {
   let accumulatedCompletion: Partial<OpenrouterStreamingResponse> = {};
