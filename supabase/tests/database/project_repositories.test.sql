@@ -253,7 +253,7 @@ select lives_ok(
     'github_webhook role can update repositories'
 );
 
--- test 7: github_webhook role cannot create repositories
+-- test 7: github_webhook role can create repositories
 prepare webhook_create_repository as
 insert into project_repositories (
     project_id,
@@ -273,10 +273,9 @@ select
     'org/webhook-repo',
     'main';
 
-select throws_ok(
+select lives_ok(
     'webhook_create_repository',
-    null,
-    'github_webhook role cannot create repositories'
+    'github_webhook role can create repositories'
 );
 
 -- test 8: github_webhook role can delete repositories

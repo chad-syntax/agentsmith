@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/utils/shadcn';
 import { usePromptPage } from '@/providers/prompt-page';
+import { ArrowRight } from 'lucide-react';
 
 export const CreateVersionModal = () => {
   const { state, handleCreateNewVersion, closeCreateVersionModal } = usePromptPage();
@@ -73,11 +74,6 @@ export const CreateVersionModal = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 pb-4">
             <div className="grid gap-2">
-              <Label>Current Version: {currentVersion.version}</Label>
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Version Type</Label>
               <div className="flex gap-2 flex-wrap">
                 {Object.values(VERSION_TYPES).map((v) => (
                   <Button
@@ -93,7 +89,21 @@ export const CreateVersionModal = () => {
               </div>
             </div>
 
-            {versionType === VERSION_TYPES.custom ? (
+            <div className="flex justify-around">
+              <div className="flex items-center justify-center gap-6">
+                <div className="flex flex-col items-center">
+                  <Label className="text-xs text-muted-foreground/60">Current</Label>
+                  <p className="text-muted-foreground/60 text-lg">{currentVersion.version}</p>
+                </div>
+                <ArrowRight className="size-5 mt-3" />
+                <div className="flex flex-col items-center">
+                  <Label className="text-xs">New</Label>
+                  <p className="text-lg">{customVersion || ''}</p>
+                </div>
+              </div>
+            </div>
+
+            {versionType === VERSION_TYPES.custom && (
               <div className="grid gap-2">
                 <Label htmlFor="version">New Version</Label>
                 <Input
@@ -105,16 +115,10 @@ export const CreateVersionModal = () => {
                 />
                 {error && <p className="text-sm text-destructive">{error}</p>}
               </div>
-            ) : (
-              <div className="grid gap-2">
-                <Label>New Version: {customVersion || ''}</Label>
-              </div>
             )}
 
-            <div className="grid gap-2">
-              <p className="text-sm text-muted-foreground">
-                {VERSION_TYPE_DESCRIPTIONS[versionType]}
-              </p>
+            <div className="text-sm text-muted-foreground min-h-[80px] md:min-h-[60px]">
+              {VERSION_TYPE_DESCRIPTIONS[versionType]}
             </div>
           </div>
           <DialogFooter>

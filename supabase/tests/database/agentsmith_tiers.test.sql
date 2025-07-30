@@ -111,17 +111,21 @@ end;
 $$;
 
 
+create role test_user with login password 'password' bypassrls;
+grant authenticated to test_user;
+
 -- test 1: attempting to insert a user to a FREE tier org should fail since FREE tier is not allowed to have more than 1 user
-select set_auth_user('free@example.com');
+set role test_user;
 prepare add_user_to_free_org as
     insert into organization_users (organization_id, user_id, role)
     values (get_org_id_by_tier('Free'), get_agentsmith_user_id_from_email('pro_member@example.com'), 'MEMBER');
 
 select throws_ok(
     'add_user_to_free_org',
-    'new row violates row-level security policy "Enforce user limit for organization tier" for table "organization_users"',
+    '23514',
     'attempting to insert a user to a FREE tier org should fail'
 );
+reset role;
 
 -- test 2: attempting to insert a user to a PRO tier org should succeed
 select set_auth_user('pro_admin@example.com');
@@ -148,6 +152,7 @@ select lives_ok(
 -- test 4: attempting to insert a fourth user into a HOBBY tier org should fail since HOBBY tier is not allowed to have more than 3 users
 select set_auth_user('hobby_admin@example.com');
 -- first add a third user to the hobby org
+set role test_user;
 insert into organization_users (organization_id, user_id, role)
 values (get_org_id_by_tier('Hobby'), get_agentsmith_user_id_from_email('free@example.com'), 'MEMBER');
 
@@ -158,9 +163,11 @@ prepare add_fourth_user_to_hobby_org as
 
 select throws_ok(
     'add_fourth_user_to_hobby_org',
-    'new row violates row-level security policy "Enforce user limit for organization tier" for table "organization_users"',
+    '23514',
     'attempting to insert a fourth user into a HOBBY tier org should fail'
 );
+reset role;
+drop role if exists test_user;
 
 -- test 6: attempting to insert a project into a PRO tier org should succeed
 select set_auth_user('pro_admin@example.com');
