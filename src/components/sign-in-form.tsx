@@ -144,7 +144,7 @@ export const SignInForm = ({ className, requiredTos = true, ...props }: SignInFo
                       I agree to the{' '}
                       <Link href={routes.marketing.terms} className="underline">
                         Terms of Service
-                      </Link>
+                      </Link>{' '}
                       and the{' '}
                       <Link href={routes.marketing.privacy} className="underline">
                         Privacy Policy
