@@ -50,6 +50,7 @@ export const OnboardingChecklist = () => {
         {
           done: onboardingChecklist.repoConnected,
           label: 'Connect a Repository',
+          disabled: !onboardingChecklist.appInstalled,
           onClick: () => setConnectProjectModalOpen(true),
         },
         {
