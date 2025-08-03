@@ -86,9 +86,12 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
+    const scriptSources = `${self} ${unsafeEval} ${unsafeInline} ${supabaseWildcard} ${localhostWildcard} ${cfChallenges} ${posthogHosts} ${googleTagManager} ${googleAnalytics} ${googleAds} ${googleAdServices} ${sibforms} ${stripeJs} ${unpkg} ${vercelAssets} ${vercelLive} ${googleApis}`;
+
     const cspHeader = [
       `default-src ${self}`,
-      `script-src ${self} ${unsafeEval} ${unsafeInline} ${supabaseWildcard} ${localhostWildcard} ${cfChallenges} ${posthogHosts} ${googleTagManager} ${googleAnalytics} ${googleAds} ${googleAdServices} ${sibforms} ${stripeJs} ${unpkg} ${vercelAssets} ${vercelLive} ${googleApis}`,
+      `script-src ${scriptSources}`,
+      `script-src-elem ${scriptSources}`,
       `style-src ${self} ${unsafeInline} ${googleFonts} ${gStatic} ${sibforms}`,
       `img-src ${self} ${blob} ${data} ${supabaseWildcard} ${localhostWildcard} ${googleAnalytics} ${googleAds} ${gStatic} ${githubAvatars} ${googleConnect} ${googleAdServices} ${googleTagManager} ${vercelBlob} ${youtubeImg}`,
       `font-src ${self} ${gStatic}`,

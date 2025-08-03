@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { useState } from 'react';
 import { JoinOrganizationModal } from '@/components/modals/join-organization';
-import { UserNeedsOrgMembership } from '@/components/user-needs-org-membership';
+import { StudioPageOnboarding } from '@/components/studio-page-onboarding';
 
 export const AccountPage = () => {
   const { user } = useAuth();
@@ -57,7 +57,7 @@ export const AccountPage = () => {
           )}
         </div>
         {userOrganizationData?.organization_users.length === 0 ? (
-          <UserNeedsOrgMembership />
+          <StudioPageOnboarding />
         ) : (
           <div className="flex flex-col gap-4 items-start">
             <H3>Organization Memberships</H3>

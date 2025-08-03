@@ -7,7 +7,71 @@ import { useState } from 'react';
 import { CreateOrganizationModal } from './modals/create-organization';
 import { JoinOrganizationModal } from './modals/join-organization';
 
-export const UserNeedsOrgMembership = () => {
+const onboardingQuestions = [
+  // Step 1: Role & Intent
+  {
+    step: 1,
+    questions: [
+      {
+        question: 'What best describes your role?',
+        options: [
+          'Engineer / Developer',
+          'Product Manager',
+          'Founder / Executive',
+          'Prompt Engineer',
+          'Copywriter',
+          'Other',
+        ],
+      },
+    ],
+  },
+  // Step 2: Are you joining an existing Agentsmith Organization?
+  {
+    step: 2,
+    questions: [
+      {
+        question: 'Are you joining an existing Agentsmith Organization?',
+        options: [
+          { label: 'Yes', action: 'openJoinModal' },
+          { label: 'No', action: 'continue' },
+        ],
+      },
+    ],
+  },
+  // Step 3: Company & Team Info
+  {
+    step: 3,
+    questions: [
+      {
+        question: 'What’s your company’s name?',
+        type: 'text',
+      },
+      {
+        question: 'How big is your team?',
+        options: ['Just me', '2–10', '11–50', '51–200', '200+'],
+      },
+    ],
+  },
+  // Step 4: What do you hope to get out of Agentsmith?
+  {
+    step: 4,
+    questions: [
+      {
+        question: 'What do you hope to get out of Agentsmith?',
+        options: [
+          'Keep prompts organized',
+          'Keep prompts between devs and non-devs in sync',
+          'Test and evaluate prompts',
+          'Monitor prompt performance',
+          'Just checking it out',
+        ],
+      },
+    ],
+  },
+  // then open the create organization modal with the org name pre-filled
+];
+
+export const StudioPageOnboarding = () => {
   const [createOrganizationModalOpen, setCreateOrganizationModalOpen] = useState(false);
   const [joinOrganizationModalOpen, setJoinOrganizationModalOpen] = useState(false);
   const handleCreateOrganizationClick = () => {

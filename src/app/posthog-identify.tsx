@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import posthog from 'posthog-js';
 import { createClient } from '@/lib/supabase/client';
+import { isProd } from '@/utils/is-env';
 
 export const PostHogIdentify = () => {
   useEffect(() => {
@@ -21,8 +22,9 @@ export const PostHogIdentify = () => {
         });
       }
     };
-
-    initIdentify();
+    if (isProd) {
+      initIdentify();
+    }
   }, []);
   return null;
 };

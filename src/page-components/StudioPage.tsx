@@ -4,7 +4,7 @@ import { GetUserOrganizationDataResult } from '@/lib/UsersService';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { UserNeedsOrgMembership } from '@/components/user-needs-org-membership';
+import { StudioPageOnboarding } from '@/components/studio-page-onboarding';
 import packageJson from '../../package.json';
 
 type StudioPageProps = {
@@ -62,7 +62,7 @@ export const StudioPage = (props: StudioPageProps) => {
       <StudioPageHeader />
       <div className="mt-6">
         {userOrganizationData.organization_users.length === 0 ? (
-          <UserNeedsOrgMembership />
+          <StudioPageOnboarding />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {userOrganizationData.organization_users.map((orgUser) => {
