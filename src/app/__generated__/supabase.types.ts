@@ -913,6 +913,12 @@ export type Database = {
         }
         Returns: Json
       }
+      create_organization_v2: {
+        Args: {
+          arg_name: string
+        }
+        Returns: Json
+      }
       delete_organization_key: {
         Args: {
           arg_organization_uuid: string

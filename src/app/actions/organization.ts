@@ -5,11 +5,19 @@ import { redirect } from 'next/navigation';
 import { routes } from '@/utils/routes';
 
 import { createSuccessResponse, createErrorResponse } from '@/utils/action-helpers';
+import { ActionResponse } from '@/types/action-response';
 
-export const createOrganization = async (name: string) => {
+type NewOrganizationData = {
+  organization_uuid: string;
+  project_uuid: string;
+};
+
+export const createOrganization = async (
+  name: string,
+): Promise<ActionResponse<NewOrganizationData>> => {
   const supabase = await createClient();
 
-  const { data: newOrganizationUuid, error } = await supabase.rpc('create_organization', {
+  const { data, error } = await supabase.rpc('create_organization_v2', {
     arg_name: name,
   });
 
@@ -17,11 +25,16 @@ export const createOrganization = async (name: string) => {
     return createErrorResponse(error.message);
   }
 
-  if (!newOrganizationUuid) {
-    return createErrorResponse('No new organization uuid returned, please try again');
+  if (!data) {
+    return createErrorResponse('No new organization data returned, please try again');
   }
 
-  return createSuccessResponse<string>(newOrganizationUuid, 'Organization created successfully.');
+  const newOrganizationData = data as NewOrganizationData;
+
+  return createSuccessResponse<NewOrganizationData>(
+    newOrganizationData,
+    'Organization created successfully.',
+  );
 };
 
 export const renameOrganization = async (organizationUuid: string, name: string) => {

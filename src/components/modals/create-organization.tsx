@@ -36,7 +36,13 @@ export function CreateOrganizationModal({ open, onOpenChange }: CreateOrganizati
       if (result.success) {
         onOpenChange(false);
         setOrgName('');
-        router.push(routes.studio.organization(result.data));
+        if (!result.data) {
+          setErrors({
+            'create-organization': ['No new organization data returned, please try again'],
+          });
+        } else {
+          router.push(routes.studio.project(result.data.project_uuid));
+        }
       } else if (result.errors) {
         setErrors(result.errors);
       }
