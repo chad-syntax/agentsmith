@@ -40,7 +40,7 @@ export const StudioApp = (props: StudioAppProps) => {
           <DesktopStudioSidebar />
           <main className="pl-0 md:pl-12 flex-1 overflow-auto">{children}</main>
           <StudioGiveFeedback />
-          <OnboardingChecklist />
+          <OnboardingChecklist floating />
         </div>
       </AppProvider>
     </AuthProvider>

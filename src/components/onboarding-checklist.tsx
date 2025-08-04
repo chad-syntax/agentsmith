@@ -6,22 +6,30 @@ import { cn } from '@/utils/shadcn';
 import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
-import { ConnectProjectModal } from './modals/connect-project';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Button } from './ui/button';
+import { ConnectProjectModal } from '@/components/modals/connect-project';
+import { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 import { installGithubApp, syncProject } from '@/app/actions/github';
 import { connectOpenrouter } from '@/app/actions/openrouter';
 import { toast } from 'sonner';
-import { Card, CardContent, CardHeader } from './ui/card';
-import { Progress } from './ui/progress';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
 import { GetOnboardingChecklistResult } from '@/lib/UsersService';
+import { usePathname } from 'next/navigation';
 
-export const OnboardingChecklist = () => {
+type OnboardingChecklistProps = {
+  floating?: boolean;
+};
+
+export const OnboardingChecklist = (props: OnboardingChecklistProps = { floating: false }) => {
+  const { floating } = props;
+
   const [connectProjectModalOpen, setConnectProjectModalOpen] = useState(false);
-  const [listExpanded, setListExpanded] = useState(false);
+  const [listExpanded, setListExpanded] = useState(floating ? false : true);
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const prevAllItemsCompletedRef = useRef(false);
   const onboardingChecklistRef = useRef<GetOnboardingChecklistResult[number] | null>(null);
+  const pathname = usePathname();
 
   const {
     selectedProjectUuid,
@@ -61,7 +69,7 @@ export const OnboardingChecklist = () => {
         {
           done: onboardingChecklist.promptCreated,
           label: 'Create a Prompt',
-          href: routes.studio.prompts(selectedProjectUuid),
+          href: routes.studio.prompts(selectedProjectUuid, true),
         },
         {
           done: onboardingChecklist.promptTested,
@@ -98,7 +106,7 @@ export const OnboardingChecklist = () => {
   useEffect(() => {
     const prevAllItemsCompleted = prevAllItemsCompletedRef.current;
 
-    if (onboardingChecklist && !prevAllItemsCompleted && allItemsCompleted) {
+    if (onboardingChecklist && !prevAllItemsCompleted && allItemsCompleted && floating) {
       toast.success('Onboarding completed!', {
         icon: <PartyPopper />,
         description: 'You have learned the basics of Agentsmith! Happy prompting!',
@@ -124,7 +132,9 @@ export const OnboardingChecklist = () => {
     }
   }, []);
 
-  if (onboardingCompleted || !onboardingChecklist) {
+  const isOnProjectPage = pathname === routes.studio.project(selectedProjectUuid);
+
+  if (onboardingCompleted || !onboardingChecklist || (floating && isOnProjectPage)) {
     return null;
   }
 
@@ -142,13 +152,27 @@ export const OnboardingChecklist = () => {
           setOnboardingChecklist((prev) => (!prev ? null : { ...prev, repoConnected: true }))
         }
       />
-      <Card className="max-sm:rounded-none max-sm:border-b-0 max-sm:border-l-0 max-sm:border-r-0 fixed max-sm:w-full w-[calc(100%-16px)] sm:w-auto bottom-0 right-0 sm:bottom-2 sm:right-2 z-50 gap-0 py-2 sm:py-4 shadow-xl">
-        <CardHeader className="px-4 gap-2" onClick={() => setListExpanded(!listExpanded)}>
-          <div className="flex items-center justify-between cursor-pointer">
-            <H4 className="text-md sm:text-lg">Get Started</H4>
-            <ChevronDown
-              className={cn('max-sm:size-5 transition-transform', listExpanded ? '' : '-rotate-90')}
-            />
+      <Card
+        className={cn(
+          'gap-0',
+          floating &&
+            'max-sm:rounded-none max-sm:border-b-0 max-sm:border-l-0 max-sm:border-r-0 fixed max-sm:w-full w-[calc(100%-16px)] sm:w-auto bottom-0 right-0 sm:bottom-2 sm:right-2 z-50 py-2 sm:py-4 shadow-xl',
+        )}
+      >
+        <CardHeader
+          className="px-4 gap-2"
+          onClick={floating ? () => setListExpanded(!listExpanded) : undefined}
+        >
+          <div className={cn('flex items-center justify-between', floating && 'cursor-pointer')}>
+            <H4 className="text-md sm:text-lg">Continue Setup</H4>
+            {floating && (
+              <ChevronDown
+                className={cn(
+                  'max-sm:size-5 transition-transform',
+                  listExpanded ? '' : '-rotate-90',
+                )}
+              />
+            )}
           </div>
           <Progress
             className={cn('hidden sm:block', listExpanded && 'block')}

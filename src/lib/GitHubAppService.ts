@@ -116,7 +116,7 @@ export class GitHubAppService extends AgentsmithSupabaseService {
 
     const { data, error } = await this.supabase
       .from('github_app_installations')
-      .select('id, organizations(id, uuid)')
+      .select('id, organizations(id, uuid, projects(uuid))')
       .eq('uuid', installationRecordUuid)
       .single();
 
@@ -143,7 +143,11 @@ export class GitHubAppService extends AgentsmithSupabaseService {
       }
     }
 
-    return { isValid: isValidOrganization, githubAppInstallationRecordId: data.id };
+    return {
+      isValid: isValidOrganization,
+      githubAppInstallationRecordId: data.id,
+      projectUuid: data.organizations.projects?.[0]?.uuid,
+    };
   }
 
   async getActiveInstallation(organizationId: number) {

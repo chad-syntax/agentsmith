@@ -20,11 +20,12 @@ export const GET = async (request: Request) => {
   try {
     const { organizationUuid, installationRecordUuid } = services.githubApp.decodeState(state);
 
-    const { isValid, githubAppInstallationRecordId } = await services.githubApp.verifyInstallation({
-      installationRecordUuid,
-      installationId,
-      organizationUuid,
-    });
+    const { isValid, githubAppInstallationRecordId, projectUuid } =
+      await services.githubApp.verifyInstallation({
+        installationRecordUuid,
+        installationId,
+        organizationUuid,
+      });
 
     if (!isValid || !githubAppInstallationRecordId) {
       return NextResponse.redirect(
@@ -37,6 +38,10 @@ export const GET = async (request: Request) => {
       organizationUuid,
       installationId,
     });
+
+    if (projectUuid) {
+      return NextResponse.redirect(new URL(routes.studio.project(projectUuid), request.url));
+    }
 
     return NextResponse.redirect(new URL(routes.studio.home, request.url));
   } catch (e) {

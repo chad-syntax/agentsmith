@@ -44,6 +44,21 @@ export class OrganizationsService extends AgentsmithSupabaseService {
     return data.id;
   }
 
+  public async getOrganizationProjects(organizationUuid: string) {
+    const { data, error } = await this.supabase
+      .from('organizations')
+      .select('projects(id, uuid, name)')
+      .eq('uuid', organizationUuid)
+      .single();
+
+    if (error) {
+      this.logger.error(error, 'Error fetching organization projects');
+      return null;
+    }
+
+    return data.projects;
+  }
+
   public async getOrganizationData(organizationUuid: string) {
     const { data, error } = await this.supabase
       .from('organizations')
