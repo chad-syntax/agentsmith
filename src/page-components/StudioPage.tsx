@@ -57,11 +57,13 @@ const StudioPageHeader = () => (
 export const StudioPage = (props: StudioPageProps) => {
   const { userOrganizationData } = props;
 
+  const needsOnboarding = userOrganizationData.organization_users.length === 0;
+
   return (
     <div className="p-4">
-      <StudioPageHeader />
+      {!needsOnboarding && <StudioPageHeader />}
       <div className="mt-6">
-        {userOrganizationData.organization_users.length === 0 ? (
+        {needsOnboarding ? (
           <StudioPageOnboarding />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -111,7 +113,7 @@ export const StudioPage = (props: StudioPageProps) => {
 
 export const StudioPageSkeleton = () => (
   <div className="p-4">
-    <StudioPageHeader />
+    <div className="h-10 w-1/2 bg-muted rounded animate-pulse mb-4" />
     <div className="mt-6">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
