@@ -13,11 +13,10 @@ import { H1 } from '@/components/typography';
 
 type ProjectEditPageProps = {
   projectData: Database['public']['Tables']['projects']['Row'];
-  githubAppInstallation: Database['public']['Tables']['github_app_installations']['Row'] | null;
 };
 
 export const ProjectEditPage = (props: ProjectEditPageProps) => {
-  const { projectData, githubAppInstallation } = props;
+  const { projectData } = props;
   const router = useRouter();
 
   const [name, setName] = useState(projectData.name);

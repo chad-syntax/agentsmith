@@ -23,11 +23,5 @@ export default async function ProjectEdit(props: ProjectEditPageProps) {
     redirect(routes.studio.home);
   }
 
-  const githubAppInstallation = await agentsmith.services.githubApp.getActiveInstallation(
-    projectData.organization_id,
-  );
-
-  return (
-    <ProjectEditPage projectData={projectData} githubAppInstallation={githubAppInstallation} />
-  );
+  return <ProjectEditPage projectData={projectData} />;
 }
