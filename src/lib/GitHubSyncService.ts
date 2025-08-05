@@ -205,6 +205,15 @@ export class GitHubSyncService extends AgentsmithSupabaseService {
           },
         });
 
+        if (createdNewBranch) {
+          await this.deleteBranch({
+            octokit,
+            owner,
+            repo,
+            branchName: branchRef,
+          });
+        }
+
         return {
           message: 'Error syncing project repository',
           status: 'error',
