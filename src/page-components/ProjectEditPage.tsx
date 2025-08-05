@@ -79,13 +79,6 @@ export const ProjectEditPage = (props: ProjectEditPageProps) => {
           />
         </div>
 
-        {!githubAppInstallation && (
-          <div>
-            <Label htmlFor="githubAppInstallation">GitHub App Installation</Label>
-            <Button>Connect GitHub Repository</Button>
-          </div>
-        )}
-
         <div className="flex gap-4">
           <Button onClick={handleSave} disabled={isSaving}>
             {isSaving ? 'Saving...' : 'Save Changes'}
