@@ -142,35 +142,39 @@ export const EventDetailPage = (props: EventDetailPageProps) => {
           </CardContent>
         </Card>
 
-        <H2>Changes</H2>
-        {syncChanges.length === 0 && <P>No changes were made.</P>}
-        {syncChanges.map((syncChange, index) => {
-          const isPromptLike = isPromptLikeSyncChange(syncChange);
+        {event.type === 'SYNC_COMPLETE' && (
+          <>
+            <H2>Changes</H2>
+            {syncChanges.length === 0 && <P>No changes were made.</P>}
+            {syncChanges.map((syncChange, index) => {
+              const isPromptLike = isPromptLikeSyncChange(syncChange);
 
-          return (
-            <Card key={`${syncChange.oldSha}-${syncChange.newSha}-${index}`}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  {syncChange.type}
-                  {isPromptLike && (
-                    <span>
-                      <span className="text-destructive">{syncChange.promptSlug}</span>
-                      <span className="px-0.5">@</span>
-                      {syncChange.promptVersion}
-                    </span>
-                  )}
-                  <span className="text-accent">{syncChange.entity}</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ReactDiffViewer
-                  oldValue={syncChange.oldContent ?? ''}
-                  newValue={syncChange.newContent ?? ''}
-                />
-              </CardContent>
-            </Card>
-          );
-        })}
+              return (
+                <Card key={`${syncChange.oldSha}-${syncChange.newSha}-${index}`}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      {syncChange.type}
+                      {isPromptLike && (
+                        <span>
+                          <span className="text-destructive">{syncChange.promptSlug}</span>
+                          <span className="px-0.5">@</span>
+                          {syncChange.promptVersion}
+                        </span>
+                      )}
+                      <span className="text-accent">{syncChange.entity}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ReactDiffViewer
+                      oldValue={syncChange.oldContent ?? ''}
+                      newValue={syncChange.newContent ?? ''}
+                    />
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </>
+        )}
 
         {!isProd && (
           <Card className="shadow-sm">

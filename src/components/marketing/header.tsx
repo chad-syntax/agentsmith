@@ -76,18 +76,18 @@ export const Header = () => {
               </Button>
               <ThemeSwitcher />
             </div>
-            <Button
-              onClick={handleStudioClick}
-              variant={isLoading || isLoggedIn ? 'outline' : 'default'}
-              disabled={isLoading}
-            >
-              <Link href={isLoading || isLoggedIn ? routes.studio.home : routes.auth.signUp}>
+            <Link href={isLoading || isLoggedIn ? routes.studio.home : routes.auth.signUp}>
+              <Button
+                onClick={handleStudioClick}
+                variant={isLoading || isLoggedIn ? 'outline' : 'default'}
+                disabled={isLoading}
+              >
                 <span className="hidden xs:inline-flex">
                   {isLoading || !isLoggedIn ? 'Get Started' : 'Studio'}
                 </span>
                 <span className="xs:hidden">{isLoading || !isLoggedIn ? 'Start' : 'Studio'}</span>
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

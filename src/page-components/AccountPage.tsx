@@ -2,7 +2,7 @@
 
 import { useApp } from '@/providers/app';
 import { useAuth } from '@/providers/auth';
-import { H1, H3 } from '@/components/typography';
+import { H1, H3, P } from '@/components/typography';
 import { SignOutButton } from '@/components/sign-out-button';
 import { Button } from '@/components/ui/button';
 import { Github, Mail } from 'lucide-react';
@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { routes } from '@/utils/routes';
 import { useState } from 'react';
 import { JoinOrganizationModal } from '@/components/modals/join-organization';
-import { UserNeedsOrgMembership } from '@/components/user-needs-org-membership';
+import { StudioPageOnboarding } from '@/components/studio-page-onboarding';
 
 export const AccountPage = () => {
   const { user } = useAuth();
@@ -56,11 +56,10 @@ export const AccountPage = () => {
             </a>
           )}
         </div>
-        {userOrganizationData?.organization_users.length === 0 ? (
-          <UserNeedsOrgMembership />
-        ) : (
-          <div className="flex flex-col gap-4 items-start">
-            <H3>Organization Memberships</H3>
+
+        <div className="flex flex-col gap-4 items-start">
+          <H3>Organization Memberships</H3>
+          {userOrganizationData?.organization_users?.length > 0 ? (
             <div className="flex flex-col gap-2 items-start">
               {userOrganizationData?.organization_users.map((orgUser) => (
                 <div key={orgUser.organizations.uuid}>
@@ -83,8 +82,19 @@ export const AccountPage = () => {
                 Join another organization
               </Button>
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="bg-muted rounded p-4 border border-muted-foreground/80">
+              <div className="font-bold">You don't have any organization memberships yet.</div>
+              <P className="text-sm">
+                To get started, complete onboarding on the{' '}
+                <Link className="underline" href={routes.studio.home}>
+                  Home
+                </Link>{' '}
+                page.
+              </P>
+            </div>
+          )}
+        </div>
       </div>
     </>
   );

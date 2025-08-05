@@ -18,6 +18,7 @@ import { ApiKeyReveal } from '@/components/api-key-reveal';
 import { TypescriptEditor } from '@/components/editors/typescript-editor';
 import { installSdk, sdkUsage } from '@/constants/sdk-documentation';
 import { isDev } from '@/utils/is-env';
+import { OnboardingChecklist } from '@/components/onboarding-checklist';
 
 export type ProjectPageProps = {
   projectData: NonNullable<GetProjectDataResult>;
@@ -87,12 +88,20 @@ export const ProjectPage = (props: ProjectPageProps) => {
         }}
       />
       <div className="p-6">
-        <div className="flex gap-4 justify-start items-center mb-4">
+        <div className="flex gap-4 justify-start items-center md:mb-4">
           <H1>{projectData.name}</H1>
-          <Link href={routes.studio.editProject(projectData.uuid)}>
+          <Link className="hidden md:block" href={routes.studio.editProject(projectData.uuid)}>
             <Pencil className="w-6 h-6 text-muted-foreground" />
           </Link>
         </div>
+        <div className="block md:hidden">
+          <Link href={routes.studio.editProject(projectData.uuid)}>
+            <Button variant="link" className="px-0 underline text-muted-foreground">
+              Rename Project
+            </Button>
+          </Link>
+        </div>
+
         {isConnected && (
           <div className="mb-4 text-muted-foreground">
             {projectData.name} connected to{' '}
@@ -125,48 +134,53 @@ export const ProjectPage = (props: ProjectPageProps) => {
             .
           </div>
         )}
-        <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div>
-            <SyncStatusAlert isConnected={isConnected} events={projectData.agentsmith_events} />
-          </div>
-          {hasPrompts && (
-            <div>
-              <Alert variant="default">
-                <Info size={16} />
-                <AlertTitle>Types</AlertTitle>
-                <AlertDescription>
-                  Prompt Types will automatically be written to your agentsmith folder during a
-                  Sync, or you can download them here.
-                  <Button
-                    onClick={handleDownloadTypesClick}
-                    size="lg"
-                    className="mt-2 bg-green-500 hover:bg-green-600 flex items-center gap-2"
-                  >
-                    <FileCode size={16} />
-                    Download Types
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            </div>
-          )}
-          {hasPrompts && (
-            <div>
-              <H3>Prompts</H3>
-              <ul className="list-disc list-inside mt-2 mb-4">
-                {projectData.prompts.map((prompt) => (
-                  <li key={prompt.uuid}>
-                    <Link
-                      href={routes.studio.promptDetail(projectData.uuid, prompt.uuid)}
-                      className="underline hover:text-primary"
-                    >
-                      {prompt.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+        <div className="md:max-w-1/2 lg:max-w-1/3">
+          <OnboardingChecklist />
         </div>
+        {(isConnected || hasPrompts) && (
+          <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div>
+              <SyncStatusAlert isConnected={isConnected} events={projectData.agentsmith_events} />
+            </div>
+            {hasPrompts && (
+              <div>
+                <Alert variant="default">
+                  <Info size={16} />
+                  <AlertTitle>Types</AlertTitle>
+                  <AlertDescription>
+                    Prompt Types will automatically be written to your agentsmith folder during a
+                    Sync, or you can download them here.
+                    <Button
+                      onClick={handleDownloadTypesClick}
+                      size="lg"
+                      className="mt-2 bg-green-500 hover:bg-green-600 flex items-center gap-2"
+                    >
+                      <FileCode size={16} />
+                      Download Types
+                    </Button>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            )}
+            {hasPrompts && (
+              <div>
+                <H3>Prompts</H3>
+                <ul className="list-disc list-inside mt-2 mb-4">
+                  {projectData.prompts.map((prompt) => (
+                    <li key={prompt.uuid}>
+                      <Link
+                        href={routes.studio.promptDetail(projectData.uuid, prompt.uuid)}
+                        className="underline hover:text-primary"
+                      >
+                        {prompt.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
         <div className="mt-6">
           <H3>Getting Started with Agentsmith SDK</H3>
           <Alert variant="default" className="mt-2">

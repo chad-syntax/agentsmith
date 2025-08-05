@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
 import { CreatePromptModal } from '@/components/modals/create-prompt';
@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { H1, H2, H3, P } from '@/components/typography';
 import { GetPromptsByProjectIdResult } from '@/lib/PromptsService';
 import { DisplayTime } from '@/components/display-time';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus } from 'lucide-react';
 
 type PromptsPageProps = {
@@ -23,6 +23,7 @@ export const PromptsPage = (props: PromptsPageProps) => {
   const { selectedProjectUuid } = useApp();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleEditPromptVersion = (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -33,6 +34,12 @@ export const PromptsPage = (props: PromptsPageProps) => {
 
     router.push(routes.studio.editPromptVersion(selectedProjectUuid, promptVersionUuid));
   };
+
+  useEffect(() => {
+    if (searchParams.get('openCreateModal')) {
+      setIsCreateModalOpen(true);
+    }
+  }, [searchParams]);
 
   return (
     <div className="p-6">
@@ -49,7 +56,6 @@ export const PromptsPage = (props: PromptsPageProps) => {
       {prompts.length === 0 ? (
         <div className="text-center py-12">
           <P className="text-muted-foreground mb-4">No prompts found</P>
-          <Button onClick={() => setIsCreateModalOpen(true)}>Create Your First Prompt</Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

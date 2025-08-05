@@ -121,6 +121,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: number
+          onboarding: Json | null
           studio_access: boolean
           updated_at: string
         }
@@ -129,6 +130,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: number
+          onboarding?: Json | null
           studio_access?: boolean
           updated_at?: string
         }
@@ -137,6 +139,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: number
+          onboarding?: Json | null
           studio_access?: boolean
           updated_at?: string
         }
@@ -913,6 +916,12 @@ export type Database = {
         }
         Returns: Json
       }
+      create_organization_v2: {
+        Args: {
+          arg_name: string
+        }
+        Returns: Json
+      }
       delete_organization_key: {
         Args: {
           arg_organization_uuid: string
@@ -1037,6 +1046,13 @@ export type Database = {
         }
         Returns: string
       }
+      jsonb_deep_merge: {
+        Args: {
+          a: Json
+          b: Json
+        }
+        Returns: Json
+      }
       rename_organization: {
         Args: {
           arg_organization_uuid: string
@@ -1060,6 +1076,12 @@ export type Database = {
           updated_at: string | null
           upvote_count: number | null
         }[]
+      }
+      update_agentsmith_user_onboarding: {
+        Args: {
+          arg_onboarding_data: Json
+        }
+        Returns: Json
       }
     }
     Enums: {

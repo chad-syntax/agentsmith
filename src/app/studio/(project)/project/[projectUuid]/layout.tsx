@@ -3,7 +3,6 @@ import { createClient } from '&/supabase/server';
 import { routes } from '@/utils/routes';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { GetUserOrganizationDataResult } from '@/lib/UsersService';
-import { IS_WAITLIST_REDIRECT_ENABLED, STUDIO_FULL_HEIGHT } from '@/app/constants';
 import { StudioApp } from '@/app/studio-app';
 
 type DashboardLayoutProps = {
@@ -42,10 +41,6 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   if (!agentsmithUser || !userOrganizationData) {
     redirectUrl = routes.error('Failed to fetch user data');
-  }
-
-  if (!agentsmithUser?.studio_access && IS_WAITLIST_REDIRECT_ENABLED) {
-    redirectUrl = routes.marketing.waitlisted;
   }
 
   if (redirectUrl) {

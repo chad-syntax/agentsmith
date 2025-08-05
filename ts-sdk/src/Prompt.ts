@@ -71,6 +71,11 @@ type LogCompletionToFileOptions = {
   variables: any;
 };
 
+type CreateLogEntryResult = {
+  log_uuid?: string;
+  organization_uuid?: string;
+};
+
 export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdentifier<Agency>> {
   public client: AgentsmithClient<Agency>;
   private slug: string;
@@ -571,26 +576,14 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       vault: vaultService,
     } as any;
 
-    const { data, error } = await this.client.supabase.rpc('create_llm_log_entry', {
+    const logEntryPromise = this.client.supabase.rpc('create_llm_log_entry', {
       arg_project_uuid: this.client.projectUuid,
       arg_version_uuid: this.version.uuid,
       arg_variables: finalVariables,
       arg_raw_input: rawInput as Json,
     });
 
-    const llmLogEntryData = data as {
-      log_uuid?: string;
-      organization_uuid?: string;
-    } | null;
-
-    if (error) {
-      this.client.logger.error(
-        `Failed to create LLM log entry in Agentsmith, but continuing execution without logging. Error: ${error.message}`,
-      );
-    }
-
-    const organizationUuid = llmLogEntryData?.organization_uuid ?? this.client.organizationUuid;
-    const logUuid = llmLogEntryData?.log_uuid;
+    const organizationUuid = this.client.organizationUuid;
 
     if (!organizationUuid) {
       throw new Error('No organization UUID found, cannot fetch OpenRouter API key');
@@ -677,6 +670,17 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
           const fullCompletion = await accumulateChatStreamToCompletion(
             streamToIterator<OpenrouterStreamEvent>(streamForLogging),
           );
+
+          const { data, error } = await logEntryPromise;
+          const logEntry = data as CreateLogEntryResult | null;
+          const logUuid = logEntry?.log_uuid;
+
+          if (error) {
+            this.client.logger.error(
+              `Failed to create LLM log entry in Agentsmith, but continuing execution without logging. Error: ${error.message}`,
+            );
+          }
+
           this.logCompletionToFile({
             logUuid,
             rawInput,
@@ -694,7 +698,11 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
           stream: streamToIterator<OpenrouterStreamEvent>(streamForStream),
           completion: completion(),
           toolCalls: toolCalls(),
-          logUuid,
+          logUuid: async () => {
+            const { data } = await logEntryPromise;
+            const logEntry = data as CreateLogEntryResult | null;
+            return logEntry?.log_uuid;
+          },
           response,
           compiledPrompt,
           finalVariables,
@@ -708,21 +716,29 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       const toolCalls = completion?.choices?.[0]?.message?.tool_calls ?? null;
 
       this.client.queue.add(async () => {
+        const { data } = await logEntryPromise;
+        const logEntry = data as CreateLogEntryResult | null;
+        const logUuid = logEntry?.log_uuid;
+
         if (logUuid) {
           await llmLogsService.updateLogWithCompletion(logUuid, completion);
-        }
-      });
 
-      this.logCompletionToFile({
-        logUuid,
-        rawInput,
-        rawOutput: completion,
-        variables: finalVariables,
+          this.logCompletionToFile({
+            logUuid,
+            rawInput,
+            rawOutput: completion,
+            variables: finalVariables,
+          });
+        }
       });
 
       return {
         completion,
-        logUuid,
+        logUuid: async () => {
+          const { data } = await logEntryPromise;
+          const logEntry = data as CreateLogEntryResult | null;
+          return logEntry?.log_uuid;
+        },
         response,
         content,
         reasoning,
@@ -732,6 +748,16 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       } as unknown as ExecuteImplementationResult<Agency, PromptArg>;
     } catch (error) {
       this.client.logger.error(error);
+
+      const { data, error: logEntryError } = await logEntryPromise;
+      const logEntry = data as CreateLogEntryResult | null;
+      const logUuid = logEntry?.log_uuid;
+
+      if (logEntryError) {
+        this.client.logger.error(
+          `Failed to create LLM log entry in Agentsmith, but continuing execution without logging. Error: ${logEntryError.message}`,
+        );
+      }
 
       if (logUuid) {
         await llmLogsService.updateLogWithCompletion(logUuid, {

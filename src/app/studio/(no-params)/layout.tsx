@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { createClient } from '&/supabase/server';
 import { routes } from '@/utils/routes';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
-import { IS_WAITLIST_REDIRECT_ENABLED } from '@/app/constants';
 import { StudioApp } from '@/app/studio-app';
 
 type DashboardLayoutProps = {
@@ -26,10 +25,6 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
   try {
     const agentsmithUser = await services.users.getAgentsmithUser(authUser.id);
-
-    if (!agentsmithUser?.studio_access && IS_WAITLIST_REDIRECT_ENABLED) {
-      redirectUrl = routes.marketing.waitlisted;
-    }
 
     const userOrganizationData = await services.users.getUserOrganizationData();
 

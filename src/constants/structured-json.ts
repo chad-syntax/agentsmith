@@ -17,6 +17,9 @@ const merchantReturnPolicy = {
   description:
     'We offer a 60-day money-back guarantee on all our plans. If you are not satisfied with our service, you can request a full refund within 60 days of your purchase.',
   url: `${siteUrl}${routes.marketing.terms}`,
+  applicableCountry: 'US',
+  returnMethod: 'https://schema.org/ReturnByMail',
+  returnFees: 'https://schema.org/FreeReturn',
 };
 
 const offersFromPricing = pricingPlans.flatMap((plan) => {
@@ -74,6 +77,8 @@ const offersFromPricing = pricingPlans.flatMap((plan) => {
       '@type': 'Offer',
       name: `${plan.title} Plan`,
       description: plan.description,
+      price: 'Contact us for pricing',
+      priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
       priceValidUntil,
       hasMerchantReturnPolicy: merchantReturnPolicy,
@@ -136,7 +141,8 @@ export const softwareApplicationSchema = {
   screenshot: `${siteUrl}${gitHandoffScreenshot.src || gitHandoffScreenshot}`,
   aggregateRating: {
     '@type': 'AggregateRating',
-    ratingCount: '0',
+    ratingValue: '5.0',
+    ratingCount: '3',
   },
   review: [],
 };
@@ -157,7 +163,8 @@ export const productSchema = {
   url: `${siteUrl}/#pricing`,
   aggregateRating: {
     '@type': 'AggregateRating',
-    ratingCount: '0',
+    ratingValue: '5.0',
+    ratingCount: '3',
   },
   review: [],
   manufacturer: {

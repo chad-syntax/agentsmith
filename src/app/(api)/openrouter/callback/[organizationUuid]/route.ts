@@ -105,7 +105,14 @@ export async function GET(request: Request, { params }: { params: OpenrouterCall
     }
 
     logger.info('/connect/openrouter: successfully saved openrouter key');
-    return NextResponse.redirect(new URL(routes.studio.home, request.url));
+
+    const projects = await services.organizations.getOrganizationProjects(organizationUuid);
+
+    if (!projects || projects.length === 0) {
+      return NextResponse.redirect(new URL(routes.studio.home, request.url));
+    }
+
+    return NextResponse.redirect(new URL(routes.studio.project(projects[0].uuid), request.url));
   } catch (error) {
     logger.error(error, '/connect/openrouter: unexpected error');
     return NextResponse.redirect(

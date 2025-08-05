@@ -23,6 +23,8 @@ import { ConfirmRemoveUserModal } from '@/components/modals/confirm-remove-user'
 import { removeOrganizationUser } from '@/app/actions/organization';
 import { useAuth } from '@/providers/auth';
 import { toast } from 'sonner';
+import { cn } from '@/utils/shadcn';
+import { UpgradeOrganizationModal } from '@/components/modals/upgrade-organization';
 
 type OrganizationUser = NonNullable<GetOrganizationDataResult>['organization_users'][number];
 
@@ -37,7 +39,8 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
   const [isLinkCopied, setIsLinkCopied] = useState(false);
   const [createProjectModalOpen, setCreateProjectModalOpen] = useState(false);
   const [userToRemove, setUserToRemove] = useState<OrganizationUser | null>(null);
-  const { isOrganizationAdmin } = useApp();
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
+  const { isOrganizationAdmin, selectedOrganization } = useApp();
   const { agentsmithUser } = useAuth();
   const [isPending, startTransition] = useTransition();
 
@@ -68,12 +71,19 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
     });
   };
 
+  const isFreeTier = selectedOrganization?.agentsmith_tiers.tier === 'FREE';
+
   return (
     <>
       <CreateProjectModal
         open={createProjectModalOpen}
         onOpenChange={setCreateProjectModalOpen}
         organizationUuid={organization.uuid}
+      />
+      <UpgradeOrganizationModal
+        organizationUuid={organization.uuid}
+        open={isUpgradeModalOpen}
+        onOpenChange={setIsUpgradeModalOpen}
       />
       {userToRemove && (
         <ConfirmRemoveUserModal
@@ -152,17 +162,38 @@ export const OrganizationPage = (props: OrganizationPageProps) => {
             {isOrganizationAdmin && (
               <button
                 type="button"
-                onClick={() => setCreateProjectModalOpen(true)}
-                className="block cursor-pointer h-full group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl"
+                onClick={
+                  isFreeTier
+                    ? () => {
+                        setIsUpgradeModalOpen(true);
+                        toast.info(
+                          'You need to upgrade your organization to create more than one project.',
+                        );
+                      }
+                    : () => setCreateProjectModalOpen(true)
+                }
+                className={cn(
+                  'block cursor-pointer h-full group focus:outline-none focus:ring-2 focus:ring-primary rounded-xl',
+                  isFreeTier && 'focus:ring-muted-foreground/30',
+                )}
                 style={{
                   background: 'none',
                   border: 'none',
                   padding: 0,
                 }}
               >
-                <Card className="h-full flex flex-col items-center justify-center gap-2 border-dashed border-2 border-primary/80 hover:shadow-lg transition-all">
+                <Card
+                  className={cn(
+                    'h-full flex flex-col items-center justify-center gap-2 border-dashed border-2 border-primary/80 hover:shadow-lg transition-all',
+                    isFreeTier && 'border-muted-foreground/30',
+                  )}
+                >
                   <CardHeader>
-                    <CardTitle className="text-primary">Create New Project</CardTitle>
+                    <CardTitle
+                      className={cn('text-primary', isFreeTier && 'text-muted-foreground/30')}
+                    >
+                      Create New Project
+                    </CardTitle>
                   </CardHeader>
                 </Card>
               </button>

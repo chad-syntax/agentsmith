@@ -20,6 +20,7 @@ export const OrganizationBillingPage = (props: OrganizationBillingPageProps) => 
   const { isOrganizationAdmin } = useApp();
 
   const isProTier = organization.agentsmith_tiers.tier === 'PRO';
+  const isHobbyTier = organization.agentsmith_tiers.tier === 'HOBBY';
 
   return (
     <>
@@ -27,6 +28,7 @@ export const OrganizationBillingPage = (props: OrganizationBillingPageProps) => 
         organizationUuid={organization.uuid}
         open={isUpgradeModalOpen}
         onOpenChange={setIsUpgradeModalOpen}
+        showHobbyTier={!isHobbyTier}
       />
       <div className="flex-1 w-full flex flex-col gap-12 p-4">
         <div className="flex flex-col gap-4">

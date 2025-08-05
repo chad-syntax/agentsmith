@@ -204,7 +204,7 @@ export type ExecuteStreamingResult = {
   toolCalls: AsyncGenerator<ToolCall, void, unknown>;
   completion: Promise<OpenrouterNonStreamingResponse>;
   stream: ReadableStream<Uint8Array>;
-  logUuid: string;
+  logUuid: Promise<string | undefined>;
   response: Response;
   compiledPrompt: string;
   finalVariables: any;
@@ -212,7 +212,7 @@ export type ExecuteStreamingResult = {
 
 export type ExecuteNonStreamingResult = {
   completion: OpenrouterNonStreamingResponse;
-  logUuid: string;
+  logUuid: Promise<string | undefined>;
   response: Response;
   content: string | null;
   reasoning: string | null;

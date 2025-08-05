@@ -24,7 +24,8 @@ export const routes = {
       `/studio/organization/${organizationUuid}/billing/success`,
     project: (projectUuid: string) => `/studio/project/${projectUuid}`,
     editProject: (projectUuid: string) => `/studio/project/${projectUuid}/edit`,
-    prompts: (projectUuid: string) => `/studio/project/${projectUuid}/prompts`,
+    prompts: (projectUuid: string, openCreateModal?: boolean) =>
+      `/studio/project/${projectUuid}/prompts${openCreateModal ? '?openCreateModal=true' : ''}`,
     editPrompt: (projectUuid: string, promptUuid: string) =>
       `/studio/project/${projectUuid}/prompts/${promptUuid}/edit`,
     promptDetail: (projectUuid: string, promptId: string) =>

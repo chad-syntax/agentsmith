@@ -13,11 +13,13 @@ import { Card, CardContent, CardFooter, CardHeader } from '../ui/card';
 import { Switch } from '../ui/switch';
 import { CheckCircle2, Loader2, Minus, Plus } from 'lucide-react';
 import { routes } from '@/utils/routes';
+import { cn } from '@/utils/shadcn';
 
 type UpgradeOrganizationModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   organizationUuid: string;
+  showHobbyTier?: boolean;
 };
 
 type PricingCardProps = {
@@ -153,7 +155,7 @@ const PricingCard = (props: PricingCardProps) => {
 };
 
 export const UpgradeOrganizationModal = (props: UpgradeOrganizationModalProps) => {
-  const { open, onOpenChange, organizationUuid } = props;
+  const { open, onOpenChange, organizationUuid, showHobbyTier = true } = props;
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('yearly');
 
   return (
@@ -171,12 +173,19 @@ export const UpgradeOrganizationModal = (props: UpgradeOrganizationModalProps) =
             <span className="text-sm">Yearly</span>
           </div>
         </DialogHeader>
-        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 justify-center">
-          <PricingCard
-            card={hobbyPlan}
-            billingCycle={billingCycle}
-            organizationUuid={organizationUuid}
-          />
+        <div
+          className={cn(
+            'flex flex-col lg:flex-row gap-4 lg:gap-8 justify-center',
+            !showHobbyTier && 'lg:max-w-1/2 lg:mx-auto',
+          )}
+        >
+          {showHobbyTier && (
+            <PricingCard
+              card={hobbyPlan}
+              billingCycle={billingCycle}
+              organizationUuid={organizationUuid}
+            />
+          )}
           <PricingCard
             card={proPlan}
             billingCycle={billingCycle}

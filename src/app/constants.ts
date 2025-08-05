@@ -51,9 +51,6 @@ export const HEADER_HEIGHT = 49;
 
 export const STUDIO_FULL_HEIGHT = `h-[calc(100vh-${HEADER_HEIGHT}px)]`;
 
-export const IS_WAITLIST_REDIRECT_ENABLED = false;
-// process.env.VERCEL_TARGET_ENV === 'production' || process.env.VERCEL_TARGET_ENV === 'staging';
-
 // Define valid states and scores as constants for reference if needed, but types will be broader
 export const VALID_ROADMAP_ITEM_STATES = [
   'PROPOSED',
@@ -87,6 +84,7 @@ export const LANDING_VIDEOS = {
     buttonText: 'Robust Authoring',
     copy: 'Centralized prompt authoring for prompt authors and engineers. Auto-detect variables and keep your prompts and config centralized.',
     icon: PencilLine,
+    duration: 'PT1M1S',
   },
   typedPrompts: {
     webm: 'https://kk9lsbugwddpmfy6.public.blob.vercel-storage.com/landing-videos-7-26-25/typed-prompts/typed-prompts-720-studio.webm',
@@ -95,6 +93,7 @@ export const LANDING_VIDEOS = {
     buttonText: 'Typed Prompts',
     copy: 'Feel secure with generated types, ensuring valid prompt inputs every time.',
     icon: ShieldCheck,
+    duration: 'PT1M21S',
   },
   unifiedApi: {
     mp4: 'https://kk9lsbugwddpmfy6.public.blob.vercel-storage.com/landing-videos-7-26-25/unified-api/unified-api-720-web.mp4',
@@ -103,6 +102,7 @@ export const LANDING_VIDEOS = {
     buttonText: 'Unified API',
     copy: 'Access OpenAI, Google, Anthropic & more via one API (powered by OpenRouter). Switch models and providers easily, no writing wrappers for every provider.',
     icon: Shuffle,
+    duration: 'PT28S',
   },
   gitHandoff: {
     mp4: 'https://kk9lsbugwddpmfy6.public.blob.vercel-storage.com/landing-videos-7-26-25/git-handoff/git-handoff-720-web.mp4',
@@ -111,5 +111,6 @@ export const LANDING_VIDEOS = {
     buttonText: 'Git Handoff',
     copy: 'Sync authors and engineers with automated Pull Requests for prompt and variable changes, keeping developers updated.',
     icon: GitBranch,
+    duration: 'PT34S',
   },
 } as const;
