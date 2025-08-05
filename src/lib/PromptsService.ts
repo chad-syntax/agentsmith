@@ -1075,25 +1075,12 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     const compiledPrompt = compilePrompt(targetVersion.content, variablesAndContext, promptLoader);
 
-    const freeModelsOnlyEnabled = process.env.FREE_MODELS_ONLY === 'true';
-
-    if (freeModelsOnlyEnabled) {
-      this.logger.info(
-        'FREE_MODELS_ONLY is enabled, all completions will be made with a random free model',
-      );
-    }
-
     // Create a log entry before making the API call
     const rawInput: OpenrouterRequestBody = {
       messages: [{ role: 'user', content: compiledPrompt }],
       // prompt: compiledPrompt, // TODO: add support for this, but it will have a different shape and we need ot make sure to return a different ytpye
       ...config,
-      models: freeModelsOnlyEnabled
-        ? (await fetchFreeOpenrouterModels())
-            .sort(() => 0.5 - Math.random())
-            .slice(0, MAX_OPENROUTER_MODELS)
-            .map((m) => m.id)
-        : ((targetVersion.config as CompletionConfig)?.models ?? [DEFAULT_OPENROUTER_MODEL]),
+      models: (targetVersion.config as CompletionConfig)?.models ?? [DEFAULT_OPENROUTER_MODEL],
       usage: {
         include: true,
       },

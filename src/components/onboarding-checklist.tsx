@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { GetOnboardingChecklistResult } from '@/lib/UsersService';
 import { usePathname } from 'next/navigation';
+import posthog from 'posthog-js';
 
 type OnboardingChecklistProps = {
   floating?: boolean;
@@ -45,6 +46,12 @@ export const OnboardingChecklist = (props: OnboardingChecklistProps = { floating
       toast.error('Failed to connect OpenRouter, please try again or contact support.');
       return;
     }
+  };
+
+  const trackOnboardingItemClick = (item: any) => {
+    posthog.capture('onboarding_item_click', {
+      item: item.label,
+    });
   };
 
   const items = !onboardingChecklist
@@ -107,6 +114,7 @@ export const OnboardingChecklist = (props: OnboardingChecklistProps = { floating
     const prevAllItemsCompleted = prevAllItemsCompletedRef.current;
 
     if (onboardingChecklist && !prevAllItemsCompleted && allItemsCompleted && floating) {
+      posthog.capture('onboarding_completed');
       toast.success('Onboarding completed!', {
         icon: <PartyPopper />,
         description: 'You have learned the basics of Agentsmith! Happy prompting!',
@@ -188,7 +196,11 @@ export const OnboardingChecklist = (props: OnboardingChecklistProps = { floating
           <CardContent className="px-4 overflow-hidden mr-4">
             <ul className="flex flex-col gap-2 sm:gap-4 pt-4 mb-2 sm:mb-0">
               {items.map((item) => (
-                <li key={item.label} className="flex items-end gap-3 text-sm sm:text-base">
+                <li
+                  onClick={() => trackOnboardingItemClick(item)}
+                  key={item.label}
+                  className="flex items-end gap-3 text-sm sm:text-base"
+                >
                   {item.done ? (
                     <CheckIcon className="text-green-500 w-5 h-5" />
                   ) : (
