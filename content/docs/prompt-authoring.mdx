@@ -55,6 +55,12 @@ Agentsmith also injects a few built-in variables for your convenience:
 
 - `{{ now() }}`: Returns the current UTC date and time in ISO 8601 format (e.g., `2025-07-23T12:00:00.000Z`).
 
+**Example:**
+
+```jinja
+The current date and time is {{ now() }}.
+```
+
 ## Prompt Composition
 
 To keep your prompts organized and reusable, you can include one prompt within another using the `{% include %}` tag. This is a powerful feature for building complex agents from smaller, manageable parts.
