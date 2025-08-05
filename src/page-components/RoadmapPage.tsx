@@ -36,11 +36,10 @@ type FilterStatus = 'ALL' | RoadmapStatus;
 
 type RoadmapPageProps = {
   initialRoadmapItems: GetRoadmapItemsResult;
-  isWaitlistRedirectEnabled: boolean;
 };
 
 export const RoadmapPage = (props: RoadmapPageProps) => {
-  const { initialRoadmapItems, isWaitlistRedirectEnabled } = props;
+  const { initialRoadmapItems } = props;
   const { agentsmithUser, isLoading: isAuthLoading } = useAuth();
   const searchParams = useSearchParams();
 
@@ -231,10 +230,7 @@ export const RoadmapPage = (props: RoadmapPageProps) => {
           </p>
         </div>
 
-        <RoadmapProposeCta
-          setIsProposeModalOpen={setIsProposeModalOpen}
-          isWaitlistRedirectEnabled={isWaitlistRedirectEnabled}
-        />
+        <RoadmapProposeCta setIsProposeModalOpen={setIsProposeModalOpen} />
       </div>
 
       <div className="flex flex-col lg:flex-row justify-between items-start md:items-center gap-4 mb-8 rounded-md">
@@ -308,10 +304,7 @@ export const RoadmapPage = (props: RoadmapPageProps) => {
           <p className="text-muted-foreground mb-6">
             Try adjusting your filters or suggest a new feature.
           </p>
-          <RoadmapProposeCta
-            setIsProposeModalOpen={setIsProposeModalOpen}
-            isWaitlistRedirectEnabled={isWaitlistRedirectEnabled}
-          />
+          <RoadmapProposeCta setIsProposeModalOpen={setIsProposeModalOpen} />
         </div>
       )}
 

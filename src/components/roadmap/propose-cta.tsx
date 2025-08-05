@@ -8,34 +8,19 @@ import { cn } from '@/utils/shadcn';
 
 type RoadmapProposeCtaProps = {
   setIsProposeModalOpen: (isOpen: boolean) => void;
-  isWaitlistRedirectEnabled: boolean;
   className?: string;
 };
 
 export const RoadmapProposeCta = (props: RoadmapProposeCtaProps) => {
-  const { setIsProposeModalOpen, className, isWaitlistRedirectEnabled } = props;
-  const { isLoading, agentsmithUser } = useAuth();
-
-  const currentUserId = agentsmithUser?.id;
-  const isWaitlisted = agentsmithUser?.studio_access === false && isWaitlistRedirectEnabled;
+  const { setIsProposeModalOpen, className } = props;
+  const { isLoading, isAuthenticated } = useAuth();
 
   return isLoading ? (
     <Button disabled className={cn('gap-0', className)}>
       <PlusCircle className="h-4 w-4 mr-2" />
       Propose Feature
     </Button>
-  ) : isWaitlisted ? (
-    <Button
-      asChild
-      onClick={() => toast.info('You must have studio access to propose a feature')}
-      className={cn('gap-0', className)}
-    >
-      <Link href={routes.marketing.waitlisted}>
-        <PlusCircle className="h-4 w-4 mr-2" />
-        Propose Feature
-      </Link>
-    </Button>
-  ) : currentUserId ? (
+  ) : isAuthenticated ? (
     <Button onClick={() => setIsProposeModalOpen(true)} className={cn('gap-0', className)}>
       <PlusCircle className="h-4 w-4 mr-2" />
       Propose Feature

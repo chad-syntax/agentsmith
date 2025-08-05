@@ -5,9 +5,7 @@ import { AgentsmithServicesDirectory } from './AgentsmithServices';
 import {
   OpenrouterRequestBody,
   CompletionConfig,
-  fetchFreeOpenrouterModels,
   DEFAULT_OPENROUTER_MODEL,
-  MAX_OPENROUTER_MODELS,
   OPENROUTER_HEADERS,
   DEFAULT_OPENROUTER_CONFIG,
   OpenrouterNonStreamingResponse,

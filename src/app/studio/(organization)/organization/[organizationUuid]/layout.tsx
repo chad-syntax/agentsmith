@@ -5,7 +5,6 @@ import { routes } from '@/utils/routes';
 import { AgentsmithServices } from '@/lib/AgentsmithServices';
 import { User } from '@supabase/supabase-js';
 import { GetUserOrganizationDataResult } from '@/lib/UsersService';
-import { IS_WAITLIST_REDIRECT_ENABLED } from '@/app/constants';
 import { StudioApp } from '@/app/studio-app';
 
 type DashboardLayoutProps = {
@@ -52,10 +51,6 @@ export default async function DashboardLayout(props: DashboardLayoutProps) {
 
       if (!firstOrganizationProject) {
         redirectUrl = routes.error('No projects found');
-      }
-
-      if (!agentsmithUser?.studio_access && IS_WAITLIST_REDIRECT_ENABLED) {
-        redirectUrl = routes.marketing.waitlisted;
       }
     }
   } catch (error) {
