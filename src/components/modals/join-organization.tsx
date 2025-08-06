@@ -44,18 +44,20 @@ export function JoinOrganizationModal({ open, onOpenChange }: JoinOrganizationMo
         setErrors({
           'join-organization': [result.message || 'Failed to join organization'],
         });
+        setLoading(false);
       } else if (result.errors) {
         setErrors(result.errors);
+        setLoading(false);
       } else {
         setErrors({
           'join-organization': ['Failed to join organization'],
         });
+        setLoading(false);
       }
     } catch (error: any) {
       setErrors({
         'join-organization': [error?.message || 'Failed to join organization'],
       });
-    } finally {
       setLoading(false);
     }
   };

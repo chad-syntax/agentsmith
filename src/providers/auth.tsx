@@ -50,7 +50,7 @@ export const AuthProvider = (props: AuthProviderProps) => {
       } = await supabase.auth.getUser();
 
       setUser(userFromSupabase);
-      setIsAuthenticated(Boolean(user));
+      setIsAuthenticated(Boolean(userFromSupabase));
 
       if (userFromSupabase) {
         const { data: agentsmithUser } = await supabase

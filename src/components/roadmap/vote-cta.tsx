@@ -43,7 +43,7 @@ export const RoadmapVoteCta = (props: RoadmapVoteCta) => {
 
   if (!currentUserId) {
     return (
-      <Link href={routes.auth.signIn} passHref legacyBehavior>
+      <Link href={routes.auth.signIn}>
         <Button
           asChild
           variant="ghost"

@@ -26,7 +26,7 @@ export const RoadmapProposeCta = (props: RoadmapProposeCtaProps) => {
       Propose Feature
     </Button>
   ) : (
-    <Link href={routes.auth.signIn} passHref legacyBehavior>
+    <Link href={routes.auth.signIn}>
       <Button
         asChild
         onClick={() => toast.info('You must be logged in to propose a feature')}
