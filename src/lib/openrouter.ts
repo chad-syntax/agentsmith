@@ -349,6 +349,8 @@ export type NonStreamingChoice = {
   index?: number;
   finish_reason: string | null;
   native_finish_reason: string | null;
+  reasoning?: string;
+  text?: string;
   message: {
     role: 'user' | 'assistant' | 'system' | 'tool';
     content: string | null;
@@ -457,8 +459,17 @@ export const MAX_OPENROUTER_MODELS = 3;
 
 export const fetchOpenrouterModels = async () => {
   const response = await fetch(routes.openrouter.models);
-  const data = await response.json();
-  return data as OpenrouterModel[];
+
+  if (!response.ok) {
+    const responseText = await response.text();
+    const error = `Failed to fetch OpenRouter models: ${responseText}`;
+    console.error(error);
+    throw new Error(error);
+  }
+
+  const json = await response.json();
+
+  return json.data as OpenrouterModel[];
 };
 
 export const fetchFreeOpenrouterModels = async () => {
@@ -468,5 +479,4 @@ export const fetchFreeOpenrouterModels = async () => {
 
 export const DEFAULT_OPENROUTER_CONFIG: CompletionConfig = {
   models: ['openrouter/auto'],
-  temperature: 1,
 };

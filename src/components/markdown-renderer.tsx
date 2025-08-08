@@ -2,7 +2,7 @@
 
 import ReactMarkdown from 'react-markdown';
 import { cn } from '@/utils/shadcn';
-import './unreset.css';
+import remarkGfm from 'remark-gfm';
 
 type MarkdownRendererProps = {
   children: string;
@@ -12,8 +12,8 @@ type MarkdownRendererProps = {
 export const MarkdownRenderer = (props: MarkdownRendererProps) => {
   const { children, className } = props;
   return (
-    <div className={cn('prose dark:prose-invert unreset', className)}>
-      <ReactMarkdown>{children}</ReactMarkdown>
+    <div className={cn('prose dark:prose-invert', className)}>
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
     </div>
   );
 };

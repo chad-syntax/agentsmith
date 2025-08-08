@@ -852,6 +852,8 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
 
     const config = parsedVersionFile.config as any;
     const content = contentFile.content;
+    const type =
+      (parsedVersionFile.type as Database['public']['Enums']['prompt_type']) ?? 'NON_CHAT';
 
     await this.services.prompts.createPromptVersion({
       projectId: this.projectId,
@@ -864,6 +866,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       versionSha,
       variablesSha,
       contentSha,
+      type,
     });
 
     syncChanges.push(

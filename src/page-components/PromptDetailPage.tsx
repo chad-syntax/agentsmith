@@ -1,11 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { Play, ClipboardCopy, GitBranchPlus, ArrowLeft, Pencil } from 'lucide-react';
+import { Play, ClipboardCopy, GitBranchPlus, ArrowLeft, Pencil, Plus } from 'lucide-react';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
 import { PromptContentEditor } from '@/components/editors/prompt-editor';
-import { VariablesSidebar, VariablesSidebarSkeleton } from '@/components/variables-sidebar';
+import {
+  VariablesSidebar,
+  VariablesSidebarSkeleton,
+} from '@/components/prompt-editor/variables-sidebar';
 import { PromptTestModal } from '@/components/modals/test-prompt';
 import { CreateVersionModal } from '@/components/modals/create-version';
 import { CompileToClipboardModal } from '@/components/modals/compile-to-clipboard';
@@ -84,12 +87,10 @@ export const PromptDetailPage = () => {
                         <span className="font-medium group-hover/accordion-trigger:underline">
                           Version {version.version}
                         </span>
+                        <Badge variant={version.status} className="ml-2">
+                          {version.status}
+                        </Badge>
                         {version.id === latestVersion.id && <Badge variant="PLANNED">Latest</Badge>}
-                        {version.status === 'DRAFT' && (
-                          <Badge variant="PROPOSED" className="ml-2">
-                            DRAFT
-                          </Badge>
-                        )}
                       </div>
                       <div className="flex items-center gap-4">
                         <Button
@@ -119,11 +120,31 @@ export const PromptDetailPage = () => {
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>
-                    <PromptContentEditor
-                      content={version.content}
-                      onContentChange={() => {}}
-                      readOnly
-                    />
+                    {version.type === 'NON_CHAT' && (
+                      <PromptContentEditor
+                        content={version.content}
+                        onContentChange={() => {}}
+                        minHeight="250px"
+                        readOnly
+                      />
+                    )}
+                    {version.type === 'CHAT' && (
+                      <>
+                        <PromptContentEditor
+                          key={version.pv_chat_prompts?.[0]?.id}
+                          content={version.pv_chat_prompts?.[0]?.content ?? ''}
+                          onContentChange={() => {}}
+                          minHeight="250px"
+                          readOnly
+                        />
+                        {version.pv_chat_prompts.length > 1 && (
+                          <div className="flex gap-1 items-center text-xs p-2 mt-2 rounded border bg-muted/75 justify-center text-muted-foreground">
+                            <Plus className="size-3" />
+                            <span>{version.pv_chat_prompts.length - 1} more chat prompts</span>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </AccordionContent>
                 </AccordionItem>
               ))}

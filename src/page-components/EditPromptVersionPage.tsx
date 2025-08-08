@@ -1,84 +1,35 @@
 'use client';
 
 import Link from 'next/link';
-import {
-  Play,
-  ClipboardCopy,
-  Save,
-  FileEdit,
-  Send,
-  GitBranchPlus,
-  RefreshCw,
-  Copy,
-  ExternalLink,
-  ArrowLeft,
-} from 'lucide-react';
+import { Copy, ArrowLeft } from 'lucide-react';
 import { routes } from '@/utils/routes';
 import { useApp } from '@/providers/app';
-import { PromptContentEditor } from '@/components/editors/prompt-editor';
-import { VariablesSidebar, VariablesSidebarSkeleton } from '@/components/variables-sidebar';
+import {
+  VariablesSidebar,
+  VariablesSidebarSkeleton,
+} from '@/components/prompt-editor/variables-sidebar';
 import { PromptTestModal } from '@/components/modals/test-prompt';
 import { PublishUpdateConfirmModal } from '@/components/modals/publish-update-confirm';
 import { Button } from '@/components/ui/button';
 import { CompileToClipboardModal } from '@/components/modals/compile-to-clipboard';
-import { Label } from '@/components/ui/label';
 import { H1 } from '@/components/typography';
-import { JsonEditor } from '@/components/editors/json-editor';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-// import { EmojiModeButton } from '@/components/emoji-mode-button';
 import { cn } from '@/utils/shadcn';
 import { STUDIO_FULL_HEIGHT } from '@/app/constants';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { usePromptPage } from '@/providers/prompt-page';
-import { ParsedVariable } from '@/utils/template-utils';
+import { NonChatPromptEditor } from '@/components/prompt-editor/non-chat-prompt-editor';
+import { ChatPromptsEditor } from '@/components/prompt-editor/chat-prompts-editor';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { EditorActions } from '@/components/prompt-editor/editor-actions';
+import { CreateVersionModal } from '@/components/modals/create-version';
 
 export const EditPromptVersionPage = () => {
-  const {
-    state,
-    handleSave,
-    openCreateVersionModal,
-    openTestModal,
-    openCompileToClipboardModal,
-    openPublishConfirm,
-    updateEditorContent,
-    updateEditorConfig,
-    updateEditorVariables,
-    updateIncludes,
-  } = usePromptPage();
+  const { state } = usePromptPage();
 
-  const {
-    currentVersion,
-    isSaving,
-    isPublishing,
-    isCreatingVersion,
-    hasChanges,
-    notExistingIncludes,
-    missingGlobals,
-    editorContent,
-    editorConfig,
-    editorVariables,
-  } = state;
+  const { currentVersion, missingGlobals, notExistingIncludes } = state;
 
   const { selectedProjectUuid } = useApp();
-
-  const isDraft = currentVersion.status === 'DRAFT';
-  const isPublished = currentVersion.status === 'PUBLISHED';
-
-  const onVariablesChange = (parsedVariables: ParsedVariable[]) => {
-    const newVariables = parsedVariables.map((v) => {
-      const existingVariable = editorVariables.find((ev) => ev.name === v.name);
-      if (existingVariable) return existingVariable;
-
-      return {
-        name: v.name,
-        type: v.type,
-        required: true,
-        default_value: null,
-      };
-    });
-    updateEditorVariables(newVariables);
-  };
 
   return (
     <div className={cn('flex', STUDIO_FULL_HEIGHT)}>
@@ -116,144 +67,37 @@ export const EditPromptVersionPage = () => {
               <Copy />
             </Button>
           </div>
-          <div className="flex gap-2 flex-wrap">
-            {isDraft && (
-              <>
-                <Button
-                  onClick={() => handleSave('DRAFT')}
-                  disabled={isSaving || !hasChanges}
-                  variant="secondary"
-                >
-                  <Save size={16} />
-                  {isSaving ? 'Saving...' : 'Save'}
-                </Button>
-                <Button onClick={() => handleSave('PUBLISHED')} disabled={isSaving || isPublishing}>
-                  <Send size={16} />
-                  {isSaving ? 'Publishing...' : 'Publish'}
-                </Button>
-              </>
-            )}
-
-            {isPublished && (
-              <>
-                <Button
-                  onClick={() => openPublishConfirm()}
-                  disabled={isSaving || !hasChanges}
-                  className="bg-amber-500 hover:bg-amber-600"
-                >
-                  <RefreshCw size={16} />
-                  {isSaving ? 'Updating...' : 'Update'}
-                </Button>
-                <Button onClick={openCreateVersionModal} disabled={isCreatingVersion || isSaving}>
-                  <GitBranchPlus size={16} />
-                  {isCreatingVersion ? 'Creating...' : 'New Version'}
-                </Button>
-                <Button
-                  onClick={() => handleSave('DRAFT')}
-                  disabled={isSaving || isPublishing}
-                  variant="secondary"
-                >
-                  <FileEdit size={16} />
-                  {isPublishing ? 'Setting to Draft...' : 'Set to Draft'}
-                </Button>
-              </>
-            )}
-            <Button
-              onClick={openTestModal}
-              className="flex items-center gap-2 bg-green-500 hover:bg-green-600"
-            >
-              <Play size={16} />
-              Test
-            </Button>
-            <Button
-              onClick={openCompileToClipboardModal}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <ClipboardCopy size={16} />
-              Compile to Clipboard
-            </Button>
-          </div>
+          <EditorActions />
         </div>
 
         <div className="space-y-6">
-          <div>
-            <div className="pb-2 flex justify-between">
-              <div className="flex items-center gap-2">
-                Config
-                <a
-                  className="text-xs flex items-center gap-1 underline text-primary"
-                  href="https://openrouter.ai/docs/api-reference/overview"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Config Reference
-                  <ExternalLink size={12} />
-                </a>
-              </div>
-              <a
-                className="text-xs flex items-center gap-1 underline text-primary"
-                href="https://openrouter.ai/models"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View Available Models on OpenRouter
-                <ExternalLink size={12} />
-              </a>
-            </div>
-            <JsonEditor
-              value={(editorConfig as object) || {}}
-              onChange={(value) => {
-                updateEditorConfig(value);
-              }}
-            />
-          </div>
-
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                Content
-                <a
-                  className="text-xs flex items-center gap-1 underline text-primary"
-                  href="https://mozilla.github.io/nunjucks/templating.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Templating Reference
-                  <ExternalLink size={12} />
-                </a>
-              </div>
-              {/* <EmojiModeButton onEnabledChange={() => {}} onEmojiListLoaded={() => {}} /> */}
-            </div>
-            {missingGlobals.length > 0 && (
-              <Alert className="mb-4" variant="destructive">
-                <AlertTitle>Missing Global Context</AlertTitle>
-                <AlertDescription>
-                  The following global context variables are missing: {missingGlobals.join(', ')}
-                </AlertDescription>
-              </Alert>
-            )}
-            {notExistingIncludes.size > 0 && (
-              <Alert className="mb-4" variant="destructive">
-                <AlertTitle>Missing Includes</AlertTitle>
-                <AlertDescription>
-                  <ul className="list-disc list-inside ml-1">
-                    {Array.from(notExistingIncludes).map((n) => (
-                      <li key={n}>Prompt "{n}" not found</li>
-                    ))}
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            )}
-            <PromptContentEditor
-              content={editorContent}
-              readOnly={false}
-              onContentChange={updateEditorContent}
-              onVariablesChange={onVariablesChange}
-              onIncludesChange={updateIncludes}
-              minHeight="500px"
-            />
-          </div>
+          {missingGlobals.length > 0 && (
+            <Alert className="mb-4" variant="destructive">
+              <AlertTitle>Missing Global Context</AlertTitle>
+              <AlertDescription>
+                The following global context variables are missing: {missingGlobals.join(', ')}
+              </AlertDescription>
+            </Alert>
+          )}
+          {notExistingIncludes.size > 0 && (
+            <Alert className="mb-4" variant="destructive">
+              <AlertTitle>Missing Includes</AlertTitle>
+              <AlertDescription>
+                <ul className="list-disc list-inside ml-1">
+                  {Array.from(notExistingIncludes).map((n) => (
+                    <li key={n}>Prompt "{n}" not found</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+          {currentVersion.type === 'NON_CHAT' ? (
+            <NonChatPromptEditor />
+          ) : currentVersion.type === 'CHAT' ? (
+            <ChatPromptsEditor />
+          ) : (
+            <div>Unknown prompt type, please contact support</div>
+          )}
         </div>
       </div>
 
@@ -261,6 +105,7 @@ export const EditPromptVersionPage = () => {
       <PromptTestModal />
       <PublishUpdateConfirmModal />
       <CompileToClipboardModal />
+      <CreateVersionModal />
     </div>
   );
 };

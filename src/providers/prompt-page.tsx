@@ -2,7 +2,11 @@
 
 import { createContext, useContext, useReducer, ReactNode, useMemo } from 'react';
 import { EditorPromptVariable, IncludedPrompt } from '@/types/prompt-editor';
-import { GetAllPromptsDataResult, UpdatePromptVersionOptions } from '@/lib/PromptsService';
+import {
+  EditorPromptPvChatPrompt,
+  GetAllPromptsDataResult,
+  UpdatePromptVersionOptions,
+} from '@/lib/PromptsService';
 import { useCallback } from 'react';
 import { compareSemanticVersions } from '@/utils/versioning';
 import { createDraftVersion, updatePromptVersion } from '@/app/actions/prompts';
@@ -12,6 +16,7 @@ import { createClient } from '@/lib/supabase/client';
 import { PromptsService } from '@/lib/PromptsService';
 import { mergeIncludedVariables } from '@/utils/merge-included-variables';
 import {
+  compileChatPrompts,
   compilePrompt,
   ParsedInclude,
   validateGlobalContext,
@@ -20,8 +25,9 @@ import {
 import { makePromptLoader } from '@/utils/make-prompt-loader';
 import { useRouter } from 'next/navigation';
 import { routes } from '@/utils/routes';
-import { CompletionConfig } from '@/lib/openrouter';
+import { CompletionConfig, Message } from '@/lib/openrouter';
 import { VersionType } from '@/app/constants';
+import { capitalize } from '@/utils/capitalize';
 
 type PromptData = NonNullable<GetAllPromptsDataResult>[0];
 type PromptVersion = PromptData['prompt_versions'][0];
@@ -39,6 +45,7 @@ type PromptPageState = {
   editorVariables: EditorPromptVariable[];
   editorContent: string;
   editorConfig: CompletionConfig;
+  editorPvChatPrompts: EditorPromptPvChatPrompt[];
 
   // Derived/UI State
   includedPrompts: IncludedPrompt[];
@@ -48,6 +55,7 @@ type PromptPageState = {
   missingRequiredVariables: EditorPromptVariable[];
   variablesWithDefaults: Record<string, string | number | boolean | object>;
   compiledPrompt: string;
+  compiledMessages: Message[];
 
   // Status Flags
   isSaving: boolean;
@@ -98,6 +106,12 @@ type Action =
   | { type: 'UPDATE_EDITOR_VARIABLES'; payload: EditorPromptVariable[] }
   | { type: 'UPDATE_INCLUDES'; payload: IncludedPrompt[] }
   | { type: 'UPDATE_EDITOR_CONTENT'; payload: string }
+  | { type: 'UPDATE_EDITOR_PV_CHAT_PROMPT_CONTENT'; payload: { index: number; content: string } }
+  | {
+      type: 'ADD_EDITOR_PV_CHAT_PROMPT';
+      payload: { role: 'system' | 'user' | 'assistant'; content?: string; index?: number };
+    }
+  | { type: 'REMOVE_EDITOR_PV_CHAT_PROMPT'; payload: { index: number } }
   | { type: 'UPDATE_EDITOR_CONFIG'; payload: CompletionConfig }
   | { type: 'UPDATE_NOT_EXISTING_INCLUDES'; payload: Set<string> }
   | {
@@ -151,50 +165,77 @@ const _compilePrompt = (state: PromptPageState) => {
   }
 };
 
+const _compileMessages = (state: PromptPageState) => {
+  try {
+    const { variablesWithDefaults } = validateVariables(
+      state.mergedIncludedVariables,
+      state.inputVariables,
+    );
+    const promptLoader = makePromptLoader(state.currentVersion.prompt_includes);
+
+    const finalVariablesForCompilation = {
+      ...variablesWithDefaults,
+      global: state.globalContext,
+    };
+
+    const compiledMessages = compileChatPrompts(
+      state.editorPvChatPrompts,
+      finalVariablesForCompilation,
+      promptLoader,
+    );
+
+    return compiledMessages;
+  } catch (error) {
+    // TODO: add template error to state so we can stop users from saving/publishing
+    // with invalid templates, for now just return the previous compiled prompt
+    return state.compiledMessages;
+  }
+};
+
 const promptPageReducer = (state: PromptPageState, action: Action): PromptPageState => {
   switch (action.type) {
-    case 'SET_INITIAL_DATA': {
-      const { prompt, versions, mode, currentVersionUuid, globalContext } = action.payload;
-      const sortedVersions = [...versions].sort((a, b) =>
-        compareSemanticVersions(b.version, a.version),
-      );
-      const latestVersion = sortedVersions[0];
-      const currentVersion =
-        mode === 'edit' && currentVersionUuid
-          ? sortedVersions.find((v) => v.uuid === currentVersionUuid) || latestVersion
-          : latestVersion;
+    // case 'SET_INITIAL_DATA': {
+    //   const { prompt, versions, mode, currentVersionUuid, globalContext } = action.payload;
+    //   const sortedVersions = [...versions].sort((a, b) =>
+    //     compareSemanticVersions(b.version, a.version),
+    //   );
+    //   const latestVersion = sortedVersions[0];
+    //   const currentVersion =
+    //     mode === 'edit' && currentVersionUuid
+    //       ? sortedVersions.find((v) => v.uuid === currentVersionUuid) || latestVersion
+    //       : latestVersion;
 
-      const variables = currentVersion.prompt_variables;
-      const includedPrompts = currentVersion.prompt_includes;
-      const includedPromptVariables = includedPrompts.flatMap(
-        (ip) => ip.prompt_versions.prompt_variables,
-      );
-      const mergedIncludedVariables = mergeIncludedVariables({
-        variables,
-        includedPromptVariables,
-      });
+    //   const variables = currentVersion.prompt_variables;
+    //   const includedPrompts = currentVersion.prompt_includes;
+    //   const includedPromptVariables = includedPrompts.flatMap(
+    //     (ip) => ip.prompt_versions.prompt_variables,
+    //   );
+    //   const mergedIncludedVariables = mergeIncludedVariables({
+    //     variables,
+    //     includedPromptVariables,
+    //   });
 
-      const { missingGlobalContext } = validateGlobalContext(currentVersion.content, globalContext);
+    //   const { missingGlobalContext } = validateGlobalContext(currentVersion.content, globalContext);
 
-      const editorContent = currentVersion.content;
-      const editorConfig = currentVersion.config as CompletionConfig;
+    //   const editorContent = currentVersion.content;
+    //   const editorConfig = currentVersion.config as CompletionConfig;
 
-      return {
-        ...state,
-        prompt,
-        allVersions: sortedVersions,
-        latestVersion,
-        currentVersion,
-        mode,
-        editorContent,
-        editorConfig,
-        editorVariables: currentVersion.prompt_variables,
-        mergedIncludedVariables,
-        missingGlobals: missingGlobalContext,
-        hasChanges: false,
-        operationError: null,
-      };
-    }
+    //   return {
+    //     ...state,
+    //     prompt,
+    //     allVersions: sortedVersions,
+    //     latestVersion,
+    //     currentVersion,
+    //     mode,
+    //     editorContent,
+    //     editorConfig,
+    //     editorVariables: currentVersion.prompt_variables,
+    //     mergedIncludedVariables,
+    //     missingGlobals: missingGlobalContext,
+    //     hasChanges: false,
+    //     operationError: null,
+    //   };
+    // }
     case 'SET_CURRENT_VERSION_BY_UUID': {
       const { versionUuid } = action.payload;
       const newCurrentVersion = state.allVersions.find((v) => v.uuid === versionUuid);
@@ -220,10 +261,12 @@ const promptPageReducer = (state: PromptPageState, action: Action): PromptPageSt
       };
 
       const compiledPrompt = _compilePrompt(beforeCompileState);
+      const compiledMessages = _compileMessages(beforeCompileState);
 
       return {
         ...beforeCompileState,
         compiledPrompt,
+        compiledMessages,
       };
     }
     case 'UPDATE_FIELD': {
@@ -235,7 +278,6 @@ const promptPageReducer = (state: PromptPageState, action: Action): PromptPageSt
       };
     }
     case 'UPDATE_EDITOR_VARIABLES': {
-      const compiledPrompt = _compilePrompt({ ...state, editorVariables: action.payload });
       const mergedIncludedVariables = mergeIncludedVariables({
         variables: action.payload,
         includedPromptVariables: state.includedPrompts.flatMap(
@@ -243,25 +285,35 @@ const promptPageReducer = (state: PromptPageState, action: Action): PromptPageSt
         ),
       });
       const { variablesWithDefaults } = validateVariables(mergedIncludedVariables, {});
-      return {
+      const newState = {
         ...state,
-        compiledPrompt,
         editorVariables: action.payload,
         mergedIncludedVariables,
         inputVariables: variablesWithDefaults,
         hasChanges: true,
       };
+      const compiledPrompt = _compilePrompt(newState);
+      const compiledMessages = _compileMessages(newState);
+      return {
+        ...newState,
+        compiledPrompt,
+        compiledMessages,
+      };
     }
     case 'UPDATE_EDITOR_CONTENT': {
-      const compiledPrompt = _compilePrompt({ ...state, editorContent: action.payload });
       const { missingGlobalContext } = validateGlobalContext(action.payload, state.globalContext);
 
-      return {
+      const newState = {
         ...state,
-        compiledPrompt,
         editorContent: action.payload,
         missingGlobals: missingGlobalContext,
         hasChanges: true,
+      };
+
+      return {
+        ...newState,
+        compiledPrompt: _compilePrompt(newState),
+        compiledMessages: _compileMessages(newState),
       };
     }
     case 'UPDATE_EDITOR_CONFIG': {
@@ -355,26 +407,66 @@ const promptPageReducer = (state: PromptPageState, action: Action): PromptPageSt
       const baseNewState = { ...state, [`is${capitalize(modalType)}ModalOpen`]: true };
       if (modalType === 'compileToClipboard' || modalType === 'test') {
         const compiledPrompt = _compilePrompt(baseNewState);
-        const { variablesWithDefaults } = validateVariables(state.mergedIncludedVariables, {});
-        return { ...baseNewState, inputVariables: variablesWithDefaults, compiledPrompt };
+        const compiledMessages = _compileMessages(baseNewState);
+        return { ...baseNewState, compiledPrompt, compiledMessages };
       }
       return baseNewState;
     }
     case 'CLOSE_MODAL': {
       const { modalType } = action.payload;
-      const baseNewState = { ...state, [`is${capitalize(modalType)}ModalOpen`]: false };
-      if (modalType === 'compileToClipboard' || modalType === 'test') {
-        const { variablesWithDefaults } = validateVariables(state.mergedIncludedVariables, {});
-        return { ...baseNewState, inputVariables: variablesWithDefaults };
-      }
-      return baseNewState;
+      return { ...state, [`is${capitalize(modalType)}ModalOpen`]: false };
+    }
+    case 'UPDATE_EDITOR_PV_CHAT_PROMPT_CONTENT': {
+      const { index, content } = action.payload;
+      const newEditorPvChatPrompts = [...state.editorPvChatPrompts];
+      newEditorPvChatPrompts[index].content = content;
+
+      const newState = { ...state, editorPvChatPrompts: newEditorPvChatPrompts, hasChanges: true };
+
+      return {
+        ...newState,
+        compiledMessages: _compileMessages(newState),
+      };
+    }
+    case 'ADD_EDITOR_PV_CHAT_PROMPT': {
+      const newEditorPvChatPrompts =
+        action.payload.index !== undefined
+          ? [
+              ...state.editorPvChatPrompts.slice(0, action.payload.index),
+              { role: action.payload.role, content: action.payload.content ?? '' },
+              ...state.editorPvChatPrompts.slice(action.payload.index),
+            ]
+          : [
+              ...state.editorPvChatPrompts,
+              { role: action.payload.role, content: action.payload.content ?? '' },
+            ];
+
+      const newState = { ...state, editorPvChatPrompts: newEditorPvChatPrompts, hasChanges: true };
+
+      return {
+        ...newState,
+        compiledMessages: _compileMessages(newState),
+      };
+    }
+    case 'REMOVE_EDITOR_PV_CHAT_PROMPT': {
+      const newEditorPvChatPrompts = state.editorPvChatPrompts.filter(
+        (_, index) => index !== action.payload.index,
+      );
+      const newState = {
+        ...state,
+        editorPvChatPrompts: newEditorPvChatPrompts,
+        hasChanges: newEditorPvChatPrompts.length > 0,
+      };
+
+      return {
+        ...newState,
+        compiledMessages: _compileMessages(newState),
+      };
     }
     default:
       return state;
   }
 };
-
-const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 type PromptPageContextType = {
   state: PromptPageState;
@@ -396,6 +488,13 @@ type PromptPageContextType = {
   updateEditorVariables: (variables: EditorPromptVariable[]) => void;
   updateEditorContent: (content: string) => void;
   updateEditorConfig: (config: CompletionConfig) => void;
+  updateEditorPvChatPromptContent: (index: number, content: string) => void;
+  addEditorPvChatPrompt: (options: {
+    role: 'system' | 'user' | 'assistant';
+    content?: string;
+    index?: number;
+  }) => void;
+  removeEditorPvChatPrompt: (index: number) => void;
 };
 
 export const PromptPageContext = createContext<PromptPageContextType | undefined>(undefined);
@@ -432,6 +531,16 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
 
   const { variablesWithDefaults } = validateVariables(mergedIncludedVariables, {});
 
+  const editorPvChatPrompts =
+    currentVersion.pv_chat_prompts.length > 0
+      ? (currentVersion.pv_chat_prompts as EditorPromptPvChatPrompt[])
+      : [
+          {
+            role: 'system' as const,
+            content: 'You are a helpful assistant.',
+          },
+        ];
+
   const initialState: PromptPageState = {
     prompt,
     allVersions: sortedVersions,
@@ -455,13 +564,19 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
     isPublishConfirmModalOpen: false,
     globalContext,
     compiledPrompt: '',
+    compiledMessages: [],
     inputVariables: variablesWithDefaults,
     editorVariables: currentVersion.prompt_variables,
     editorContent: currentVersion.content,
     editorConfig: currentVersion.config as CompletionConfig,
+    editorPvChatPrompts,
   };
 
-  const [state, dispatch] = useReducer(promptPageReducer, initialState);
+  const [state, dispatch] = useReducer(promptPageReducer, {
+    ...initialState,
+    compiledPrompt: _compilePrompt(initialState),
+    compiledMessages: _compileMessages(initialState),
+  });
 
   const openTestModal = () => {
     if (state.hasChanges) {
@@ -479,8 +594,24 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
     dispatch({ type: 'OPEN_MODAL', payload: { modalType: 'test' } });
   };
   const closeTestModal = () => dispatch({ type: 'CLOSE_MODAL', payload: { modalType: 'test' } });
-  const openCompileToClipboardModal = () =>
-    dispatch({ type: 'OPEN_MODAL', payload: { modalType: 'compileToClipboard' } });
+  const openCompileToClipboardModal = () => {
+    if (state.editorVariables.length === 0) {
+      const targetContent =
+        state.currentVersion.type === 'CHAT'
+          ? JSON.stringify(state.compiledMessages, null, 2)
+          : state.compiledPrompt;
+      navigator.clipboard
+        .writeText(targetContent)
+        .then(() => {
+          toast.success('Compiled prompt copied to clipboard!');
+        })
+        .catch(() => {
+          toast.error('Failed to copy prompt to clipboard');
+        });
+    } else {
+      dispatch({ type: 'OPEN_MODAL', payload: { modalType: 'compileToClipboard' } });
+    }
+  };
   const closeCompileToClipboardModal = () =>
     dispatch({ type: 'CLOSE_MODAL', payload: { modalType: 'compileToClipboard' } });
   const openCreateVersionModal = () =>
@@ -515,6 +646,7 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
           slug: ip.prompt_versions.prompts.slug,
           version: ip.prompt_versions.version,
         })),
+        pvChatPrompts: state.editorPvChatPrompts,
       };
 
       try {
@@ -635,6 +767,20 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
     }
   };
 
+  const updateEditorPvChatPromptContent = (index: number, content: string) => {
+    dispatch({ type: 'UPDATE_EDITOR_PV_CHAT_PROMPT_CONTENT', payload: { index, content } });
+  };
+  const addEditorPvChatPrompt = (options: {
+    role: 'system' | 'user' | 'assistant';
+    content?: string;
+    index?: number;
+  }) => {
+    dispatch({ type: 'ADD_EDITOR_PV_CHAT_PROMPT', payload: options });
+  };
+  const removeEditorPvChatPrompt = (index: number) => {
+    dispatch({ type: 'REMOVE_EDITOR_PV_CHAT_PROMPT', payload: { index } });
+  };
+
   const value: PromptPageContextType = {
     state,
     openTestModal,
@@ -652,6 +798,9 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
     updateEditorContent,
     updateEditorConfig,
     updateIncludes,
+    updateEditorPvChatPromptContent,
+    addEditorPvChatPrompt,
+    removeEditorPvChatPrompt,
   };
 
   return <PromptPageContext.Provider value={value}>{children}</PromptPageContext.Provider>;

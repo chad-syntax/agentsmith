@@ -128,7 +128,7 @@ export async function POST(
   });
 
   try {
-    const executePromise = agentsmith.services.prompts.executePrompt({
+    const response = await agentsmith.services.prompts.executePrompt({
       prompt: promptVersion.prompts,
       config: finalConfig,
       targetVersion: promptVersion,
@@ -136,12 +136,6 @@ export async function POST(
       promptIncludes: promptVersion.prompt_includes,
       globalContext: globalContext as Record<string, any>,
     });
-
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out')), 300000),
-    );
-
-    const response = await Promise.race([executePromise, timeoutPromise]);
 
     if (response.stream) {
       const [streamForClient, streamForLogging] = response.stream.tee();
@@ -195,6 +189,9 @@ export async function POST(
         { error: 'Failed to create log entry, please check your plan limits and try again.' },
         { status: 403 },
       );
+    }
+    if (error instanceof Error && error.message.includes('Error calling OpenRouter API')) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     agentsmith.logger.error(error, 'Error running prompt');
     return NextResponse.json(

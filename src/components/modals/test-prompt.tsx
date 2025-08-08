@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { OpenrouterStreamEvent, StreamEvent, streamToIterator } from '@/utils/stream-to-iterator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MarkdownEditor } from '../editors/markdown-editor';
@@ -24,15 +24,17 @@ import { MarkdownRenderer } from '../markdown-renderer';
 import { ExecutePromptResponseError } from '@/types/api-responses';
 import { usePromptPage } from '@/providers/prompt-page';
 import { PromptContentEditor } from '../editors/prompt-editor';
-import { VariableInput } from '../variable-input';
+import { VariableInput } from '../prompt-editor/variable-input';
 import { JsonEditor } from '../editors/json-editor';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { accumulateChatStreamToCompletion } from '@/utils/accumulate-stream';
+import { capitalize } from '@/utils/capitalize';
 
 const TABS = {
   content: 'content',
   compiledPrompt: 'compiledPrompt',
+  compiledMessages: 'compiledMessages',
   markdown: 'markdown',
   response: 'response',
 } as const;
@@ -40,6 +42,7 @@ const TABS = {
 const TAB_LABELS = {
   content: 'Content',
   compiledPrompt: 'Compiled Prompt',
+  compiledMessages: 'Compiled Messages',
   markdown: 'Markdown',
   response: 'Response',
 } as const;
@@ -49,7 +52,7 @@ type Tab = keyof typeof TABS;
 // Add a "thread" mode so the user can set the prompt as the system or user message.
 
 export const PromptTestModal = () => {
-  const { state, closeTestModal, setInputVariables } = usePromptPage();
+  const { state, closeTestModal, setInputVariables, addEditorPvChatPrompt } = usePromptPage();
   const {
     currentVersion,
     editorConfig,
@@ -57,6 +60,7 @@ export const PromptTestModal = () => {
     isTestModalOpen: isOpen,
     inputVariables,
     compiledPrompt,
+    compiledMessages,
   } = state;
 
   const [isRunning, setIsRunning] = useState(false);
@@ -77,6 +81,7 @@ export const PromptTestModal = () => {
   const handleTestPrompt = async () => {
     setIsRunning(true);
     setCompletionContent(null);
+    setReasoningContent(null);
     setFullResult(null);
     setTestError(null);
 
@@ -154,8 +159,9 @@ export const PromptTestModal = () => {
 
       const choice = data.completion.choices[0] as NonStreamingChoice;
 
-      const result = choice.message.content || 'No response content';
-      const reasoning = choice.message.reasoning;
+      const result =
+        ('text' in choice ? choice.text : choice.message.content) || 'No response content';
+      const reasoning = 'reasoning' in choice ? choice.reasoning : choice.message.reasoning;
 
       setCompletionContent(result);
 
@@ -196,6 +202,11 @@ export const PromptTestModal = () => {
       toast.error('Failed to connect OpenRouter, please try again or contact support.');
       return;
     }
+  };
+
+  const handleAddToMessageThread = () => {
+    addEditorPvChatPrompt({ role: 'assistant', content: completionContent ?? undefined });
+    closeTestModal();
   };
 
   // If no OpenRouter key is configured, show the connection UI instead
@@ -310,12 +321,26 @@ export const PromptTestModal = () => {
                 onValueChange={(value) => setSelectedTab(value as Tab)}
                 className="flex-1 flex flex-col overflow-hidden"
               >
-                <TabsList className="w-full md:w-xl rounded-md">
-                  {Object.entries(TABS).map(([key, value]) => (
-                    <TabsTrigger key={key} className="cursor-pointer rounded-md" value={value}>
-                      {TAB_LABELS[value]}
+                <TabsList className="w-full lg:w-2xl rounded-md">
+                  <TabsTrigger value={TABS.content} className="cursor-pointer">
+                    {TAB_LABELS.content}
+                  </TabsTrigger>
+                  {currentVersion.type === 'NON_CHAT' && (
+                    <TabsTrigger value={TABS.compiledPrompt} className="cursor-pointer">
+                      {TAB_LABELS.compiledPrompt}
                     </TabsTrigger>
-                  ))}
+                  )}
+                  {currentVersion.type === 'CHAT' && (
+                    <TabsTrigger value={TABS.compiledMessages} className="cursor-pointer">
+                      {TAB_LABELS.compiledMessages}
+                    </TabsTrigger>
+                  )}
+                  <TabsTrigger value={TABS.markdown} className="cursor-pointer">
+                    {TAB_LABELS.markdown}
+                  </TabsTrigger>
+                  <TabsTrigger value={TABS.response} className="cursor-pointer">
+                    {TAB_LABELS.response}
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value={TABS.compiledPrompt} className="flex-1 overflow-auto">
                   <PromptContentEditor
@@ -324,6 +349,22 @@ export const PromptTestModal = () => {
                     readOnly
                     minHeight="100%"
                   />
+                </TabsContent>
+                <TabsContent value={TABS.compiledMessages} className="flex-1 overflow-auto">
+                  <div className="space-y-4 mt-2">
+                    {compiledMessages.map((message, index) => (
+                      <div key={`${message.role}-${index}`}>
+                        <h3 className="ml-2">{capitalize(message.role)}</h3>
+                        <Card>
+                          <CardContent>
+                            {typeof message.content === 'string'
+                              ? message.content
+                              : JSON.stringify(message.content)}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    ))}
+                  </div>
                 </TabsContent>
                 <TabsContent value={TABS.content} className="flex-1 overflow-auto">
                   {reasoningContent && (
@@ -352,6 +393,12 @@ export const PromptTestModal = () => {
                     <div className="flex items-center justify-center h-full">
                       <Loader2 className="w-4 h-4 animate-spin" />
                     </div>
+                  )}
+                  {currentVersion.type === 'CHAT' && completionContent && !isRunning && (
+                    <Button className="mt-4" onClick={handleAddToMessageThread} variant="outline">
+                      <Plus className="size-4" />
+                      Add to thread
+                    </Button>
                   )}
                 </TabsContent>
                 <TabsContent value={TABS.markdown} className="flex-1 overflow-auto">

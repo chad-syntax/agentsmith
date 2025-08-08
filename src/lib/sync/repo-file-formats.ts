@@ -26,6 +26,7 @@ const PromptVersionFileJSONContentSchema = z.object({
   version: z
     .string()
     .regex(SEMVER_PATTERN, { message: 'Version must be a valid semantic version (e.g., 1.0.0)' }),
+  type: z.enum(['CHAT', 'NON_CHAT']).optional(),
   created_at: supabaseDatetime,
   updated_at: supabaseDatetime,
 });
