@@ -84,6 +84,8 @@ export async function POST(
     body.variables,
   );
 
+  console.log('missingRequiredVariables', missingRequiredVariables);
+
   if (missingRequiredVariables.length > 0) {
     return NextResponse.json(
       {

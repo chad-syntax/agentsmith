@@ -50,6 +50,7 @@ type PromptPageState = {
   // Derived/UI State
   includedPrompts: IncludedPrompt[];
   mergedIncludedVariables: EditorPromptVariable[];
+  invalidIncludes: Set<ParsedInclude>;
   notExistingIncludes: Set<string>;
   missingGlobals: string[];
   missingRequiredVariables: EditorPromptVariable[];
@@ -105,6 +106,7 @@ type Action =
   | { type: 'UPDATE_FIELD'; payload: { field: 'content' | 'config'; value: any } }
   | { type: 'UPDATE_EDITOR_VARIABLES'; payload: EditorPromptVariable[] }
   | { type: 'UPDATE_INCLUDES'; payload: IncludedPrompt[] }
+  | { type: 'UPDATE_INVALID_INCLUDES'; payload: Set<ParsedInclude> }
   | { type: 'UPDATE_EDITOR_CONTENT'; payload: string }
   | { type: 'UPDATE_EDITOR_PV_CHAT_PROMPT_CONTENT'; payload: { index: number; content: string } }
   | {
@@ -320,7 +322,7 @@ const promptPageReducer = (state: PromptPageState, action: Action): PromptPageSt
       return { ...state, editorConfig: action.payload, hasChanges: true };
     }
     case 'UPDATE_NOT_EXISTING_INCLUDES': {
-      return { ...state, notExistingIncludes: action.payload };
+      return { ...state, notExistingIncludes: action.payload, hasChanges: false };
     }
     case 'UPDATE_INCLUDES': {
       const mergedIncludedVariables = mergeIncludedVariables({
@@ -330,6 +332,9 @@ const promptPageReducer = (state: PromptPageState, action: Action): PromptPageSt
         ),
       });
       return { ...state, includedPrompts: action.payload, mergedIncludedVariables };
+    }
+    case 'UPDATE_INVALID_INCLUDES': {
+      return { ...state, invalidIncludes: action.payload, hasChanges: false };
     }
     case 'OPERATION_START': {
       const { operationType } = action.payload;
@@ -482,7 +487,11 @@ type PromptPageContextType = {
 
   // Action handlers
   handleSave: (status: 'DRAFT' | 'PUBLISHED') => Promise<void>;
-  handleCreateNewVersion: (versionType: VersionType, customVersion?: string) => Promise<void>;
+  handleCreateNewVersion: (options: {
+    versionType: VersionType;
+    fromVersionUuid: string;
+    customVersion?: string;
+  }) => Promise<void>;
   setInputVariables: (variables: Record<string, string | number | boolean | object>) => void;
   updateIncludes: (includes: ParsedInclude[]) => void;
   updateEditorVariables: (variables: EditorPromptVariable[]) => void;
@@ -550,6 +559,7 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
     includedPrompts: currentVersion.prompt_includes,
     mergedIncludedVariables,
     notExistingIncludes: new Set(),
+    invalidIncludes: new Set(),
     missingGlobals: [],
     missingRequiredVariables: [],
     variablesWithDefaults,
@@ -625,6 +635,11 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
 
   const handleSave = useCallback(
     async (status: 'DRAFT' | 'PUBLISHED') => {
+      if (state.invalidIncludes.size > 0 || state.notExistingIncludes.size > 0) {
+        toast.error('Invalid includes or missing includes, please fix them before saving');
+        return;
+      }
+
       const operationType = status === 'PUBLISHED' ? 'PUBLISH' : 'SAVE';
       dispatch({
         type: 'OPERATION_START',
@@ -678,8 +693,14 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
   );
 
   const handleCreateNewVersion = useCallback(
-    async (versionType: VersionType, customVersion?: string) => {
+    async (options: {
+      versionType: VersionType;
+      fromVersionUuid: string;
+      customVersion?: string;
+    }) => {
       dispatch({ type: 'OPERATION_START', payload: { operationType: 'CREATE_VERSION' } });
+
+      const { versionType, customVersion, fromVersionUuid } = options;
 
       try {
         const response = await createDraftVersion({
@@ -687,6 +708,7 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
           latestVersion: state.latestVersion.version,
           versionType,
           customVersion,
+          fromVersionUuid,
         });
 
         if (response.success && response.data) {
@@ -757,6 +779,13 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
 
     if (resolvedIncludes?.includedPrompts) {
       dispatch({ type: 'UPDATE_INCLUDES', payload: resolvedIncludes.includedPrompts });
+    }
+
+    if (resolvedIncludes?.invalidIncludes) {
+      dispatch({
+        type: 'UPDATE_INVALID_INCLUDES',
+        payload: resolvedIncludes.invalidIncludes,
+      });
     }
 
     if (resolvedIncludes?.notExistingIncludes) {

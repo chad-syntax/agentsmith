@@ -59,6 +59,7 @@ export type CreatePromptWithDraftVersionOptions = {
 export type CreateDraftVersionOptions = {
   promptId: number;
   latestVersion: string;
+  fromVersionUuid: string;
   customVersion?: string;
   versionType?: VersionType;
 };
@@ -603,6 +604,7 @@ export class PromptsService extends AgentsmithSupabaseService {
     const includedPrompts: IncludedPrompt[] = [];
 
     const notExistingIncludes = new Set<string>();
+    const invalidIncludes = new Set<ParsedInclude>();
 
     const results = await Promise.all(
       parsedIncludes.map(async (parsedInclude) => {
@@ -632,6 +634,10 @@ export class PromptsService extends AgentsmithSupabaseService {
             return { notFound: true, parsedInclude };
           }
 
+          if (data.prompt_versions[0].type !== 'NON_CHAT') {
+            return { invalid: true, parsedInclude };
+          }
+
           const includedPrompt: IncludedPrompt = {
             prompt_versions: {
               version: data.prompt_versions[0].version,
@@ -657,6 +663,10 @@ export class PromptsService extends AgentsmithSupabaseService {
         // If any error occurred, return early (mimics original behavior)
         return;
       }
+      if (result?.invalid) {
+        invalidIncludes.add(result.parsedInclude);
+        continue;
+      }
       if (result?.notFound) {
         notExistingIncludes.add(result.parsedInclude.arg);
         continue;
@@ -666,7 +676,7 @@ export class PromptsService extends AgentsmithSupabaseService {
       }
     }
 
-    return { includedPrompts, notExistingIncludes };
+    return { includedPrompts, notExistingIncludes, invalidIncludes };
   }
 
   public async fetchPromptIncludes(promptVersionUuid: string) {
@@ -1061,7 +1071,13 @@ export class PromptsService extends AgentsmithSupabaseService {
   }
 
   public async createDraftVersion(options: CreateDraftVersionOptions) {
-    const { promptId, latestVersion, customVersion, versionType = 'patch' } = options;
+    const {
+      promptId,
+      latestVersion,
+      customVersion,
+      versionType = 'patch',
+      fromVersionUuid,
+    } = options;
 
     // First, get ALL versions for this prompt to find existing versions
     const { data: allVersions, error: versionsError } = await this.supabase
@@ -1102,18 +1118,16 @@ export class PromptsService extends AgentsmithSupabaseService {
       newVersion = incrementVersion(highestVersion, versionType);
     }
 
-    // Get latest version to copy content
-    const { data: latestVersionData, error: latestVersionError } = await this.supabase
+    const { data: fromVersionData, error: fromVersionError } = await this.supabase
       .from('prompt_versions')
       .select(
         'type, content, config, prompt_variables(*), prompt_includes!prompt_version_id(*), pv_chat_prompts(*)',
       )
-      .eq('prompt_id', promptId)
-      .eq('version', latestVersion)
+      .eq('uuid', fromVersionUuid)
       .single();
 
-    if (latestVersionError || !latestVersionData) {
-      throw new Error('Failed to find latest version: ' + latestVersionError?.message);
+    if (fromVersionError || !fromVersionData) {
+      throw new Error('Failed to find fromVersion: ' + fromVersionError?.message);
     }
 
     // Create new draft version
@@ -1121,11 +1135,11 @@ export class PromptsService extends AgentsmithSupabaseService {
       .from('prompt_versions')
       .insert({
         prompt_id: promptId,
-        content: latestVersionData.content,
-        config: latestVersionData.config,
+        content: fromVersionData.content,
+        config: fromVersionData.config,
         status: 'DRAFT',
         version: newVersion,
-        type: latestVersionData.type,
+        type: fromVersionData.type,
       })
       .select('id, uuid')
       .single();
@@ -1135,8 +1149,8 @@ export class PromptsService extends AgentsmithSupabaseService {
     }
 
     // Copy variables from the latest version
-    if (latestVersionData.prompt_variables && latestVersionData.prompt_variables.length > 0) {
-      const variablesToInsert = latestVersionData.prompt_variables.map(
+    if (fromVersionData.prompt_variables && fromVersionData.prompt_variables.length > 0) {
+      const variablesToInsert = fromVersionData.prompt_variables.map(
         ({ id, uuid, ...variable }) => ({
           ...variable,
           prompt_version_id: newVersionData.id,
@@ -1153,8 +1167,8 @@ export class PromptsService extends AgentsmithSupabaseService {
     }
 
     // Copy includes from the latest version
-    if (latestVersionData.prompt_includes && latestVersionData.prompt_includes.length > 0) {
-      const includesToInsert = latestVersionData.prompt_includes.map(({ id, ...include }) => ({
+    if (fromVersionData.prompt_includes && fromVersionData.prompt_includes.length > 0) {
+      const includesToInsert = fromVersionData.prompt_includes.map(({ id, ...include }) => ({
         ...include,
         prompt_version_id: newVersionData.id,
       }));
@@ -1169,8 +1183,8 @@ export class PromptsService extends AgentsmithSupabaseService {
     }
 
     // copy the pv chat prompts from the latest version
-    if (latestVersionData.pv_chat_prompts && latestVersionData.pv_chat_prompts.length > 0) {
-      const pvChatPromptsToInsert = latestVersionData.pv_chat_prompts.map(
+    if (fromVersionData.pv_chat_prompts && fromVersionData.pv_chat_prompts.length > 0) {
+      const pvChatPromptsToInsert = fromVersionData.pv_chat_prompts.map(
         ({ id, ...pvChatPrompt }) => ({
           ...pvChatPrompt,
           prompt_version_id: newVersionData.id,

@@ -16,7 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { OpenrouterStreamEvent, StreamEvent, streamToIterator } from '@/utils/stream-to-iterator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { MarkdownEditor } from '../editors/markdown-editor';
@@ -424,7 +424,37 @@ export const PromptTestModal = () => {
               </Tabs>
             ) : (
               <Card className="text-center">
-                <CardContent>Results will appear here.</CardContent>
+                <CardHeader>
+                  <CardTitle>
+                    Compiled {currentVersion.type === 'NON_CHAT' ? 'Prompt' : 'Messages'}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {currentVersion.type === 'NON_CHAT' && (
+                    <PromptContentEditor
+                      onContentChange={() => {}}
+                      content={compiledPrompt}
+                      readOnly
+                      minHeight="100%"
+                    />
+                  )}
+                  {currentVersion.type === 'CHAT' && (
+                    <div className="space-y-4 mt-2">
+                      {compiledMessages.map((message, index) => (
+                        <div key={`${message.role}-${index}`}>
+                          <h3 className="ml-2">{capitalize(message.role)}</h3>
+                          <Card>
+                            <CardContent>
+                              {typeof message.content === 'string'
+                                ? message.content
+                                : JSON.stringify(message.content)}
+                            </CardContent>
+                          </Card>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
               </Card>
             )}
           </div>

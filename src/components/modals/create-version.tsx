@@ -59,7 +59,7 @@ export const CreateVersionModal = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (error) return;
-    handleCreateNewVersion(versionType, customVersion);
+    handleCreateNewVersion({ versionType, customVersion, fromVersionUuid: currentVersion.uuid });
   };
 
   return (

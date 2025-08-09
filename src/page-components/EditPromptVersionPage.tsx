@@ -27,7 +27,7 @@ import { CreateVersionModal } from '@/components/modals/create-version';
 export const EditPromptVersionPage = () => {
   const { state } = usePromptPage();
 
-  const { currentVersion, missingGlobals, notExistingIncludes } = state;
+  const { currentVersion, missingGlobals, notExistingIncludes, invalidIncludes } = state;
 
   const { selectedProjectUuid } = useApp();
 
@@ -88,6 +88,17 @@ export const EditPromptVersionPage = () => {
                     <li key={n}>Prompt "{n}" not found</li>
                   ))}
                 </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+          {invalidIncludes.size > 0 && (
+            <Alert className="mb-4" variant="destructive">
+              <AlertTitle>Invalid Includes</AlertTitle>
+              <AlertDescription>
+                Can only include non-chat prompts, invalid prompts:{' '}
+                {Array.from(invalidIncludes)
+                  .map((i) => i.arg)
+                  .join(', ')}
               </AlertDescription>
             </Alert>
           )}

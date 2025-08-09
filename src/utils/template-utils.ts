@@ -508,7 +508,15 @@ export const validateVariables = (
 } => {
   const missingRequiredVariables = variables
     .filter((v) => v.required)
-    .filter((v) => !(v.name in variablesToCheck));
+    .filter(
+      (v) =>
+        !(
+          v.name in variablesToCheck &&
+          variablesToCheck[v.name] !== null &&
+          variablesToCheck[v.name] !== undefined &&
+          String(variablesToCheck[v.name]).trim() !== ''
+        ),
+    );
 
   const defaultValues = variables.reduce((acc, v) => {
     if (v.default_value === null && v.type === 'BOOLEAN') {
