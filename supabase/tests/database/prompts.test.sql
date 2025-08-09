@@ -112,9 +112,10 @@ with new_prompt as (
     where name = 'Pro Project 1'
     returning id
 )
-insert into prompt_versions (prompt_id, config, content, version, status)
+insert into prompt_versions (prompt_id, type, config, content, version, status)
 select 
     id,
+    'NON_CHAT',
     '{"test": true}'::jsonb,
     'test content',
     '1.0.0',
@@ -138,9 +139,10 @@ with new_prompt as (
     where name = 'Pro Project 1'
     returning id
 )
-insert into prompt_versions (prompt_id, config, content, version, status)
+insert into prompt_versions (prompt_id, type, config, content, version, status)
 select 
     id,
+    'NON_CHAT',
     '{"test": true}'::jsonb,
     'test content',
     '1.0.0-alpha.1',
@@ -164,9 +166,10 @@ with new_prompt as (
     where name = 'Pro Project 1'
     returning id
 )
-insert into prompt_versions (prompt_id, config, content, version, status)
+insert into prompt_versions (prompt_id, type, config, content, version, status)
 select 
     id,
+    'NON_CHAT',
     '{"test": true}'::jsonb,
     'test content',
     '1.0.0+build.123',
@@ -190,9 +193,10 @@ with new_prompt as (
     where name = 'Pro Project 1'
     returning id
 )
-insert into prompt_versions (prompt_id, config, content, version, status)
+insert into prompt_versions (prompt_id, type, config, content, version, status)
 select 
     id,
+    'NON_CHAT',
     '{"test": true}'::jsonb,
     'test content',
     '1.0',
@@ -218,9 +222,10 @@ with new_prompt as (
     where name = 'Pro Project 1'
     returning id
 )
-insert into prompt_versions (prompt_id, config, content, version, status)
+insert into prompt_versions (prompt_id, type, config, content, version, status)
 select 
     id,
+    'NON_CHAT',
     '{"test": true}'::jsonb,
     'test content',
     'v1.0.0',

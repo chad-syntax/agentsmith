@@ -11,6 +11,7 @@ from public.projects;
 insert into prompt_versions (
     uuid,
     prompt_id,
+    type,
     config,
     content,
     version,
@@ -19,6 +20,7 @@ insert into prompt_versions (
 select
     uuid_generate_v4(),
     id,
+    'NON_CHAT',
     '{"models": ["openrouter/auto"], "temperature": 1.0}',
     'Respond with the following:
 
@@ -33,6 +35,7 @@ from prompts;
 insert into prompt_versions (
     uuid,
     prompt_id,
+    type,
     config,
     content,
     version,
@@ -41,6 +44,7 @@ insert into prompt_versions (
 select
     uuid_generate_v4(),
     id,
+    'NON_CHAT',
     '{"models": ["openrouter/auto"], "temperature": 0.75}',
     'Respond with the following:
 
@@ -55,6 +59,7 @@ from prompts;
 insert into prompt_versions (
     uuid,
     prompt_id,
+    type,
     config,
     content,
     version,
@@ -63,6 +68,7 @@ insert into prompt_versions (
 select
     uuid_generate_v4(),
     id,
+    'NON_CHAT',
     '{"models": ["openrouter/auto"], "temperature": 0.5}',
     'Respond with the following:
 

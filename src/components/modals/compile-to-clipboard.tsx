@@ -16,7 +16,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
-import { VariableInput } from '../variable-input';
+import { VariableInput } from '../prompt-editor/variable-input';
 import { usePromptPage } from '@/providers/prompt-page';
 
 export const CompileToClipboardModal = () => {
@@ -30,19 +30,13 @@ export const CompileToClipboardModal = () => {
     notExistingIncludes,
     inputVariables,
     compiledPrompt,
+    compiledMessages,
+    currentVersion,
   } = state;
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasClickedCompileOnce, setHasClickedCompileOnce] = useState(false);
-
-  const handleInputChange = (variableName: string, value: string) => {
-    setInputVariables({
-      ...inputVariables,
-      [variableName]: value,
-    });
-    setError(null); // Clear error on input change
-  };
 
   const handleSubmit = async () => {
     setIsProcessing(true);
@@ -55,7 +49,9 @@ export const CompileToClipboardModal = () => {
     }
 
     try {
-      await navigator.clipboard.writeText(compiledPrompt);
+      const targetContent =
+        currentVersion.type === 'CHAT' ? JSON.stringify(compiledMessages, null, 2) : compiledPrompt;
+      await navigator.clipboard.writeText(targetContent);
       toast.success('Compiled prompt copied to clipboard!');
       closeCompileToClipboardModal(); // Close modal on success
     } catch (compileError: any) {

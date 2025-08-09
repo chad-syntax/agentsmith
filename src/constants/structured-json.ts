@@ -141,8 +141,8 @@ export const softwareApplicationSchema = {
   screenshot: `${siteUrl}${gitHandoffScreenshot.src || gitHandoffScreenshot}`,
   aggregateRating: {
     '@type': 'AggregateRating',
-    ratingValue: '5.0',
-    ratingCount: '3',
+    ratingValue: 5.0,
+    ratingCount: 3,
   },
   review: [],
 };
@@ -163,8 +163,8 @@ export const productSchema = {
   url: `${siteUrl}/#pricing`,
   aggregateRating: {
     '@type': 'AggregateRating',
-    ratingValue: '5.0',
-    ratingCount: '3',
+    ratingValue: 5.0,
+    ratingCount: 3,
   },
   review: [],
   manufacturer: {

@@ -5,6 +5,8 @@ import { Database } from '@/app/__generated__/supabase.types';
 import { transform } from 'nunjucks/src/transformer';
 import merge from 'lodash.merge';
 import { EditorPromptVariable } from '@/types/prompt-editor';
+import { EditorPromptPvChatPrompt } from '@/lib/PromptsService';
+import { Message } from '@/lib/openrouter';
 
 export const SEMVER_PATTERN =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
@@ -484,6 +486,19 @@ export const compilePrompt = (
   return nunjucksEnv.renderString(promptContent, processedVariables);
 };
 
+export const compileChatPrompts = (
+  chatPrompts: EditorPromptPvChatPrompt[],
+  variables: Record<string, any> & { global: Record<string, any> },
+  promptLoader: (slug: string, version: string | null) => string,
+): Message[] =>
+  chatPrompts.map((prompt) => {
+    const content = compilePrompt(prompt.content ?? '', variables, promptLoader);
+    return {
+      role: prompt.role,
+      content,
+    };
+  });
+
 export const validateVariables = (
   variables: EditorPromptVariable[],
   variablesToCheck: Record<string, string | number | boolean | object>,
@@ -493,7 +508,15 @@ export const validateVariables = (
 } => {
   const missingRequiredVariables = variables
     .filter((v) => v.required)
-    .filter((v) => !(v.name in variablesToCheck));
+    .filter(
+      (v) =>
+        !(
+          v.name in variablesToCheck &&
+          variablesToCheck[v.name] !== null &&
+          variablesToCheck[v.name] !== undefined &&
+          String(variablesToCheck[v.name]).trim() !== ''
+        ),
+    );
 
   const defaultValues = variables.reduce((acc, v) => {
     if (v.default_value === null && v.type === 'BOOLEAN') {
