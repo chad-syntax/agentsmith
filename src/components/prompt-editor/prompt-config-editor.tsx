@@ -70,7 +70,7 @@ export const PromptConfigEditor = (props: PromptConfigEditorProps) => {
             Temperature
           </Label>
           <Slider
-            disabled={!temperatureEnabled}
+            disabled={!temperatureEnabled || readOnly}
             min={0}
             max={2}
             step={0.01}
