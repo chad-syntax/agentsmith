@@ -23,8 +23,11 @@ import { usePromptPage } from '@/providers/prompt-page';
 import { ArrowRight } from 'lucide-react';
 
 export const CreateVersionModal = () => {
-  const { state, handleCreateNewVersion, closeCreateVersionModal } = usePromptPage();
-  const { currentVersion, isCreateVersionModalOpen: isOpen, isCreatingVersion } = state;
+  const currentVersion = usePromptPage((s) => s.currentVersion);
+  const isOpen = usePromptPage((s) => s.isCreateVersionModalOpen);
+  const isCreatingVersion = usePromptPage((s) => s.isCreatingVersion);
+  const handleCreateNewVersion = usePromptPage((s) => s.handleCreateNewVersion);
+  const closeCreateVersionModal = usePromptPage((s) => s.closeCreateVersionModal);
 
   const [versionType, setVersionType] = useState<VersionType>(VERSION_TYPES.patch);
   const [customVersion, setCustomVersion] = useState('');

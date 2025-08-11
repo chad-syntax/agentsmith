@@ -17,9 +17,12 @@ type PromptConfigEditorProps = {
 export const PromptConfigEditor = (props: PromptConfigEditorProps) => {
   const { readOnly } = props;
 
-  const { state, updateEditorConfig } = usePromptPage();
+  const editorConfig = usePromptPage((s) => s.editorConfig);
+  const updateEditorConfig = usePromptPage((s) => s.updateEditorConfig);
   const [isJsonConfigEditorOpen, setIsJsonConfigEditorOpen] = useState(false);
-  const [temperatureEnabled, setTemperatureEnabled] = useState(false);
+  const [temperatureEnabled, setTemperatureEnabled] = useState(
+    editorConfig.temperature !== undefined,
+  );
 
   return (
     <>
@@ -36,10 +39,11 @@ export const PromptConfigEditor = (props: PromptConfigEditorProps) => {
           <Switch
             id="stream"
             disabled={readOnly}
-            checked={state.editorConfig.stream}
+            checked={editorConfig.stream === true}
+            className="cursor-pointer"
             onCheckedChange={(checked) =>
               updateEditorConfig({
-                ...state.editorConfig,
+                ...editorConfig,
                 stream: checked === true ? checked : undefined,
               })
             }
@@ -51,7 +55,7 @@ export const PromptConfigEditor = (props: PromptConfigEditorProps) => {
             checked={temperatureEnabled}
             onCheckedChange={(checked) => {
               setTemperatureEnabled((p) => !p);
-              updateEditorConfig({ ...state.editorConfig, temperature: checked ? 1 : undefined });
+              updateEditorConfig({ ...editorConfig, temperature: checked ? 1 : undefined });
             }}
             className="cursor-pointer"
             disabled={readOnly}
@@ -70,9 +74,9 @@ export const PromptConfigEditor = (props: PromptConfigEditorProps) => {
             min={0}
             max={2}
             step={0.01}
-            value={[state.editorConfig.temperature ?? 0]}
+            value={[editorConfig.temperature ?? 0]}
             onValueChange={(value) =>
-              updateEditorConfig({ ...state.editorConfig, temperature: value[0] })
+              updateEditorConfig({ ...editorConfig, temperature: value[0] })
             }
           />
           <span
@@ -81,7 +85,7 @@ export const PromptConfigEditor = (props: PromptConfigEditorProps) => {
               !temperatureEnabled && 'text-muted-foreground',
             )}
           >
-            {state.editorConfig.temperature ?? '-'}
+            {editorConfig.temperature ?? '-'}
           </span>
         </div>
         {!readOnly && (

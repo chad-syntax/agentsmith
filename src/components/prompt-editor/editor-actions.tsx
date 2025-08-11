@@ -26,16 +26,16 @@ import {
 import { AltKeyIcon, MetaKeyIcon } from '../mod-key-labels';
 
 export const EditorActions = () => {
-  const {
-    state,
-    handleSave,
-    openCreateVersionModal,
-    openTestModal,
-    openCompileToClipboardModal,
-    openPublishConfirm,
-  } = usePromptPage();
-
-  const { currentVersion, isSaving, isPublishing, isCreatingVersion, hasChanges } = state;
+  const currentVersion = usePromptPage((s) => s.currentVersion);
+  const isSaving = usePromptPage((s) => s.isSaving);
+  const isPublishing = usePromptPage((s) => s.isPublishing);
+  const isCreatingVersion = usePromptPage((s) => s.isCreatingVersion);
+  const hasChanges = usePromptPage((s) => s.hasChanges);
+  const handleSave = usePromptPage((s) => s.handleSave);
+  const openCreateVersionModal = usePromptPage((s) => s.openCreateVersionModal);
+  const openTestModal = usePromptPage((s) => s.openTestModal);
+  const openCompileToClipboardModal = usePromptPage((s) => s.openCompileToClipboardModal);
+  const openPublishConfirm = usePromptPage((s) => s.openPublishConfirm);
 
   const isDraft = currentVersion.status === 'DRAFT';
   const isPublished = currentVersion.status === 'PUBLISHED';

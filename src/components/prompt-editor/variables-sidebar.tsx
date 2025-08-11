@@ -45,9 +45,8 @@ export const VariablesSidebar = (props: VariablesSidebarProps) => {
   const [isOpen, setIsOpen] = useState(true);
 
   const { selectedProjectUuid } = useApp();
-  const { state } = usePromptPage();
-
-  const { includedPrompts, globalContext } = state;
+  const includedPrompts = usePromptPage((s) => s.includedPrompts);
+  const globalContext = usePromptPage((s) => s.globalContext);
 
   return (
     <Collapsible

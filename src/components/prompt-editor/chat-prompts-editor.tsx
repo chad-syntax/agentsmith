@@ -12,7 +12,7 @@ type AddMessageButtonProps = {
 };
 
 const AddMessageButton = (props: AddMessageButtonProps) => {
-  const { addEditorPvChatPrompt } = usePromptPage();
+  const addEditorPvChatPrompt = usePromptPage((s) => s.addEditorPvChatPrompt);
   const { role, index } = props;
   return (
     <Button
@@ -28,15 +28,12 @@ const AddMessageButton = (props: AddMessageButtonProps) => {
 };
 
 export const ChatPromptsEditor = () => {
-  const {
-    state,
-    updateEditorVariables,
-    updateIncludes,
-    updateEditorPvChatPromptContent,
-    removeEditorPvChatPrompt,
-  } = usePromptPage();
-
-  const { editorVariables, editorPvChatPrompts } = state;
+  const editorVariables = usePromptPage((s) => s.editorVariables);
+  const editorPvChatPrompts = usePromptPage((s) => s.editorPvChatPrompts);
+  const updateEditorVariables = usePromptPage((s) => s.updateEditorVariables);
+  const updateIncludes = usePromptPage((s) => s.updateIncludes);
+  const updateEditorPvChatPromptContent = usePromptPage((s) => s.updateEditorPvChatPromptContent);
+  const removeEditorPvChatPrompt = usePromptPage((s) => s.removeEditorPvChatPrompt);
 
   const pvChatPromptVariablesRef = useRef<Record<string, ParsedVariable[]>>({});
 

@@ -35,8 +35,7 @@ const ModelPicker = (props: ModelPickerProps) => {
   const [models, setModels] = useState<OpenrouterModel[]>(cachedModels ?? []);
   const [loading, setLoading] = useState(false);
 
-  const prompt = usePromptPage();
-  const selectedModels = prompt.state.editorConfig.models ?? [];
+  const selectedModels = usePromptPage((s) => s.editorConfig.models ?? []);
 
   useEffect(() => {
     if (!open) return;
@@ -93,8 +92,9 @@ type ModelSelectProps = {
 
 export const ModelSelect = (props: ModelSelectProps) => {
   const { readOnly } = props;
-  const { state, updateEditorConfig } = usePromptPage();
-  const models = state.editorConfig.models ?? [];
+  const models = usePromptPage((s) => s.editorConfig.models ?? []);
+  const editorConfig = usePromptPage((s) => s.editorConfig);
+  const updateEditorConfig = usePromptPage((s) => s.updateEditorConfig);
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
   // Picker state
@@ -104,7 +104,7 @@ export const ModelSelect = (props: ModelSelectProps) => {
   const handleRemoveModel = (modelToRemove: string) => {
     if (models.length > 1) {
       const newModels = models.filter((model) => model !== modelToRemove);
-      updateEditorConfig({ ...state.editorConfig, models: newModels });
+      updateEditorConfig({ ...editorConfig, models: newModels });
     }
   };
 
@@ -112,14 +112,14 @@ export const ModelSelect = (props: ModelSelectProps) => {
     if (oldModel === newModel) return;
 
     const newModels = models.map((m) => (m === oldModel ? newModel : m));
-    updateEditorConfig({ ...state.editorConfig, models: newModels });
+    updateEditorConfig({ ...editorConfig, models: newModels });
   };
 
   const handleAddModel = (newModel: string) => {
-    const selectedModels = state.editorConfig.models ?? [];
+    const selectedModels = editorConfig.models ?? [];
     if (selectedModels.length >= 3) return;
     if (selectedModels.includes(newModel)) return;
-    updateEditorConfig({ ...state.editorConfig, models: [...selectedModels, newModel] });
+    updateEditorConfig({ ...editorConfig, models: [...selectedModels, newModel] });
   };
 
   return (

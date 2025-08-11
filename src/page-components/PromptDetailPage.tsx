@@ -26,9 +26,13 @@ import { STUDIO_FULL_HEIGHT } from '@/app/constants';
 import { usePromptPage } from '@/providers/prompt-page';
 
 export const PromptDetailPage = () => {
-  const { state, openTestModal, openCompileToClipboardModal, openCreateVersionModal } =
-    usePromptPage();
-  const { prompt, latestVersion, allVersions, isCreatingVersion } = state;
+  const prompt = usePromptPage((s) => s.prompt);
+  const latestVersion = usePromptPage((s) => s.latestVersion);
+  const allVersions = usePromptPage((s) => s.allVersions);
+  const isCreatingVersion = usePromptPage((s) => s.isCreatingVersion);
+  const openTestModal = usePromptPage((s) => s.openTestModal);
+  const openCompileToClipboardModal = usePromptPage((s) => s.openCompileToClipboardModal);
+  const openCreateVersionModal = usePromptPage((s) => s.openCreateVersionModal);
 
   const { selectedProjectUuid } = useApp();
 

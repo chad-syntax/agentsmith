@@ -19,8 +19,8 @@ type JsonConfigEditorModalProps = {
 
 export const JsonConfigEditorModal = (props: JsonConfigEditorModalProps) => {
   const { isOpen, onOpenChange } = props;
-  const { state, updateEditorConfig } = usePromptPage();
-  const { editorConfig } = state;
+  const editorConfig = usePromptPage((s) => s.editorConfig);
+  const updateEditorConfig = usePromptPage((s) => s.updateEditorConfig);
 
   const handleSaveClick = () => {
     updateEditorConfig(editorConfig);

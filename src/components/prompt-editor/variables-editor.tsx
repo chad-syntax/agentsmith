@@ -39,8 +39,8 @@ type VariablesEditorProps = {
 export const VariablesEditor = (props: VariablesEditorProps) => {
   const { readOnly = false, className } = props;
 
-  const { state, updateEditorVariables } = usePromptPage();
-  const { editorVariables } = state;
+  const editorVariables = usePromptPage((s) => s.editorVariables);
+  const updateEditorVariables = usePromptPage((s) => s.updateEditorVariables);
 
   const updateVariable = (
     index: number,

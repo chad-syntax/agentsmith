@@ -4,7 +4,11 @@ import { PromptContentEditor } from '../editors/prompt-editor';
 import { ParsedVariable } from '@/utils/template-utils';
 
 export const NonChatPromptEditor = () => {
-  const { state, updateEditorContent, updateEditorVariables, updateIncludes } = usePromptPage();
+  const editorContent = usePromptPage((s) => s.editorContent);
+  const editorVariables = usePromptPage((s) => s.editorVariables);
+  const updateEditorContent = usePromptPage((s) => s.updateEditorContent);
+  const updateEditorVariables = usePromptPage((s) => s.updateEditorVariables);
+  const updateIncludes = usePromptPage((s) => s.updateIncludes);
 
   const onVariablesChange = (parsedVariables: ParsedVariable[]) => {
     const newVariables = parsedVariables.map((v) => {
@@ -20,8 +24,6 @@ export const NonChatPromptEditor = () => {
     });
     updateEditorVariables(newVariables);
   };
-
-  const { editorContent, editorVariables } = state;
 
   return (
     <div>

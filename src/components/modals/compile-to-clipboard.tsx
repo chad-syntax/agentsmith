@@ -20,19 +20,18 @@ import { VariableInput } from '../prompt-editor/variable-input';
 import { usePromptPage } from '@/providers/prompt-page';
 
 export const CompileToClipboardModal = () => {
-  const { state, closeCompileToClipboardModal, setInputVariables } = usePromptPage();
-  const {
-    editorVariables,
-    isCompileToClipboardModalOpen: isOpen,
-    missingGlobals,
-    missingRequiredVariables,
-    mergedIncludedVariables,
-    notExistingIncludes,
-    inputVariables,
-    compiledPrompt,
-    compiledMessages,
-    currentVersion,
-  } = state;
+  const editorVariables = usePromptPage((s) => s.editorVariables);
+  const isOpen = usePromptPage((s) => s.isCompileToClipboardModalOpen);
+  const missingGlobals = usePromptPage((s) => s.missingGlobals);
+  const missingRequiredVariables = usePromptPage((s) => s.missingRequiredVariables);
+  const mergedIncludedVariables = usePromptPage((s) => s.mergedIncludedVariables);
+  const notExistingIncludes = usePromptPage((s) => s.notExistingIncludes);
+  const inputVariables = usePromptPage((s) => s.inputVariables);
+  const compiledPrompt = usePromptPage((s) => s.compiledPrompt);
+  const compiledMessages = usePromptPage((s) => s.compiledMessages);
+  const currentVersion = usePromptPage((s) => s.currentVersion);
+  const closeCompileToClipboardModal = usePromptPage((s) => s.closeCompileToClipboardModal);
+  const setInputVariables = usePromptPage((s) => s.setInputVariables);
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);

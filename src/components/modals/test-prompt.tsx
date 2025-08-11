@@ -49,19 +49,17 @@ const TAB_LABELS = {
 
 type Tab = keyof typeof TABS;
 
-// Add a "thread" mode so the user can set the prompt as the system or user message.
-
 export const PromptTestModal = () => {
-  const { state, closeTestModal, setInputVariables, addEditorPvChatPrompt } = usePromptPage();
-  const {
-    currentVersion,
-    editorConfig,
-    mergedIncludedVariables,
-    isTestModalOpen: isOpen,
-    inputVariables,
-    compiledPrompt,
-    compiledMessages,
-  } = state;
+  const currentVersion = usePromptPage((s) => s.currentVersion);
+  const editorConfig = usePromptPage((s) => s.editorConfig);
+  const mergedIncludedVariables = usePromptPage((s) => s.mergedIncludedVariables);
+  const isOpen = usePromptPage((s) => s.isTestModalOpen);
+  const inputVariables = usePromptPage((s) => s.inputVariables);
+  const compiledPrompt = usePromptPage((s) => s.compiledPrompt);
+  const compiledMessages = usePromptPage((s) => s.compiledMessages);
+  const closeTestModal = usePromptPage((s) => s.closeTestModal);
+  const setInputVariables = usePromptPage((s) => s.setInputVariables);
+  const addEditorPvChatPrompt = usePromptPage((s) => s.addEditorPvChatPrompt);
 
   const [isRunning, setIsRunning] = useState(false);
   const [completionContent, setCompletionContent] = useState<string | null>(null);
@@ -423,7 +421,7 @@ export const PromptTestModal = () => {
                 </TabsContent>
               </Tabs>
             ) : (
-              <Card className="text-center">
+              <Card>
                 <CardHeader>
                   <CardTitle>
                     Compiled {currentVersion.type === 'NON_CHAT' ? 'Prompt' : 'Messages'}

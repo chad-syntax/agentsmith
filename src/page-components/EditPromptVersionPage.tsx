@@ -25,9 +25,10 @@ import { EditorActions } from '@/components/prompt-editor/editor-actions';
 import { CreateVersionModal } from '@/components/modals/create-version';
 
 export const EditPromptVersionPage = () => {
-  const { state } = usePromptPage();
-
-  const { currentVersion, missingGlobals, notExistingIncludes, invalidIncludes } = state;
+  const currentVersion = usePromptPage((s) => s.currentVersion);
+  const missingGlobals = usePromptPage((s) => s.missingGlobals);
+  const notExistingIncludes = usePromptPage((s) => s.notExistingIncludes);
+  const invalidIncludes = usePromptPage((s) => s.invalidIncludes);
 
   const { selectedProjectUuid } = useApp();
 
