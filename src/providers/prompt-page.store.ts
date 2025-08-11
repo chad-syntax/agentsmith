@@ -461,9 +461,22 @@ export const createPromptPageStore = (initialState: PromptPageState, deps: Store
         const newEditorPvChatPrompts = [...state.editorPvChatPrompts];
         newEditorPvChatPrompts[index].content = content;
 
+        const allMissingGlobalContext = newEditorPvChatPrompts.flatMap((pvChatPrompt) => {
+          const { missingGlobalContext } = validateGlobalContext(
+            pvChatPrompt.content ?? '',
+            state.globalContext as Record<string, any>,
+          );
+          return missingGlobalContext;
+        });
+
+        const nextMissingGlobals = isEqual(allMissingGlobalContext, state.missingGlobals)
+          ? state.missingGlobals
+          : allMissingGlobalContext;
+
         const newState = {
           ...state,
           editorPvChatPrompts: newEditorPvChatPrompts,
+          missingGlobals: nextMissingGlobals,
           hasChanges: true,
         };
 

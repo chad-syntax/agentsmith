@@ -703,7 +703,7 @@ export type Database = {
       prompt_versions: {
         Row: {
           config: Json
-          content: string
+          content: string | null
           created_at: string
           id: number
           last_sync_content_sha: string | null
@@ -718,7 +718,7 @@ export type Database = {
         }
         Insert: {
           config: Json
-          content: string
+          content?: string | null
           created_at?: string
           id?: number
           last_sync_content_sha?: string | null
@@ -733,7 +733,7 @@ export type Database = {
         }
         Update: {
           config?: Json
-          content?: string
+          content?: string | null
           created_at?: string
           id?: number
           last_sync_content_sha?: string | null
@@ -800,29 +800,35 @@ export type Database = {
       pv_chat_prompts: {
         Row: {
           content: string | null
-          created_at: string | null
+          created_at: string
           id: number
+          index: number
+          last_sync_git_sha: string | null
           prompt_version_id: number
           role: string
-          updated_at: string | null
+          updated_at: string
           uuid: string
         }
         Insert: {
           content?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: number
+          index: number
+          last_sync_git_sha?: string | null
           prompt_version_id: number
           role: string
-          updated_at?: string | null
+          updated_at?: string
           uuid?: string
         }
         Update: {
           content?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: number
+          index?: number
+          last_sync_git_sha?: string | null
           prompt_version_id?: number
           role?: string
-          updated_at?: string | null
+          updated_at?: string
           uuid?: string
         }
         Relationships: [

@@ -54,13 +54,17 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
 
     const editorPvChatPrompts =
       currentVersion.pv_chat_prompts.length > 0
-        ? (currentVersion.pv_chat_prompts as EditorPromptPvChatPrompt[])
-        : [
-            {
-              role: 'system' as const,
-              content: 'You are a helpful assistant.',
-            },
-          ];
+        ? (currentVersion.pv_chat_prompts.sort(
+            (a, b) => a.index - b.index,
+          ) as EditorPromptPvChatPrompt[])
+        : currentVersion.type === 'CHAT'
+          ? [
+              {
+                role: 'system' as const,
+                content: 'You are a helpful assistant.',
+              },
+            ]
+          : [];
 
     const initialState: PromptPageState = {
       prompt,
@@ -89,7 +93,7 @@ export const PromptPageProvider = (props: PromptPageProviderProps) => {
       compiledMessages: [],
       inputVariables: variablesWithDefaults,
       editorVariables: currentVersion.prompt_variables,
-      editorContent: currentVersion.content,
+      editorContent: currentVersion.content ?? '',
       editorConfig: currentVersion.config as any,
       editorPvChatPrompts,
     };

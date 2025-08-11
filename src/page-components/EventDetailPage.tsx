@@ -9,12 +9,16 @@ import { GetEventByUuidResult } from '@/lib/EventsService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database } from '@/app/__generated__/supabase.types';
 import ReactDiffViewer from 'react-diff-viewer-continued-react19';
-import { isPromptLikeSyncChange, SyncChange } from '@/lib/sync/GitHubSyncInstance';
+import type { PromptLikeSyncChange, SyncChange } from '@/lib/sync/GitHubSyncInstance';
 import { DisplayTime } from '@/components/display-time';
 import { isProd } from '@/utils/is-env';
 
 type EventDetailPageProps = {
   event: NonNullable<GetEventByUuidResult>;
+};
+
+const isPromptLikeSyncChange = (syncChange: SyncChange): syncChange is PromptLikeSyncChange => {
+  return 'promptSlug' in syncChange && 'promptVersion' in syncChange;
 };
 
 export const EventDetailPage = (props: EventDetailPageProps) => {

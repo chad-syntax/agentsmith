@@ -26,7 +26,7 @@ export type AgentsmithCreateVersionAction = {
   promptSlug: string;
   version: string;
   versionSha: string;
-  contentSha: string;
+  contentSha: string | null;
   variablesSha: string | null;
 };
 
@@ -79,6 +79,44 @@ export type AgentsmithUpdateContentAction = {
   oldContent: string;
   oldSha: string | null;
   newSha: string;
+};
+
+export type AgentsmithCreateChatPromptAction = {
+  target: 'agentsmith';
+  type: 'create';
+  entity: 'chatPrompt';
+  promptSlug: string;
+  version: string;
+  promptVersionUuid: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  index: number;
+  sha: string;
+};
+
+export type AgentsmithUpdateChatPromptAction = {
+  target: 'agentsmith';
+  type: 'update';
+  entity: 'chatPrompt';
+  promptSlug: string;
+  version: string;
+  promptVersionUuid: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  index: number;
+  oldContent: string | null;
+  oldSha: string | null;
+  newSha: string;
+};
+
+export type AgentsmithDeleteChatPromptAction = {
+  target: 'agentsmith';
+  type: 'delete';
+  entity: 'chatPrompt';
+  promptSlug: string;
+  version: string;
+  promptVersionUuid: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  index: number;
+  oldSha: string | null;
 };
 
 export type RepoCreatePromptAction = {
@@ -199,6 +237,37 @@ export type RepoUpdateAgentsmithTypesAction = {
   entity: 'agentsmithTypes';
 };
 
+export type RepoCreateChatPromptAction = {
+  target: 'repo';
+  type: 'create';
+  entity: 'chatPrompt';
+  promptSlug: string;
+  version: string;
+  promptVersionUuid: string;
+  pvChatPrompt: GetAllPromptsDataResult[number]['prompt_versions'][number]['pv_chat_prompts'][number];
+};
+
+export type RepoUpdateChatPromptAction = {
+  target: 'repo';
+  type: 'update';
+  entity: 'chatPrompt';
+  promptSlug: string;
+  version: string;
+  promptVersionUuid: string;
+  pvChatPrompt: GetAllPromptsDataResult[number]['prompt_versions'][number]['pv_chat_prompts'][number];
+};
+
+export type RepoDeleteChatPromptAction = {
+  target: 'repo';
+  type: 'delete';
+  entity: 'chatPrompt';
+  promptSlug: string;
+  version: string;
+  promptVersionUuid: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  index: number;
+};
+
 export type SyncAction =
   | AgentsmithCreatePromptAction
   | AgentsmithUpdatePromptAction
@@ -208,6 +277,9 @@ export type SyncAction =
   | AgentsmithUpdateVariablesAction
   | AgentsmithDeleteVariablesAction
   | AgentsmithUpdateContentAction
+  | AgentsmithCreateChatPromptAction
+  | AgentsmithUpdateChatPromptAction
+  | AgentsmithDeleteChatPromptAction
   | RepoCreatePromptAction
   | RepoUpdatePromptAction
   // | RepoDeletePromptAction
@@ -222,7 +294,10 @@ export type SyncAction =
   | RepoCreateGlobalsAction
   | RepoUpdateGlobalsAction
   | RepoCreateAgentsmithTypesAction
-  | RepoUpdateAgentsmithTypesAction;
+  | RepoUpdateAgentsmithTypesAction
+  | RepoCreateChatPromptAction
+  | RepoUpdateChatPromptAction
+  | RepoDeleteChatPromptAction;
 
 export const isAgentsmithCreatePromptAction = (
   action: SyncAction,
@@ -264,6 +339,30 @@ export const isAgentsmithUpdateContentAction = (
   action: SyncAction,
 ): action is AgentsmithUpdateContentAction => {
   return action.target === 'agentsmith' && action.entity === 'content' && action.type === 'update';
+};
+
+export const isAgentsmithCreateChatPromptAction = (
+  action: SyncAction,
+): action is AgentsmithCreateChatPromptAction => {
+  return (
+    action.target === 'agentsmith' && action.entity === 'chatPrompt' && action.type === 'create'
+  );
+};
+
+export const isAgentsmithUpdateChatPromptAction = (
+  action: SyncAction,
+): action is AgentsmithUpdateChatPromptAction => {
+  return (
+    action.target === 'agentsmith' && action.entity === 'chatPrompt' && action.type === 'update'
+  );
+};
+
+export const isAgentsmithDeleteChatPromptAction = (
+  action: SyncAction,
+): action is AgentsmithDeleteChatPromptAction => {
+  return (
+    action.target === 'agentsmith' && action.entity === 'chatPrompt' && action.type === 'delete'
+  );
 };
 
 export const isRepoCreatePromptAction = (action: SyncAction): action is RepoCreatePromptAction => {
@@ -348,4 +447,22 @@ export const isRepoUpdateAgentsmithTypesAction = (
   return (
     action.target === 'repo' && action.entity === 'agentsmithTypes' && action.type === 'update'
   );
+};
+
+export const isRepoCreateChatPromptAction = (
+  action: SyncAction,
+): action is RepoCreateChatPromptAction => {
+  return action.target === 'repo' && action.entity === 'chatPrompt' && action.type === 'create';
+};
+
+export const isRepoUpdateChatPromptAction = (
+  action: SyncAction,
+): action is RepoUpdateChatPromptAction => {
+  return action.target === 'repo' && action.entity === 'chatPrompt' && action.type === 'update';
+};
+
+export const isRepoDeleteChatPromptAction = (
+  action: SyncAction,
+): action is RepoDeleteChatPromptAction => {
+  return action.target === 'repo' && action.entity === 'chatPrompt' && action.type === 'delete';
 };

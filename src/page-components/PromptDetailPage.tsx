@@ -126,7 +126,7 @@ export const PromptDetailPage = () => {
                   <AccordionContent>
                     {version.type === 'NON_CHAT' && (
                       <PromptContentEditor
-                        content={version.content}
+                        content={version.content ?? ''}
                         onContentChange={() => {}}
                         minHeight="250px"
                         readOnly

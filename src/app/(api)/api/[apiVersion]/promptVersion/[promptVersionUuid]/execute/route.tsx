@@ -96,16 +96,38 @@ export async function POST(
     );
   }
 
-  const { missingGlobalContext } = validateGlobalContext(
-    promptVersion.content,
-    globalContext as Record<string, any>,
-  );
-
-  if (missingGlobalContext.length > 0) {
-    return NextResponse.json(
-      { error: 'Missing required global context variables', missingGlobalContext },
-      { status: 400 },
+  if (promptVersion.type === 'NON_CHAT') {
+    const { missingGlobalContext } = validateGlobalContext(
+      promptVersion.content ?? '',
+      globalContext as Record<string, any>,
     );
+
+    if (missingGlobalContext.length > 0) {
+      return NextResponse.json(
+        { error: 'Missing required global context variables', missingGlobalContext },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (promptVersion.type === 'CHAT') {
+    const allMissingGlobalContext = promptVersion.pv_chat_prompts.flatMap((pvChatPrompt) => {
+      const { missingGlobalContext } = validateGlobalContext(
+        pvChatPrompt.content ?? '',
+        globalContext as Record<string, any>,
+      );
+      return missingGlobalContext;
+    });
+
+    if (allMissingGlobalContext.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Missing required global context variables',
+          missingGlobalContext: allMissingGlobalContext,
+        },
+        { status: 400 },
+      );
+    }
   }
 
   const openrouterApiKey = await agentsmith.services.organizations.getOrganizationKeySecret(

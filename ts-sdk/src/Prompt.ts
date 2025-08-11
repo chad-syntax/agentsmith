@@ -266,7 +266,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         slug: ip.prompt_versions.prompts.slug,
         version: ip.prompt_versions.version,
         versionUuid: ip.prompt_versions.uuid,
-        content: ip.prompt_versions.content,
+        content: ip.prompt_versions.content ?? '',
         variables: ip.prompt_versions.prompt_variables,
       }));
 
@@ -308,7 +308,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       slug: ip.prompt_versions.prompts.slug,
       version: ip.prompt_versions.version,
       versionUuid: ip.prompt_versions.uuid,
-      content: ip.prompt_versions.content,
+      content: ip.prompt_versions.content ?? '',
       variables: ip.prompt_versions.prompt_variables,
     }));
   }

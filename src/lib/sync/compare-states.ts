@@ -21,9 +21,15 @@ import {
   RepoCreateAgentsmithTypesAction,
   SyncAction,
   RepoUpdateAgentsmithTypesAction,
+  RepoCreateChatPromptAction,
+  RepoDeleteChatPromptAction,
+  RepoUpdateChatPromptAction,
+  AgentsmithCreateChatPromptAction,
+  AgentsmithDeleteChatPromptAction,
+  AgentsmithUpdateChatPromptAction,
 } from './sync-actions';
 import { GetAllPromptsDataResult } from '../PromptsService';
-import { AgentsmithState, RepoState, RepoPrompt, RepoVersion } from './sync-states';
+import { AgentsmithState, RepoState, RepoPrompt, RepoVersion, RepoChatPrompt } from './sync-states';
 import {
   generatePromptJsonContent,
   generatePromptVersionJsonContent,
@@ -182,10 +188,13 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
       }
 
       // content exists in agentsmith and repo, but has a different sha, and is newer than the repo version, update in repo
+      // and the version type is NON_CHAT
       if (
         targetRepoVersion &&
         targetRepoVersion.contentSha !== agentsmithVersion.last_sync_content_sha &&
-        targetRepoVersion.contentLastModified < agentsmithVersion.updated_at
+        targetRepoVersion.contentLastModified &&
+        targetRepoVersion.contentLastModified < agentsmithVersion.updated_at &&
+        agentsmithVersion.type === 'NON_CHAT'
       ) {
         const updateContentAction: RepoUpdateContentAction = {
           type: 'update',
@@ -196,6 +205,56 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
         };
 
         actionPlan.push(updateContentAction);
+      }
+
+      // if the version type is CHAT, we need to iterate over the chat prompts and create/update/delete in repo
+      if (targetRepoVersion && agentsmithVersion.type === 'CHAT') {
+        const repoChatPromptsMap = new Map<string, RepoChatPrompt>(
+          targetRepoVersion.chatPrompts?.map((cp) => [`${cp.role}_${cp.index}`, cp]) || [],
+        );
+
+        console.log('repoChatPromptsMap', repoChatPromptsMap);
+
+        // loop through each chat prompt in agentsmith version
+        for (const agentsmithChatPrompt of agentsmithVersion.pv_chat_prompts) {
+          const targetRepoChatPrompt = repoChatPromptsMap.get(
+            `${agentsmithChatPrompt.role}_${agentsmithChatPrompt.index}`,
+          );
+
+          // if the chat prompt exists in agentsmith, but not in repo, create in repo
+          if (!targetRepoChatPrompt) {
+            const createChatPromptAction: RepoCreateChatPromptAction = {
+              type: 'create',
+              target: 'repo',
+              entity: 'chatPrompt',
+              promptVersionUuid: agentsmithVersion.uuid,
+              promptSlug: agentsmithPrompt.slug,
+              version: agentsmithVersion.version,
+              pvChatPrompt: agentsmithChatPrompt,
+            };
+
+            actionPlan.push(createChatPromptAction);
+          }
+
+          // if the chat prompt exists in both agentsmith and repo, but has a different sha, and is newer than the repo version, update in repo
+          if (
+            targetRepoChatPrompt &&
+            targetRepoChatPrompt.sha !== agentsmithChatPrompt.last_sync_git_sha &&
+            targetRepoChatPrompt.lastModified < agentsmithChatPrompt.updated_at
+          ) {
+            const updateChatPromptAction: RepoUpdateChatPromptAction = {
+              type: 'update',
+              target: 'repo',
+              entity: 'chatPrompt',
+              promptVersionUuid: agentsmithVersion.uuid,
+              promptSlug: agentsmithPrompt.slug,
+              version: agentsmithVersion.version,
+              pvChatPrompt: agentsmithChatPrompt,
+            };
+
+            actionPlan.push(updateChatPromptAction);
+          }
+        }
       }
 
       // version exists in agentsmith and repo, but is archived, delete in repo
@@ -370,6 +429,7 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
         repoPromptVersion.variablesSha === null &&
         targetAgentsmithVersion.last_sync_variables_sha !== null &&
         versionHasVariables &&
+        repoPromptVersion.contentLastModified &&
         repoPromptVersion.contentLastModified > mostRecentVariablesUpdatedAt &&
         targetAgentsmithVersion.status === 'DRAFT' // we do not delete variables for published versions
       ) {
@@ -388,7 +448,11 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
       if (
         targetAgentsmithVersion &&
         targetAgentsmithVersion.last_sync_content_sha !== repoPromptVersion.contentSha &&
-        targetAgentsmithVersion.updated_at < repoPromptVersion.contentLastModified
+        repoPromptVersion.contentLastModified &&
+        targetAgentsmithVersion.updated_at < repoPromptVersion.contentLastModified &&
+        targetAgentsmithVersion.content !== null &&
+        repoPromptVersion.contentSha !== null &&
+        repoPromptVersion.type === 'NON_CHAT'
       ) {
         const oldContent = targetAgentsmithVersion.content;
 
@@ -405,6 +469,91 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
         };
 
         actionPlan.push(updateContentAction);
+      }
+
+      // if the version type is CHAT, we need to iterate over the chat prompts and create/update/delete in agentsmith
+      if (
+        targetAgentsmithVersion &&
+        repoPromptVersion.type === 'CHAT' &&
+        repoPromptVersion.chatPrompts &&
+        repoPromptVersion.chatPrompts.length > 0
+      ) {
+        const agentsmithChatPromptsMap = new Map<
+          string,
+          GetAllPromptsDataResult[number]['prompt_versions'][number]['pv_chat_prompts'][number]
+        >(targetAgentsmithVersion.pv_chat_prompts.map((cp) => [`${cp.role}_${cp.index}`, cp]));
+
+        console.log('agentsmithChatPromptsMap', agentsmithChatPromptsMap);
+
+        for (const repoChatPrompt of repoPromptVersion.chatPrompts) {
+          const targetAgentsmithChatPrompt = agentsmithChatPromptsMap.get(
+            `${repoChatPrompt.role}_${repoChatPrompt.index}`,
+          );
+
+          // if the chat prompt exists in repo but not agentsmith,
+          // and the repo chat prompt last modified is newer than the targetAgentsmithVersion updated_at, create in agentsmith
+          if (
+            !targetAgentsmithChatPrompt &&
+            repoChatPrompt.lastModified > (targetAgentsmithVersion.updated_at ?? 0)
+          ) {
+            const createChatPromptAction: AgentsmithCreateChatPromptAction = {
+              type: 'create',
+              target: 'agentsmith',
+              entity: 'chatPrompt',
+              promptSlug: repoPrompt.slug,
+              version: repoPromptVersion.version,
+              promptVersionUuid: targetAgentsmithVersion.uuid,
+              role: repoChatPrompt.role,
+              index: repoChatPrompt.index,
+              sha: repoChatPrompt.sha,
+            };
+
+            actionPlan.push(createChatPromptAction);
+          }
+
+          // if the chat prompt exists in repo but not in agentsmith,
+          // and the repo chat prompt last modified is older than the targetAgentsmithVersion updated_at, delete in repo
+          if (
+            !targetAgentsmithChatPrompt &&
+            repoChatPrompt.lastModified < (targetAgentsmithVersion.updated_at ?? 0)
+          ) {
+            const deleteChatPromptAction: RepoDeleteChatPromptAction = {
+              type: 'delete',
+              target: 'repo',
+              entity: 'chatPrompt',
+              promptSlug: repoPrompt.slug,
+              version: repoPromptVersion.version,
+              promptVersionUuid: targetAgentsmithVersion.uuid,
+              role: repoChatPrompt.role,
+              index: repoChatPrompt.index,
+            };
+
+            actionPlan.push(deleteChatPromptAction);
+          }
+
+          // if the chat prompt exists in both agentsmith and repo, but has a different sha, and is newer than the agentsmith version, issue update
+          if (
+            targetAgentsmithChatPrompt &&
+            targetAgentsmithChatPrompt.last_sync_git_sha !== repoChatPrompt.sha &&
+            targetAgentsmithChatPrompt.updated_at < repoChatPrompt.lastModified
+          ) {
+            const updateChatPromptAction: AgentsmithUpdateChatPromptAction = {
+              type: 'update',
+              target: 'agentsmith',
+              entity: 'chatPrompt',
+              promptSlug: repoPrompt.slug,
+              version: repoPromptVersion.version,
+              promptVersionUuid: targetAgentsmithVersion.uuid,
+              role: repoChatPrompt.role,
+              index: repoChatPrompt.index,
+              oldContent: targetAgentsmithChatPrompt.content,
+              oldSha: targetAgentsmithChatPrompt.last_sync_git_sha,
+              newSha: repoChatPrompt.sha,
+            };
+
+            actionPlan.push(updateChatPromptAction);
+          }
+        }
       }
     }
   }

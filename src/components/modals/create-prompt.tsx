@@ -103,7 +103,7 @@ export const CreatePromptModal = (props: CreatePromptModalProps) => {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="type">Prompt Type</Label>
-              <Tabs defaultValue="chat" onValueChange={(value) => setType(value as PromptType)}>
+              <Tabs defaultValue="CHAT" onValueChange={(value) => setType(value as PromptType)}>
                 <TabsList className="rounded-md">
                   <TabsTrigger className="cursor-pointer rounded-md" value="CHAT">
                     Chat

@@ -49,3 +49,6 @@ ts-sdk/node_modules
 
 # Docs Build artifacts
 .source
+
+# reports
+reports/

@@ -3,9 +3,15 @@ import { createClient } from '@/lib/supabase/server';
 import { createJwtClient } from '@/lib/supabase/server-api-key';
 import { exchangeApiKeyForJwt } from '@/lib/supabase/server-api-key';
 import { mergeIncludedVariables } from '@/utils/merge-included-variables';
-import { compilePrompt, validateGlobalContext, validateVariables } from '@/utils/template-utils';
+import {
+  compileChatPrompts,
+  compilePrompt,
+  validateGlobalContext,
+  validateVariables,
+} from '@/utils/template-utils';
 import { NextResponse } from 'next/server';
 import { makePromptLoader } from '@/utils/make-prompt-loader';
+import { EditorPromptPvChatPrompt } from '@/lib/PromptsService';
 
 type RequestBody = {
   variables: Record<string, string | number | boolean>;
@@ -86,22 +92,53 @@ export async function POST(
     );
   }
 
-  const { missingGlobalContext } = validateGlobalContext(
-    promptVersion.content,
-    globalContext as Record<string, any>,
-  );
+  const promptLoader = makePromptLoader(promptVersion.prompt_includes);
 
-  if (missingGlobalContext.length > 0) {
+  if (promptVersion.type === 'NON_CHAT') {
+    const { missingGlobalContext } = validateGlobalContext(
+      promptVersion.content ?? '',
+      globalContext as Record<string, any>,
+    );
+
+    if (missingGlobalContext.length > 0) {
+      return NextResponse.json(
+        { error: 'Missing required global context variables', missingGlobalContext },
+        { status: 400 },
+      );
+    }
+
+    const compiledPrompt = compilePrompt(
+      promptVersion.content ?? '',
+      {
+        ...variablesWithDefaults,
+        global: globalContext as Record<string, any>,
+      },
+      promptLoader,
+    );
+
+    return NextResponse.json({ compiledPrompt }, { status: 200 });
+  }
+
+  const allMissingGlobalContext = promptVersion.pv_chat_prompts.flatMap((pvChatPrompt) => {
+    const { missingGlobalContext } = validateGlobalContext(
+      pvChatPrompt.content ?? '',
+      globalContext as Record<string, any>,
+    );
+    return missingGlobalContext;
+  });
+
+  if (allMissingGlobalContext.length > 0) {
     return NextResponse.json(
-      { error: 'Missing required global context variables', missingGlobalContext },
+      {
+        error: 'Missing required global context variables',
+        missingGlobalContext: allMissingGlobalContext,
+      },
       { status: 400 },
     );
   }
 
-  const promptLoader = makePromptLoader(promptVersion.prompt_includes);
-
-  const compiledPrompt = compilePrompt(
-    promptVersion.content,
+  const compiledMessages = compileChatPrompts(
+    promptVersion.pv_chat_prompts as EditorPromptPvChatPrompt[],
     {
       ...variablesWithDefaults,
       global: globalContext as Record<string, any>,
@@ -109,5 +146,5 @@ export async function POST(
     promptLoader,
   );
 
-  return NextResponse.json({ compiledPrompt }, { status: 200 });
+  return NextResponse.json({ compiledMessages }, { status: 200 });
 }
