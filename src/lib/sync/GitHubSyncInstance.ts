@@ -1,3 +1,5 @@
+import path from 'path';
+import fs from 'fs';
 import { Octokit } from '@octokit/core';
 import { AgentsmithSupabaseService } from '../AgentsmithSupabaseService';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -9,8 +11,9 @@ import {
   contentJ2FilePath,
   globalsJsonFilePath,
   agentsmithTypesTsFilePath,
+  chatPromptJ2FilePath,
 } from './repo-paths';
-import { AgentsmithState, RepoState, RepoPrompt, RepoVersion } from './sync-states';
+import { AgentsmithState, RepoState, RepoPrompt, RepoVersion, RepoChatPrompt } from './sync-states';
 import { compareStates } from './compare-states';
 import {
   AgentsmithCreatePromptAction,
@@ -52,11 +55,30 @@ import {
   RepoUpdateGlobalsAction,
   isRepoCreateAgentsmithTypesAction,
   isRepoUpdateAgentsmithTypesAction,
+  isAgentsmithCreateChatPromptAction,
+  isAgentsmithDeleteChatPromptAction,
+  isAgentsmithUpdateChatPromptAction,
+  isRepoCreateChatPromptAction,
+  isRepoDeleteChatPromptAction,
+  isRepoUpdateChatPromptAction,
+  AgentsmithCreateChatPromptAction,
+  AgentsmithDeleteChatPromptAction,
+  AgentsmithUpdateChatPromptAction,
+  RepoCreateChatPromptAction,
+  RepoDeleteChatPromptAction,
+  RepoUpdateChatPromptAction,
 } from './sync-actions';
 import {
   generatePromptJsonContent,
   generatePromptVariablesJsonContent,
   generatePromptVersionJsonContent,
+  isAgentsmithTypesFilePath,
+  isChatPromptFilePath,
+  isGlobalsFilePath,
+  isPromptContentFilePath,
+  isPromptFilePath,
+  isPromptVariablesFilePath,
+  isPromptVersionFilePath,
   parsePromptJSONFile,
   parsePromptVariableJSONFile,
   parsePromptVersionJSONFile,
@@ -68,9 +90,9 @@ import { validateTemplate } from '@/utils/template-utils';
 
 type SyncChangeTarget = 'agentsmith' | 'repo';
 type SyncChangeType = 'create' | 'update' | 'delete';
-type SyncChangeEntity = 'prompt' | 'version' | 'variables' | 'content';
+type SyncChangeEntity = 'prompt' | 'version' | 'variables' | 'content' | 'chatPrompt';
 
-type PromptLikeSyncChange = {
+export type PromptLikeSyncChange = {
   target: SyncChangeTarget;
   type: SyncChangeType;
   entity: SyncChangeEntity;
@@ -103,12 +125,6 @@ type AgentsmithTypesSyncChange = {
 };
 
 export type SyncChange = PromptLikeSyncChange | GlobalsSyncChange | AgentsmithTypesSyncChange;
-
-export const isPromptLikeSyncChange = (
-  syncChange: SyncChange,
-): syncChange is PromptLikeSyncChange => {
-  return 'promptSlug' in syncChange && 'promptVersion' in syncChange;
-};
 
 export const isGlobalsSyncChange = (syncChange: SyncChange): syncChange is GlobalsSyncChange => {
   return syncChange.entity === 'globals';
@@ -152,6 +168,7 @@ type UpdateRepoFileOptions = {
 type DeleteRepoFileOptions = {
   path: string;
   entity: SyncChangeEntity;
+  message: string;
   sha: string;
 };
 
@@ -286,21 +303,48 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
             continue;
           }
 
-          if (!contentFile) {
+          // get all the chat prompts for this version
+          const chatPrompts = folderContentsWithAgentsmithFolder.filter((file) => {
+            const isChatPrompt = isChatPromptFilePath(file.path);
+            const [, , chatPromptSlug, chatPromptVersion] = file.path.split('/');
+            const isVersion = chatPromptVersion === versionNumber;
+            const isPrompt = chatPromptSlug === promptSlug;
+            return isChatPrompt && isVersion && isPrompt;
+          });
+
+          const repoChatPrompts: RepoChatPrompt[] = [];
+
+          for (const chatPrompt of chatPrompts) {
+            const fileName = chatPrompt.path.split('/').at(-1) ?? '';
+            const [role, index] = fileName.split('_');
+
+            repoChatPrompts.push({
+              role: role as RepoChatPrompt['role'],
+              index: parseInt(index),
+              sha: chatPrompt.sha,
+              lastModified: chatPrompt.lastModified,
+            });
+          }
+
+          if (!contentFile && repoChatPrompts.length === 0) {
             this.logger.warn(
-              `content file not found for ${promptSlug} v${versionNumber}, cannot add to state, looked for ${contentFilePath}`,
+              `version ${versionNumber} for ${promptSlug} has no content or chat prompts, skipping`,
             );
             continue;
           }
 
+          const type = contentFile ? 'NON_CHAT' : 'CHAT';
+
           repoVersions.push({
             version: versionNumber,
             versionSha: versionFile.sha,
+            type,
             versionLastModified: versionFile.lastModified,
             variablesSha: variablesFile ? variablesFile.sha : null,
             variablesLastModified: variablesFile ? variablesFile.lastModified : null,
-            contentSha: contentFile.sha,
-            contentLastModified: contentFile.lastModified,
+            contentSha: contentFile?.sha ?? null,
+            contentLastModified: contentFile?.lastModified ?? null,
+            chatPrompts: repoChatPrompts.length > 0 ? repoChatPrompts : null,
           });
         }
 
@@ -362,24 +406,24 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       };
     }
     // for debugging purposes
-    // const reportDir = `reports/${Date.now()}`;
+    const reportDir = `reports/${Date.now()}`;
 
-    // await fs.promises.mkdir(reportDir, { recursive: true });
+    await fs.promises.mkdir(reportDir, { recursive: true });
 
-    // await fs.promises.writeFile(
-    //   path.join(reportDir, 'agentsmith-state.json'),
-    //   JSON.stringify(agentsmithState, null, 2),
-    // );
+    await fs.promises.writeFile(
+      path.join(reportDir, 'agentsmith-state.json'),
+      JSON.stringify(agentsmithState, null, 2),
+    );
 
-    // await fs.promises.writeFile(
-    //   path.join(reportDir, 'repo-state.json'),
-    //   JSON.stringify(repoState, null, 2),
-    // );
+    await fs.promises.writeFile(
+      path.join(reportDir, 'repo-state.json'),
+      JSON.stringify(repoState, null, 2),
+    );
 
-    // await fs.promises.writeFile(
-    //   path.join(reportDir, 'actions.json'),
-    //   JSON.stringify(actions, null, 2),
-    // );
+    await fs.promises.writeFile(
+      path.join(reportDir, 'actions.json'),
+      JSON.stringify(actions, null, 2),
+    );
 
     const numRepoActions = actions.filter((action) => action.target === 'repo').length;
     const numAgentsmithActions = actions.filter((action) => action.target === 'agentsmith').length;
@@ -404,10 +448,10 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     }
 
     // for debugging purposes
-    // await fs.promises.writeFile(
-    //   path.join(reportDir, 'sync-changes.json'),
-    //   JSON.stringify(syncChanges, null, 2),
-    // );
+    await fs.promises.writeFile(
+      path.join(reportDir, 'sync-changes.json'),
+      JSON.stringify(syncChanges, null, 2),
+    );
 
     return {
       syncChanges,
@@ -471,12 +515,13 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         item.sha !== undefined &&
         item.url !== undefined &&
         item.size !== undefined &&
-        (item.path.endsWith('/prompt.json') ||
-          item.path.endsWith('/version.json') ||
-          item.path.endsWith('/variables.json') ||
-          item.path.endsWith('/content.j2') ||
-          item.path.endsWith('globals.json') ||
-          item.path.endsWith('agentsmith.types.ts')),
+        (isPromptFilePath(item.path) ||
+          isPromptVersionFilePath(item.path) ||
+          isPromptVariablesFilePath(item.path) ||
+          isPromptContentFilePath(item.path) ||
+          isGlobalsFilePath(item.path) ||
+          isAgentsmithTypesFilePath(item.path) ||
+          isChatPromptFilePath(item.path)),
     );
 
     // Assert that the filtered files match this hardened type
@@ -597,6 +642,24 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
           break;
         case isRepoDeleteContentAction(action):
           syncChangePromises.push(this._performRepoDeleteContentAction(action));
+          break;
+        case isAgentsmithCreateChatPromptAction(action):
+          syncChangePromises.push(this._performAgentsmithCreateChatPromptAction(action));
+          break;
+        case isAgentsmithUpdateChatPromptAction(action):
+          syncChangePromises.push(this._performAgentsmithUpdateChatPromptAction(action));
+          break;
+        case isAgentsmithDeleteChatPromptAction(action):
+          syncChangePromises.push(this._performAgentsmithDeleteChatPromptAction(action));
+          break;
+        case isRepoCreateChatPromptAction(action):
+          syncChangePromises.push(this._performRepoCreateChatPromptAction(action));
+          break;
+        case isRepoUpdateChatPromptAction(action):
+          syncChangePromises.push(this._performRepoUpdateChatPromptAction(action));
+          break;
+        case isRepoDeleteChatPromptAction(action):
+          syncChangePromises.push(this._performRepoDeleteChatPromptAction(action));
           break;
         case isRepoCreateAgentsmithTypesAction(action):
           // Do nothing, the regenerate needs to be the last action to run below
@@ -852,6 +915,8 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
 
     const config = parsedVersionFile.config as any;
     const content = contentFile.content;
+    const type =
+      (parsedVersionFile.type as Database['public']['Enums']['prompt_type']) ?? 'NON_CHAT';
 
     await this.services.prompts.createPromptVersion({
       projectId: this.projectId,
@@ -864,6 +929,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       versionSha,
       variablesSha,
       contentSha,
+      type,
     });
 
     syncChanges.push(
@@ -1184,6 +1250,18 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       sha,
     });
 
+    syncChanges.push({
+      target: 'repo',
+      type: 'create',
+      entity: 'version',
+      promptSlug,
+      promptVersion: promptVersion.version,
+      oldContent: null,
+      newContent: versionContent,
+      oldSha: null,
+      newSha: sha,
+    });
+
     if (promptVersion.prompt_variables.length > 0) {
       const variablesFilePath = variablesJsonFilePath({
         agentsmithFolder: this.agentsmithFolder,
@@ -1221,44 +1299,35 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       });
     }
 
-    const contentFilePath = contentJ2FilePath({
-      agentsmithFolder: this.agentsmithFolder,
-      promptSlug,
-      version: promptVersion.version,
-    });
-
-    const contentContent = promptVersion.content;
-
-    const { isValid, error } = validateTemplate(contentContent);
-
-    if (!isValid) {
-      throw new Error(`Invalid content for ${contentFilePath} at ref ${this.branchRef}: ${error}`);
-    }
-
-    const { sha: contentSha } = await this._createRepoFile({
-      path: contentFilePath,
-      content: contentContent,
-      message: `create content ${promptSlug}:${promptVersion.version}`,
-    });
-
-    await this.services.prompts.updatePromptVersionContentSha({
-      promptVersionUuid: promptVersion.uuid,
-      sha: contentSha,
-    });
-
-    syncChanges.push(
-      {
-        target: 'repo',
-        type: 'create',
-        entity: 'version',
+    if (promptVersion.type === 'NON_CHAT') {
+      const contentFilePath = contentJ2FilePath({
+        agentsmithFolder: this.agentsmithFolder,
         promptSlug,
-        promptVersion: promptVersion.version,
-        oldContent: null,
-        newContent: versionContent,
-        oldSha: null,
-        newSha: sha,
-      },
-      {
+        version: promptVersion.version,
+      });
+
+      const contentContent = promptVersion.content;
+
+      const { isValid, error } = validateTemplate(contentContent ?? '');
+
+      if (!isValid) {
+        throw new Error(
+          `Invalid content for ${contentFilePath} at ref ${this.branchRef}: ${error}`,
+        );
+      }
+
+      const { sha: contentSha } = await this._createRepoFile({
+        path: contentFilePath,
+        content: contentContent ?? '',
+        message: `create content ${promptSlug}:${promptVersion.version}`,
+      });
+
+      await this.services.prompts.updatePromptVersionContentSha({
+        promptVersionUuid: promptVersion.uuid,
+        sha: contentSha,
+      });
+
+      syncChanges.push({
         target: 'repo',
         type: 'create',
         entity: 'content',
@@ -1268,8 +1337,61 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         newContent: contentContent,
         oldSha: null,
         newSha: contentSha,
-      },
-    );
+      });
+    }
+
+    if (promptVersion.pv_chat_prompts.length > 0) {
+      const chatPromptSyncChanges = await Promise.all(
+        promptVersion.pv_chat_prompts.map(async (chatPrompt, index) => {
+          const chatPromptFilePath = chatPromptJ2FilePath({
+            agentsmithFolder: this.agentsmithFolder,
+            promptSlug,
+            version: promptVersion.version,
+            role: chatPrompt.role as 'user' | 'assistant' | 'system' | 'tool',
+            index,
+          });
+
+          const chatPromptContent = chatPrompt.content;
+
+          const { isValid, error } = validateTemplate(chatPromptContent ?? '');
+
+          if (!isValid) {
+            throw new Error(
+              `Invalid chat prompt for ${chatPromptFilePath} at ref ${this.branchRef}: ${error}`,
+            );
+          }
+
+          const { sha: chatPromptSha } = await this._createRepoFile({
+            path: chatPromptFilePath,
+            content: chatPromptContent ?? '',
+            message: `create chat prompt ${promptSlug}:${promptVersion.version}:${chatPrompt.role}_${index}`,
+          });
+
+          await this.services.prompts.updatePromptVersionChatPromptSha({
+            promptVersionUuid: promptVersion.uuid,
+            role: chatPrompt.role as 'user' | 'assistant' | 'system' | 'tool',
+            index,
+            sha: chatPromptSha,
+          });
+
+          const syncChange: SyncChange = {
+            target: 'repo',
+            type: 'create',
+            entity: 'chatPrompt',
+            promptSlug,
+            promptVersion: promptVersion.version,
+            oldContent: null,
+            newContent: chatPromptContent,
+            oldSha: null,
+            newSha: chatPromptSha,
+          };
+
+          return syncChange;
+        }),
+      );
+
+      syncChanges.push(...chatPromptSyncChanges);
+    }
 
     return syncChanges;
   }
@@ -1345,7 +1467,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
 
     const { sha } = await this._updateRepoFile({
       path: contentFilePath,
-      content: contentContent,
+      content: contentContent ?? '',
       message,
       sha: oldFile.sha,
     });
@@ -1389,9 +1511,12 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       throw new Error(`Failed to get file content for ${versionFilePath} at ref ${this.branchRef}`);
     }
 
+    const message = `delete version ${promptSlug}:${promptVersion.version}`;
+
     await this._deleteRepoFile({
       path: versionFilePath,
       entity: 'version',
+      message,
       sha: versionFile.sha,
     });
 
@@ -1415,9 +1540,12 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         );
       }
 
+      const message = `delete variables ${promptSlug}:${promptVersion.version}`;
+
       await this._deleteRepoFile({
         path: variablesFilePath,
         entity: 'variables',
+        message,
         sha: variablesFile.sha,
       });
 
@@ -1451,9 +1579,12 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
       throw new Error(`Failed to get file content for ${contentFilePath} at ref ${this.branchRef}`);
     }
 
+    const deleteMessage = `delete content ${promptSlug}:${promptVersion.version}`;
+
     await this._deleteRepoFile({
       path: contentFilePath,
       entity: 'content',
+      message: deleteMessage,
       sha: contentFile.sha,
     });
 
@@ -1611,6 +1742,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     await this._deleteRepoFile({
       path: variablesFilePath,
       entity: 'variables',
+      message: `delete variables ${promptSlug}:${version}`,
       sha: oldFile.sha,
     });
 
@@ -1654,6 +1786,7 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
     await this._deleteRepoFile({
       path: contentFilePath,
       entity: 'content',
+      message: `delete content ${promptSlug}:${version}`,
       sha: oldFile.sha,
     });
 
@@ -1667,6 +1800,290 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         target: 'repo',
         type: 'delete',
         entity: 'content',
+        promptSlug,
+        promptVersion: version,
+        oldContent: oldFile.content,
+        newContent: null,
+        oldSha: oldFile.sha,
+        newSha: null,
+      },
+    ];
+  }
+
+  private async _performAgentsmithCreateChatPromptAction(
+    action: AgentsmithCreateChatPromptAction,
+  ): Promise<SyncChange[]> {
+    const { promptSlug, version, promptVersionUuid, role, index } = action;
+
+    // get the file path
+    const chatPromptFilePath = chatPromptJ2FilePath({
+      agentsmithFolder: this.agentsmithFolder,
+      promptSlug,
+      version,
+      role,
+      index,
+    });
+
+    // get the file contents
+    const chatPromptContent = await this._getRepoFileContentString(chatPromptFilePath);
+
+    if (!chatPromptContent) {
+      throw new Error(
+        `Failed to get file content for ${chatPromptFilePath} at ref ${this.branchRef}`,
+      );
+    }
+
+    // create the record in agentsmith
+    this.services.prompts.createPromptVersionChatPrompt({
+      promptVersionUuid,
+      role,
+      index,
+      content: chatPromptContent.content,
+      sha: chatPromptContent.sha,
+    });
+
+    return [
+      {
+        target: 'agentsmith',
+        type: 'create',
+        entity: 'chatPrompt',
+        promptSlug,
+        promptVersion: version,
+        oldContent: null,
+        newContent: chatPromptContent.content,
+        oldSha: null,
+        newSha: chatPromptContent.sha,
+      },
+    ];
+  }
+
+  private async _performAgentsmithUpdateChatPromptAction(
+    action: AgentsmithUpdateChatPromptAction,
+  ): Promise<SyncChange[]> {
+    const { promptSlug, version, promptVersionUuid, role, index, oldContent, oldSha, newSha } =
+      action;
+
+    // get the file path
+    const chatPromptFilePath = chatPromptJ2FilePath({
+      agentsmithFolder: this.agentsmithFolder,
+      promptSlug,
+      version,
+      role,
+      index,
+    });
+
+    // get the file contents
+    const chatPromptContent = await this._getRepoFileContentString(chatPromptFilePath);
+
+    if (!chatPromptContent) {
+      throw new Error(
+        `Failed to get file content for ${chatPromptFilePath} at ref ${this.branchRef}`,
+      );
+    }
+
+    // update the record in agentsmith
+    this.services.prompts.updatePromptVersionChatPrompt({
+      promptVersionUuid,
+      role,
+      index,
+      content: chatPromptContent.content,
+      sha: newSha,
+    });
+
+    return [
+      {
+        target: 'agentsmith',
+        type: 'update',
+        entity: 'chatPrompt',
+        promptSlug,
+        promptVersion: version,
+        oldContent: oldContent,
+        newContent: chatPromptContent.content,
+        oldSha: oldSha,
+        newSha: newSha,
+      },
+    ];
+  }
+
+  private async _performAgentsmithDeleteChatPromptAction(
+    action: AgentsmithDeleteChatPromptAction,
+  ): Promise<SyncChange[]> {
+    const { promptSlug, version, promptVersionUuid, role, index, oldSha } = action;
+
+    // get the file path
+    const chatPromptFilePath = chatPromptJ2FilePath({
+      agentsmithFolder: this.agentsmithFolder,
+      promptSlug,
+      version,
+      role,
+      index,
+    });
+
+    // get the file contents
+    const chatPromptContent = await this._getRepoFileContentString(chatPromptFilePath);
+
+    if (!chatPromptContent) {
+      throw new Error(
+        `Failed to get file content for ${chatPromptFilePath} at ref ${this.branchRef}`,
+      );
+    }
+
+    // delete the record in agentsmith
+    this.services.prompts.deletePromptVersionChatPrompt({
+      promptVersionUuid,
+      role,
+      index,
+    });
+
+    return [
+      {
+        target: 'agentsmith',
+        type: 'delete',
+        entity: 'chatPrompt',
+        promptSlug,
+        promptVersion: version,
+        oldContent: chatPromptContent.content,
+        newContent: null,
+        oldSha: oldSha,
+        newSha: null,
+      },
+    ];
+  }
+
+  private async _performRepoCreateChatPromptAction(
+    action: RepoCreateChatPromptAction,
+  ): Promise<SyncChange[]> {
+    const { promptSlug, promptVersionUuid, version, pvChatPrompt } = action;
+
+    // get the file path
+    const chatPromptFilePath = chatPromptJ2FilePath({
+      agentsmithFolder: this.agentsmithFolder,
+      promptSlug,
+      version,
+      role: pvChatPrompt.role as 'user' | 'assistant' | 'system' | 'tool',
+      index: pvChatPrompt.index,
+    });
+
+    // write the file to github
+    const { sha } = await this._createRepoFile({
+      path: chatPromptFilePath,
+      content: pvChatPrompt.content || '',
+      message: `create chat prompt ${promptSlug}:${version}:${pvChatPrompt.role}_${pvChatPrompt.index}`,
+    });
+
+    // update the sha in agentsmith
+    this.services.prompts.updatePromptVersionChatPromptSha({
+      promptVersionUuid,
+      role: pvChatPrompt.role as 'user' | 'assistant' | 'system' | 'tool',
+      index: pvChatPrompt.index,
+      sha,
+    });
+
+    return [
+      {
+        target: 'repo',
+        type: 'create',
+        entity: 'chatPrompt',
+        promptSlug,
+        promptVersion: version,
+        oldContent: null,
+        newContent: pvChatPrompt.content || '',
+        oldSha: null,
+        newSha: sha,
+      },
+    ];
+  }
+
+  private async _performRepoUpdateChatPromptAction(
+    action: RepoUpdateChatPromptAction,
+  ): Promise<SyncChange[]> {
+    const { promptSlug, promptVersionUuid, version, pvChatPrompt } = action;
+
+    // get the file path
+    const chatPromptFilePath = chatPromptJ2FilePath({
+      agentsmithFolder: this.agentsmithFolder,
+      promptSlug,
+      version,
+      role: pvChatPrompt.role as 'user' | 'assistant' | 'system' | 'tool',
+      index: pvChatPrompt.index,
+    });
+
+    // get the old file contents
+    const oldFile = await this._getRepoFileContentString(chatPromptFilePath);
+
+    if (!oldFile) {
+      throw new Error(
+        `Failed to get file content for ${chatPromptFilePath} at ref ${this.branchRef}`,
+      );
+    }
+
+    // write the file to github
+    const { sha } = await this._updateRepoFile({
+      path: chatPromptFilePath,
+      content: pvChatPrompt.content || '',
+      message: `update chat prompt ${promptSlug}:${version}:${pvChatPrompt.role}_${pvChatPrompt.index}`,
+      sha: oldFile.sha,
+    });
+
+    // update the sha in agentsmith
+    this.services.prompts.updatePromptVersionChatPromptSha({
+      promptVersionUuid,
+      role: pvChatPrompt.role as 'user' | 'assistant' | 'system' | 'tool',
+      index: pvChatPrompt.index,
+      sha,
+    });
+
+    return [
+      {
+        target: 'repo',
+        type: 'update',
+        entity: 'chatPrompt',
+        promptSlug,
+        promptVersion: version,
+        oldContent: oldFile.content,
+        newContent: pvChatPrompt.content || '',
+        oldSha: oldFile.sha,
+        newSha: sha,
+      },
+    ];
+  }
+
+  private async _performRepoDeleteChatPromptAction(
+    action: RepoDeleteChatPromptAction,
+  ): Promise<SyncChange[]> {
+    const { promptSlug, version, role, index } = action;
+
+    // get the file path
+    const chatPromptFilePath = chatPromptJ2FilePath({
+      agentsmithFolder: this.agentsmithFolder,
+      promptSlug,
+      version,
+      role,
+      index,
+    });
+
+    // get the old file contents
+    const oldFile = await this._getRepoFileContentString(chatPromptFilePath);
+
+    if (!oldFile) {
+      throw new Error(
+        `Failed to get file content for ${chatPromptFilePath} at ref ${this.branchRef}`,
+      );
+    }
+
+    // delete the file from github
+    await this._deleteRepoFile({
+      path: chatPromptFilePath,
+      entity: 'chatPrompt',
+      message: `delete chat prompt ${promptSlug}:${version}:${role}_${index}`,
+      sha: oldFile.sha,
+    });
+
+    return [
+      {
+        target: 'repo',
+        type: 'delete',
+        entity: 'chatPrompt',
         promptSlug,
         promptVersion: version,
         oldContent: oldFile.content,
@@ -1801,16 +2218,14 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
   }
 
   private async _deleteRepoFile(options: DeleteRepoFileOptions): Promise<void> {
-    const { path, entity, sha } = options;
-
-    const message = `Agentsmith Sync: delete ${entity}`;
+    const { path, entity, message, sha } = options;
 
     await this.octokit.request('DELETE /repos/{owner}/{repo}/contents/{path}', {
       owner: this.owner,
       repo: this.repo,
       path,
       message,
-      ref: this.branchRef,
+      branch: this.branchRef,
       sha,
     });
   }

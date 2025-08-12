@@ -6,12 +6,14 @@ import {
   PromptJSONFileContent,
   PromptVersionFileJSONContent,
   PromptVariableFileJSONContent,
+  isChatPromptFilePath,
 } from '@/lib/sync/repo-file-formats';
 import {
   promptJsonFilePath,
   versionJsonFilePath,
   contentJ2FilePath,
   variablesJsonFilePath,
+  versionDirectoryPath,
 } from '@/lib/sync/repo-paths';
 import {
   validateVariables,
@@ -29,7 +31,8 @@ import {
   ExecuteOptions,
   ExecuteImplementationResult,
   CompileOptions,
-  CompileResult,
+  NonChatCompileResult,
+  ChatCompileResult,
   CompileSignature,
   ExecuteSignature,
 } from './types';
@@ -52,8 +55,13 @@ type FetchedPromptFromFileSystem = {
   meta: PromptJSONFileContent;
   version: PromptVersionFileJSONContent;
   variables: PromptVariableFileJSONContent;
-  content: string;
+  content: string | null;
   includedPrompts: FetchedPromptFromFileSystem[];
+  chatPrompts: {
+    role: 'system' | 'user' | 'assistant' | 'tool';
+    index: number;
+    content: string;
+  }[];
 };
 
 type PromptConstructorOptions<
@@ -88,8 +96,9 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
   public version!: {
     uuid: string;
     version: string;
+    type: 'CHAT' | 'NON_CHAT';
     config: GetPromptConfig<Agency, PromptArg>;
-    content: string;
+    content: string | null;
   };
   public variables!: {
     uuid: string;
@@ -102,7 +111,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     slug: string;
     version: string;
     versionUuid: string;
-    content: string;
+    content: string | null;
     variables: {
       uuid: string;
       name: string;
@@ -111,6 +120,13 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       default_value?: string | null;
     }[];
   }[];
+  public chatPrompts!:
+    | {
+        role: 'system' | 'user' | 'assistant' | 'tool';
+        index: number;
+        content: string;
+      }[]
+    | null;
 
   public execute: ExecuteSignature<Agency, PromptArg>;
   public compile: CompileSignature<Agency, PromptArg>;
@@ -209,7 +225,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
   }
 
   private async _initFromFileSystem() {
-    const { meta, version, variables, content, includedPrompts } =
+    const { meta, version, variables, content, includedPrompts, chatPrompts } =
       await this.fetchPromptFromFileSystem(this.slug, this.argVersion);
 
     this.meta = meta;
@@ -218,6 +234,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       config: version.config as GetPromptConfig<Agency, PromptArg>,
       content,
     };
+    this.chatPrompts = chatPrompts;
     this.variables = variables;
     this.includedPrompts = includedPrompts.map((ip) => ({
       slug: ip.meta.slug,
@@ -237,7 +254,22 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       const { data, error } = await this.client.supabase
         .from('prompt_versions')
         .select(
-          'uuid, version, config, content, prompt_variables(uuid, name, type, required, default_value), prompts!inner(uuid, name, slug), prompt_includes!prompt_version_id(prompt_versions!included_prompt_version_id(uuid, version, content, prompts(slug), prompt_variables(uuid, name, type, required, default_value)))',
+          `uuid, 
+          version, 
+          type,
+          config, 
+          content, 
+          prompt_variables(uuid, name, type, required, default_value), 
+          prompts!inner(uuid, name, slug), 
+          prompt_includes!prompt_version_id(
+            prompt_versions!included_prompt_version_id(
+              uuid, 
+              version, 
+              content, 
+              prompts(slug), 
+              prompt_variables(uuid, name, type, required, default_value)
+            )
+          )`,
         )
         .eq('prompts.slug', this.slug)
         .eq('version', this.argVersion)
@@ -266,7 +298,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         slug: ip.prompt_versions.prompts.slug,
         version: ip.prompt_versions.version,
         versionUuid: ip.prompt_versions.uuid,
-        content: ip.prompt_versions.content,
+        content: ip.prompt_versions.content ?? '',
         variables: ip.prompt_versions.prompt_variables,
       }));
 
@@ -276,7 +308,24 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     const { data, error } = await this.client.supabase
       .from('prompt_versions')
       .select(
-        'uuid, version, config, content, prompt_variables(uuid, name, type, required, default_value), prompts!inner(uuid, name, slug), prompt_includes!prompt_version_id(prompt_versions!included_prompt_version_id(uuid, version, content, prompts(slug), prompt_variables(uuid, name, type, required, default_value)))',
+        `
+        uuid, 
+        version, 
+        type,
+        config, 
+        content, 
+        prompts!inner(uuid, name, slug),
+        prompt_variables(uuid, name, type, required, default_value),
+        pv_chat_prompts(uuid, role, index, content),
+        prompt_includes!prompt_version_id(
+          prompt_versions!included_prompt_version_id(
+            uuid, 
+            version, 
+            content, 
+            prompts(slug), 
+            prompt_variables(uuid, name, type, required, default_value)
+          )
+        )`,
       )
       .eq('prompts.slug', this.slug)
       .eq('status', 'PUBLISHED')
@@ -295,7 +344,8 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       );
     }
 
-    const { prompts, prompt_variables, prompt_includes, ...version } = latestVersion;
+    const { prompts, prompt_variables, prompt_includes, pv_chat_prompts, ...version } =
+      latestVersion;
 
     this.meta = prompts;
     this.version = {
@@ -303,12 +353,17 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       config: version.config as GetPromptConfig<Agency, PromptArg>,
       content: version.content as GetPromptContent<Agency, PromptArg>,
     };
+    this.chatPrompts = pv_chat_prompts as {
+      role: 'system' | 'user' | 'assistant' | 'tool';
+      index: number;
+      content: string;
+    }[];
     this.variables = prompt_variables;
     this.includedPrompts = prompt_includes.map((ip) => ({
       slug: ip.prompt_versions.prompts.slug,
       version: ip.prompt_versions.version,
       versionUuid: ip.prompt_versions.uuid,
-      content: ip.prompt_versions.content,
+      content: ip.prompt_versions.content ?? '',
       variables: ip.prompt_versions.prompt_variables,
     }));
   }
@@ -361,9 +416,44 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       version,
     });
 
-    const contentJ2FileContent = await fs.promises.readFile(contentJ2Path, 'utf-8');
+    try {
+      const contentJ2FileContent = await fs.promises.readFile(contentJ2Path, 'utf-8');
 
-    return contentJ2FileContent;
+      return contentJ2FileContent;
+    } catch (err: any) {
+      if (err.code === 'ENOENT') {
+        return null;
+      }
+      throw err;
+    }
+  }
+
+  private async fetchChatPromptsFromFileSystem(slug: string, version: string) {
+    const versionDirectory = versionDirectoryPath({
+      agentsmithFolder: this.client.agentsmithDirectory,
+      promptSlug: slug,
+      version,
+    });
+
+    // read version directory and get all chat prompts
+    const dirContents = await fs.promises.readdir(versionDirectory);
+
+    const chatPromptFiles = dirContents.filter((file) => isChatPromptFilePath(file));
+
+    const chatPrompts = await Promise.all(
+      chatPromptFiles.map(async (chatPromptFile) => {
+        const chatPromptPath = path.join(versionDirectory, chatPromptFile);
+        const chatPromptContent = await fs.promises.readFile(chatPromptPath, 'utf-8');
+        const [role, index] = chatPromptFile.split('_');
+        return {
+          role: role as 'system' | 'user' | 'assistant' | 'tool',
+          index: parseInt(index),
+          content: chatPromptContent,
+        };
+      }),
+    );
+
+    return chatPrompts;
   }
 
   private async fetchPromptFromFileSystem(
@@ -387,14 +477,45 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       this.fetchPromptContentFromFileSystem(slug, targetVersion),
     ]);
 
-    const { includes } = extract(content);
+    let includedPrompts: FetchedPromptFromFileSystem[] = [];
+    let chatPrompts: {
+      role: 'system' | 'user' | 'assistant' | 'tool';
+      index: number;
+      content: string;
+    }[] = [];
 
-    const includedPrompts = await Promise.all(
-      includes.map(async (include) => {
-        const includedPrompt = await this.fetchPromptFromFileSystem(include.slug, include.version);
-        return includedPrompt;
-      }),
-    );
+    if (versionJson.type === 'NON_CHAT' && content) {
+      const { includes } = extract(content);
+
+      includedPrompts = await Promise.all(
+        includes.map(async (include) => {
+          const includedPrompt = await this.fetchPromptFromFileSystem(
+            include.slug,
+            include.version,
+          );
+          return includedPrompt;
+        }),
+      );
+    } else {
+      chatPrompts = await this.fetchChatPromptsFromFileSystem(slug, targetVersion);
+
+      const allIncludes = [];
+
+      for (const chatPrompt of chatPrompts) {
+        const { includes } = extract(chatPrompt.content);
+        allIncludes.push(...includes);
+      }
+
+      includedPrompts = await Promise.all(
+        allIncludes.map(async (include) => {
+          const includedPrompt = await this.fetchPromptFromFileSystem(
+            include.slug,
+            include.version,
+          );
+          return includedPrompt;
+        }),
+      );
+    }
 
     return {
       meta: promptJson,
@@ -402,6 +523,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       variables: variablesJson,
       content,
       includedPrompts,
+      chatPrompts,
     };
   }
 
@@ -432,7 +554,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     return [variables, options];
   }
 
-  private async _compile(...args: any[]): Promise<CompileResult> {
+  private async _compile(...args: any[]): Promise<NonChatCompileResult | ChatCompileResult> {
     if (this.client.abortController.signal.aborted) {
       throw new Error('Client shutdown, compilation aborted');
     }
@@ -462,10 +584,22 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       throw new Error('Missing required variables');
     }
 
-    const { missingGlobalContext } = validateGlobalContext(this.version.content, globals);
+    if (this.version.type === 'NON_CHAT' && this.version.content) {
+      const { missingGlobalContext } = validateGlobalContext(this.version.content, globals);
 
-    if (missingGlobalContext.length > 0) {
-      throw new Error('Missing required global context variables');
+      if (missingGlobalContext.length > 0) {
+        throw new Error('Missing required global context variables');
+      }
+    }
+
+    if (this.version.type === 'CHAT' && this.chatPrompts) {
+      for (const chatPrompt of this.chatPrompts) {
+        const { missingGlobalContext } = validateGlobalContext(chatPrompt.content, globals);
+
+        if (missingGlobalContext.length > 0) {
+          throw new Error('Missing required global context variables');
+        }
+      }
     }
 
     const finalGlobalContext = merge(globals, globalOverrides);
@@ -487,12 +621,30 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         throw new Error(`Included prompt ${slug}@${version} not found`);
       }
 
-      return includedPromptVersion.content;
+      return includedPromptVersion.content ?? '';
     };
 
-    const compiledPrompt = compilePrompt(this.version.content, finalVariables, promptLoader);
+    if (this.version.type === 'NON_CHAT' && this.version.content) {
+      const compiledPrompt = compilePrompt(this.version.content, finalVariables, promptLoader);
 
-    return { compiledPrompt, finalVariables };
+      return { compiledPrompt, finalVariables };
+    }
+
+    const compiledMessages =
+      this.chatPrompts === null
+        ? []
+        : this.chatPrompts
+            .sort((a, b) => a.index - b.index)
+            .map((chatPrompt) => {
+              const compiledPrompt = compilePrompt(
+                chatPrompt.content,
+                finalVariables,
+                promptLoader,
+              );
+              return { role: chatPrompt.role, content: compiledPrompt };
+            });
+
+    return { compiledMessages, finalVariables };
   }
 
   private async logCompletionToFile(options: LogCompletionToFileOptions) {
@@ -513,6 +665,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
             prompt: this.meta,
             promptVersion: this.version,
             variables,
+            chatPrompts: this.chatPrompts,
           })
         : `${Date.now()}-${logUuid}`;
 
@@ -542,7 +695,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
       ExecuteOptions<Agency>
     >(args, isExecuteOptions);
 
-    const { compiledPrompt, finalVariables } = await this.compile(variables, options);
+    const compileResult = await this.compile(variables, options);
 
     const { config: configOverrides } = options ?? {
       config: {},
@@ -556,7 +709,14 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
 
     // Create a log entry before making the API call
     const rawInput: OpenrouterRequestBody = {
-      messages: [{ role: 'user', content: compiledPrompt }],
+      ...(this.version.type === 'CHAT' && 'compiledMessages' in compileResult
+        ? { messages: compileResult.compiledMessages }
+        : {}),
+      ...(this.version.type === 'NON_CHAT' && 'compiledPrompt' in compileResult
+        ? finalConfig.models.includes('openrouter/auto')
+          ? { messages: [{ role: 'user', content: compileResult.compiledPrompt }] }
+          : { prompt: compileResult.compiledPrompt }
+        : {}),
       ...finalConfig,
     };
 
@@ -579,7 +739,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
     const logEntryPromise = this.client.supabase.rpc('create_llm_log_entry', {
       arg_project_uuid: this.client.projectUuid,
       arg_version_uuid: this.version.uuid,
-      arg_variables: finalVariables,
+      arg_variables: compileResult.finalVariables,
       arg_raw_input: rawInput as Json,
     });
 
@@ -685,7 +845,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
             logUuid,
             rawInput,
             rawOutput: fullCompletion,
-            variables: finalVariables,
+            variables: compileResult.finalVariables,
           });
           if (logUuid) {
             await llmLogsService.updateLogWithCompletion(logUuid, fullCompletion);
@@ -704,8 +864,12 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
             return logEntry?.log_uuid;
           },
           response,
-          compiledPrompt,
-          finalVariables,
+          ...(this.version.type === 'NON_CHAT' && 'compiledPrompt' in compileResult
+            ? { compiledPrompt: compileResult.compiledPrompt }
+            : {}),
+          ...(this.version.type === 'CHAT' && 'compiledMessages' in compileResult
+            ? { compiledMessages: compileResult.compiledMessages }
+            : {}),
         } as unknown as ExecuteImplementationResult<Agency, PromptArg>;
       }
 
@@ -727,7 +891,7 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
             logUuid,
             rawInput,
             rawOutput: completion,
-            variables: finalVariables,
+            variables: compileResult.finalVariables,
           });
         }
       });
@@ -742,8 +906,13 @@ export class Prompt<Agency extends GenericAgency, PromptArg extends PromptIdenti
         response,
         content,
         reasoning,
-        compiledPrompt,
-        finalVariables,
+        ...(this.version.type === 'NON_CHAT' && 'compiledPrompt' in compileResult
+          ? { compiledPrompt: compileResult.compiledPrompt }
+          : {}),
+        ...(this.version.type === 'CHAT' && 'compiledMessages' in compileResult
+          ? { compiledMessages: compileResult.compiledMessages }
+          : {}),
+        finalVariables: compileResult.finalVariables,
         toolCalls,
       } as unknown as ExecuteImplementationResult<Agency, PromptArg>;
     } catch (error) {

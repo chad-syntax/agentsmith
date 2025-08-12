@@ -1,7 +1,6 @@
 'use client';
 
 import { Database } from '@/app/__generated__/supabase.types';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -21,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/utils/shadcn';
 import { EditorPromptVariable } from '@/types/prompt-editor';
 import { usePromptPage } from '@/providers/prompt-page';
-import { VariableInput } from '../variable-input';
+import { VariableInput } from './variable-input';
 
 type VariableType = Database['public']['Enums']['variable_type'];
 
@@ -40,8 +39,8 @@ type VariablesEditorProps = {
 export const VariablesEditor = (props: VariablesEditorProps) => {
   const { readOnly = false, className } = props;
 
-  const { state, updateEditorVariables } = usePromptPage();
-  const { editorVariables } = state;
+  const editorVariables = usePromptPage((s) => s.editorVariables);
+  const updateEditorVariables = usePromptPage((s) => s.updateEditorVariables);
 
   const updateVariable = (
     index: number,

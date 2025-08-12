@@ -7,8 +7,16 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import posthog from 'posthog-js';
+import { ReactNode } from 'react';
 
-const faqData = [
+type FaqItem = {
+  value: string;
+  trigger: string;
+  content: ReactNode;
+  jsonLdContent?: string;
+};
+
+const faqData: FaqItem[] = [
   {
     value: 'prompt-cms',
     trigger: 'What is a Prompt CMS?',
@@ -19,7 +27,38 @@ const faqData = [
     value: 'improve-ai-development',
     trigger: 'How does Agentsmith improve my AI agent development process?',
     content:
-      'Agentsmith streamlines AI agent development with intuitive prompt authoring for all skill levels, robust testing capabilities, seamless Git integration for version control, and typesafe SDKs (TypeScript & Python). This means you can build, refine, and deploy more reliable AI agents, faster.',
+      'Agentsmith streamlines AI agent development by providing a centralized platform for managing prompts, testing, and versioning. It allows you to refine your prompts and then safely hand them off to your engineering team to integrate into the codebase.',
+  },
+  {
+    value: 'byok-llm-provider',
+    trigger: 'Can I bring my own LLM provider keys?',
+    content: (
+      <>
+        Yes you can! OpenRouter supports BYOK, read more here:{' '}
+        <a
+          href="https://openrouter.ai/docs/use-cases/byok"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:text-blue-800 underline"
+        >
+          https://openrouter.ai/docs/use-cases/byok
+        </a>
+      </>
+    ),
+    jsonLdContent:
+      'Yes you can! OpenRouter supports BYOK, read more here: https://openrouter.ai/docs/use-cases/byok',
+  },
+  {
+    value: 'execute-prompts',
+    trigger: 'Do I have to use Agentsmith to execute my prompts?',
+    content:
+      'Nope! You can use Agentsmith to just organize and compile your prompts. Once the prompts are compiled you have just a string or a messages array to pass along to whatever setup you have.',
+  },
+  {
+    value: 'use-openrouter',
+    trigger: 'Do I have to use OpenRouter?',
+    content:
+      'OpenRouter is required to use the Agentsmith Studio as it executes prompts for testing and evaluating. You do not have to use OpenRouter in your codebase, you can use Agentsmith to only compile your prompts and then you can decide what to do.',
   },
   {
     value: 'user-friendliness',
@@ -54,7 +93,20 @@ const faqData = [
   {
     value: 'support-options',
     trigger: 'How do I get support?',
-    content:
+    content: (
+      <>
+        Send an email to{' '}
+        <a
+          href="mailto:support@agentsmith.dev"
+          className="text-blue-600 hover:text-blue-800 underline"
+        >
+          support@agentsmith.dev
+        </a>
+        . All users, including those on the Community plan, can access community support through our
+        GitHub repository and participate in discussions.
+      </>
+    ),
+    jsonLdContent:
       'Send an email to support@agentsmith.dev. All users, including those on the Community plan, can access community support through our GitHub repository and participate in discussions.',
   },
 ];
@@ -74,7 +126,7 @@ export const FAQSection = () => {
       name: item.trigger,
       acceptedAnswer: {
         '@type': 'Answer',
-        text: item.content,
+        text: item.jsonLdContent || (typeof item.content === 'string' ? item.content : ''),
       },
     })),
   };

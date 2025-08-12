@@ -94,16 +94,38 @@ export async function POST(
     );
   }
 
-  const { missingGlobalContext } = validateGlobalContext(
-    promptVersion.content,
-    globalContext as Record<string, any>,
-  );
-
-  if (missingGlobalContext.length > 0) {
-    return NextResponse.json(
-      { error: 'Missing required global context variables', missingGlobalContext },
-      { status: 400 },
+  if (promptVersion.type === 'NON_CHAT') {
+    const { missingGlobalContext } = validateGlobalContext(
+      promptVersion.content ?? '',
+      globalContext as Record<string, any>,
     );
+
+    if (missingGlobalContext.length > 0) {
+      return NextResponse.json(
+        { error: 'Missing required global context variables', missingGlobalContext },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (promptVersion.type === 'CHAT') {
+    const allMissingGlobalContext = promptVersion.pv_chat_prompts.flatMap((pvChatPrompt) => {
+      const { missingGlobalContext } = validateGlobalContext(
+        pvChatPrompt.content ?? '',
+        globalContext as Record<string, any>,
+      );
+      return missingGlobalContext;
+    });
+
+    if (allMissingGlobalContext.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Missing required global context variables',
+          missingGlobalContext: allMissingGlobalContext,
+        },
+        { status: 400 },
+      );
+    }
   }
 
   const openrouterApiKey = await agentsmith.services.organizations.getOrganizationKeySecret(
@@ -128,7 +150,7 @@ export async function POST(
   });
 
   try {
-    const executePromise = agentsmith.services.prompts.executePrompt({
+    const response = await agentsmith.services.prompts.executePrompt({
       prompt: promptVersion.prompts,
       config: finalConfig,
       targetVersion: promptVersion,
@@ -136,12 +158,6 @@ export async function POST(
       promptIncludes: promptVersion.prompt_includes,
       globalContext: globalContext as Record<string, any>,
     });
-
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out')), 300000),
-    );
-
-    const response = await Promise.race([executePromise, timeoutPromise]);
 
     if (response.stream) {
       const [streamForClient, streamForLogging] = response.stream.tee();
@@ -195,6 +211,9 @@ export async function POST(
         { error: 'Failed to create log entry, please check your plan limits and try again.' },
         { status: 403 },
       );
+    }
+    if (error instanceof Error && error.message.includes('Error calling OpenRouter API')) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     agentsmith.logger.error(error, 'Error running prompt');
     return NextResponse.json(

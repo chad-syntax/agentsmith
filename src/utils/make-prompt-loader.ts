@@ -19,5 +19,5 @@ export const makePromptLoader =
       throw new Error(`Included prompt ${slug}@${version} not found`);
     }
 
-    return includedPromptVersion.prompt_versions.content;
+    return includedPromptVersion.prompt_versions.content ?? '';
   };

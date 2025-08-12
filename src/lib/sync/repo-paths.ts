@@ -24,3 +24,18 @@ export const globalsJsonFilePath = (options: { agentsmithFolder: string }) =>
 
 export const agentsmithTypesTsFilePath = (options: { agentsmithFolder: string }) =>
   `${options.agentsmithFolder}/agentsmith.types.ts`;
+
+export const chatPromptJ2FilePath = (options: {
+  agentsmithFolder: string;
+  promptSlug: string;
+  version: string;
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  index: number;
+}) =>
+  `${options.agentsmithFolder}/prompts/${options.promptSlug}/${options.version}/${options.role}_${options.index}.j2`;
+
+export const versionDirectoryPath = (options: {
+  agentsmithFolder: string;
+  promptSlug: string;
+  version: string;
+}) => `${options.agentsmithFolder}/prompts/${options.promptSlug}/${options.version}`;

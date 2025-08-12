@@ -703,7 +703,7 @@ export type Database = {
       prompt_versions: {
         Row: {
           config: Json
-          content: string
+          content: string | null
           created_at: string
           id: number
           last_sync_content_sha: string | null
@@ -711,13 +711,14 @@ export type Database = {
           last_sync_variables_sha: string | null
           prompt_id: number
           status: Database["public"]["Enums"]["prompt_status"]
+          type: Database["public"]["Enums"]["prompt_type"]
           updated_at: string
           uuid: string
           version: string
         }
         Insert: {
           config: Json
-          content: string
+          content?: string | null
           created_at?: string
           id?: number
           last_sync_content_sha?: string | null
@@ -725,13 +726,14 @@ export type Database = {
           last_sync_variables_sha?: string | null
           prompt_id: number
           status: Database["public"]["Enums"]["prompt_status"]
+          type: Database["public"]["Enums"]["prompt_type"]
           updated_at?: string
           uuid?: string
           version: string
         }
         Update: {
           config?: Json
-          content?: string
+          content?: string | null
           created_at?: string
           id?: number
           last_sync_content_sha?: string | null
@@ -739,6 +741,7 @@ export type Database = {
           last_sync_variables_sha?: string | null
           prompt_id?: number
           status?: Database["public"]["Enums"]["prompt_status"]
+          type?: Database["public"]["Enums"]["prompt_type"]
           updated_at?: string
           uuid?: string
           version?: string
@@ -790,6 +793,50 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pv_chat_prompts: {
+        Row: {
+          content: string | null
+          created_at: string
+          id: number
+          index: number
+          last_sync_git_sha: string | null
+          prompt_version_id: number
+          role: string
+          updated_at: string
+          uuid: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          id?: number
+          index: number
+          last_sync_git_sha?: string | null
+          prompt_version_id: number
+          role: string
+          updated_at?: string
+          uuid?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          id?: number
+          index?: number
+          last_sync_git_sha?: string | null
+          prompt_version_id?: number
+          role?: string
+          updated_at?: string
+          uuid?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pv_chat_prompts_prompt_version_id_fkey"
+            columns: ["prompt_version_id"]
+            isOneToOne: false
+            referencedRelation: "prompt_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -1104,6 +1151,7 @@ export type Database = {
       organization_tier: "FREE" | "HOBBY" | "PRO" | "ENTERPRISE"
       organization_user_role: "ADMIN" | "MEMBER"
       prompt_status: "DRAFT" | "PUBLISHED" | "ARCHIVED"
+      prompt_type: "CHAT" | "NON_CHAT"
       roadmap_item_state:
         | "PROPOSED"
         | "REJECTED"

@@ -6,14 +6,23 @@ export type AgentsmithState = {
   globals: NonNullable<GetProjectGlobalsByProjectIdResult>;
 };
 
+export type RepoChatPrompt = {
+  role: 'user' | 'assistant' | 'system' | 'tool';
+  index: number;
+  sha: string;
+  lastModified: string;
+};
+
 export type RepoVersion = {
   version: string;
+  type: 'NON_CHAT' | 'CHAT';
   versionSha: string;
-  contentSha: string;
+  contentSha: string | null;
   variablesSha: string | null;
   versionLastModified: string;
-  contentLastModified: string;
+  contentLastModified: string | null;
   variablesLastModified: string | null;
+  chatPrompts: RepoChatPrompt[] | null;
 };
 
 export type RepoPrompt = {

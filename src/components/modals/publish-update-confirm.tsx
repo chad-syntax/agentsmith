@@ -13,8 +13,10 @@ import { AlertTriangle } from 'lucide-react';
 import { usePromptPage } from '@/providers/prompt-page';
 
 export const PublishUpdateConfirmModal = () => {
-  const { state, closePublishConfirm, handleSave } = usePromptPage();
-  const { isPublishConfirmModalOpen: isOpen, isPublishing } = state;
+  const isOpen = usePromptPage((s) => s.isPublishConfirmModalOpen);
+  const isPublishing = usePromptPage((s) => s.isPublishing);
+  const closePublishConfirm = usePromptPage((s) => s.closePublishConfirm);
+  const handleSave = usePromptPage((s) => s.handleSave);
 
   return (
     <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && closePublishConfirm()}>

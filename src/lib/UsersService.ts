@@ -2,6 +2,7 @@ import { Database } from '@/app/__generated__/supabase.types';
 import type { User, SupabaseClient } from '@supabase/supabase-js';
 import { AgentsmithSupabaseService } from './AgentsmithSupabaseService';
 import { AgentsmithServicesDirectory } from './AgentsmithServices';
+import { logger } from './logger';
 
 type AgentsmithUser = Database['public']['Tables']['agentsmith_users']['Row'];
 
@@ -45,6 +46,14 @@ export class UsersService extends AgentsmithSupabaseService {
     this.agentsmithUser = await this.getAgentsmithUser(this.authUser.id);
 
     this.initialized = true;
+
+    // not sure if this is the best place for this, but we need to set these bindings to match logs to users somewhere
+    if (logger.setBindings && typeof logger.setBindings === 'function' && !this.initialized) {
+      logger.setBindings({
+        authUserId: this.authUser.id,
+        agentsmithUserId: this.agentsmithUser?.id,
+      });
+    }
 
     return {
       authUser: this.authUser,

@@ -24,8 +24,15 @@ type CompletionLogDirTransformerOptions = {
     uuid: string;
     version: string;
     config: any;
-    content: string;
+    content: string | null;
   };
+  chatPrompts:
+    | {
+        role: 'system' | 'user' | 'assistant' | 'tool';
+        index: number;
+        content: string;
+      }[]
+    | null;
   variables: Record<string, any>;
   rawInput: any;
   rawOutput: any;
