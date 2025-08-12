@@ -16,6 +16,12 @@ create table pv_chat_prompts (
   updated_at timestamp with time zone not null default now()
 );
 
+create trigger handle_updated_at
+    before update
+    on pv_chat_prompts
+    for each row
+    execute procedure set_updated_at();
+
 alter table prompt_versions alter column content drop not null;
 
 create index on pv_chat_prompts(prompt_version_id);

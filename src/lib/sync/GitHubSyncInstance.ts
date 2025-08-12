@@ -72,6 +72,13 @@ import {
   generatePromptJsonContent,
   generatePromptVariablesJsonContent,
   generatePromptVersionJsonContent,
+  isAgentsmithTypesFilePath,
+  isChatPromptFilePath,
+  isGlobalsFilePath,
+  isPromptContentFilePath,
+  isPromptFilePath,
+  isPromptVariablesFilePath,
+  isPromptVersionFilePath,
   parsePromptJSONFile,
   parsePromptVariableJSONFile,
   parsePromptVersionJSONFile,
@@ -220,8 +227,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
   public async getRepoState(): Promise<RepoState | null> {
     const agentsmithFolderContents = await this.getRepoFolderContents();
 
-    console.log('agentsmithFolderContents', agentsmithFolderContents);
-
     if (!agentsmithFolderContents) {
       this.logger.info('Agentsmith folder contents not found, returning empty repo state');
       return {
@@ -298,22 +303,12 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
             continue;
           }
 
-          // if (!contentFile) {
-          //   this.logger.warn(
-          //     `content file not found for ${promptSlug} v${versionNumber}, cannot add to state, looked for ${contentFilePath}`,
-          //   );
-          //   continue;
-          // }
-
           // get all the chat prompts for this version
           const chatPrompts = folderContentsWithAgentsmithFolder.filter((file) => {
-            const isChatPrompt =
-              file.path.includes('system_') ||
-              file.path.includes('user_') ||
-              file.path.includes('assistant_') ||
-              file.path.includes('tool_');
-            const isVersion = file.path.includes(versionNumber);
-            const isPrompt = file.path.includes(promptSlug);
+            const isChatPrompt = isChatPromptFilePath(file.path);
+            const [, , chatPromptSlug, chatPromptVersion] = file.path.split('/');
+            const isVersion = chatPromptVersion === versionNumber;
+            const isPrompt = chatPromptSlug === promptSlug;
             return isChatPrompt && isVersion && isPrompt;
           });
 
@@ -330,8 +325,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
               lastModified: chatPrompt.lastModified,
             });
           }
-
-          console.log('repoChatPrompts', repoChatPrompts);
 
           if (!contentFile && repoChatPrompts.length === 0) {
             this.logger.warn(
@@ -522,13 +515,13 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         item.sha !== undefined &&
         item.url !== undefined &&
         item.size !== undefined &&
-        (item.path.endsWith('/prompt.json') ||
-          item.path.endsWith('/version.json') ||
-          item.path.endsWith('/variables.json') ||
-          item.path.endsWith('/content.j2') ||
-          item.path.endsWith('globals.json') ||
-          item.path.endsWith('agentsmith.types.ts') ||
-          /\/(system_\d+|user_\d+|assistant_\d+|tool_\d+)\.j2$/.test(item.path)),
+        (isPromptFilePath(item.path) ||
+          isPromptVersionFilePath(item.path) ||
+          isPromptVariablesFilePath(item.path) ||
+          isPromptContentFilePath(item.path) ||
+          isGlobalsFilePath(item.path) ||
+          isAgentsmithTypesFilePath(item.path) ||
+          isChatPromptFilePath(item.path)),
     );
 
     // Assert that the filtered files match this hardened type
@@ -2077,11 +2070,6 @@ export class GitHubSyncInstance extends AgentsmithSupabaseService {
         `Failed to get file content for ${chatPromptFilePath} at ref ${this.branchRef}`,
       );
     }
-
-    console.log('about to delete file', {
-      chatPromptFilePath,
-      oldFile,
-    });
 
     // delete the file from github
     await this._deleteRepoFile({

@@ -511,9 +511,9 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     const { data: promptData, error: getPromptError } = await this.supabase
       .from('prompt_variables')
-      .select('*, prompt_versions!inner(version), prompts!inner(slug)')
-      .eq('prompt_version.version', promptVersion)
-      .eq('prompt.slug', promptSlug);
+      .select('*, prompt_versions!inner(prompts!inner(slug), version)')
+      .eq('prompt_versions.version', promptVersion)
+      .eq('prompt_versions.prompts.slug', promptSlug);
 
     if (getPromptError || !promptData) {
       this.logger.error(getPromptError, 'Error fetching prompt variables:');
@@ -793,7 +793,7 @@ export class PromptsService extends AgentsmithSupabaseService {
 
     const { data: versionData, error: getVersionError } = await this.supabase
       .from('prompt_versions')
-      .select('*, prompt_variables(*)')
+      .select('*, prompt_variables(*), pv_chat_prompts(*)')
       .eq('uuid', promptVersionUuid)
       .single();
 
@@ -808,6 +808,7 @@ export class PromptsService extends AgentsmithSupabaseService {
     const promptVersionId = versionData.id;
 
     const currentVariables: PromptVariableExisting[] = versionData.prompt_variables || [];
+    const currentPvChatPrompts = versionData.pv_chat_prompts || [];
     const currentIncludes = await this.fetchPromptIncludes(promptVersionUuid);
 
     const includesToAdd: ParsedInclude[] = [];
@@ -989,30 +990,106 @@ export class PromptsService extends AgentsmithSupabaseService {
       }
     }
 
-    // TODO: handle pv chat prompts better
-    if (versionData.type === 'CHAT') {
-      // delete all existing pv chat prompts for this version
-      const { error: deleteError } = await this.supabase
-        .from('pv_chat_prompts')
-        .delete()
-        .eq('prompt_version_id', promptVersionId);
+    // Handle chat prompts with create/update/delete logic
+    const pvChatPromptsToCreate: Array<{ role: string; content: string; index: number }> = [];
+    const pvChatPromptsToUpdate: Array<{
+      id: number;
+      role: string;
+      content: string;
+      index: number;
+    }> = [];
+    const pvChatPromptsToDelete: number[] = [];
 
-      if (deleteError) {
-        throw new Error('Failed to delete pv chat prompts: ' + deleteError.message);
+    if (versionData.type === 'CHAT') {
+      // Create a map of current chat prompts by index for efficient lookup
+      const currentChatPromptsMap = new Map(currentPvChatPrompts.map((cp) => [cp.index, cp]));
+
+      // Check incoming chat prompts to determine what to create or update
+      for (let index = 0; index < incomingPvChatPrompts.length; index++) {
+        const incomingChatPrompt = incomingPvChatPrompts[index];
+        const currentChatPrompt = currentChatPromptsMap.get(index);
+
+        if (currentChatPrompt) {
+          // Chat prompt exists at this index, check if it needs updating
+          const chatPromptNeedsUpdating =
+            incomingChatPrompt.role !== currentChatPrompt.role ||
+            incomingChatPrompt.content !== currentChatPrompt.content;
+
+          if (chatPromptNeedsUpdating) {
+            pvChatPromptsToUpdate.push({
+              id: currentChatPrompt.id,
+              role: incomingChatPrompt.role,
+              content: incomingChatPrompt.content,
+              index,
+            });
+          }
+          currentChatPromptsMap.delete(index);
+        } else {
+          // Chat prompt doesn't exist at this index, create it
+          pvChatPromptsToCreate.push({
+            role: incomingChatPrompt.role,
+            content: incomingChatPrompt.content,
+            index,
+          });
+        }
       }
 
-      // add new pv chat prompts for this version
-      const { error: insertError } = await this.supabase.from('pv_chat_prompts').insert(
-        incomingPvChatPrompts.map((pvChatPrompt, index) => ({
-          prompt_version_id: promptVersionId,
-          role: pvChatPrompt.role,
-          index,
-          content: pvChatPrompt.content,
-        })),
-      );
+      // Any remaining chat prompts in the map should be deleted
+      for (const currentChatPromptToDelete of Array.from(currentChatPromptsMap.values())) {
+        pvChatPromptsToDelete.push(currentChatPromptToDelete.id);
+      }
 
-      if (insertError) {
-        throw new Error('Failed to add pv chat prompts: ' + insertError.message);
+      // Perform database operations
+      if (pvChatPromptsToDelete.length > 0) {
+        const { error: deleteError } = await this.supabase
+          .from('pv_chat_prompts')
+          .delete()
+          .in('id', pvChatPromptsToDelete);
+
+        if (deleteError) {
+          this.logger.error(
+            { error: deleteError, chatPrompts: pvChatPromptsToDelete },
+            'Failed to delete pv chat prompts',
+          );
+          throw new Error('Failed to delete pv chat prompts: ' + deleteError.message);
+        }
+      }
+
+      if (pvChatPromptsToCreate.length > 0) {
+        const { error: insertError } = await this.supabase.from('pv_chat_prompts').insert(
+          pvChatPromptsToCreate.map((pvChatPrompt) => ({
+            prompt_version_id: promptVersionId,
+            role: pvChatPrompt.role,
+            index: pvChatPrompt.index,
+            content: pvChatPrompt.content,
+          })),
+        );
+
+        if (insertError) {
+          this.logger.error(
+            { error: insertError, chatPrompts: pvChatPromptsToCreate },
+            'Failed to add new pv chat prompts',
+          );
+          throw new Error('Failed to add new pv chat prompts: ' + insertError.message);
+        }
+      }
+
+      if (pvChatPromptsToUpdate.length > 0) {
+        for (const chatPromptToUpdate of pvChatPromptsToUpdate) {
+          const { id, role, content, index } = chatPromptToUpdate;
+          const { error: updateError } = await this.supabase
+            .from('pv_chat_prompts')
+            .update({ role, content, index, last_sync_git_sha: null })
+            .eq('id', id);
+
+          if (updateError) {
+            this.logger.error(
+              { error: updateError, chatPrompt: chatPromptToUpdate },
+              'Failed to update pv chat prompt',
+            );
+            throw new Error(`Failed to update pv chat prompt (ID: ${id}): ${updateError.message}`);
+          }
+        }
       }
     }
 
@@ -1449,8 +1526,6 @@ export class PromptsService extends AgentsmithSupabaseService {
 
   public async updatePromptVersionChatPromptSha(options: UpdatePromptVersionChatPromptShaOptions) {
     const { promptVersionUuid, role, index, sha } = options;
-
-    console.log('updatePromptVersionChatPromptSha', options);
 
     const { data: promptVersionData, error: promptVersionError } = await this.supabase
       .from('prompt_versions')

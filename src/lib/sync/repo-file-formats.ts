@@ -108,3 +108,12 @@ export const parsePromptVariableJSONFile = (content: string): PromptVariableFile
   const parsedContent = JSON.parse(content);
   return PromptVariableFileJSONContentSchema.parse(parsedContent);
 };
+
+export const isPromptFilePath = (path: string) => path.endsWith('/prompt.json');
+export const isPromptVersionFilePath = (path: string) => path.endsWith('/version.json');
+export const isPromptVariablesFilePath = (path: string) => path.endsWith('/variables.json');
+export const isPromptContentFilePath = (path: string) => path.endsWith('/content.j2');
+export const isGlobalsFilePath = (path: string) => path.endsWith('globals.json');
+export const isAgentsmithTypesFilePath = (path: string) => path.endsWith('agentsmith.types.ts');
+export const isChatPromptFilePath = (path: string) =>
+  /\/(system_\d+|user_\d+|assistant_\d+|tool_\d+)\.j2$/.test(path);

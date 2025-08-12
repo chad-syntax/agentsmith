@@ -213,8 +213,6 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
           targetRepoVersion.chatPrompts?.map((cp) => [`${cp.role}_${cp.index}`, cp]) || [],
         );
 
-        console.log('repoChatPromptsMap', repoChatPromptsMap);
-
         // loop through each chat prompt in agentsmith version
         for (const agentsmithChatPrompt of agentsmithVersion.pv_chat_prompts) {
           const targetRepoChatPrompt = repoChatPromptsMap.get(
@@ -242,6 +240,14 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
             targetRepoChatPrompt.sha !== agentsmithChatPrompt.last_sync_git_sha &&
             targetRepoChatPrompt.lastModified < agentsmithChatPrompt.updated_at
           ) {
+            console.log('determined to update chat prompt in the repo', {
+              targetRepoChatPromptSha: targetRepoChatPrompt.sha,
+              agentsmithChatPromptSha: agentsmithChatPrompt.last_sync_git_sha,
+              targetRepoChatPromptLastModified: targetRepoChatPrompt.lastModified,
+              agentsmithChatPromptUpdatedAt: agentsmithChatPrompt.updated_at,
+              isRepoNewer: targetRepoChatPrompt.lastModified > agentsmithChatPrompt.updated_at,
+            });
+
             const updateChatPromptAction: RepoUpdateChatPromptAction = {
               type: 'update',
               target: 'repo',
@@ -483,8 +489,6 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
           GetAllPromptsDataResult[number]['prompt_versions'][number]['pv_chat_prompts'][number]
         >(targetAgentsmithVersion.pv_chat_prompts.map((cp) => [`${cp.role}_${cp.index}`, cp]));
 
-        console.log('agentsmithChatPromptsMap', agentsmithChatPromptsMap);
-
         for (const repoChatPrompt of repoPromptVersion.chatPrompts) {
           const targetAgentsmithChatPrompt = agentsmithChatPromptsMap.get(
             `${repoChatPrompt.role}_${repoChatPrompt.index}`,
@@ -537,6 +541,15 @@ export const compareStates = (options: CompareStatesOptions): SyncAction[] => {
             targetAgentsmithChatPrompt.last_sync_git_sha !== repoChatPrompt.sha &&
             targetAgentsmithChatPrompt.updated_at < repoChatPrompt.lastModified
           ) {
+            console.log('determined to update chat prompt in agentsmith', {
+              targetAgentsmithChatPromptSha: targetAgentsmithChatPrompt.last_sync_git_sha,
+              repoChatPromptSha: repoChatPrompt.sha,
+              targetAgentsmithChatPromptUpdatedAt: targetAgentsmithChatPrompt.updated_at,
+              repoChatPromptLastModified: repoChatPrompt.lastModified,
+              isAgentsmithOlder:
+                targetAgentsmithChatPrompt.updated_at < repoChatPrompt.lastModified,
+            });
+
             const updateChatPromptAction: AgentsmithUpdateChatPromptAction = {
               type: 'update',
               target: 'agentsmith',
