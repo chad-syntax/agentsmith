@@ -154,6 +154,7 @@ export class TypegenService extends AgentsmithSupabaseService {
             writer.block(() => {
               writer.writeLine(`version: '${version.version}';`);
               writer.writeLine(`config: ${configTypeName};`);
+              writer.writeLine(`type: '${version.type}';`);
 
               const variableTypeNames = [];
               const ownVariablesTypeName = this._normalizeTypeName(

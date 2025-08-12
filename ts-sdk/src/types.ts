@@ -1,10 +1,16 @@
-import { OpenrouterNonStreamingResponse, OpenrouterRequestBody, ToolCall } from '@/lib/openrouter';
+import {
+  Message,
+  OpenrouterNonStreamingResponse,
+  OpenrouterRequestBody,
+  ToolCall,
+} from '@/lib/openrouter';
 export type { Message } from '@/lib/openrouter';
 
 export type GenericPromptVersion = {
   version: string;
   config: any;
   content: string;
+  type: 'CHAT' | 'NON_CHAT';
   variables?: Record<string, string | number | boolean | any>;
 };
 
@@ -198,7 +204,7 @@ export type GetPromptContent<
       : never
     : never;
 
-export type ExecuteStreamingResult = {
+export type ExecuteStreamingResultBase = {
   tokens: AsyncGenerator<string | undefined, void, unknown>;
   reasoningTokens: AsyncGenerator<string | undefined, void, unknown>;
   toolCalls: AsyncGenerator<ToolCall, void, unknown>;
@@ -206,19 +212,33 @@ export type ExecuteStreamingResult = {
   stream: ReadableStream<Uint8Array>;
   logUuid: Promise<string | undefined>;
   response: Response;
-  compiledPrompt: string;
   finalVariables: any;
 };
 
-export type ExecuteNonStreamingResult = {
+export type ExecuteStreamingResultChat = ExecuteStreamingResultBase & {
+  compiledMessages: Message[];
+};
+
+export type ExecuteStreamingResultNonChat = ExecuteStreamingResultBase & {
+  compiledPrompt: string;
+};
+
+export type ExecuteNonStreamingResultBase = {
   completion: OpenrouterNonStreamingResponse;
   logUuid: Promise<string | undefined>;
   response: Response;
   content: string | null;
   reasoning: string | null;
-  compiledPrompt: string;
   toolCalls: ToolCall[] | null;
   finalVariables: any;
+};
+
+export type ExecuteNonStreamingResultChat = ExecuteNonStreamingResultBase & {
+  compiledMessages: Message[];
+};
+
+export type ExecuteNonStreamingResultNonChat = ExecuteNonStreamingResultBase & {
+  compiledPrompt: string;
 };
 
 // This helper extracts the type of the 'stream' property from the runtime options.
@@ -249,15 +269,23 @@ export type ExecuteResult<
   Options extends ExecuteOptions<CurAgency> | undefined,
 > =
   FinalStreamSetting<CurAgency, PromptArg, Options> extends true
-    ? ExecuteStreamingResult
-    : ExecuteNonStreamingResult;
+    ? IsChatPrompt<CurAgency, PromptArg> extends true
+      ? ExecuteStreamingResultChat
+      : ExecuteStreamingResultNonChat
+    : IsChatPrompt<CurAgency, PromptArg> extends true
+      ? ExecuteNonStreamingResultChat
+      : ExecuteNonStreamingResultNonChat;
 
 export type ExecuteResultNoOptions<
   CurAgency extends GenericAgency,
   PromptArg extends PromptIdentifier<CurAgency>,
 > = GetPromptConfig<CurAgency, PromptArg>['stream'] extends true
-  ? ExecuteStreamingResult
-  : ExecuteNonStreamingResult;
+  ? IsChatPrompt<CurAgency, PromptArg> extends true
+    ? ExecuteStreamingResultChat
+    : ExecuteStreamingResultNonChat
+  : IsChatPrompt<CurAgency, PromptArg> extends true
+    ? ExecuteNonStreamingResultChat
+    : ExecuteNonStreamingResultNonChat;
 
 export type ExecuteImplementationResult<
   CurAgency extends GenericAgency,
@@ -266,27 +294,58 @@ export type ExecuteImplementationResult<
   | ExecuteResult<CurAgency, PromptArg, ExecuteOptions<CurAgency>>
   | ExecuteResultNoOptions<CurAgency, PromptArg>;
 
-export type CompileResult = {
+export type NonChatCompileResult = {
   compiledPrompt: string;
   finalVariables: any;
 };
+
+export type ChatCompileResult = {
+  compiledMessages: Message[];
+  finalVariables: any;
+};
+
+type IsChatPrompt<
+  CurAgency extends GenericAgency,
+  PromptArg extends PromptIdentifier<CurAgency>,
+> = PromptArg extends `${infer Slug}@${infer Version}`
+  ? Slug extends AgencyPromptSlugs<CurAgency>
+    ? Version extends AllPromptVersionKeys<CurAgency, Slug>
+      ? CurAgency['prompts'][Slug]['versions'][Version] extends { type: 'CHAT' }
+        ? true
+        : false
+      : false
+    : false
+  : false;
 
 export type CompileSignature<
   CurAgency extends GenericAgency,
   PromptArg extends PromptIdentifier<CurAgency>,
 > =
   HasRequiredKeys<GetPromptVariables<CurAgency, PromptArg>> extends true
-    ? (
-        variables: GetPromptVariables<CurAgency, PromptArg>,
-        options?: CompileOptions<CurAgency>,
-      ) => Promise<CompileResult>
-    : {
-        (
+    ? IsChatPrompt<CurAgency, PromptArg> extends true
+      ? (
           variables: GetPromptVariables<CurAgency, PromptArg>,
           options?: CompileOptions<CurAgency>,
-        ): Promise<CompileResult>;
-        (options?: CompileOptions<CurAgency>): Promise<CompileResult>;
-      };
+        ) => Promise<ChatCompileResult>
+      : (
+          variables: GetPromptVariables<CurAgency, PromptArg>,
+          options?: CompileOptions<CurAgency>,
+        ) => Promise<NonChatCompileResult>
+    : IsChatPrompt<CurAgency, PromptArg> extends true
+      ? {
+          (
+            variables: GetPromptVariables<CurAgency, PromptArg>,
+            options?: CompileOptions<CurAgency>,
+          ): Promise<ChatCompileResult>;
+          (options?: CompileOptions<CurAgency>): Promise<ChatCompileResult>;
+        }
+      : {
+          (
+            variables: GetPromptVariables<CurAgency, PromptArg>,
+            options?: CompileOptions<CurAgency>,
+          ): Promise<NonChatCompileResult>;
+          (options?: CompileOptions<CurAgency>): Promise<NonChatCompileResult>;
+        };
 
 export type ExecuteSignature<
   CurAgency extends GenericAgency,

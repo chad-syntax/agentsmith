@@ -48,7 +48,7 @@ export class UsersService extends AgentsmithSupabaseService {
     this.initialized = true;
 
     // not sure if this is the best place for this, but we need to set these bindings to match logs to users somewhere
-    if (logger.setBindings && typeof logger.setBindings === 'function') {
+    if (logger.setBindings && typeof logger.setBindings === 'function' && !this.initialized) {
       logger.setBindings({
         authUserId: this.authUser.id,
         agentsmithUserId: this.agentsmithUser?.id,

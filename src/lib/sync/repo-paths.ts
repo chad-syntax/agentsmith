@@ -33,3 +33,9 @@ export const chatPromptJ2FilePath = (options: {
   index: number;
 }) =>
   `${options.agentsmithFolder}/prompts/${options.promptSlug}/${options.version}/${options.role}_${options.index}.j2`;
+
+export const versionDirectoryPath = (options: {
+  agentsmithFolder: string;
+  promptSlug: string;
+  version: string;
+}) => `${options.agentsmithFolder}/prompts/${options.promptSlug}/${options.version}`;
